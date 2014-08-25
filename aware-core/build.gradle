@@ -1,0 +1,34 @@
+//Uncomment to choose how to treat the project. Use it as a library for AWARE-applications or plugins
+apply plugin: 'com.android.application' //AWARE is an application
+//apply plugin: 'com.android.library' //AWARE is a library
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion '20.0.0'
+
+    defaultConfig {
+        applicationId "com.aware"
+        minSdkVersion 10 //Android 2.3.3
+        targetSdkVersion 19 //Android >= 20 is Android L (not supported, yet)
+    }
+
+    buildTypes {
+        release {
+            runProguard false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+
+    //For plugins and AWARE-applications, uncomment the following to disable manifest merging.
+//    android.applicationVariants.all { variant ->
+//        variant.processResources.manifestFile = file('src/main/AndroidManifest.xml')
+//        variant.processManifest.enabled=false
+//    }
+}
+
+dependencies {
+    compile files('libs/mqtt-client-0.4.0.jar')
+    compile files('libs/zbar.jar')
+    compile 'com.android.support:appcompat-v7:19.+'
+    compile 'com.android.support:gridlayout-v7:19.+'
+}

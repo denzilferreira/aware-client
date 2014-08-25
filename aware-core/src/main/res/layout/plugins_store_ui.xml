@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/aware_ui_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <ScrollView
+        xmlns:grid="http://schemas.android.com/apk/res-auto"
+        xmlns:app="http://schemas.android.com/apk/res/com.aware"
+        android:id="@+id/plugins_store_scroller"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true" >
+
+        <LinearLayout
+            android:id="@+id/store_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical" >
+
+            <ProgressBar
+                android:id="@+id/loading_plugins"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:indeterminate="true"
+                android:padding="10dp"
+                android:background="@color/grey_background" />
+
+            <android.support.v7.widget.GridLayout
+                android:id="@+id/plugins_store_grid"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/grey_background"
+                grid:alignmentMode="alignMargins"
+                grid:columnCount="3"
+                grid:orientation="horizontal"
+                grid:useDefaultMargins="true"
+                android:animateLayoutChanges="true" >
+            </android.support.v7.widget.GridLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <ListView
+        android:id="@+id/aware_navigation"
+        android:layout_width="240dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="left"
+        android:background="#111"
+        android:choiceMode="singleChoice"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="0dp" />
+
+</android.support.v4.widget.DrawerLayout>

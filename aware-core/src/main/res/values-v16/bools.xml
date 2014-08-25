@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="is_jelly_bean" type="bool">true</item>
+    <item name="is_not_jelly_bean" type="bool">false</item>
+    
+</resources>
