@@ -48,10 +48,7 @@ import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.view.accessibility.AccessibilityManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -778,14 +775,15 @@ public class Aware_Preferences extends PreferenceActivity {
     	if( ! is_refreshing ) {
     		new Async_SensorLoading().execute();
     	}
-    	if( Aware.getSetting(getApplicationContext(), "study_id").length() == 0 || ! isAccessibilityServiceActive() ) {
-    		if( is_first_time ) navigationDrawer.openDrawer(Gravity.LEFT);
-    		if( ! isAccessibilityServiceActive() ) {
-                Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
-                accessibilitySettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(accessibilitySettings);
-                Toast.makeText(getApplicationContext(), getResources().getText(R.string.aware_activate_accessibility), Toast.LENGTH_LONG).show();
-            }
+    	if( Aware.getSetting(getApplicationContext(), "study_id").length() == 0 ) {
+            if( is_first_time ) navigationDrawer.openDrawer(android.view.Gravity.LEFT);
+        }
+
+        if( Aware.getSetting( getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && ! isAccessibilityServiceActive() ) {
+            Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
+            accessibilitySettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(accessibilitySettings);
+            Toast.makeText(getApplicationContext(), getResources().getText(R.string.aware_activate_accessibility), Toast.LENGTH_LONG).show();
     	}
     }
     

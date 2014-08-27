@@ -2,41 +2,29 @@
 <pre-dex-items>
 
     <item
-        dex="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/pre-dexed/debug/internal_impl-20.0.0-2a17450dd06aa7f52e2913614f90ced72ecc79be.jar"
-        jar="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/exploded-aar/com.android.support/support-v4/20.0.0/libs/internal_impl-20.0.0.jar"
-        jumboMode="false"
-        revision="20.0.0"
-        sha1="e40b3078e3fbd353c9f44da8df25a8fc0078209d"/>
-    <item
-        dex="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/pre-dexed/debug/support-annotations-20.0.0-bca9cd8c8082330ef7549e0398af852faae531fd.jar"
-        jar="/Applications/Android Studio.app/sdk/extras/android/m2repository/com/android/support/support-annotations/20.0.0/support-annotations-20.0.0.jar"
-        jumboMode="false"
-        revision="20.0.0"
-        sha1="9d9013e9ff35fc3756411e62873c363c70c638fa"/>
-    <item
         dex="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/pre-dexed/debug/mqtt-client-0.4.0-cadba1d9f4c8150a9ef424ac75511490ae0afcc2.jar"
         jar="/Users/denzil/Android/source/AWARE-AS/aware-core/libs/mqtt-client-0.4.0.jar"
         jumboMode="false"
         revision="20.0.0"
         sha1="02315d1759d01e52495e040e6e538aaa2e91c7f6"/>
     <item
-        dex="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/pre-dexed/debug/classes-e9d160e6a56cee205756be304e28a77600314dfb.jar"
-        jar="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/exploded-aar/com.android.support/support-v4/20.0.0/classes.jar"
+        dex="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/pre-dexed/debug/support-v4-19.1.0-fe930dc68beb1e566675ce71b270d4091c6c249b.jar"
+        jar="/Applications/Android Studio.app/sdk/extras/android/m2repository/com/android/support/support-v4/19.1.0/support-v4-19.1.0.jar"
         jumboMode="false"
         revision="20.0.0"
-        sha1="8694693636ab36910c8100ce527c258ff3ebece0"/>
+        sha1="85f201b380937e61a9dce6ca90ccf6872abbfb67"/>
     <item
-        dex="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/pre-dexed/debug/classes-6e5adf5327122d820e02861f4cc755c747d74da7.jar"
-        jar="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/exploded-aar/com.android.support/appcompat-v7/20.0.0/classes.jar"
+        dex="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/pre-dexed/debug/classes-f79992cc3eb492bb391106d65d59bb768f6c2564.jar"
+        jar="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/exploded-aar/com.android.support/appcompat-v7/19.1.0/classes.jar"
         jumboMode="false"
         revision="20.0.0"
-        sha1="f21927d22fe31889ecce94dd697a2e75b137e0ef"/>
+        sha1="3499ceba05ca1f6037c6a2fad73df8f636224a28"/>
     <item
-        dex="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/pre-dexed/debug/classes-385d16cd2868ec48556e9ab61c25407af4d4174d.jar"
-        jar="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/exploded-aar/com.android.support/gridlayout-v7/20.0.0/classes.jar"
+        dex="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/pre-dexed/debug/classes-eaeb4b281922cd5dd63051dc604032061da29ff0.jar"
+        jar="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/exploded-aar/com.android.support/gridlayout-v7/19.1.0/classes.jar"
         jumboMode="false"
         revision="20.0.0"
-        sha1="e5531cb41e35c81a051a274945542f6b31e4c97e"/>
+        sha1="af4cc326e6cd92f88db12298767e521743aedd36"/>
     <item
         dex="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/pre-dexed/debug/zbar-b90e8bb6fc4d9fa5ca0743e4ef097bddd18356ed.jar"
         jar="/Users/denzil/Android/source/AWARE-AS/aware-core/libs/zbar.jar"
