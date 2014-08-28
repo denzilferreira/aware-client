@@ -231,7 +231,7 @@ public class Aware extends Service {
         	editor.putLong(PREF_LAST_UPDATE, 0);
         	editor.commit();
         }
-        
+
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
         filter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);

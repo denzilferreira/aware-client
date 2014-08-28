@@ -48,7 +48,10 @@ import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
-import android.view.*;
+import android.view.LayoutInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -618,14 +621,12 @@ public class Aware_Preferences extends PreferenceActivity {
                 navigationDrawer.closeDrawer(navigationList);
             }
         });
-        
-        if( Build.VERSION.SDK_INT > 11 ) {
+
+        if( getActionBar() != null ) {
             getActionBar().setDisplayHomeAsUpEnabled(true);
-            if( Build.VERSION.SDK_INT >= 14 ) {
-                getActionBar().setHomeButtonEnabled(true);
-            }
+            getActionBar().setHomeButtonEnabled(true);
         }
-        
+
         SharedPreferences prefs = getSharedPreferences( getPackageName(), Context.MODE_PRIVATE );
     	if( prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0 ) {
             is_first_time = true;
@@ -803,14 +804,10 @@ public class Aware_Preferences extends PreferenceActivity {
     @Deprecated
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
     	super.onPreferenceTreeClick(preferenceScreen, preference);
-    	
-    	getActionBar().setDisplayShowHomeEnabled(true);
-    	navigationToggle.setDrawerIndicatorEnabled(true);
-    	if( Build.VERSION.SDK_INT > 11 ) {
-    		getActionBar().setDisplayHomeAsUpEnabled(true);
-    		if( Build.VERSION.SDK_INT >= 14 ) {
-                getActionBar().setHomeButtonEnabled(true);
-            }
+        if( getActionBar() != null ) {
+            getActionBar().show();
+            getActionBar().setDisplayUseLogoEnabled(true);
+            getActionBar().setDisplayShowHomeEnabled(true);
         }
     	return true;
     }

@@ -31,4 +31,5 @@ dependencies {
     compile files('libs/zbar.jar')
     compile 'com.android.support:appcompat-v7:19.+'
     compile 'com.android.support:gridlayout-v7:19.+'
+    compile 'com.android.support:support-v4:19.+'
 }

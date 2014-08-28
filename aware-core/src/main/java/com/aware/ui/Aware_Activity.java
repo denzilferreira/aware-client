@@ -128,12 +128,10 @@ public class Aware_Activity extends Activity {
             	navigationDrawer.closeDrawer(navigationList);
             }
         });
-        
-        if( Build.VERSION.SDK_INT > 11 ) {
+
+        if( getActionBar() != null ) {
             getActionBar().setDisplayHomeAsUpEnabled(true);
-            if( Build.VERSION.SDK_INT >= 14 ) {
-                getActionBar().setHomeButtonEnabled(true);
-            }
+            getActionBar().setHomeButtonEnabled(true);
         }
 	}
 
