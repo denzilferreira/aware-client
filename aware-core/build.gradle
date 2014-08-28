@@ -18,12 +18,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
-
-    //For plugins and AWARE-applications, uncomment the following to disable manifest merging.
-//    android.applicationVariants.all { variant ->
-//        variant.processResources.manifestFile = file('src/main/AndroidManifest.xml')
-//        variant.processManifest.enabled=false
-//    }
 }
 
 dependencies {

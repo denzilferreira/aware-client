@@ -14,17 +14,17 @@
         revision="20.0.0"
         sha1="85f201b380937e61a9dce6ca90ccf6872abbfb67"/>
     <item
-        dex="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/pre-dexed/debug/classes-f79992cc3eb492bb391106d65d59bb768f6c2564.jar"
-        jar="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/exploded-aar/com.android.support/appcompat-v7/19.1.0/classes.jar"
-        jumboMode="false"
-        revision="20.0.0"
-        sha1="3499ceba05ca1f6037c6a2fad73df8f636224a28"/>
-    <item
         dex="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/pre-dexed/debug/classes-eaeb4b281922cd5dd63051dc604032061da29ff0.jar"
         jar="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/exploded-aar/com.android.support/gridlayout-v7/19.1.0/classes.jar"
         jumboMode="false"
         revision="20.0.0"
         sha1="af4cc326e6cd92f88db12298767e521743aedd36"/>
+    <item
+        dex="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/pre-dexed/debug/classes-f79992cc3eb492bb391106d65d59bb768f6c2564.jar"
+        jar="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/exploded-aar/com.android.support/appcompat-v7/19.1.0/classes.jar"
+        jumboMode="false"
+        revision="20.0.0"
+        sha1="3499ceba05ca1f6037c6a2fad73df8f636224a28"/>
     <item
         dex="/Users/denzil/Android/source/AWARE-AS/aware-core/build/intermediates/pre-dexed/debug/zbar-b90e8bb6fc4d9fa5ca0743e4ef097bddd18356ed.jar"
         jar="/Users/denzil/Android/source/AWARE-AS/aware-core/libs/zbar.jar"

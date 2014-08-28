@@ -536,9 +536,19 @@ public class Aware extends Service {
 			Context packageContext = context.createPackageContext(package_name, Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY);
 			
 			Class<?> fragment_loader = packageContext.getClassLoader().loadClass(ui_class);
-			Method m = fragment_loader.getDeclaredMethod("getContextCard", Context.class);
-			
-			View ui = (View) m.invoke(null, new Object[]{packageContext});
+            Object fragment = fragment_loader.newInstance();
+            Method[] allMethods = fragment_loader.getDeclaredMethods();
+            Method m = null;
+            for( Method mItem : allMethods ) {
+                String mName = mItem.getName();
+                if( mName.contains("getContextCard") ) {
+                    mItem.setAccessible(true);
+                    m = mItem;
+                    break;
+                }
+            }
+
+            View ui = (View) m.invoke( fragment, packageContext );
 			if( ui != null ) {
 				//Check if plugin has settings. If it does, tapping the card shows the settings
 				if( isClassAvailable(context, package_name, "Settings") ) {
@@ -574,8 +584,6 @@ public class Aware extends Service {
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
-		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
 		} catch (IllegalAccessException e) {
 			e.printStackTrace();
 		} catch (IllegalArgumentException e) {
@@ -584,8 +592,10 @@ public class Aware extends Service {
 			e.printStackTrace();
 		} catch (NullPointerException e) {
 			e.printStackTrace();
-		}
-    	return null;
+		} catch (InstantiationException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
     
     /**

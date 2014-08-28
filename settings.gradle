@@ -1,1 +1,1 @@
-include ':app', ':aware-core'
+include ':aware-core'
