@@ -34,4 +34,22 @@ public class Converters {
 	{
 	  return str.matches("-?\\d+(\\.\\d+)?");  //match a number with optional '-' and decimal.
 	}
+
+    /**
+     * Converts Hz to microseconds
+     * @param hertz
+     * @return long
+     */
+    public static long hertz2microseconds(long hertz) {
+        return hertz * 1000000;
+    }
+
+    /**
+     * Converts microseconds to Hz
+     * @param microseconds
+     * @return long
+     */
+    public static long microseconds2hertz(long microseconds) {
+        return microseconds / 1000000;
+    }
 }

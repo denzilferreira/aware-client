@@ -53,6 +53,7 @@ import com.aware.providers.Aware_Provider.Aware_Settings;
 import com.aware.ui.Plugins_Manager;
 import com.aware.ui.Stream_UI;
 import com.aware.utils.Aware_Plugin;
+import com.aware.utils.Converters;
 import com.aware.utils.Https;
 import com.aware.utils.WebserviceHelper;
 
