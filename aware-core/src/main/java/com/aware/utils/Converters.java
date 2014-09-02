@@ -22,7 +22,7 @@ public class Converters {
 	    
 	    long h = (milliseconds/1000)/3600;
 	    long m = ((milliseconds/1000)/60) % 60;
-	    return h+"h"+((m<10)?"0"+m:m);
+	    return h+"h"+((m<10)?"0"+m:m)+"m";
 	}
 	
 	/**
