@@ -37,11 +37,11 @@ public class Converters {
 
     /**
      * Converts Hz to microseconds
-     * @param hertz
+     * @param Hz
      * @return long
      */
-    public static long hertz2microseconds(long hertz) {
-        return hertz * 1000000;
+    public static long Hz2micro(long Hz) {
+        return Hz * 1000;
     }
 
     /**
@@ -49,7 +49,7 @@ public class Converters {
      * @param microseconds
      * @return long
      */
-    public static long microseconds2hertz(long microseconds) {
-        return microseconds / 1000000;
+    public static long micro2Hz(long microseconds) {
+        return microseconds / 1000;
     }
 }

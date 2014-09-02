@@ -33,7 +33,7 @@
     <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <!-- Uncomment for Android Wear -->
-    <!--<uses-feature android:name="android.hardware.type.watch" />-->
+    <uses-feature android:name="android.hardware.type.watch" />
 
     <permission
         android:name="com.aware.READ_CONTEXT_DATA"
