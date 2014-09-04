@@ -56,14 +56,15 @@
                 android:persistent="true"
                 android:title="Activate" />
 
-            <EditTextPreference
-                android:defaultValue="200000"
+            <ListPreference
                 android:dependency="status_accelerometer"
-                android:inputType="number"
+                android:defaultValue="0"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
                 android:key="frequency_accelerometer"
                 android:persistent="true"
-                android:summary="Delay in microseconds between samples: 0 (fastest), 20000 (game), 60000 (UI), 200000 (normal)"
-                android:title="Update frequency" />
+                android:summary="5 Hz"
+                android:title="Sampling rate" />
         </PreferenceScreen>
         <PreferenceScreen
             android:key="applications"
@@ -116,14 +117,15 @@
                 android:persistent="true"
                 android:title="Activate" />
 
-            <EditTextPreference
-                android:defaultValue="200000"
+            <ListPreference
                 android:dependency="status_barometer"
-                android:inputType="number"
+                android:defaultValue="0"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
                 android:key="frequency_barometer"
                 android:persistent="true"
-                android:summary="Delay in microseconds between samples: 0 (fastest), 20000 (game), 60000 (UI), 200000 (normal)"
-                android:title="Update frequency" />
+                android:summary="5 Hz"
+                android:title="Sampling rate" />
         </PreferenceScreen>
         <PreferenceScreen
             android:key="battery"
@@ -198,14 +200,16 @@
                 android:persistent="true"
                 android:title="Active" />
 
-            <EditTextPreference
-                android:defaultValue="200000"
+            <ListPreference
                 android:dependency="status_gravity"
-                android:inputType="number"
+                android:defaultValue="0"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
                 android:key="frequency_gravity"
                 android:persistent="true"
-                android:summary="Delay in microseconds between samples: 0 (fastest), 20000 (game), 60000 (UI), 200000 (normal)"
-                android:title="Update frequency" />
+                android:summary="5 Hz"
+                android:title="Sampling rate" />
+
         </PreferenceScreen>
         <PreferenceScreen
             android:key="gyroscope"
@@ -217,14 +221,16 @@
                 android:persistent="true"
                 android:title="Active" />
 
-            <EditTextPreference
-                android:defaultValue="200000"
+            <ListPreference
                 android:dependency="status_gyroscope"
-                android:inputType="number"
+                android:defaultValue="0"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
                 android:key="frequency_gyroscope"
                 android:persistent="true"
-                android:summary="Delay in microseconds between samples: 0 (fastest), 20000 (game), 60000 (UI), 200000 (normal)"
-                android:title="Update frequency" />
+                android:summary="5 Hz"
+                android:title="Sampling rate" />
+
         </PreferenceScreen>
         <PreferenceScreen
             android:key="locations"
@@ -296,14 +302,16 @@
                 android:persistent="true"
                 android:title="Active" />
 
-            <EditTextPreference
-                android:defaultValue="200000"
+            <ListPreference
                 android:dependency="status_light"
-                android:inputType="number"
+                android:defaultValue="0"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
                 android:key="frequency_light"
                 android:persistent="true"
-                android:summary="Delay in microseconds between samples: 0 (fastest), 20000 (game), 60000 (UI), 200000 (normal)"
-                android:title="Update frequency" />
+                android:summary="5 Hz"
+                android:title="Sampling rate" />
+
         </PreferenceScreen>
         <PreferenceScreen
             android:key="linear_accelerometer"
@@ -315,14 +323,16 @@
                 android:persistent="true"
                 android:title="Active" />
 
-            <EditTextPreference
-                android:defaultValue="200000"
+            <ListPreference
                 android:dependency="status_linear_accelerometer"
-                android:inputType="number"
+                android:defaultValue="0"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
                 android:key="frequency_linear_accelerometer"
                 android:persistent="true"
-                android:summary="Delay in microseconds between samples: 0 (fastest), 20000 (game), 60000 (UI), 200000 (normal)"
-                android:title="Update frequency" />
+                android:summary="5 Hz"
+                android:title="Sampling rate" />
+
         </PreferenceScreen>
         <PreferenceScreen
             android:key="network"
@@ -359,14 +369,16 @@
                 android:persistent="true"
                 android:title="Active" />
 
-            <EditTextPreference
-                android:defaultValue="200000"
+            <ListPreference
                 android:dependency="status_magnetometer"
-                android:inputType="number"
+                android:defaultValue="0"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
                 android:key="frequency_magnetometer"
                 android:persistent="true"
-                android:summary="Delay in microseconds between samples: 0 (fastest), 20000 (game), 60000 (UI), 200000 (normal)"
-                android:title="Update frequency" />
+                android:summary="5 Hz"
+                android:title="Sampling rate" />
+
         </PreferenceScreen>
         <PreferenceScreen
             android:key="processor"
@@ -416,14 +428,16 @@
                 android:persistent="true"
                 android:title="Active" />
 
-            <EditTextPreference
-                android:defaultValue="200000"
+            <ListPreference
                 android:dependency="status_proximity"
-                android:inputType="number"
+                android:defaultValue="0"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
                 android:key="frequency_proximity"
                 android:persistent="true"
-                android:summary="Delay in microseconds between samples: 0 (fastest), 20000 (game), 60000 (UI), 200000 (normal)"
-                android:title="Update frequency" />
+                android:summary="5 Hz"
+                android:title="Sampling rate" />
+
         </PreferenceScreen>
         <PreferenceScreen
             android:key="rotation"
@@ -435,14 +449,16 @@
                 android:persistent="true"
                 android:title="Active" />
 
-            <EditTextPreference
-                android:defaultValue="200000"
+            <ListPreference
                 android:dependency="status_rotation"
-                android:inputType="number"
+                android:defaultValue="0"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
                 android:key="frequency_rotation"
                 android:persistent="true"
-                android:summary="Delay in microseconds between samples: 0 (fastest), 20000 (game), 60000 (UI), 200000 (normal)"
-                android:title="Update frequency" />
+                android:summary="5 Hz"
+                android:title="Sampling rate" />
+
         </PreferenceScreen>
         <PreferenceScreen
             android:key="screen"
@@ -466,14 +482,16 @@
                 android:persistent="true"
                 android:title="Active" />
 
-            <EditTextPreference
-                android:defaultValue="200000"
+            <ListPreference
                 android:dependency="status_temperature"
-                android:inputType="number"
+                android:defaultValue="0"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
                 android:key="frequency_temperature"
                 android:persistent="true"
-                android:summary="Delay in microseconds between samples: 0 (fastest), 20000 (game), 60000 (UI), 200000 (normal)"
-                android:title="Update frequency" />
+                android:summary="5 Hz"
+                android:title="Sampling rate" />
+
         </PreferenceScreen>
         <PreferenceScreen
             android:key="telephony"

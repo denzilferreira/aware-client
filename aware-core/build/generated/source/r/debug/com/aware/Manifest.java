@@ -9,6 +9,9 @@ package com.aware;
 
 public final class Manifest {
     public static final class permission {
+        /**  Uncomment for Android Wear 
+ <uses-feature android:name="android.hardware.type.watch" /> 
+         */
         public static final String READ_CONTEXT_DATA="com.aware.READ_CONTEXT_DATA";
         public static final String WRITE_CONTEXT_DATA="com.aware.WRITE_CONTEXT_DATA";
     }

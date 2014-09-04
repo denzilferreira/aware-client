@@ -1187,17 +1187,18 @@ public class Aware_Preferences extends PreferenceActivity {
                 return true;
             }
         });
-        
-        final EditTextPreference frequency_temperature = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_TEMPERATURE);
-        frequency_temperature.setText(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE));
+
+        final ListPreference frequency_temperature = (ListPreference) findPreference( FREQUENCY_TEMPERATURE );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE).length() > 0 ) {
-        	frequency_temperature.setSummary(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE) + " microseconds");
+            String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE);
+            frequency_temperature.setSummary(freq + " Hz");
         }
+        frequency_temperature.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_TEMPERATURE) );
         frequency_temperature.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE, (String) newValue);
-                frequency_temperature.setSummary((String) newValue + " microseconds");
+                Aware.setSetting(getApplicationContext(),FREQUENCY_TEMPERATURE, (String) newValue);
+                frequency_temperature.setSummary( (String)newValue + " Hz");
                 framework.startTemperature();
                 return true;
             }
@@ -1239,22 +1240,22 @@ public class Aware_Preferences extends PreferenceActivity {
                 return true;
             }
         });
-        
-        final EditTextPreference frequency_accelerometer = (EditTextPreference) findPreference( Aware_Preferences.FREQUENCY_ACCELEROMETER );
+
+        final ListPreference frequency_accelerometer = (ListPreference) findPreference( FREQUENCY_ACCELEROMETER );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER).length() > 0 ) {
-        	frequency_accelerometer.setSummary(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER) + " microseconds");
+            String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER);
+            frequency_accelerometer.setSummary(freq + " Hz");
         }
-        frequency_accelerometer.setText(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_ACCELEROMETER));
+        frequency_accelerometer.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_ACCELEROMETER) );
         frequency_accelerometer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_ACCELEROMETER, (String) newValue);
-                frequency_accelerometer.setSummary((String) newValue + " microseconds");
+                Aware.setSetting(getApplicationContext(),FREQUENCY_ACCELEROMETER, (String) newValue);
+                frequency_accelerometer.setSummary( (String)newValue + " Hz");
                 framework.startAccelerometer();
                 return true;
             }
         });
-        
     }
     
     /**
@@ -1291,22 +1292,22 @@ public class Aware_Preferences extends PreferenceActivity {
                 return true;
             }
         });
-        
-        final EditTextPreference frequency_linear_accelerometer = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER);
+
+        final ListPreference frequency_linear_accelerometer = (ListPreference) findPreference( FREQUENCY_LINEAR_ACCELEROMETER );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER).length() > 0 ) {
-        	frequency_linear_accelerometer.setSummary(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER) + " microseconds");
+            String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER);
+            frequency_linear_accelerometer.setSummary(freq + " Hz");
         }
-        frequency_linear_accelerometer.setText(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER));
+        frequency_linear_accelerometer.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_LINEAR_ACCELEROMETER) );
         frequency_linear_accelerometer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER, (String) newValue);
-                frequency_linear_accelerometer.setSummary((String) newValue + " microseconds");
+                Aware.setSetting(getApplicationContext(),FREQUENCY_LINEAR_ACCELEROMETER, (String) newValue);
+                frequency_linear_accelerometer.setSummary( (String)newValue + " Hz");
                 framework.startLinearAccelerometer();
                 return true;
             }
         });
-        
     }
     
     /**
@@ -1563,17 +1564,18 @@ public class Aware_Preferences extends PreferenceActivity {
                 return true;
             }
         });
-        
-        final EditTextPreference frequency_gravity = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_GRAVITY);
+
+        final ListPreference frequency_gravity = (ListPreference) findPreference( FREQUENCY_GRAVITY );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY).length() > 0 ) {
-        	frequency_gravity.setSummary(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY) + " microseconds");
+            String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY);
+            frequency_gravity.setSummary(freq + " Hz");
         }
-        frequency_gravity.setText(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_GRAVITY));
+        frequency_gravity.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_GRAVITY) );
         frequency_gravity.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_GRAVITY, (String) newValue);
-                frequency_gravity.setSummary((String) newValue + " microseconds");
+                Aware.setSetting(getApplicationContext(),FREQUENCY_GRAVITY, (String) newValue);
+                frequency_gravity.setSummary( (String)newValue + " Hz");
                 framework.startGravity();
                 return true;
             }
@@ -1613,22 +1615,22 @@ public class Aware_Preferences extends PreferenceActivity {
                 return true;
             }
         });
-        
-        final EditTextPreference frequency_gyroscope = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_GYROSCOPE);
+
+        final ListPreference frequency_gyroscope = (ListPreference) findPreference( FREQUENCY_GYROSCOPE );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE).length() > 0 ) {
-        	frequency_gyroscope.setSummary(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE) + " microseconds");
+            String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE);
+            frequency_gyroscope.setSummary(freq + " Hz");
         }
-        frequency_gyroscope.setText(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_GYROSCOPE));
+        frequency_gyroscope.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_GYROSCOPE) );
         frequency_gyroscope.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_GYROSCOPE, (String) newValue);
-                frequency_gyroscope.setSummary((String) newValue + " microseconds");
+                Aware.setSetting(getApplicationContext(),FREQUENCY_GYROSCOPE, (String) newValue);
+                frequency_gyroscope.setSummary( (String)newValue + " Hz");
                 framework.startGyroscope();
                 return true;
             }
         });
-        
     }
     
     /**
@@ -1974,22 +1976,22 @@ public class Aware_Preferences extends PreferenceActivity {
                 return true;
             }
         });
-        
-        final EditTextPreference frequency_light = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_LIGHT);
+
+        final ListPreference frequency_light = (ListPreference) findPreference( FREQUENCY_LIGHT );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT).length() > 0 ) {
-        	frequency_light.setSummary(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT) + " microseconds");
+            String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT);
+            frequency_light.setSummary(freq + " Hz");
         }
-        frequency_light.setText(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT));
+        frequency_light.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_LIGHT) );
         frequency_light.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LIGHT, (String) newValue);
-                frequency_light.setSummary((String) newValue + " microseconds");
+                Aware.setSetting(getApplicationContext(),FREQUENCY_LIGHT, (String) newValue);
+                frequency_light.setSummary( (String)newValue + " Hz");
                 framework.startLight();
                 return true;
             }
         });
-        
     }
     
     /**
@@ -2026,22 +2028,22 @@ public class Aware_Preferences extends PreferenceActivity {
                 return true;
             }
         });
-        
-        final EditTextPreference frequency_magnetometer = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_MAGNETOMETER);
+
+        final ListPreference frequency_magnetometer = (ListPreference) findPreference( FREQUENCY_MAGNETOMETER );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER).length() > 0 ) {
-        	frequency_magnetometer.setSummary(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER) + " microseconds");
+            String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER);
+            frequency_magnetometer.setSummary(freq + " Hz");
         }
-        frequency_magnetometer.setText(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER));
+        frequency_magnetometer.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_MAGNETOMETER) );
         frequency_magnetometer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER, (String) newValue);
-                frequency_magnetometer.setSummary((String) newValue + " microseconds");
+                Aware.setSetting(getApplicationContext(),FREQUENCY_MAGNETOMETER, (String) newValue);
+                frequency_magnetometer.setSummary( (String)newValue + " Hz");
                 framework.startMagnetometer();
                 return true;
             }
         });
-        
     }
     
     /**
@@ -2078,22 +2080,22 @@ public class Aware_Preferences extends PreferenceActivity {
                 return true;
             }
         });
-        
-        final EditTextPreference frequency_pressure = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_BAROMETER);
+
+        final ListPreference frequency_pressure = (ListPreference) findPreference( FREQUENCY_BAROMETER );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER).length() > 0 ) {
-        	frequency_pressure.setSummary(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER) + " microseconds");
+            String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER);
+            frequency_pressure.setSummary(freq + " Hz");
         }
-        frequency_pressure.setText(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER));
+        frequency_pressure.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_BAROMETER) );
         frequency_pressure.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER, (String) newValue);
-                frequency_pressure.setSummary((String) newValue + " microseconds");
+                Aware.setSetting(getApplicationContext(),FREQUENCY_BAROMETER, (String) newValue);
+                frequency_pressure.setSummary( (String)newValue + " Hz");
                 framework.startBarometer();
                 return true;
             }
         });
-        
     }
     
     /**
@@ -2131,17 +2133,18 @@ public class Aware_Preferences extends PreferenceActivity {
                 return true;
             }
         });
-        
-        final EditTextPreference frequency_proximity = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_PROXIMITY);
+
+        final ListPreference frequency_proximity = (ListPreference) findPreference( FREQUENCY_PROXIMITY );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY).length() > 0 ) {
-        	frequency_proximity.setSummary(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY) + " microseconds");
+            String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY);
+            frequency_proximity.setSummary(freq + " Hz");
         }
-        frequency_proximity.setText(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY));
+        frequency_proximity.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_PROXIMITY) );
         frequency_proximity.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY, (String) newValue);
-                frequency_proximity.setSummary((String) newValue + " microseconds");
+                Aware.setSetting(getApplicationContext(),FREQUENCY_PROXIMITY, (String) newValue);
+                frequency_proximity.setSummary( (String)newValue + " Hz");
                 framework.startProximity();
                 return true;
             }
@@ -2182,22 +2185,22 @@ public class Aware_Preferences extends PreferenceActivity {
                 return true;
             }
         });
-        
-        final EditTextPreference frequency_rotation = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_ROTATION);
+
+        final ListPreference frequency_rotation = (ListPreference) findPreference( FREQUENCY_ROTATION );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION).length() > 0 ) {
-        	frequency_rotation.setSummary(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION) + " microseconds");
+            String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION);
+            frequency_rotation.setSummary(freq + " Hz");
         }
-        frequency_rotation.setText(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION));
+        frequency_rotation.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_ROTATION) );
         frequency_rotation.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION, (String) newValue);
-                frequency_rotation.setSummary((String) newValue + " microseconds");
+                Aware.setSetting(getApplicationContext(),FREQUENCY_ROTATION, (String) newValue);
+                frequency_rotation.setSummary( (String)newValue + " Hz");
                 framework.startRotation();
                 return true;
             }
         });
-        
     }
     
     /**

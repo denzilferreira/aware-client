@@ -31,6 +31,7 @@ import com.aware.providers.Gyroscope_Provider;
 import com.aware.providers.Gyroscope_Provider.Gyroscope_Data;
 import com.aware.providers.Gyroscope_Provider.Gyroscope_Sensor;
 import com.aware.utils.Aware_Sensor;
+import com.aware.utils.Converters;
 
 /**
  * Service that logs gyroscope readings from the device
@@ -45,9 +46,9 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
     private static String TAG = "AWARE::Gyroscope";
     
     /**
-     * Sensor update frequency ( default = {@link SensorManager#SENSOR_DELAY_NORMAL})
+     * Sensor update frequency in Hz, default = 5
      */
-    private static int SENSOR_DELAY = 200000;
+    private static int SAMPLING_RATE = 5;
     
     private static SensorManager mSensorManager;
     private static Sensor mGyroscope;
@@ -144,13 +145,12 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
         }
         
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
-        try {
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE));
-        }catch(NumberFormatException e) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE, 200000);
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE));
+        if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_GYROSCOPE ).length() > 0 ) {
+            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE));
+        } else {
+            Aware.setSetting(this, Aware_Preferences.FREQUENCY_GYROSCOPE, SAMPLING_RATE);
         }
-        
+
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
         
@@ -158,7 +158,7 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
         wakeLock.acquire();
         
         sensorHandler = new Handler(sensorThread.getLooper());
-        mSensorManager.registerListener(this, mGyroscope, SENSOR_DELAY, sensorHandler);
+        mSensorManager.registerListener(this, mGyroscope, SAMPLING_RATE, sensorHandler);
         
         saveGyroscopeDevice(mGyroscope);
         
@@ -186,18 +186,14 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         
     	TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
-    	try {
-    		if(SENSOR_DELAY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE))) { //changed setting
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mGyroscope);
-                mSensorManager.registerListener(this, mGyroscope, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE)), sensorHandler);
-            }
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE));
-        }catch(NumberFormatException e) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE, 200000);
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE));
+
+        if(SAMPLING_RATE != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE))) { //changed setting
+            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE));
+            sensorHandler.removeCallbacksAndMessages(null);
+            mSensorManager.unregisterListener(this, mGyroscope);
+            mSensorManager.registerListener(this, mGyroscope, Converters.Hz2micro(SAMPLING_RATE), sensorHandler);
         }
-    	
+
         if(Aware.DEBUG) Log.d(TAG,"Gyroscope service active...");
         
         return START_STICKY;

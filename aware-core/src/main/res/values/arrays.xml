@@ -10,5 +10,18 @@
         <item >Weekly</item>
         <item >Monthly</item>
     </string-array>
-    
+    <string-array name="frequency_values">
+        <item>5</item>
+        <item>10</item>
+        <item>20</item>
+        <item>50</item>
+        <item>100</item>
+    </string-array>
+    <string-array name="frequency_readable">
+        <item>5 Hz</item>
+        <item>10 Hz</item>
+        <item>20 Hz</item>
+        <item>50 Hz</item>
+        <item>100 Hz</item>
+    </string-array>
 </resources>

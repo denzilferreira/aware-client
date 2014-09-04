@@ -31,6 +31,7 @@ import com.aware.providers.Magnetometer_Provider;
 import com.aware.providers.Magnetometer_Provider.Magnetometer_Data;
 import com.aware.providers.Magnetometer_Provider.Magnetometer_Sensor;
 import com.aware.utils.Aware_Sensor;
+import com.aware.utils.Converters;
 
 /**
  * AWARE Magnetometer module
@@ -47,9 +48,9 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
     private static String TAG = "AWARE::Magnetometer";
     
     /**
-     * Sensor update frequency ( default = {@link SensorManager#SENSOR_DELAY_NORMAL})
+     * Sensor update frequency in Hz, default = 5
      */
-    private static int SENSOR_DELAY = 200000;
+    private static int SAMPLING_RATE = 5;
     
     private static SensorManager mSensorManager;
     private static Sensor mMagnetometer;
@@ -146,11 +147,10 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
         }
         
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        try {
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_MAGNETOMETER));
-        } catch( NumberFormatException e ) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER, 200000);
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_MAGNETOMETER));
+        if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER).length() > 0 ) {
+            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_MAGNETOMETER));
+        } else {
+            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER, SAMPLING_RATE);
         }
         
         DATABASE_TABLES = Magnetometer_Provider.DATABASE_TABLES;
@@ -164,7 +164,7 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
         wakeLock.acquire();
         
         sensorHandler = new Handler(sensorThread.getLooper());
-        mSensorManager.registerListener(this, mMagnetometer, SENSOR_DELAY, sensorHandler);
+        mSensorManager.registerListener(this, mMagnetometer, SAMPLING_RATE, sensorHandler);
         
         saveSensorDevice(mMagnetometer);
         
@@ -188,16 +188,12 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        try {
-        	if(SENSOR_DELAY != Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_MAGNETOMETER))) {
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mMagnetometer);
-                mSensorManager.registerListener(this, mMagnetometer, Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_MAGNETOMETER)), sensorHandler);
-            }
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_MAGNETOMETER));
-        } catch( NumberFormatException e ) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER, 200000);
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_MAGNETOMETER));
+
+        if(SAMPLING_RATE != Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_MAGNETOMETER))) {
+            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_MAGNETOMETER));
+            sensorHandler.removeCallbacksAndMessages(null);
+            mSensorManager.unregisterListener(this, mMagnetometer);
+            mSensorManager.registerListener(this, mMagnetometer, Converters.Hz2micro(SAMPLING_RATE), sensorHandler);
         }
         
         if(Aware.DEBUG) Log.d(TAG,"Magnetometer service active...");

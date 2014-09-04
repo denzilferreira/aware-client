@@ -31,6 +31,7 @@ import com.aware.providers.Light_Provider;
 import com.aware.providers.Light_Provider.Light_Data;
 import com.aware.providers.Light_Provider.Light_Sensor;
 import com.aware.utils.Aware_Sensor;
+import com.aware.utils.Converters;
 
 /**
  * AWARE Light module
@@ -47,9 +48,9 @@ public class Light extends Aware_Sensor implements SensorEventListener {
     private static String TAG = "AWARE::Light";
     
     /**
-     * Sensor update frequency ( default = {@link SensorManager#SENSOR_DELAY_NORMAL})
+     * Sensor update frequency in Hz, default = 5
      */
-    private static int SENSOR_DELAY = 200000;
+    private static int SAMPLING_RATE = 5;
     
     private static SensorManager mSensorManager;
     private static Sensor mLight;
@@ -144,11 +145,10 @@ public class Light extends Aware_Sensor implements SensorEventListener {
         }
         
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        try {
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LIGHT));
-        } catch( NumberFormatException e ) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT, 200000);
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LIGHT));
+        if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_LIGHT).length() > 0 ) {
+            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LIGHT));
+        } else {
+            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT, SAMPLING_RATE);
         }
         
         sensorThread = new HandlerThread(TAG);
@@ -158,7 +158,7 @@ public class Light extends Aware_Sensor implements SensorEventListener {
         wakeLock.acquire();
         
         sensorHandler = new Handler(sensorThread.getLooper());
-        mSensorManager.registerListener(this, mLight, SENSOR_DELAY, sensorHandler);
+        mSensorManager.registerListener(this, mLight, SAMPLING_RATE, sensorHandler);
         
         saveSensorDevice(mLight);
         
@@ -186,18 +186,13 @@ public class Light extends Aware_Sensor implements SensorEventListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        try {
-        	if(SENSOR_DELAY != Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LIGHT))) {
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mLight);
-                mSensorManager.registerListener(this, mLight, Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LIGHT)), sensorHandler);
-            }
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LIGHT));
-        } catch( NumberFormatException e ) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT, 200000);
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LIGHT));
+
+        if(SAMPLING_RATE != Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LIGHT))) {
+            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LIGHT));
+            sensorHandler.removeCallbacksAndMessages(null);
+            mSensorManager.unregisterListener(this, mLight);
+            mSensorManager.registerListener(this, mLight, Converters.Hz2micro(SAMPLING_RATE), sensorHandler);
         }
-        
         if(Aware.DEBUG) Log.d(TAG,"Light service active...");
         
         return START_STICKY;

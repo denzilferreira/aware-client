@@ -31,6 +31,7 @@ import com.aware.providers.Barometer_Provider;
 import com.aware.providers.Barometer_Provider.Barometer_Data;
 import com.aware.providers.Barometer_Provider.Barometer_Sensor;
 import com.aware.utils.Aware_Sensor;
+import com.aware.utils.Converters;
 
 /**
  * AWARE Barometer module
@@ -42,9 +43,9 @@ import com.aware.utils.Aware_Sensor;
 public class Barometer extends Aware_Sensor implements SensorEventListener {
     
     /**
-     * Sensor update frequency ( default = {@link SensorManager#SENSOR_DELAY_NORMAL})
+     * Sensor update frequency in Hz, default = 5)
      */
-    private static int SENSOR_DELAY = 200000;
+    private static int SAMPLING_RATE = 5;
     
     private static SensorManager mSensorManager;
     private static Sensor mPressure;
@@ -141,13 +142,12 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
         }
         
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        try {
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_BAROMETER));
-        }catch(NumberFormatException e) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER, 200000);
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_BAROMETER));
+        if( Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_BAROMETER).length() > 0 ) {
+            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_BAROMETER));
+        } else {
+            Aware.setSetting(this, Aware_Preferences.FREQUENCY_BAROMETER, SAMPLING_RATE);
         }
-        
+
         DATABASE_TABLES = Barometer_Provider.DATABASE_TABLES;
         TABLES_FIELDS = Barometer_Provider.TABLES_FIELDS;
         CONTEXT_URIS = new Uri[]{ Barometer_Sensor.CONTENT_URI, Barometer_Data.CONTENT_URI };
@@ -159,7 +159,7 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
         wakeLock.acquire();
         
         sensorHandler = new Handler(sensorThread.getLooper());
-        mSensorManager.registerListener(this, mPressure, SENSOR_DELAY, sensorHandler);
+        mSensorManager.registerListener(this, mPressure, Converters.Hz2micro(SAMPLING_RATE), sensorHandler);
         
         saveSensorDevice(mPressure);
         
@@ -183,18 +183,14 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        try {
-        	if(SENSOR_DELAY != Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_BAROMETER))) { //changed setting
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mPressure);
-                mSensorManager.registerListener(this, mPressure, Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_BAROMETER)), sensorHandler);
-            }
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_BAROMETER));
-        }catch(NumberFormatException e) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER, 200000);
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_BAROMETER));
+
+        if(SAMPLING_RATE != Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_BAROMETER))) { //changed setting
+            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_BAROMETER));
+            sensorHandler.removeCallbacksAndMessages(null);
+            mSensorManager.unregisterListener(this, mPressure);
+            mSensorManager.registerListener(this, mPressure, Converters.Hz2micro(SAMPLING_RATE), sensorHandler);
         }
-        
+
         if(Aware.DEBUG) Log.d(TAG,"Barometer service active...");
         
         return START_STICKY;

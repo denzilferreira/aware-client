@@ -13,6 +13,7 @@ package com.aware;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.hardware.Sensor;
@@ -31,6 +32,7 @@ import com.aware.providers.Accelerometer_Provider;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Data;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Sensor;
 import com.aware.utils.Aware_Sensor;
+import com.aware.utils.Converters;
 
 /**
  * AWARE Accelerometer module
@@ -47,10 +49,10 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     private static String TAG = "AWARE::Accelerometer";
     
     /**
-     * Sensor update frequency ( default = {@link SensorManager#SENSOR_DELAY_NORMAL})
+     * Sensor update frequency in Hz, default = 5)
      */
-    private static int SENSOR_DELAY = 200000;
-    
+    private static int SAMPLING_RATE = 5;
+
     private static SensorManager mSensorManager;
     private static Sensor mAccelerometer;
     private static HandlerThread sensorThread = null;
@@ -98,7 +100,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
             if(Aware.DEBUG) Log.d(TAG,e.getMessage());
         }
     }
-    
+
     private void saveAccelerometerDevice(Sensor acc) {
         Cursor accelInfo = getContentResolver().query(Accelerometer_Sensor.CONTENT_URI, null, null, null, null);
         if( accelInfo == null || ! accelInfo.moveToFirst() ) {
@@ -146,13 +148,13 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         }
         
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        try {
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_ACCELEROMETER));
-        } catch ( NumberFormatException e) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER, 200000);
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER));
+
+        if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER).length() > 0 ) {
+            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_ACCELEROMETER));
+        } else {
+            Aware.setSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER, SAMPLING_RATE);
         }
-        
+
         DATABASE_TABLES = Accelerometer_Provider.DATABASE_TABLES;
     	TABLES_FIELDS = Accelerometer_Provider.TABLES_FIELDS;
     	CONTEXT_URIS = new Uri[]{ Accelerometer_Sensor.CONTENT_URI, Accelerometer_Data.CONTENT_URI };
@@ -164,7 +166,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         wakeLock.acquire();
         
         sensorHandler = new Handler(sensorThread.getLooper());
-        mSensorManager.registerListener(this, mAccelerometer, SENSOR_DELAY, sensorHandler);
+        mSensorManager.registerListener(this, mAccelerometer, Converters.Hz2micro(SAMPLING_RATE), sensorHandler);
         
         saveAccelerometerDevice(mAccelerometer);
         
@@ -183,24 +185,20 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         
         if(Aware.DEBUG) Log.d(TAG,"Accelerometer service terminated...");
     }
-    
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         
         TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        try {
-        	if( SENSOR_DELAY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER))) { //changed parameters
-        		sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mAccelerometer);
-                mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), sensorHandler);
-        	}
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_ACCELEROMETER));
-        }catch ( NumberFormatException e) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER, 200000);
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_ACCELEROMETER));
+
+        if( SAMPLING_RATE != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)) ) { //changed parameters
+            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER));
+            sensorHandler.removeCallbacksAndMessages(null);
+            mSensorManager.unregisterListener(this, mAccelerometer);
+            mSensorManager.registerListener(this, mAccelerometer, Converters.Hz2micro(SAMPLING_RATE), sensorHandler);
         }
-        
-        if(Aware.DEBUG) Log.d(TAG,"Accelerometer service active...");
+
+        if(Aware.DEBUG) Log.d(TAG,"Accelerometer service active at " + SAMPLING_RATE + " Hz...");
         
         return START_STICKY;
     }

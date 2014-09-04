@@ -31,6 +31,7 @@ import com.aware.providers.Temperature_Provider;
 import com.aware.providers.Temperature_Provider.Temperature_Data;
 import com.aware.providers.Temperature_Provider.Temperature_Sensor;
 import com.aware.utils.Aware_Sensor;
+import com.aware.utils.Converters;
 
 /**
  * AWARE Temperature module
@@ -46,9 +47,9 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
     private static String TAG = "AWARE::Temperature";
     
     /**
-     * Sensor update frequency ( default = {@link SensorManager#SENSOR_DELAY_NORMAL})
+     * Sensor update frequency in Hz, default = 5
      */
-    private static int SENSOR_DELAY = 200000;
+    private static int SAMPLING_RATE = 5;
     
     private static SensorManager mSensorManager;
     private static Sensor mTemperature;
@@ -131,11 +132,10 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
         }
     
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        try {
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_TEMPERATURE));
-        } catch( NumberFormatException e ) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE, 200000);
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_TEMPERATURE));
+        if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_TEMPERATURE).length() > 0 ) {
+            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_TEMPERATURE));
+        } else {
+            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE, SAMPLING_RATE);
         }
         
         sensorThread = new HandlerThread(TAG);
@@ -145,7 +145,7 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
         wakeLock.acquire();
         
         sensorHandler = new Handler(sensorThread.getLooper());
-        mSensorManager.registerListener(this, mTemperature, SENSOR_DELAY, sensorHandler);
+        mSensorManager.registerListener(this, mTemperature, SAMPLING_RATE, sensorHandler);
         
         saveSensorDevice(mTemperature);
         
@@ -174,18 +174,14 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        try {
-        	if(SENSOR_DELAY != Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_TEMPERATURE))) {
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mTemperature);
-                mSensorManager.registerListener(this, mTemperature, Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_TEMPERATURE)), sensorHandler);
-            }
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_TEMPERATURE));
-        } catch( NumberFormatException e ) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE, 200000);
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_TEMPERATURE));
+
+        if(SAMPLING_RATE != Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_TEMPERATURE))) {
+            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_TEMPERATURE));
+            sensorHandler.removeCallbacksAndMessages(null);
+            mSensorManager.unregisterListener(this, mTemperature);
+            mSensorManager.registerListener(this, mTemperature, Converters.Hz2micro(SAMPLING_RATE), sensorHandler);
         }
-        
+
         if(Aware.DEBUG) Log.d(TAG,"Temperature service active...");
         
         return START_STICKY;

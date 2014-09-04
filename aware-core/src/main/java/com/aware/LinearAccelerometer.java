@@ -31,6 +31,7 @@ import com.aware.providers.Linear_Accelerometer_Provider;
 import com.aware.providers.Linear_Accelerometer_Provider.Linear_Accelerometer_Data;
 import com.aware.providers.Linear_Accelerometer_Provider.Linear_Accelerometer_Sensor;
 import com.aware.utils.Aware_Sensor;
+import com.aware.utils.Converters;
 
 /**
  * AWARE Linear-accelerometer module: 
@@ -49,9 +50,9 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
     private static String TAG = "AWARE::Linear Accelerometer";
     
     /**
-     * Sensor update frequency ( default = {@link SensorManager#SENSOR_DELAY_NORMAL})
+     * Sensor update frequency in Hz, default = 5
      */
-    private static int SENSOR_DELAY = 200000;
+    private static int SAMPLING_RATE = 5;
     
     private static SensorManager mSensorManager;
     private static Sensor mLinearAccelerator;
@@ -148,11 +149,10 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
         }
         
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        try {
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER));
-        } catch( NumberFormatException e ) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER, 200000);
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER));
+        if(Aware.getSetting(this, Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER).length() > 0 ) {
+            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER));
+        } else {
+            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER, SAMPLING_RATE);
         }
         
         sensorThread = new HandlerThread(TAG);
@@ -162,7 +162,7 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
         wakeLock.acquire();
         
         sensorHandler = new Handler(sensorThread.getLooper());
-        mSensorManager.registerListener(this, mLinearAccelerator, SENSOR_DELAY, sensorHandler);
+        mSensorManager.registerListener(this, mLinearAccelerator, SAMPLING_RATE, sensorHandler);
         
         saveAccelerometerDevice(mLinearAccelerator);
         
@@ -190,18 +190,13 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
     public int onStartCommand(Intent intent, int flags, int startId) {
         
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        try {
-        	if(SENSOR_DELAY != Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER))) {
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mLinearAccelerator);
-                mSensorManager.registerListener(this, mLinearAccelerator, Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER)), sensorHandler);
-            }
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER));
-        } catch( NumberFormatException e ) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER, 200000);
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER));
+        if(SAMPLING_RATE != Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER))) {
+            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER));
+            sensorHandler.removeCallbacksAndMessages(null);
+            mSensorManager.unregisterListener(this, mLinearAccelerator);
+            mSensorManager.registerListener(this, mLinearAccelerator, Converters.Hz2micro(SAMPLING_RATE), sensorHandler);
         }
-        
+
         if(Aware.DEBUG) Log.d(TAG,"Linear-accelerometer service active...");
         
         return START_STICKY;

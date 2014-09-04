@@ -31,6 +31,7 @@ import com.aware.providers.Proximity_Provider;
 import com.aware.providers.Proximity_Provider.Proximity_Data;
 import com.aware.providers.Proximity_Provider.Proximity_Sensor;
 import com.aware.utils.Aware_Sensor;
+import com.aware.utils.Converters;
 
 /**
  * AWARE Proximity module
@@ -42,9 +43,9 @@ import com.aware.utils.Aware_Sensor;
 public class Proximity extends Aware_Sensor implements SensorEventListener {
     
     /**
-     * Sensor update frequency ( default = {@link SensorManager#SENSOR_DELAY_NORMAL})
+     * Sensor update frequency in Hz, default = 5
      */
-    private static int SENSOR_DELAY = 200000;
+    private static int SAMPLING_RATE = 5;
     
     private static SensorManager mSensorManager;
     private static Sensor mProximity;
@@ -141,11 +142,10 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
         }
         
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        try {
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROXIMITY));
-        } catch( NumberFormatException e ) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY, 200000);
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROXIMITY));
+        if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY).length() > 0 ) {
+            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROXIMITY));
+        } else {
+            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY, SAMPLING_RATE);
         }
         
         sensorThread = new HandlerThread(TAG);
@@ -155,7 +155,7 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
         wakeLock.acquire();
         
         sensorHandler = new Handler(sensorThread.getLooper());
-        mSensorManager.registerListener(this, mProximity, SENSOR_DELAY, sensorHandler);
+        mSensorManager.registerListener(this, mProximity, SAMPLING_RATE, sensorHandler);
         
         saveSensorDevice(mProximity);
         
@@ -183,18 +183,14 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):"AWARE::Proximity";
-        try {
-        	if(SENSOR_DELAY != Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROXIMITY))) {
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mProximity);
-                mSensorManager.registerListener(this, mProximity, Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROXIMITY)), sensorHandler);
-            }
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROXIMITY));
-        } catch( NumberFormatException e ) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY, 200000);
-            SENSOR_DELAY = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROXIMITY));
+
+        if(SAMPLING_RATE != Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROXIMITY))) {
+            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROXIMITY));
+            sensorHandler.removeCallbacksAndMessages(null);
+            mSensorManager.unregisterListener(this, mProximity);
+            mSensorManager.registerListener(this, mProximity, Converters.Hz2micro(SAMPLING_RATE), sensorHandler);
         }
-        
+
         if(Aware.DEBUG) Log.d(TAG,"Proximity service active...");
         
         return START_STICKY;

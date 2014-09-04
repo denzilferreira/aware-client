@@ -27,7 +27,7 @@ public class Converters {
 	
 	/**
 	 * Checks if the string is a number
-	 * @param String
+	 * @param str
 	 * @return boolean
 	 */
 	public static boolean isNumeric(String str)
@@ -40,16 +40,7 @@ public class Converters {
      * @param Hz
      * @return long
      */
-    public static long Hz2micro(long Hz) {
-        return Hz * 1000;
-    }
-
-    /**
-     * Converts microseconds to Hz
-     * @param microseconds
-     * @return long
-     */
-    public static long micro2Hz(long microseconds) {
-        return microseconds / 1000;
+    public static int Hz2micro(int Hz) {
+        return (1/Hz) * 1000000;
     }
 }
