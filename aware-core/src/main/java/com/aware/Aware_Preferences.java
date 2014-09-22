@@ -558,7 +558,7 @@ public class Aware_Preferences extends PreferenceActivity {
             @Override
             public void onDrawerClosed(View drawerView) {
                 super.onDrawerClosed(drawerView);
-                if ( Build.VERSION.SDK_INT > 11 ) {
+                if ( Build.VERSION.SDK_INT > 11 && getActionBar() != null ) {
                     getActionBar().setTitle(getTitle());
                     invalidateOptionsMenu();
                 }
@@ -567,7 +567,7 @@ public class Aware_Preferences extends PreferenceActivity {
             @Override
             public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
-                if( Build.VERSION.SDK_INT > 11 ) {
+                if( Build.VERSION.SDK_INT > 11 && getActionBar() != null ) {
                     getActionBar().setTitle(getTitle());
                     invalidateOptionsMenu();
                 }
