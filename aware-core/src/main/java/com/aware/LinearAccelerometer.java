@@ -50,9 +50,9 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
     private static String TAG = "AWARE::Linear Accelerometer";
     
     /**
-     * Sensor update frequency in Hz, default = 5
+     * Sensor update frequency in microseconds, default 200000
      */
-    private static int SAMPLING_RATE = 5;
+    private static int SAMPLING_RATE = 200000;
     
     private static SensorManager mSensorManager;
     private static Sensor mLinearAccelerator;
@@ -194,7 +194,7 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
             SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER));
             sensorHandler.removeCallbacksAndMessages(null);
             mSensorManager.unregisterListener(this, mLinearAccelerator);
-            mSensorManager.registerListener(this, mLinearAccelerator, Converters.Hz2micro(SAMPLING_RATE), sensorHandler);
+            mSensorManager.registerListener(this, mLinearAccelerator, SAMPLING_RATE, sensorHandler);
         }
 
         if(Aware.DEBUG) Log.d(TAG,"Linear-accelerometer service active...");

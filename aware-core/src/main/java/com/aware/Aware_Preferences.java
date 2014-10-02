@@ -30,6 +30,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ServiceInfo;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
@@ -61,6 +62,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.aware.providers.Aware_Provider;
 import com.aware.providers.Aware_Provider.Aware_Settings;
 import com.aware.ui.CameraStudy;
 import com.aware.ui.Plugins_Manager;
@@ -101,6 +103,11 @@ public class Aware_Preferences extends PreferenceActivity {
     private static final int DIALOG_ERROR_ACCESSIBILITY = 1;
     private static final int DIALOG_ERROR_MISSING_PARAMETERS = 2;
     private static final int DIALOG_ERROR_MISSING_SENSOR = 3;
+
+    /**
+     * Used to disable sensors that are not applicable
+     */
+    private static boolean is_watch = false;
     
     //Request ID for joining study
     public static final int REQUEST_JOIN_STUDY = 1;
@@ -492,9 +499,13 @@ public class Aware_Preferences extends PreferenceActivity {
      * 2 - monthly<br/>
      */
     public static final String FREQUENCY_CLEAN_OLD_DATA = "frequency_clean_old_data";
-    
+
+    /**
+     * Activate/deactivate Android Wear data synching
+     */
+    public static final String STATUS_ANDROID_WEAR = "status_android_wear";
+
     private static boolean is_refreshing = false;
-    private static boolean is_first_time = false;
 
     @Override
     protected Dialog onCreateDialog(int id) {
@@ -544,6 +555,12 @@ public class Aware_Preferences extends PreferenceActivity {
         super.onCreate(savedInstanceState);
         
         mSensorMgr = (SensorManager) getSystemService(SENSOR_SERVICE);
+
+        Cursor device = getContentResolver().query(Aware_Provider.Aware_Device.CONTENT_URI, null, null, null, "1 LIMIT 1");
+        if( device != null && device.moveToFirst() ) {
+            is_watch = device.getInt(device.getColumnIndex(Aware_Provider.Aware_Device.SDK))==20; //TODO: check if there is a better way to detect a watch...
+        }
+        if( device != null && ! device.isClosed() ) device.close();
         
         //Start the Aware
         Intent startAware = new Intent( getApplicationContext(), Aware.class );
@@ -629,8 +646,7 @@ public class Aware_Preferences extends PreferenceActivity {
 
         SharedPreferences prefs = getSharedPreferences( getPackageName(), Context.MODE_PRIVATE );
     	if( prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0 ) {
-            is_first_time = true;
-    		PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
+            PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
     		prefs.edit().commit(); //commit changes
     	} else {
     		PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, false);
@@ -776,9 +792,6 @@ public class Aware_Preferences extends PreferenceActivity {
     	if( ! is_refreshing ) {
     		new Async_SensorLoading().execute();
     	}
-    	if( Aware.getSetting(getApplicationContext(), "study_id").length() == 0 ) {
-            if( is_first_time ) navigationDrawer.openDrawer(android.view.Gravity.LEFT);
-        }
 
         if( Aware.getSetting( getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && ! isAccessibilityServiceActive() ) {
             Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
@@ -1138,6 +1151,12 @@ public class Aware_Preferences extends PreferenceActivity {
      * ESM module settings UI
      */
     private void esm() {
+        final PreferenceScreen mobile_esm = (PreferenceScreen) findPreference("esm");
+        if( is_watch ) {
+            mobile_esm.setEnabled(false);
+            return;
+        }
+
         final CheckBoxPreference esm = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_ESM);
         esm.setChecked(Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_ESM).equals("true"));
         esm.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -1163,7 +1182,9 @@ public class Aware_Preferences extends PreferenceActivity {
     	if( temp != null ) {
     		temp_pref.setSummary(temp_pref.getSummary().toString().replace("*", " - Power: " + temp.getPower() +" mA"));
     	} else {
-    		temp_pref.setSummary(temp_pref.getSummary().toString().replace("*", ""));
+            temp_pref.setSummary(temp_pref.getSummary().toString().replace("*", ""));
+            temp_pref.setEnabled(false);
+            return;
     	}
     	
     	final CheckBoxPreference temperature = (CheckBoxPreference) findPreference( Aware_Preferences.STATUS_TEMPERATURE );
@@ -1191,14 +1212,14 @@ public class Aware_Preferences extends PreferenceActivity {
         final ListPreference frequency_temperature = (ListPreference) findPreference( FREQUENCY_TEMPERATURE );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE).length() > 0 ) {
             String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE);
-            frequency_temperature.setSummary(freq + " Hz");
+            frequency_temperature.setSummary(freq);
         }
         frequency_temperature.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_TEMPERATURE) );
         frequency_temperature.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 Aware.setSetting(getApplicationContext(),FREQUENCY_TEMPERATURE, (String) newValue);
-                frequency_temperature.setSummary( (String)newValue + " Hz");
+                frequency_temperature.setSummary( (String)newValue);
                 framework.startTemperature();
                 return true;
             }
@@ -1215,7 +1236,9 @@ public class Aware_Preferences extends PreferenceActivity {
     	if( temp != null ) {
     		accel_pref.setSummary(accel_pref.getSummary().toString().replace("*", " - Power: " + temp.getPower() +" mA"));
     	} else {
-    		accel_pref.setSummary(accel_pref.getSummary().toString().replace("*", ""));
+            accel_pref.setSummary(accel_pref.getSummary().toString().replace("*", ""));
+            accel_pref.setEnabled(false);
+            return;
     	}
     	
     	final CheckBoxPreference accelerometer = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_ACCELEROMETER);
@@ -1244,14 +1267,14 @@ public class Aware_Preferences extends PreferenceActivity {
         final ListPreference frequency_accelerometer = (ListPreference) findPreference( FREQUENCY_ACCELEROMETER );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER).length() > 0 ) {
             String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER);
-            frequency_accelerometer.setSummary(freq + " Hz");
+            frequency_accelerometer.setSummary(freq);
         }
         frequency_accelerometer.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_ACCELEROMETER) );
         frequency_accelerometer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 Aware.setSetting(getApplicationContext(),FREQUENCY_ACCELEROMETER, (String) newValue);
-                frequency_accelerometer.setSummary( (String)newValue + " Hz");
+                frequency_accelerometer.setSummary( (String)newValue);
                 framework.startAccelerometer();
                 return true;
             }
@@ -1269,6 +1292,8 @@ public class Aware_Preferences extends PreferenceActivity {
     		linear_pref.setSummary(linear_pref.getSummary().toString().replace("*", " - Power: " + temp.getPower() +" mA"));
     	} else {
     		linear_pref.setSummary(linear_pref.getSummary().toString().replace("*", ""));
+            linear_pref.setEnabled(false);
+            return;
     	}
     	
     	final CheckBoxPreference linear_accelerometer = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_LINEAR_ACCELEROMETER);
@@ -1296,14 +1321,14 @@ public class Aware_Preferences extends PreferenceActivity {
         final ListPreference frequency_linear_accelerometer = (ListPreference) findPreference( FREQUENCY_LINEAR_ACCELEROMETER );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER).length() > 0 ) {
             String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER);
-            frequency_linear_accelerometer.setSummary(freq + " Hz");
+            frequency_linear_accelerometer.setSummary(freq);
         }
         frequency_linear_accelerometer.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_LINEAR_ACCELEROMETER) );
         frequency_linear_accelerometer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 Aware.setSetting(getApplicationContext(),FREQUENCY_LINEAR_ACCELEROMETER, (String) newValue);
-                frequency_linear_accelerometer.setSummary( (String)newValue + " Hz");
+                frequency_linear_accelerometer.setSummary( (String)newValue);
                 framework.startLinearAccelerometer();
                 return true;
             }
@@ -1485,6 +1510,12 @@ public class Aware_Preferences extends PreferenceActivity {
      * Communication module settings UI
      */
     private void communication() {
+        final PreferenceScreen communications = (PreferenceScreen) findPreference("communication");
+        if( is_watch ) {
+            communications.setEnabled(false);
+            return;
+        }
+
         final CheckBoxPreference calls = (CheckBoxPreference) findPreference( Aware_Preferences.STATUS_CALLS );
         calls.setChecked(Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_CALLS).equals("true"));
         calls.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -1541,6 +1572,8 @@ public class Aware_Preferences extends PreferenceActivity {
     		grav_pref.setSummary(grav_pref.getSummary().toString().replace("*", " - Power: " + temp.getPower() +" mA"));
     	} else {
     		grav_pref.setSummary(grav_pref.getSummary().toString().replace("*", ""));
+            grav_pref.setEnabled(false);
+            return;
     	}
     	
     	final CheckBoxPreference gravity = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_GRAVITY);
@@ -1568,14 +1601,14 @@ public class Aware_Preferences extends PreferenceActivity {
         final ListPreference frequency_gravity = (ListPreference) findPreference( FREQUENCY_GRAVITY );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY).length() > 0 ) {
             String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY);
-            frequency_gravity.setSummary(freq + " Hz");
+            frequency_gravity.setSummary(freq);
         }
         frequency_gravity.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_GRAVITY) );
         frequency_gravity.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 Aware.setSetting(getApplicationContext(),FREQUENCY_GRAVITY, (String) newValue);
-                frequency_gravity.setSummary( (String)newValue + " Hz");
+                frequency_gravity.setSummary( (String)newValue);
                 framework.startGravity();
                 return true;
             }
@@ -1592,6 +1625,8 @@ public class Aware_Preferences extends PreferenceActivity {
     		gyro_pref.setSummary(gyro_pref.getSummary().toString().replace("*", " - Power: " + temp.getPower() +" mA"));
     	} else {
     		gyro_pref.setSummary(gyro_pref.getSummary().toString().replace("*", ""));
+            gyro_pref.setEnabled(false);
+            return;
     	}
         
     	final CheckBoxPreference gyroscope = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_GYROSCOPE);
@@ -1619,14 +1654,14 @@ public class Aware_Preferences extends PreferenceActivity {
         final ListPreference frequency_gyroscope = (ListPreference) findPreference( FREQUENCY_GYROSCOPE );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE).length() > 0 ) {
             String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE);
-            frequency_gyroscope.setSummary(freq + " Hz");
+            frequency_gyroscope.setSummary(freq);
         }
         frequency_gyroscope.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_GYROSCOPE) );
         frequency_gyroscope.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 Aware.setSetting(getApplicationContext(),FREQUENCY_GYROSCOPE, (String) newValue);
-                frequency_gyroscope.setSummary( (String)newValue + " Hz");
+                frequency_gyroscope.setSummary( (String)newValue);
                 framework.startGyroscope();
                 return true;
             }
@@ -1637,6 +1672,12 @@ public class Aware_Preferences extends PreferenceActivity {
      * Location module settings UI
      */
     private void locations() {
+        final PreferenceScreen locations = (PreferenceScreen) findPreference("locations");
+        if( is_watch ) {
+            locations.setEnabled(false);
+            return;
+        }
+
         final CheckBoxPreference location_gps = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_LOCATION_GPS);
         location_gps.setChecked(Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_LOCATION_GPS).equals("true"));
         location_gps.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -1769,6 +1810,12 @@ public class Aware_Preferences extends PreferenceActivity {
      * Network module settings UI
      */
     private void network() {
+        final PreferenceScreen networks = (PreferenceScreen) findPreference("network");
+        if( is_watch ) {
+            networks.setEnabled(false);
+            return;
+        }
+
         final CheckBoxPreference network_traffic = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_NETWORK_TRAFFIC);
         network_traffic.setChecked(Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_NETWORK_TRAFFIC).equals("true"));
         network_traffic.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -1841,6 +1888,12 @@ public class Aware_Preferences extends PreferenceActivity {
      * WiFi module settings UI
      */
     private void wifi() {
+        final PreferenceScreen wifis = (PreferenceScreen) findPreference("wifi");
+        if( is_watch ) {
+            wifis.setEnabled(false);
+            return;
+        }
+
         final CheckBoxPreference wifi = (CheckBoxPreference) findPreference( Aware_Preferences.STATUS_WIFI );
         wifi.setChecked(Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WIFI).equals("true"));
         wifi.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -1911,6 +1964,12 @@ public class Aware_Preferences extends PreferenceActivity {
      * TimeZone module settings UI
      */
     private void timeZone() {
+        final PreferenceScreen timezones = (PreferenceScreen) findPreference("timezone");
+        if( is_watch ) {
+            timezones.setEnabled(false);
+            return;
+        }
+
         final CheckBoxPreference timeZone = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_TIMEZONE);
         timeZone.setChecked(Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_TIMEZONE).equals("true"));
         timeZone.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -1953,6 +2012,8 @@ public class Aware_Preferences extends PreferenceActivity {
     		light_pref.setSummary(light_pref.getSummary().toString().replace("*", " - Power: " + temp.getPower() +" mA"));
     	} else {
     		light_pref.setSummary(light_pref.getSummary().toString().replace("*", ""));
+            light_pref.setEnabled(false);
+            return;
     	}
     	
     	final CheckBoxPreference light = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_LIGHT);
@@ -1980,14 +2041,14 @@ public class Aware_Preferences extends PreferenceActivity {
         final ListPreference frequency_light = (ListPreference) findPreference( FREQUENCY_LIGHT );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT).length() > 0 ) {
             String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT);
-            frequency_light.setSummary(freq + " Hz");
+            frequency_light.setSummary(freq);
         }
-        frequency_light.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_LIGHT) );
+        frequency_light.setDefaultValue(Aware.getSetting(getApplicationContext(), FREQUENCY_LIGHT));
         frequency_light.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 Aware.setSetting(getApplicationContext(),FREQUENCY_LIGHT, (String) newValue);
-                frequency_light.setSummary( (String)newValue + " Hz");
+                frequency_light.setSummary( (String)newValue);
                 framework.startLight();
                 return true;
             }
@@ -2004,6 +2065,8 @@ public class Aware_Preferences extends PreferenceActivity {
     		magno_pref.setSummary(magno_pref.getSummary().toString().replace("*", " - Power: " + temp.getPower() +" mA"));
     	} else {
     		magno_pref.setSummary(magno_pref.getSummary().toString().replace("*", ""));
+            magno_pref.setEnabled(false);
+            return;
     	}
     	
     	final CheckBoxPreference magnetometer = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_MAGNETOMETER);
@@ -2032,14 +2095,14 @@ public class Aware_Preferences extends PreferenceActivity {
         final ListPreference frequency_magnetometer = (ListPreference) findPreference( FREQUENCY_MAGNETOMETER );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER).length() > 0 ) {
             String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER);
-            frequency_magnetometer.setSummary(freq + " Hz");
+            frequency_magnetometer.setSummary(freq);
         }
         frequency_magnetometer.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_MAGNETOMETER) );
         frequency_magnetometer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 Aware.setSetting(getApplicationContext(),FREQUENCY_MAGNETOMETER, (String) newValue);
-                frequency_magnetometer.setSummary( (String)newValue + " Hz");
+                frequency_magnetometer.setSummary( (String)newValue);
                 framework.startMagnetometer();
                 return true;
             }
@@ -2056,6 +2119,8 @@ public class Aware_Preferences extends PreferenceActivity {
     		baro_pref.setSummary(baro_pref.getSummary().toString().replace("*", " - Power: " + temp.getPower() +" mA"));
     	} else {
     		baro_pref.setSummary(baro_pref.getSummary().toString().replace("*", ""));
+            baro_pref.setEnabled(false);
+            return;
     	}
     	
     	final CheckBoxPreference pressure = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_BAROMETER);
@@ -2084,14 +2149,14 @@ public class Aware_Preferences extends PreferenceActivity {
         final ListPreference frequency_pressure = (ListPreference) findPreference( FREQUENCY_BAROMETER );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER).length() > 0 ) {
             String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER);
-            frequency_pressure.setSummary(freq + " Hz");
+            frequency_pressure.setSummary(freq);
         }
         frequency_pressure.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_BAROMETER) );
         frequency_pressure.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 Aware.setSetting(getApplicationContext(),FREQUENCY_BAROMETER, (String) newValue);
-                frequency_pressure.setSummary( (String)newValue + " Hz");
+                frequency_pressure.setSummary( (String)newValue);
                 framework.startBarometer();
                 return true;
             }
@@ -2109,6 +2174,8 @@ public class Aware_Preferences extends PreferenceActivity {
     		proxi_pref.setSummary(proxi_pref.getSummary().toString().replace("*", " - Power: " + temp.getPower() +" mA"));
     	} else {
     		proxi_pref.setSummary(proxi_pref.getSummary().toString().replace("*", ""));
+            proxi_pref.setEnabled(false);
+            return;
     	}
     	
     	final CheckBoxPreference proximity = (CheckBoxPreference) findPreference( Aware_Preferences.STATUS_PROXIMITY);
@@ -2137,14 +2204,14 @@ public class Aware_Preferences extends PreferenceActivity {
         final ListPreference frequency_proximity = (ListPreference) findPreference( FREQUENCY_PROXIMITY );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY).length() > 0 ) {
             String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY);
-            frequency_proximity.setSummary(freq + " Hz");
+            frequency_proximity.setSummary(freq);
         }
         frequency_proximity.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_PROXIMITY) );
         frequency_proximity.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 Aware.setSetting(getApplicationContext(),FREQUENCY_PROXIMITY, (String) newValue);
-                frequency_proximity.setSummary( (String)newValue + " Hz");
+                frequency_proximity.setSummary( (String)newValue);
                 framework.startProximity();
                 return true;
             }
@@ -2162,6 +2229,8 @@ public class Aware_Preferences extends PreferenceActivity {
     		rotation_pref.setSummary(rotation_pref.getSummary().toString().replace("*", " - Power: " + temp.getPower() +" mA"));
     	} else {
     		rotation_pref.setSummary(rotation_pref.getSummary().toString().replace("*", ""));
+            rotation_pref.setEnabled(false);
+            return;
     	}
     	
     	final CheckBoxPreference rotation = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_ROTATION);
@@ -2189,14 +2258,14 @@ public class Aware_Preferences extends PreferenceActivity {
         final ListPreference frequency_rotation = (ListPreference) findPreference( FREQUENCY_ROTATION );
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION).length() > 0 ) {
             String freq = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION);
-            frequency_rotation.setSummary(freq + " Hz");
+            frequency_rotation.setSummary(freq);
         }
         frequency_rotation.setDefaultValue( Aware.getSetting(getApplicationContext(), FREQUENCY_ROTATION) );
         frequency_rotation.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 Aware.setSetting(getApplicationContext(),FREQUENCY_ROTATION, (String) newValue);
-                frequency_rotation.setSummary( (String)newValue + " Hz");
+                frequency_rotation.setSummary( (String)newValue);
                 framework.startRotation();
                 return true;
             }
@@ -2207,15 +2276,20 @@ public class Aware_Preferences extends PreferenceActivity {
      * Telephony module settings UI
      */
     private void telephony() {
+        final PreferenceScreen telephonies = (PreferenceScreen) findPreference("telephony");
+        if( is_watch ) {
+            telephonies.setEnabled(false);
+            return;
+        }
         final CheckBoxPreference telephony = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_TELEPHONY);
-        telephony.setChecked(Aware.getSetting(getApplicationContext(),Aware_Preferences.STATUS_TELEPHONY).equals("true"));
+        telephony.setChecked(Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_TELEPHONY).equals("true"));
         telephony.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(getApplicationContext(),Aware_Preferences.STATUS_TELEPHONY, telephony.isChecked());
-                if(telephony.isChecked()) {
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_TELEPHONY, telephony.isChecked());
+                if (telephony.isChecked()) {
                     framework.startTelephony();
-                }else {
+                } else {
                     framework.stopTelephony();
                 }
                 return true;
@@ -2229,6 +2303,27 @@ public class Aware_Preferences extends PreferenceActivity {
     private void logging() {
         webservices();
         mqtt();
+        external();
+    }
+
+    /**
+     * External sensors settings UI
+     */
+    private void external() {
+        final CheckBoxPreference android_wear = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_ANDROID_WEAR);
+        android_wear.setChecked(Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_ANDROID_WEAR).equals("true"));
+        android_wear.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener(){
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_ANDROID_WEAR, android_wear.isChecked());
+                if( android_wear.isChecked() ) {
+                    framework.startAndroidWear();
+                } else {
+                    framework.stopAndroidWear();
+                }
+                return true;
+            }
+        });
     }
     
     /**

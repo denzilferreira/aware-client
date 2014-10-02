@@ -139,6 +139,16 @@ public class Aware extends Service {
      * Used by Plugin Manager to refresh UI
      */
     public static final String ACTION_AWARE_PLUGIN_MANAGER_REFRESH = "ACTION_AWARE_PLUGIN_MANAGER_REFRESH";
+
+    /**
+     * Used by Android Wear to know which sensor has been activated to sync with phone.
+     * Extras:
+     * extra_config_setting: the setting key
+     * extra_config_value: the setting value
+     */
+    public static final String ACTION_AWARE_CONFIG_CHANGED = "ACTION_AWARE_CONFIG_CHANGED";
+    public static final String EXTRA_CONFIG_SETTING = "extra_config_setting";
+    public static final String EXTRA_CONFIG_VALUE = "extra_config_value";
     
     /**
      * DownloadManager AWARE update ID, used to prompt user to install the update once finished downloading.
@@ -181,6 +191,7 @@ public class Aware extends Service {
     private static Intent temperatureSrv = null;
     private static Intent esmSrv = null;
     private static Intent installationsSrv = null;
+    private static Intent androidWearSrv = null;
     
     private final String PREF_FREQUENCY_WATCHDOG = "frequency_watchdog";
     private final String PREF_LAST_UPDATE = "last_update";
@@ -674,7 +685,14 @@ public class Aware extends Service {
         setting.put(Aware_Settings.SETTING_KEY, key);
         setting.put(Aware_Settings.SETTING_VALUE, value.toString());
         setting.put(Aware_Settings.SETTING_PACKAGE_NAME, context.getPackageName());
-        
+
+        if( context.getPackageName().equals("com.aware") ) {
+            Intent wearBroadcast = new Intent(ACTION_AWARE_CONFIG_CHANGED);
+            wearBroadcast.putExtra(EXTRA_CONFIG_SETTING, key);
+            wearBroadcast.putExtra(EXTRA_CONFIG_VALUE, value.toString());
+            context.sendBroadcast(wearBroadcast);
+        }
+
         Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "'" + (is_restricted_package ? " AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE '" + context.getPackageName() + "'" : ""), null, null);
         //update
         if( qry != null && qry.moveToFirst() ) {
@@ -1328,6 +1346,10 @@ public class Aware extends Service {
         if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true") ) {
             startESM();
         }else stopESM();
+
+        if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_ANDROID_WEAR).equals("true") ) {
+            startAndroidWear();
+        }else stopAndroidWear();
     }
     
     /**
@@ -1359,8 +1381,24 @@ public class Aware extends Service {
         stopTemperature();
         stopESM();
         stopInstallations();
+        stopAndroidWear();
     }
-    
+
+    /**
+     * Start Android Wear module
+     */
+    protected void startAndroidWear() {
+        if( androidWearSrv == null ) androidWearSrv = new Intent(awareContext, Wear_Sync.class);
+        awareContext.startService(androidWearSrv);
+    }
+
+    /**
+     * Stop Android Wear module
+     */
+    protected void stopAndroidWear() {
+        if( androidWearSrv != null ) awareContext.stopService(androidWearSrv);
+    }
+
     /**
      * Start Applications module
      */

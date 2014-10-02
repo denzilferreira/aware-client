@@ -48,9 +48,9 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
     private static String TAG = "AWARE::Gravity";
     
     /**
-     * Sensor update frequency in Hz, default = 5)
+     * Sensor update frequency in microseconds, default 200000
      */
-    private static int SAMPLING_RATE = 5;
+    private static int SAMPLING_RATE = 200000;
     
     private static SensorManager mSensorManager;
     private static Sensor mGravity;
@@ -195,7 +195,7 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
             SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY));
             sensorHandler.removeCallbacksAndMessages(null);
             mSensorManager.unregisterListener(this, mGravity);
-            mSensorManager.registerListener(this, mGravity, Converters.Hz2micro(SAMPLING_RATE), sensorHandler);
+            mSensorManager.registerListener(this, mGravity, SAMPLING_RATE, sensorHandler);
         }
 
         if(Aware.DEBUG) Log.d(TAG,"Gravity service active...");

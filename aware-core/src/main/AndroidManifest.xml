@@ -33,7 +33,7 @@
     <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <!-- Uncomment for Android Wear -->
-    <!--<uses-feature android:name="android.hardware.type.watch" />-->
+    <uses-feature android:name="android.hardware.type.watch" />
 
     <permission
         android:name="com.aware.READ_CONTEXT_DATA"
@@ -57,7 +57,11 @@
     <application
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/Theme.AppCompat.Light.DarkActionBar" >
+        android:theme="@android:style/Theme.DeviceDefault.Light.DarkActionBar" >
+
+        <!-- Google Play Services for Android Wear and Google Glass compatibility -->
+        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+
         <activity
             android:name="com.aware.Aware_Preferences"
             android:configChanges="keyboardHidden|orientation|screenSize"
@@ -531,6 +535,12 @@
         </activity>
         <service android:name="com.aware.Aware$UpdateFrameworkService" android:exported="true"></service>
         <service android:name="com.aware.Aware$DownloadPluginService" android:exported="true"></service>
+        <service android:name="com.aware.Wear_Sync" android:exported="true"></service>
+        <service android:name="com.aware.Wear_Sync$WearListener" android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.BIND_LISTENER"/>
+            </intent-filter>
+        </service>
         <receiver android:name="com.aware.Aware$PluginMonitor" android:exported="true" android:enabled="true">
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_ADDED" />

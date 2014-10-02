@@ -48,9 +48,9 @@ public class Light extends Aware_Sensor implements SensorEventListener {
     private static String TAG = "AWARE::Light";
     
     /**
-     * Sensor update frequency in Hz, default = 5
+     * Sensor update frequency in microseconds, default 200000
      */
-    private static int SAMPLING_RATE = 5;
+    private static int SAMPLING_RATE = 200000;
     
     private static SensorManager mSensorManager;
     private static Sensor mLight;
@@ -191,7 +191,7 @@ public class Light extends Aware_Sensor implements SensorEventListener {
             SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LIGHT));
             sensorHandler.removeCallbacksAndMessages(null);
             mSensorManager.unregisterListener(this, mLight);
-            mSensorManager.registerListener(this, mLight, Converters.Hz2micro(SAMPLING_RATE), sensorHandler);
+            mSensorManager.registerListener(this, mLight, SAMPLING_RATE, sensorHandler);
         }
         if(Aware.DEBUG) Log.d(TAG,"Light service active...");
         

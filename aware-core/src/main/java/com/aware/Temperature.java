@@ -47,9 +47,9 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
     private static String TAG = "AWARE::Temperature";
     
     /**
-     * Sensor update frequency in Hz, default = 5
+     * Sensor update frequency in microseconds, default 200000
      */
-    private static int SAMPLING_RATE = 5;
+    private static int SAMPLING_RATE = 200000;
     
     private static SensorManager mSensorManager;
     private static Sensor mTemperature;
@@ -179,7 +179,7 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
             SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_TEMPERATURE));
             sensorHandler.removeCallbacksAndMessages(null);
             mSensorManager.unregisterListener(this, mTemperature);
-            mSensorManager.registerListener(this, mTemperature, Converters.Hz2micro(SAMPLING_RATE), sensorHandler);
+            mSensorManager.registerListener(this, mTemperature, SAMPLING_RATE, sensorHandler);
         }
 
         if(Aware.DEBUG) Log.d(TAG,"Temperature service active...");

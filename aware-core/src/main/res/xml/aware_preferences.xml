@@ -58,12 +58,11 @@
 
             <ListPreference
                 android:dependency="status_accelerometer"
-                android:defaultValue="5"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_accelerometer"
                 android:persistent="true"
-                android:summary="5 Hz"
                 android:title="Sampling rate" />
         </PreferenceScreen>
         <PreferenceScreen
@@ -119,12 +118,11 @@
 
             <ListPreference
                 android:dependency="status_barometer"
-                android:defaultValue="5"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_barometer"
                 android:persistent="true"
-                android:summary="5 Hz"
                 android:title="Sampling rate" />
         </PreferenceScreen>
         <PreferenceScreen
@@ -202,12 +200,11 @@
 
             <ListPreference
                 android:dependency="status_gravity"
-                android:defaultValue="5"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_gravity"
                 android:persistent="true"
-                android:summary="5 Hz"
                 android:title="Sampling rate" />
 
         </PreferenceScreen>
@@ -223,12 +220,11 @@
 
             <ListPreference
                 android:dependency="status_gyroscope"
-                android:defaultValue="5"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_gyroscope"
                 android:persistent="true"
-                android:summary="5 Hz"
                 android:title="Sampling rate" />
 
         </PreferenceScreen>
@@ -304,12 +300,11 @@
 
             <ListPreference
                 android:dependency="status_light"
-                android:defaultValue="5"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_light"
                 android:persistent="true"
-                android:summary="5 Hz"
                 android:title="Sampling rate" />
 
         </PreferenceScreen>
@@ -325,12 +320,11 @@
 
             <ListPreference
                 android:dependency="status_linear_accelerometer"
-                android:defaultValue="5"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_linear_accelerometer"
                 android:persistent="true"
-                android:summary="5 Hz"
                 android:title="Sampling rate" />
 
         </PreferenceScreen>
@@ -371,12 +365,11 @@
 
             <ListPreference
                 android:dependency="status_magnetometer"
-                android:defaultValue="5"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_magnetometer"
                 android:persistent="true"
-                android:summary="5 Hz"
                 android:title="Sampling rate" />
 
         </PreferenceScreen>
@@ -430,12 +423,11 @@
 
             <ListPreference
                 android:dependency="status_proximity"
-                android:defaultValue="5"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_proximity"
                 android:persistent="true"
-                android:summary="5 Hz"
                 android:title="Sampling rate" />
 
         </PreferenceScreen>
@@ -451,12 +443,11 @@
 
             <ListPreference
                 android:dependency="status_rotation"
-                android:defaultValue="5"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_rotation"
                 android:persistent="true"
-                android:summary="5 Hz"
                 android:title="Sampling rate" />
 
         </PreferenceScreen>
@@ -484,12 +475,11 @@
 
             <ListPreference
                 android:dependency="status_temperature"
-                android:defaultValue="5"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_temperature"
                 android:persistent="true"
-                android:summary="5 Hz"
                 android:title="Sampling rate" />
 
         </PreferenceScreen>
@@ -521,6 +511,20 @@
                 android:persistent="true"
                 android:summary="60 seconds"
                 android:title="Wi-Fi scanning update frequency" />
+        </PreferenceScreen>
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="wearables"
+        android:summary="Wearables, sensors"
+        android:title="External sensors">
+        <PreferenceScreen
+            android:key="external_android_wear"
+            android:title="Android Wear">
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_android_wear"
+                android:persistent="true"
+                android:title="Active"/>
         </PreferenceScreen>
     </PreferenceCategory>
     <PreferenceCategory

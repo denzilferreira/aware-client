@@ -34,13 +34,4 @@ public class Converters {
 	{
 	  return str.matches("-?\\d+(\\.\\d+)?");  //match a number with optional '-' and decimal.
 	}
-
-    /**
-     * Converts Hz to microseconds
-     * @param Hz
-     * @return long
-     */
-    public static int Hz2micro(int Hz) {
-        return (1/Hz) * 1000000;
-    }
 }

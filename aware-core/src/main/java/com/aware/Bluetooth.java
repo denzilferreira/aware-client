@@ -204,10 +204,11 @@ public class Bluetooth extends Aware_Sensor {
                 
                 ContentValues rowData = new ContentValues();
                 rowData.put(Bluetooth_Data.DEVICE_ID, Aware.getSetting(context,Aware_Preferences.DEVICE_ID));
-                rowData.put(Bluetooth_Data.TIMESTAMP, scanTimestamp);
+                rowData.put(Bluetooth_Data.TIMESTAMP, System.currentTimeMillis());
                 rowData.put(Bluetooth_Data.BT_ADDRESS, btDevice.getAddress());
                 rowData.put(Bluetooth_Data.BT_NAME, btDevice.getName());
                 rowData.put(Bluetooth_Data.BT_RSSI, btDeviceRSSI);
+                rowData.put(Bluetooth_Data.BT_LABEL, scanTimestamp);
                 
                 try{
                     context.getContentResolver().insert(Bluetooth_Data.CONTENT_URI, rowData);
@@ -223,8 +224,6 @@ public class Bluetooth extends Aware_Sensor {
             }   
             
             if(intent.getAction().equals(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)) {
-                scanTimestamp = 0;
-                
                 if( Aware.DEBUG ) Log.d(TAG,ACTION_AWARE_BLUETOOTH_SCAN_ENDED);
                 Intent scanEnd = new Intent(ACTION_AWARE_BLUETOOTH_SCAN_ENDED);
                 context.sendBroadcast(scanEnd);
@@ -232,7 +231,6 @@ public class Bluetooth extends Aware_Sensor {
             
             if(intent.getAction().equals(BluetoothAdapter.ACTION_DISCOVERY_STARTED)) {
                 scanTimestamp = System.currentTimeMillis();
-                
                 if( Aware.DEBUG ) Log.d(TAG,ACTION_AWARE_BLUETOOTH_SCAN_STARTED);
                 Intent scanStart = new Intent(ACTION_AWARE_BLUETOOTH_SCAN_STARTED);
                 context.sendBroadcast(scanStart);
