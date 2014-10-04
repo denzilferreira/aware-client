@@ -197,8 +197,8 @@ public class Communication_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case CALLS:
-			long call_id = database.insert(DATABASE_TABLES[0],
-					Calls_Data.DEVICE_ID, values);
+			long call_id = database.insertWithOnConflict(DATABASE_TABLES[0],
+					Calls_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (call_id > 0) {
 				Uri callsUri = ContentUris.withAppendedId(
@@ -208,8 +208,8 @@ public class Communication_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case MESSAGES:
-			long message_id = database.insert(DATABASE_TABLES[1],
-					Messages_Data.DEVICE_ID, values);
+			long message_id = database.insertWithOnConflict(DATABASE_TABLES[1],
+					Messages_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (message_id > 0) {
 				Uri messagesUri = ContentUris.withAppendedId(

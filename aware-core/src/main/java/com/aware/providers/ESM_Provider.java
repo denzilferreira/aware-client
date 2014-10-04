@@ -171,8 +171,8 @@ public class ESM_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case ESMS_QUEUE:
-			long quest_id = database.insert(DATABASE_TABLES[0],
-					ESM_Data.DEVICE_ID, values);
+			long quest_id = database.insertWithOnConflict(DATABASE_TABLES[0],
+					ESM_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (quest_id > 0) {
 				Uri questUri = ContentUris.withAppendedId(ESM_Data.CONTENT_URI,

@@ -212,8 +212,8 @@ public class Accelerometer_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case ACCEL_DEV:
-			long accel_id = database.insert(DATABASE_TABLES[0],
-					Accelerometer_Sensor.DEVICE_ID, values);
+			long accel_id = database.insertWithOnConflict(DATABASE_TABLES[0],
+					Accelerometer_Sensor.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 			if (accel_id > 0) {
 				Uri accelUri = ContentUris.withAppendedId(
 						Accelerometer_Sensor.CONTENT_URI, accel_id);
@@ -222,8 +222,8 @@ public class Accelerometer_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case ACCEL_DATA:
-			long accelData_id = database.insert(DATABASE_TABLES[1],
-					Accelerometer_Data.DEVICE_ID, values);
+			long accelData_id = database.insertWithOnConflict(DATABASE_TABLES[1],
+					Accelerometer_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 			if (accelData_id > 0) {
 				Uri accelDataUri = ContentUris.withAppendedId(
 						Accelerometer_Data.CONTENT_URI, accelData_id);

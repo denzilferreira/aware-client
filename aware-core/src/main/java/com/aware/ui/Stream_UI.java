@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
@@ -28,7 +29,15 @@ public class Stream_UI extends Aware_Activity {
 	public static final String ACTION_AWARE_UPDATE_STREAM = "ACTION_AWARE_UPDATE_STREAM";
 	
 	private static LinearLayout stream_container;
-	private static ProgressBar loading_stream;
+
+    private Handler refreshHandler = new Handler();
+    private final Runnable refresher = new Runnable() {
+        @Override
+        public void run() {
+            loadStream();
+            refreshHandler.postDelayed(refresher, 1000);
+        }
+    };
 	
 	@Override
 	protected void onCreate(Bundle arg0) {
@@ -39,8 +48,7 @@ public class Stream_UI extends Aware_Activity {
 		super.onCreate(arg0);
 		
 		stream_container = (LinearLayout) findViewById(R.id.stream_container);
-		loading_stream = (ProgressBar) findViewById(R.id.loading_stream);
-		
+
 		IntentFilter filter = new IntentFilter(ACTION_AWARE_UPDATE_STREAM);
 		registerReceiver(stream_updater, filter);
 	}
@@ -49,13 +57,11 @@ public class Stream_UI extends Aware_Activity {
 	protected void onResume() {
 		super.onResume();
 		loadStream();
+        refreshHandler.post(refresher);
 	}
 	
 	private void loadStream() {
 		stream_container.removeAllViews();
-		stream_container.addView(loading_stream);
-		loading_stream.setVisibility(View.VISIBLE);
-
         TextView empty_message = new TextView( this );
         empty_message.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -82,8 +88,6 @@ public class Stream_UI extends Aware_Activity {
 			} while(get_plugins.moveToNext());			
 		}
         if( get_plugins != null && ! get_plugins.isClosed() ) get_plugins.close();
-
-		loading_stream.setVisibility(View.GONE);
 	}
 
     private View buildCard(View content) {
@@ -111,7 +115,13 @@ public class Stream_UI extends Aware_Activity {
         return card;
     }
 
-	@Override
+    @Override
+    protected void onPause() {
+        super.onPause();
+        refreshHandler.removeCallbacksAndMessages(null);
+    }
+
+    @Override
 	protected void onDestroy() {
 		super.onDestroy();
 		unregisterReceiver(stream_updater);

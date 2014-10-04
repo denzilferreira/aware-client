@@ -153,8 +153,8 @@ public class Installations_Provider extends ContentProvider {
 				initialValues) : new ContentValues();
 		switch (sUriMatcher.match(uri)) {
 		case INSTALLATIONS:
-			long installations_id = database.insert(DATABASE_TABLES[0],
-					Installations_Data.PACKAGE_NAME, values);
+			long installations_id = database.insertWithOnConflict(DATABASE_TABLES[0],
+					Installations_Data.PACKAGE_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
 			if (installations_id > 0) {
 				Uri installationsUri = ContentUris.withAppendedId(
 						Installations_Data.CONTENT_URI, installations_id);

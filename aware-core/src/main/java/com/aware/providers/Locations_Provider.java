@@ -165,8 +165,8 @@ public class Locations_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case LOCATIONS:
-			long location_id = database.insert(DATABASE_TABLES[0],
-					Locations_Data.PROVIDER, values);
+			long location_id = database.insertWithOnConflict(DATABASE_TABLES[0],
+					Locations_Data.PROVIDER, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (location_id > 0) {
 				Uri locationUri = ContentUris.withAppendedId(

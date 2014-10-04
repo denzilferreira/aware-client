@@ -324,8 +324,8 @@ public class Telephony_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case TELEPHONY:
-			long tele_id = database.insert(DATABASE_TABLES[0],
-					Telephony_Data.DEVICE_ID, values);
+			long tele_id = database.insertWithOnConflict(DATABASE_TABLES[0],
+					Telephony_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (tele_id > 0) {
 				Uri tele_uri = ContentUris.withAppendedId(
@@ -335,8 +335,8 @@ public class Telephony_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case GSM:
-			long gsm_id = database.insert(DATABASE_TABLES[1],
-					GSM_Data.DEVICE_ID, values);
+			long gsm_id = database.insertWithOnConflict(DATABASE_TABLES[1],
+					GSM_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (gsm_id > 0) {
 				Uri gsm_uri = ContentUris.withAppendedId(GSM_Data.CONTENT_URI,
@@ -346,8 +346,8 @@ public class Telephony_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case NEIGHBOR:
-			long neighbor_id = database.insert(DATABASE_TABLES[2],
-					GSM_Neighbors_Data.DEVICE_ID, values);
+			long neighbor_id = database.insertWithOnConflict(DATABASE_TABLES[2],
+					GSM_Neighbors_Data.DEVICE_ID, values,SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (neighbor_id > 0) {
 				Uri neighbor_uri = ContentUris.withAppendedId(
@@ -358,8 +358,8 @@ public class Telephony_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case CDMA:
-			long cdma_id = database.insert(DATABASE_TABLES[3],
-					CDMA_Data.DEVICE_ID, values);
+			long cdma_id = database.insertWithOnConflict(DATABASE_TABLES[3],
+					CDMA_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (cdma_id > 0) {
 				Uri cdma_uri = ContentUris.withAppendedId(

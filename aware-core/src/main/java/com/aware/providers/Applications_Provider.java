@@ -317,8 +317,8 @@ public class Applications_Provider extends ContentProvider {
 				initialValues) : new ContentValues();
 		switch (sUriMatcher.match(uri)) {
 		case FOREGROUND:
-			long foreground_id = database.insert(DATABASE_TABLES[0],
-					Applications_Foreground.APPLICATION_NAME, values);
+			long foreground_id = database.insertWithOnConflict(DATABASE_TABLES[0],
+					Applications_Foreground.APPLICATION_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
 			if (foreground_id > 0) {
 				Uri foregroundUri = ContentUris.withAppendedId(
 						Applications_Foreground.CONTENT_URI, foreground_id);
@@ -328,8 +328,8 @@ public class Applications_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case APPLICATIONS:
-			long applications_id = database.insert(DATABASE_TABLES[1],
-					Applications_History.PACKAGE_NAME, values);
+			long applications_id = database.insertWithOnConflict(DATABASE_TABLES[1],
+					Applications_History.PACKAGE_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
 			if (applications_id > 0) {
 				Uri applicationsUri = ContentUris.withAppendedId(
 						Applications_History.CONTENT_URI, applications_id);
@@ -339,8 +339,8 @@ public class Applications_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case NOTIFICATIONS:
-			long notifications_id = database.insert(DATABASE_TABLES[2],
-					Applications_Notifications.PACKAGE_NAME, values);
+			long notifications_id = database.insertWithOnConflict(DATABASE_TABLES[2],
+					Applications_Notifications.PACKAGE_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
 			if (notifications_id > 0) {
 				Uri notificationsUri = ContentUris.withAppendedId(
 						Applications_Notifications.CONTENT_URI,
@@ -351,8 +351,8 @@ public class Applications_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case ERROR:
-			long error_id = database.insert(DATABASE_TABLES[3],
-					Applications_Crashes.PACKAGE_NAME, values);
+			long error_id = database.insertWithOnConflict(DATABASE_TABLES[3],
+					Applications_Crashes.PACKAGE_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
 			if (error_id > 0) {
 				Uri errorsUri = ContentUris.withAppendedId(
 						Applications_Crashes.CONTENT_URI, error_id);

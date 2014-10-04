@@ -183,8 +183,8 @@ public class Mqtt_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case MQTT:
-			long mqtt_id = database.insert(DATABASE_TABLES[0],
-					Mqtt_Messages.DEVICE_ID, values);
+			long mqtt_id = database.insertWithOnConflict(DATABASE_TABLES[0],
+					Mqtt_Messages.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (mqtt_id > 0) {
 				Uri mqttUri = ContentUris.withAppendedId(
@@ -194,8 +194,8 @@ public class Mqtt_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case MQTT_SUBSCRIPTION:
-			long mqtt_sub_id = database.insert(DATABASE_TABLES[1],
-					Mqtt_Subscriptions.DEVICE_ID, values);
+			long mqtt_sub_id = database.insertWithOnConflict(DATABASE_TABLES[1],
+					Mqtt_Subscriptions.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (mqtt_sub_id > 0) {
 				Uri mqttSubUri = ContentUris.withAppendedId(

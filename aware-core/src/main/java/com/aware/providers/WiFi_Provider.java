@@ -199,8 +199,8 @@ public class WiFi_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case WIFI_DATA:
-			long wifiID = database.insert(DATABASE_TABLES[0],
-					WiFi_Data.DEVICE_ID, values);
+			long wifiID = database.insertWithOnConflict(DATABASE_TABLES[0],
+					WiFi_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (wifiID > 0) {
 				Uri wifiUri = ContentUris.withAppendedId(WiFi_Data.CONTENT_URI,
@@ -210,8 +210,8 @@ public class WiFi_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case WIFI_DEV:
-			long wifiDevID = database.insert(DATABASE_TABLES[1],
-					WiFi_Sensor.DEVICE_ID, values);
+			long wifiDevID = database.insertWithOnConflict(DATABASE_TABLES[1],
+					WiFi_Sensor.DEVICE_ID, values,SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (wifiDevID > 0) {
 				Uri wifiUri = ContentUris.withAppendedId(

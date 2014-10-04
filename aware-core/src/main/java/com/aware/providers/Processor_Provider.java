@@ -154,8 +154,8 @@ public class Processor_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case PROCESSOR:
-			long processor_id = database.insert(DATABASE_TABLES[0],
-					Processor_Data.DEVICE_ID, values);
+			long processor_id = database.insertWithOnConflict(DATABASE_TABLES[0],
+					Processor_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (processor_id > 0) {
 				Uri processorUri = ContentUris.withAppendedId(

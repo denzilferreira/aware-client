@@ -198,8 +198,8 @@ public class Bluetooth_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case BT_DEV:
-			long rowId = database.insert(DATABASE_TABLES[0],
-					Bluetooth_Sensor.BT_NAME, values);
+			long rowId = database.insertWithOnConflict(DATABASE_TABLES[0],
+					Bluetooth_Sensor.BT_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (rowId > 0) {
 				Uri bluetoothUri = ContentUris.withAppendedId(
@@ -210,8 +210,8 @@ public class Bluetooth_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case BT_DATA:
-			long btId = database.insert(DATABASE_TABLES[1],
-					Bluetooth_Data.BT_NAME, values);
+			long btId = database.insertWithOnConflict(DATABASE_TABLES[1],
+					Bluetooth_Data.BT_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (btId > 0) {
 				Uri bluetoothUri = ContentUris.withAppendedId(

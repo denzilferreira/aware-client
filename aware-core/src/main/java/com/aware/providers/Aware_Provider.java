@@ -256,8 +256,8 @@ public class Aware_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case DEVICE_INFO:
-			long dev_id = database.insert(DATABASE_TABLES[0],
-					Aware_Device.DEVICE_ID, values);
+			long dev_id = database.insertWithOnConflict(DATABASE_TABLES[0],
+					Aware_Device.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 			if (dev_id > 0) {
 				Uri devUri = ContentUris.withAppendedId(
 						Aware_Device.CONTENT_URI, dev_id);
@@ -266,8 +266,8 @@ public class Aware_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case SETTING:
-			long sett_id = database.insert(DATABASE_TABLES[1],
-					Aware_Settings.SETTING_KEY, values);
+			long sett_id = database.insertWithOnConflict(DATABASE_TABLES[1],
+					Aware_Settings.SETTING_KEY, values, SQLiteDatabase.CONFLICT_IGNORE);
 			if (sett_id > 0) {
 				Uri settUri = ContentUris.withAppendedId(
 						Aware_Settings.CONTENT_URI, sett_id);
@@ -276,8 +276,8 @@ public class Aware_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case PLUGIN:
-			long plug_id = database.insert(DATABASE_TABLES[2],
-					Aware_Plugins.PLUGIN_NAME, values);
+			long plug_id = database.insertWithOnConflict(DATABASE_TABLES[2],
+					Aware_Plugins.PLUGIN_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
 			if (plug_id > 0) {
 				Uri settUri = ContentUris.withAppendedId(
 						Aware_Plugins.CONTENT_URI, plug_id);

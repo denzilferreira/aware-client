@@ -148,8 +148,8 @@ public class TimeZone_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case TIMEZONE:
-			long timezone_id = database.insert(DATABASE_TABLES[0],
-					TimeZone_Data.TIMEZONE, values);
+			long timezone_id = database.insertWithOnConflict(DATABASE_TABLES[0],
+					TimeZone_Data.TIMEZONE, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (timezone_id > 0) {
 				Uri tele_uri = ContentUris.withAppendedId(

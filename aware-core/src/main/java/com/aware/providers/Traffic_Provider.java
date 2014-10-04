@@ -158,8 +158,8 @@ public class Traffic_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case TRAFFIC:
-			long traffic_id = database.insert(DATABASE_TABLES[0],
-					Traffic_Data.DEVICE_ID, values);
+			long traffic_id = database.insertWithOnConflict(DATABASE_TABLES[0],
+					Traffic_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (traffic_id > 0) {
 				Uri trafficUri = ContentUris.withAppendedId(

@@ -213,8 +213,8 @@ public class Rotation_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case SENSOR_DEV:
-			long accel_id = database.insert(DATABASE_TABLES[0],
-					Rotation_Sensor.DEVICE_ID, values);
+			long accel_id = database.insertWithOnConflict(DATABASE_TABLES[0],
+					Rotation_Sensor.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (accel_id > 0) {
 				Uri accelUri = ContentUris.withAppendedId(
@@ -224,8 +224,8 @@ public class Rotation_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case SENSOR_DATA:
-			long accelData_id = database.insert(DATABASE_TABLES[1],
-					Rotation_Data.DEVICE_ID, values);
+			long accelData_id = database.insertWithOnConflict(DATABASE_TABLES[1],
+					Rotation_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (accelData_id > 0) {
 				Uri accelDataUri = ContentUris.withAppendedId(

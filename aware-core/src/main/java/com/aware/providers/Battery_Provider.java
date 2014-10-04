@@ -238,8 +238,7 @@ public class Battery_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case BATTERY:
-			long battery_id = database.insert(DATABASE_TABLES[0],
-					Battery_Data.TECHNOLOGY, values);
+			long battery_id = database.insertWithOnConflict(DATABASE_TABLES[0], Battery_Data.TECHNOLOGY, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (battery_id > 0) {
 				Uri batteryUri = ContentUris.withAppendedId(
@@ -250,8 +249,7 @@ public class Battery_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case BATTERY_DISCHARGE:
-			long battery_d_id = database.insert(DATABASE_TABLES[1],
-					Battery_Discharges.DEVICE_ID, values);
+			long battery_d_id = database.insertWithOnConflict(DATABASE_TABLES[1], Battery_Discharges.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (battery_d_id > 0) {
 				Uri batteryUri = ContentUris.withAppendedId(
@@ -262,8 +260,8 @@ public class Battery_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case BATTERY_CHARGE:
-			long battery_c_id = database.insert(DATABASE_TABLES[2],
-					Battery_Charges.DEVICE_ID, values);
+			long battery_c_id = database.insertWithOnConflict(DATABASE_TABLES[2],
+					Battery_Charges.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (battery_c_id > 0) {
 				Uri batteryUri = ContentUris.withAppendedId(

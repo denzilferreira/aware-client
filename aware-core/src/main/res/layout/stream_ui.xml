@@ -16,17 +16,7 @@
             android:layout_height="fill_parent"
             android:background="@color/grey_background"
             android:orientation="vertical"
-            android:padding="10dp"
-            android:animateLayoutChanges="true" >
-            
-            <ProgressBar
-                android:id="@+id/loading_stream"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:indeterminate="true" />
-            
-        </LinearLayout>
+            android:padding="10dp" />
     </ScrollView>
 
     <ListView

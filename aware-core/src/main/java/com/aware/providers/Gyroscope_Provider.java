@@ -207,8 +207,8 @@ public class Gyroscope_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case GYRO_DEV:
-			long gyro_id = database.insert(DATABASE_TABLES[0],
-					Gyroscope_Sensor.DEVICE_ID, values);
+			long gyro_id = database.insertWithOnConflict(DATABASE_TABLES[0],
+					Gyroscope_Sensor.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (gyro_id > 0) {
 				Uri gyroUri = ContentUris.withAppendedId(
@@ -218,8 +218,8 @@ public class Gyroscope_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case GYRO_DATA:
-			long gyroData_id = database.insert(DATABASE_TABLES[1],
-					Gyroscope_Data.DEVICE_ID, values);
+			long gyroData_id = database.insertWithOnConflict(DATABASE_TABLES[1],
+					Gyroscope_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (gyroData_id > 0) {
 				Uri gyroDataUri = ContentUris.withAppendedId(

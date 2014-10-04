@@ -153,8 +153,8 @@ public class Network_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case NETWORK:
-			long network_id = database.insert(DATABASE_TABLES[0],
-					Network_Data.DEVICE_ID, values);
+			long network_id = database.insertWithOnConflict(DATABASE_TABLES[0],
+					Network_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (network_id > 0) {
 				Uri networkUri = ContentUris.withAppendedId(

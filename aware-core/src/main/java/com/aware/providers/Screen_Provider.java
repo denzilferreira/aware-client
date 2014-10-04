@@ -148,8 +148,8 @@ public class Screen_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case SCREEN:
-			long screen_id = database.insert(DATABASE_TABLES[0],
-					Screen_Data.DEVICE_ID, values);
+			long screen_id = database.insertWithOnConflict(DATABASE_TABLES[0],
+					Screen_Data.DEVICE_ID, values,SQLiteDatabase.CONFLICT_IGNORE);
 
 			if (screen_id > 0) {
 				Uri screenUri = ContentUris.withAppendedId(
