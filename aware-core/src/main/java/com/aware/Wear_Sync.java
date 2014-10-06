@@ -33,17 +33,14 @@ import com.aware.providers.Proximity_Provider;
 import com.aware.providers.Rotation_Provider;
 import com.aware.providers.Screen_Provider;
 import com.aware.providers.Temperature_Provider;
-import com.aware.ui.Stream_UI;
 import com.aware.utils.Aware_Sensor;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.wearable.Asset;
 import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
-import com.google.android.gms.wearable.DataItem;
 import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
@@ -56,14 +53,10 @@ import com.google.android.gms.wearable.WearableListenerService;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.concurrent.TimeUnit;
 
 public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
     public static String TAG = "AWARE::Android Wear";
@@ -71,6 +64,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
     private static GoogleApiClient googleClient;
     private static Node peer;
     private static boolean is_watch = false;
+    private static boolean is_connected = false;
     private static AWAREListener awareListener;
 
     private static long last_sync = 0;
@@ -122,6 +116,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
             IntentFilter filter = new IntentFilter(Aware.ACTION_AWARE_CONFIG_CHANGED);
             registerReceiver(awareListener, filter);
 
+            //Report battery to smartphone
             Aware.setSetting(this, Aware_Preferences.STATUS_BATTERY, true);
             Intent apply = new Intent(Aware.ACTION_AWARE_REFRESH);
             sendBroadcast(apply);
@@ -151,7 +146,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
     }
 
     /**
-     * Will monitor changes in AWARE's settings
+     * Monitors AWARE's sensors enable/disable
      */
     public class AWAREListener extends BroadcastReceiver {
         @Override
@@ -380,6 +375,11 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         }
     }
 
+    /**
+     * Get Android Wear's contextual card
+     * @param context
+     * @return
+     */
     public static View getContextCard(Context context) {
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View card = inflater.inflate(R.layout.card_android_wear, null);
@@ -388,7 +388,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         TextView wear_battery = (TextView) card.findViewById(R.id.wear_battery);
         TextView wear_last_sync = (TextView) card.findViewById(R.id.wear_last_sync);
 
-        wear_status.setText("Status: " + ((googleClient.isConnected() && peer != null)?"Connected":"Disconnected"));
+        wear_status.setText("Status: " + ((is_connected)?"Connected":"Disconnected"));
 
         Cursor last_watch_battery = context.getContentResolver().query(Battery_Provider.Battery_Data.CONTENT_URI, null, Aware_Preferences.DEVICE_ID + " NOT LIKE '" + Aware.getSetting(context, Aware_Preferences.DEVICE_ID) + "'", null, Battery_Provider.Battery_Data.TIMESTAMP + " DESC LIMIT 1");
         if( last_watch_battery != null && last_watch_battery.moveToFirst() ) {
@@ -411,6 +411,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
 
     /**
      * AWARE sensor data observer
+     * - Sends data from watch to smartphone as we record it.
      */
     public class AWAREContentObserver extends ContentObserver {
         private Uri CONTENT_URI;
@@ -637,11 +638,13 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         public void onPeerConnected(Node peer) {
             super.onPeerConnected(peer);
             if(Aware.DEBUG) Log.d(TAG,"Connected to: " + peer.getDisplayName());
+            is_connected = true;
         }
 
         @Override
         public void onPeerDisconnected(Node peer) {
             super.onPeerDisconnected(peer);
+            is_connected = false;
             if(Aware.DEBUG) Log.d(TAG,"Disconnected from peer, reconnecting...");
             googleClient.reconnect();
         }

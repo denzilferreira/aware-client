@@ -101,6 +101,7 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 19 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" exported="" name="support-v13-20.0.0" level="project" />
     <orderEntry type="library" exported="" name="gridlayout-v7-20.0.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-wearable-5.0.77" level="project" />
     <orderEntry type="library" exported="" name="appcompat-v7-20.0.0" level="project" />

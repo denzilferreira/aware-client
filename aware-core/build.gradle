@@ -8,7 +8,7 @@ android {
     defaultConfig {
         applicationId "com.aware"
         minSdkVersion 10 //Android 2.3.3
-        targetSdkVersion 19 //Android > 20 is Android L (not supported, yet)
+        targetSdkVersion 19
     }
     buildTypes {
         release {
@@ -18,12 +18,14 @@ android {
     }
     productFlavors {
         wear {
+            minSdkVersion 20
             applicationId 'com.aware'
             targetSdkVersion 20
         }
         phone {
             applicationId 'com.aware'
             targetSdkVersion 19
+            minSdkVersion 10
         }
     }
 }
@@ -35,5 +37,6 @@ dependencies {
     compile 'com.android.support:gridlayout-v7:20.0.0'
     phoneCompile 'com.google.android.gms:play-services:5.2.08'
     wearCompile 'com.google.android.gms:play-services-wearable:5.0.77'
-    compile 'com.android.support:support-v4:20.0.0'
+    phoneCompile 'com.android.support:support-v4:20.0.0'
+    wearCompile 'com.android.support:support-v13:20.0.0'
 }
