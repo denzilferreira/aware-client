@@ -27,6 +27,16 @@ public class Stream_UI extends Aware_Activity {
 	 * Received broadcast to request an update on the stream
 	 */
 	public static final String ACTION_AWARE_UPDATE_STREAM = "ACTION_AWARE_UPDATE_STREAM";
+
+    /**
+     * Broadcast to let plugins know that the stream is visible to the user
+     */
+    public static final String ACTION_AWARE_STREAM_OPEN = "ACTION_AWARE_STREAM_OPEN";
+
+    /**
+     * Broadcast to let plugins know that the stream is not visible to the user
+     */
+    public static final String ACTION_AWARE_STREAM_CLOSED = "ACTION_AWARE_STREAM_CLOSED";
 	
 	private static LinearLayout stream_container;
 
@@ -58,6 +68,8 @@ public class Stream_UI extends Aware_Activity {
 		super.onResume();
 		loadStream();
         refreshHandler.post(refresher);
+        Intent is_visible = new Intent(ACTION_AWARE_STREAM_OPEN);
+        sendBroadcast(is_visible);
 	}
 	
 	private void loadStream() {
@@ -119,6 +131,9 @@ public class Stream_UI extends Aware_Activity {
     protected void onPause() {
         super.onPause();
         refreshHandler.removeCallbacksAndMessages(null);
+
+        Intent not_visible = new Intent(ACTION_AWARE_STREAM_CLOSED);
+        sendBroadcast(not_visible);
     }
 
     @Override
