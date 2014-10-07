@@ -32,6 +32,12 @@
         revision="20.0.0"
         sha1="8694693636ab36910c8100ce527c258ff3ebece0"/>
     <item
+        dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/debug/internal_impl-20.0.0-6d4cdd535ea64fbd04452694dbd6ab9e911e4528.jar"
+        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/support-v13/20.0.0/libs/internal_impl-20.0.0.jar"
+        jumboMode="false"
+        revision="20.0.0"
+        sha1="27bbd3982cdfe4468a9bf99c8c773734a9049e33"/>
+    <item
         dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/debug/classes-37eaf9eb6f642073c27b8ee2f8dfdc7919ec4c64.jar"
         jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services/5.2.08/classes.jar"
         jumboMode="false"
@@ -55,5 +61,11 @@
         jumboMode="false"
         revision="20.0.0"
         sha1="02315d1759d01e52495e040e6e538aaa2e91c7f6"/>
+    <item
+        dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/debug/classes-7fa855c5b82c68eb74f704afcd4fb8374ab892e4.jar"
+        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/support-v13/20.0.0/classes.jar"
+        jumboMode="false"
+        revision="20.0.0"
+        sha1="e128103d5281ddd26195a7f980b36d0d005a4e56"/>
 
 </pre-dex-items>

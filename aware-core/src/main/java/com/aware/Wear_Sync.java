@@ -64,7 +64,6 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
     private static GoogleApiClient googleClient;
     private static Node peer;
     private static boolean is_watch = false;
-    private static boolean is_connected = false;
     private static AWAREListener awareListener;
 
     private static long last_sync = 0;
@@ -388,7 +387,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         TextView wear_battery = (TextView) card.findViewById(R.id.wear_battery);
         TextView wear_last_sync = (TextView) card.findViewById(R.id.wear_last_sync);
 
-        wear_status.setText("Status: " + ((is_connected)?"Connected":"Disconnected"));
+        wear_status.setText("Status: " + ((googleClient.isConnected())?"Connected":"Disconnected"));
 
         Cursor last_watch_battery = context.getContentResolver().query(Battery_Provider.Battery_Data.CONTENT_URI, null, Aware_Preferences.DEVICE_ID + " NOT LIKE '" + Aware.getSetting(context, Aware_Preferences.DEVICE_ID) + "'", null, Battery_Provider.Battery_Data.TIMESTAMP + " DESC LIMIT 1");
         if( last_watch_battery != null && last_watch_battery.moveToFirst() ) {
@@ -638,13 +637,11 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         public void onPeerConnected(Node peer) {
             super.onPeerConnected(peer);
             if(Aware.DEBUG) Log.d(TAG,"Connected to: " + peer.getDisplayName());
-            is_connected = true;
         }
 
         @Override
         public void onPeerDisconnected(Node peer) {
             super.onPeerDisconnected(peer);
-            is_connected = false;
             if(Aware.DEBUG) Log.d(TAG,"Disconnected from peer, reconnecting...");
             googleClient.reconnect();
         }

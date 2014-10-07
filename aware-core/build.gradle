@@ -18,7 +18,7 @@ android {
     }
     productFlavors {
         wear {
-            minSdkVersion 20
+            minSdkVersion 13
             applicationId 'com.aware'
             targetSdkVersion 20
         }
