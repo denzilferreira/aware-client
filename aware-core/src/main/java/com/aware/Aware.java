@@ -459,7 +459,7 @@ public class Aware extends Service {
      * @param package_name
      */
     public static void startPlugin(Context context, String package_name ) {
-    	//Check if plugin is installed. If not, ask user to download it.
+    	//Check if plugin is installed
     	Cursor is_installed = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
     	if( is_installed != null && is_installed.moveToFirst() ) {
     		//We might just have it cached, but not installed
@@ -474,43 +474,58 @@ public class Aware extends Service {
                 rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
                 context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
                 is_installed.close();
-                return;
     		}
             is_installed.close();
+            return;
     	}
-    		
-		HttpResponse response = new Https(awareContext).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name);
-		if( response != null && response.getStatusLine().getStatusCode() == 200 ) {
-			try {
-				String data = EntityUtils.toString(response.getEntity());
-				if( data.equals("[]") ) return;
-				
-				JSONObject json_package = new JSONObject(data);
-    			
-    			NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
-    			mBuilder.setSmallIcon(R.drawable.ic_stat_aware_plugin_dependency);
-    			mBuilder.setContentTitle("AWARE");
-    			mBuilder.setContentText("Plugin missing: " + json_package.getString("title")+". Tap to install.");
-                mBuilder.setDefaults(Notification.DEFAULT_ALL);
-    			mBuilder.setAutoCancel(true);
-    			
-    			Intent pluginIntent = new Intent(context, DownloadPluginService.class);
-    			pluginIntent.putExtra("package_name", package_name);
-    			pluginIntent.putExtra("is_update", false);
-    			
-    			PendingIntent clickIntent = PendingIntent.getService(context, 0, pluginIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-    			mBuilder.setContentIntent(clickIntent);
-    			NotificationManager notManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-    			notManager.notify( json_package.getInt("id"), mBuilder.build());
-    			
-    		} catch (ParseException e) {
-				e.printStackTrace();
-			} catch (JSONException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+
+        //Request the missing plugin
+        new PluginDependencyTask().execute(package_name);
+    }
+
+    /**
+     * Downloads missing plugins as a seperate thread.
+     */
+    private static class PluginDependencyTask extends AsyncTask<String, Void, Void> {
+        @Override
+        protected Void doInBackground(String... params) {
+
+            String package_name = params[0];
+
+            HttpResponse response = new Https(awareContext).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name);
+            if( response != null && response.getStatusLine().getStatusCode() == 200 ) {
+                try {
+                    String data = EntityUtils.toString(response.getEntity());
+                    if( data.equals("[]") ) return null;
+
+                    JSONObject json_package = new JSONObject(data);
+
+                    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(awareContext);
+                    mBuilder.setSmallIcon(R.drawable.ic_stat_aware_plugin_dependency);
+                    mBuilder.setContentTitle("AWARE");
+                    mBuilder.setContentText("Plugin missing: " + json_package.getString("title")+". Tap to install.");
+                    mBuilder.setDefaults(Notification.DEFAULT_ALL);
+                    mBuilder.setAutoCancel(true);
+
+                    Intent pluginIntent = new Intent(awareContext, DownloadPluginService.class);
+                    pluginIntent.putExtra("package_name", package_name);
+                    pluginIntent.putExtra("is_update", false);
+
+                    PendingIntent clickIntent = PendingIntent.getService(awareContext, 0, pluginIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                    mBuilder.setContentIntent(clickIntent);
+                    NotificationManager notManager = (NotificationManager) awareContext.getSystemService(Context.NOTIFICATION_SERVICE);
+                    notManager.notify( json_package.getInt("id"), mBuilder.build());
+
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return null;
+        }
     }
     
     /**

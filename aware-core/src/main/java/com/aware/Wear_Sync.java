@@ -59,6 +59,10 @@ import java.util.Date;
 import java.util.Iterator;
 
 public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+
+    public static final String ACTION_AWARE_WEAR_MESSAGE_RECEIVED = "ACTION_AWARE_WEAR_MESSAGE_RECEIVED";
+    public static final String EXTRA_MESSAGE = "message";
+
     public static String TAG = "AWARE::Android Wear";
 
     private static GoogleApiClient googleClient;
@@ -99,27 +103,27 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         }
         if( device != null && ! device.isClosed() ) device.close();
 
-        if( ! is_watch ) { //The phone will receive messages from the watch
+        //Phone manages the connection
+        if( ! is_watch ) {
             googleClient = new GoogleApiClient.Builder(this)
                     .addApi(Wearable.API)
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
                     .build();
-        } else { //The watch will just send messages
+        } else {
             googleClient = new GoogleApiClient.Builder(this)
                     .addApi(Wearable.API)
                     .build();
-
-            //Watch will monitor for changes in AWARE's settings
-            awareListener = new AWAREListener();
-            IntentFilter filter = new IntentFilter(Aware.ACTION_AWARE_CONFIG_CHANGED);
-            registerReceiver(awareListener, filter);
-
             //Report battery to smartphone
             Aware.setSetting(this, Aware_Preferences.STATUS_BATTERY, true);
             Intent apply = new Intent(Aware.ACTION_AWARE_REFRESH);
             sendBroadcast(apply);
         }
+
+        //Monitor for changes in AWARE's settings
+        awareListener = new AWAREListener();
+        IntentFilter filter = new IntentFilter(Aware.ACTION_AWARE_CONFIG_CHANGED);
+        registerReceiver(awareListener, filter);
     }
 
     @Override
@@ -430,6 +434,8 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         public void onChange(boolean selfChange) {
             super.onChange(selfChange);
 
+            if( ! is_watch ) return;
+
             Cursor latest = getContentResolver().query(CONTENT_URI, null, null, null, "timestamp DESC LIMIT 1");
             if( latest != null && latest.moveToFirst() ) {
                 JSONObject data = new JSONObject();
@@ -630,7 +636,10 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         @Override
         public void onMessageReceived(MessageEvent messageEvent) {
             super.onMessageReceived(messageEvent);
-            if(Aware.DEBUG) Log.d(TAG, "Message received: " + new String(messageEvent.getData()));
+            if(Aware.DEBUG) Log.d(TAG, "Message received! Broadcasting ACTION_AWARE_WEAR_MESSAGE_RECEIVED, extra message");
+            Intent broadcast = new Intent(ACTION_AWARE_WEAR_MESSAGE_RECEIVED);
+            broadcast.putExtra(EXTRA_MESSAGE, messageEvent.getData());
+            sendBroadcast(broadcast);
         }
 
         @Override
