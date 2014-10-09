@@ -701,12 +701,10 @@ public class Aware extends Service {
         setting.put(Aware_Settings.SETTING_VALUE, value.toString());
         setting.put(Aware_Settings.SETTING_PACKAGE_NAME, context.getPackageName());
 
-        if( context.getPackageName().equals("com.aware") ) {
-            Intent wearBroadcast = new Intent(ACTION_AWARE_CONFIG_CHANGED);
-            wearBroadcast.putExtra(EXTRA_CONFIG_SETTING, key);
-            wearBroadcast.putExtra(EXTRA_CONFIG_VALUE, value.toString());
-            context.sendBroadcast(wearBroadcast);
-        }
+        Intent wearBroadcast = new Intent(ACTION_AWARE_CONFIG_CHANGED);
+        wearBroadcast.putExtra(EXTRA_CONFIG_SETTING, key);
+        wearBroadcast.putExtra(EXTRA_CONFIG_VALUE, value.toString());
+        context.sendBroadcast(wearBroadcast);
 
         Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "'" + (is_restricted_package ? " AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE '" + context.getPackageName() + "'" : ""), null, null);
         //update

@@ -68,31 +68,34 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
     private static GoogleApiClient googleClient;
     private static Node peer;
     private static boolean is_watch = false;
-    private static AWAREListener awareListener;
 
     private static long last_sync = 0;
 
-    private final PutDataMapRequest accelerometer = PutDataMapRequest.create("/accelerometer");
-    private final PutDataMapRequest installations = PutDataMapRequest.create("/installations");
-    private final PutDataMapRequest barometer = PutDataMapRequest.create("/barometer");
-    private final PutDataMapRequest battery = PutDataMapRequest.create("/battery");
-    private final PutDataMapRequest bluetooth = PutDataMapRequest.create("/bluetooth");
-    private final PutDataMapRequest gravity = PutDataMapRequest.create("/gravity");
-    private final PutDataMapRequest gyroscope = PutDataMapRequest.create("/gyroscope");
-    private final PutDataMapRequest light = PutDataMapRequest.create("/light");
-    private final PutDataMapRequest linear = PutDataMapRequest.create("/linear");
-    private final PutDataMapRequest magnetometer = PutDataMapRequest.create("/magnetometer");
-    private final PutDataMapRequest processor = PutDataMapRequest.create("/processor");
-    private final PutDataMapRequest proximity = PutDataMapRequest.create("/proximity");
-    private final PutDataMapRequest rotation = PutDataMapRequest.create("/rotation");
-    private final PutDataMapRequest screen = PutDataMapRequest.create("/screen");
-    private final PutDataMapRequest temperature = PutDataMapRequest.create("/temperature");
+    private static Context context;
 
-    private ArrayList<AWAREContentObserver> contentObservers = new ArrayList<AWAREContentObserver>();
+    public final static PutDataMapRequest accelerometer = PutDataMapRequest.create("/accelerometer");
+    public final static PutDataMapRequest installations = PutDataMapRequest.create("/installations");
+    public final static PutDataMapRequest barometer = PutDataMapRequest.create("/barometer");
+    public final static PutDataMapRequest battery = PutDataMapRequest.create("/battery");
+    public final static PutDataMapRequest bluetooth = PutDataMapRequest.create("/bluetooth");
+    public final static PutDataMapRequest gravity = PutDataMapRequest.create("/gravity");
+    public final static PutDataMapRequest gyroscope = PutDataMapRequest.create("/gyroscope");
+    public final static PutDataMapRequest light = PutDataMapRequest.create("/light");
+    public final static PutDataMapRequest linear = PutDataMapRequest.create("/linear");
+    public final static PutDataMapRequest magnetometer = PutDataMapRequest.create("/magnetometer");
+    public final static PutDataMapRequest processor = PutDataMapRequest.create("/processor");
+    public final static PutDataMapRequest proximity = PutDataMapRequest.create("/proximity");
+    public final static PutDataMapRequest rotation = PutDataMapRequest.create("/rotation");
+    public final static PutDataMapRequest screen = PutDataMapRequest.create("/screen");
+    public final static PutDataMapRequest temperature = PutDataMapRequest.create("/temperature");
+
+    private final static ArrayList<AWAREContentObserver> contentObservers = new ArrayList<AWAREContentObserver>();
 
     @Override
     public void onCreate() {
         super.onCreate();
+
+        context = getApplicationContext();
 
         TAG = Aware.getSetting(this, Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(this,Aware_Preferences.DEBUG_TAG):TAG;
         if(Aware.DEBUG) Log.d(TAG, "Android Wear synching created!");
@@ -119,11 +122,6 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
             Intent apply = new Intent(Aware.ACTION_AWARE_REFRESH);
             sendBroadcast(apply);
         }
-
-        //Monitor for changes in AWARE's settings
-        awareListener = new AWAREListener();
-        IntentFilter filter = new IntentFilter(Aware.ACTION_AWARE_CONFIG_CHANGED);
-        registerReceiver(awareListener, filter);
     }
 
     @Override
@@ -151,7 +149,8 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
     /**
      * Monitors AWARE's sensors enable/disable
      */
-    public class AWAREListener extends BroadcastReceiver {
+    public static class AWAREListener extends BroadcastReceiver {
+
         @Override
         public void onReceive(Context context, Intent intent) {
             String setting = intent.getStringExtra(Aware.EXTRA_CONFIG_SETTING);
@@ -161,77 +160,77 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 if( setting.equals(Aware_Preferences.STATUS_ACCELEROMETER) ) {
                     AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Accelerometer_Provider.Accelerometer_Data.CONTENT_URI, "accelerometer");
                     contentObservers.add(observer);
-                    getContentResolver().registerContentObserver(Accelerometer_Provider.Accelerometer_Data.CONTENT_URI, true, observer);
+                    context.getContentResolver().registerContentObserver(Accelerometer_Provider.Accelerometer_Data.CONTENT_URI, true, observer);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_INSTALLATIONS) ) {
                     AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Installations_Provider.Installations_Data.CONTENT_URI, "installations");
                     contentObservers.add(observer);
-                    getContentResolver().registerContentObserver(Installations_Provider.Installations_Data.CONTENT_URI, true, observer);
+                    context.getContentResolver().registerContentObserver(Installations_Provider.Installations_Data.CONTENT_URI, true, observer);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_BAROMETER) ) {
                     AWAREContentObserver observer = new AWAREContentObserver(new Handler(),Barometer_Provider.Barometer_Data.CONTENT_URI,"barometer");
                     contentObservers.add(observer);
-                    getContentResolver().registerContentObserver(Barometer_Provider.Barometer_Data.CONTENT_URI, true, observer);
+                    context.getContentResolver().registerContentObserver(Barometer_Provider.Barometer_Data.CONTENT_URI, true, observer);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_BATTERY) ) {
                     AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Battery_Provider.Battery_Data.CONTENT_URI, "battery");
                     contentObservers.add(observer);
-                    getContentResolver().registerContentObserver(Battery_Provider.Battery_Data.CONTENT_URI, true, observer);
+                    context.getContentResolver().registerContentObserver(Battery_Provider.Battery_Data.CONTENT_URI, true, observer);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_BLUETOOTH) ) {
                     AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Bluetooth_Provider.Bluetooth_Data.CONTENT_URI, "bluetooth");
                     contentObservers.add(observer);
-                    getContentResolver().registerContentObserver(Bluetooth_Provider.Bluetooth_Data.CONTENT_URI, true, observer);
+                    context.getContentResolver().registerContentObserver(Bluetooth_Provider.Bluetooth_Data.CONTENT_URI, true, observer);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_GRAVITY) ) {
                     AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Gravity_Provider.Gravity_Data.CONTENT_URI, "gravity");
                     contentObservers.add(observer);
-                    getContentResolver().registerContentObserver(Gravity_Provider.Gravity_Data.CONTENT_URI, true, observer);
+                    context.getContentResolver().registerContentObserver(Gravity_Provider.Gravity_Data.CONTENT_URI, true, observer);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_GYROSCOPE) ) {
                     AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Gyroscope_Provider.Gyroscope_Data.CONTENT_URI, "gyroscope");
                     contentObservers.add(observer);
-                    getContentResolver().registerContentObserver(Gyroscope_Provider.Gyroscope_Data.CONTENT_URI, true, observer);
+                    context.getContentResolver().registerContentObserver(Gyroscope_Provider.Gyroscope_Data.CONTENT_URI, true, observer);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_LIGHT) ) {
                     AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Light_Provider.Light_Data.CONTENT_URI, "light");
                     contentObservers.add(observer);
-                    getContentResolver().registerContentObserver(Light_Provider.Light_Data.CONTENT_URI, true, observer);
+                    context.getContentResolver().registerContentObserver(Light_Provider.Light_Data.CONTENT_URI, true, observer);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_LINEAR_ACCELEROMETER) ) {
                     AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Linear_Accelerometer_Provider.Linear_Accelerometer_Data.CONTENT_URI, "linear");
                     contentObservers.add(observer);
-                    getContentResolver().registerContentObserver(Linear_Accelerometer_Provider.Linear_Accelerometer_Data.CONTENT_URI, true, observer);
+                    context.getContentResolver().registerContentObserver(Linear_Accelerometer_Provider.Linear_Accelerometer_Data.CONTENT_URI, true, observer);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_MAGNETOMETER) ) {
                     AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Magnetometer_Provider.Magnetometer_Data.CONTENT_URI, "magnetometer");
                     contentObservers.add(observer);
-                    getContentResolver().registerContentObserver(Magnetometer_Provider.Magnetometer_Data.CONTENT_URI, true, observer);
+                    context.getContentResolver().registerContentObserver(Magnetometer_Provider.Magnetometer_Data.CONTENT_URI, true, observer);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_PROCESSOR) ) {
                     AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Processor_Provider.Processor_Data.CONTENT_URI, "processor");
                     contentObservers.add(observer);
-                    getContentResolver().registerContentObserver(Processor_Provider.Processor_Data.CONTENT_URI, true, observer);
+                    context.getContentResolver().registerContentObserver(Processor_Provider.Processor_Data.CONTENT_URI, true, observer);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_PROXIMITY) ) {
                     AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Proximity_Provider.Proximity_Data.CONTENT_URI, "proximity");
                     contentObservers.add(observer);
-                    getContentResolver().registerContentObserver(Proximity_Provider.Proximity_Data.CONTENT_URI, true, observer);
+                    context.getContentResolver().registerContentObserver(Proximity_Provider.Proximity_Data.CONTENT_URI, true, observer);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_ROTATION) ) {
                     AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Rotation_Provider.Rotation_Data.CONTENT_URI, "rotation");
                     contentObservers.add(observer);
-                    getContentResolver().registerContentObserver(Rotation_Provider.Rotation_Data.CONTENT_URI, true, observer);
+                    context.getContentResolver().registerContentObserver(Rotation_Provider.Rotation_Data.CONTENT_URI, true, observer);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_SCREEN) ) {
                     AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Screen_Provider.Screen_Data.CONTENT_URI, "screen");
                     contentObservers.add(observer);
-                    getContentResolver().registerContentObserver(Screen_Provider.Screen_Data.CONTENT_URI, true, observer);
+                    context.getContentResolver().registerContentObserver(Screen_Provider.Screen_Data.CONTENT_URI, true, observer);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_TEMPERATURE) ) {
                     AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Temperature_Provider.Temperature_Data.CONTENT_URI, "temperature");
                     contentObservers.add(observer);
-                    getContentResolver().registerContentObserver(Temperature_Provider.Temperature_Data.CONTENT_URI, true, observer);
+                    context.getContentResolver().registerContentObserver(Temperature_Provider.Temperature_Data.CONTENT_URI, true, observer);
                 }
             }
 
@@ -239,7 +238,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 if (setting.equals(Aware_Preferences.STATUS_ACCELEROMETER)) {
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Accelerometer_Provider.Accelerometer_Data.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
@@ -247,7 +246,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 if (setting.equals(Aware_Preferences.STATUS_INSTALLATIONS)) {
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Installations_Provider.Installations_Data.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
@@ -255,7 +254,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 if (setting.equals(Aware_Preferences.STATUS_BAROMETER)) {
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Barometer_Provider.Barometer_Data.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
@@ -263,19 +262,19 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 if (setting.equals(Aware_Preferences.STATUS_BATTERY)) {
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Battery_Provider.Battery_Data.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Battery_Provider.Battery_Charges.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Battery_Provider.Battery_Discharges.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
@@ -283,13 +282,13 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 if (setting.equals(Aware_Preferences.STATUS_BLUETOOTH)) {
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Bluetooth_Provider.Bluetooth_Data.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Bluetooth_Provider.Bluetooth_Sensor.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
@@ -297,7 +296,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 if (setting.equals(Aware_Preferences.STATUS_GRAVITY)) {
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Gravity_Provider.Gravity_Data.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
@@ -305,7 +304,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 if (setting.equals(Aware_Preferences.STATUS_GYROSCOPE)) {
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Gyroscope_Provider.Gyroscope_Data.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
@@ -313,7 +312,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 if (setting.equals(Aware_Preferences.STATUS_LIGHT)) {
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Light_Provider.Light_Data.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
@@ -321,7 +320,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 if (setting.equals(Aware_Preferences.STATUS_LINEAR_ACCELEROMETER)) {
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Linear_Accelerometer_Provider.Linear_Accelerometer_Data.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
@@ -329,7 +328,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 if (setting.equals(Aware_Preferences.STATUS_MAGNETOMETER)) {
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Magnetometer_Provider.Magnetometer_Data.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
@@ -337,7 +336,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 if (setting.equals(Aware_Preferences.STATUS_PROCESSOR)) {
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Processor_Provider.Processor_Data.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
@@ -345,7 +344,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 if (setting.equals(Aware_Preferences.STATUS_PROXIMITY)) {
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Proximity_Provider.Proximity_Data.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
@@ -353,7 +352,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 if (setting.equals(Aware_Preferences.STATUS_ROTATION)) {
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Rotation_Provider.Rotation_Data.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
@@ -361,7 +360,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 if (setting.equals(Aware_Preferences.STATUS_SCREEN)) {
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Screen_Provider.Screen_Data.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
@@ -369,7 +368,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 if (setting.equals(Aware_Preferences.STATUS_TEMPERATURE)) {
                     for(AWAREContentObserver obs : contentObservers ) {
                         if ( obs.getContentProvider().toString().equals(Temperature_Provider.Temperature_Data.CONTENT_URI.toString()) ) {
-                            getContentResolver().unregisterContentObserver(obs);
+                            context.getContentResolver().unregisterContentObserver(obs);
                             contentObservers.remove(obs);
                         }
                     }
@@ -416,9 +415,10 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
      * AWARE sensor data observer
      * - Sends data from watch to smartphone as we record it.
      */
-    public class AWAREContentObserver extends ContentObserver {
+    public static class AWAREContentObserver extends ContentObserver {
         private Uri CONTENT_URI;
         private String PATH;
+        private String LABEL = "";
 
         public AWAREContentObserver(Handler handler, Uri content_uri, String watch_path) {
            super(handler);
@@ -430,21 +430,25 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
             return CONTENT_URI;
         }
 
+        public void setLabel(String lbl) { LABEL = lbl; }
+
         @Override
         public void onChange(boolean selfChange) {
             super.onChange(selfChange);
 
             if( ! is_watch ) return;
 
-            Cursor latest = getContentResolver().query(CONTENT_URI, null, null, null, "timestamp DESC LIMIT 1");
+            Cursor latest = context.getContentResolver().query(CONTENT_URI, null, null, null, "timestamp DESC LIMIT 1");
             if( latest != null && latest.moveToFirst() ) {
                 JSONObject data = new JSONObject();
                 try {
                     data.put("content_uri", CONTENT_URI.toString());
                     String[] columns = latest.getColumnNames();
                     for(String field : columns ) {
-                        if( field.contains("timestamp") || field.contains("double") ) {
+                        if (field.contains("timestamp") || field.contains("double")) {
                             data.put(field, latest.getDouble(latest.getColumnIndex(field)));
+                        } else if( field.contains("label") ) {
+                            data.put(field, LABEL);
                         } else {
                             data.put(field, latest.getString(latest.getColumnIndex(field)));
                         }
@@ -536,9 +540,6 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if( awareListener != null ) {
-            unregisterReceiver(awareListener);
-        }
         if( ! is_watch && googleClient != null && googleClient.isConnected() ) {
             if(Aware.DEBUG) Log.d(TAG, "Android Wear service terminated...");
             googleClient.disconnect();

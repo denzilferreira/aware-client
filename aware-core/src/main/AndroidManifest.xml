@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.aware"
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.aware"
+    xmlns:tools="http://schemas.android.com/tools"
     android:versionCode="338"
     android:versionName="3.0" >
 
@@ -57,7 +57,8 @@
     <application
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@android:style/Theme.DeviceDefault.Light.DarkActionBar" >
+        android:theme="@android:style/Theme.DeviceDefault.Light.DarkActionBar"
+        tools:node="replace">
 
         <!-- Google Play Services for Android Wear and Google Glass compatibility -->
         <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
@@ -121,21 +122,24 @@
             android:authorities="${applicationId}.provider.bluetooth"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
         <provider
             android:name="com.aware.providers.Applications_Provider"
             android:authorities="${applicationId}.provider.applications"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
         <provider
             android:name="com.aware.providers.Locations_Provider"
             android:authorities="${applicationId}.provider.locations"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -148,7 +152,8 @@
             android:authorities="${applicationId}.provider.screen"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -161,7 +166,8 @@
             android:authorities="${applicationId}.provider.battery"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -174,7 +180,8 @@
             android:authorities="${applicationId}.provider.network"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -187,7 +194,8 @@
             android:authorities="${applicationId}.provider.communication"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -200,7 +208,8 @@
             android:authorities="${applicationId}.provider.processor"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -214,7 +223,8 @@
             android:enabled="true"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -231,14 +241,16 @@
             android:authorities="${applicationId}.provider.traffic"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
         <provider
             android:name="com.aware.providers.Mqtt_Provider"
             android:authorities="${applicationId}.provider.mqtt"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -251,7 +263,8 @@
             android:authorities="${applicationId}.provider.accelerometer"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -264,7 +277,8 @@
             android:authorities="${applicationId}.provider.gyroscope"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -289,7 +303,8 @@
             android:authorities="${applicationId}.provider.wifi"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -302,14 +317,16 @@
             android:authorities="${applicationId}.provider.telephony"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
         <provider
             android:name="com.aware.providers.Aware_Provider"
             android:authorities="${applicationId}.provider.aware"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -322,7 +339,8 @@
             android:authorities="${applicationId}.provider.rotation"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -335,7 +353,8 @@
             android:authorities="${applicationId}.provider.light"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -348,7 +367,8 @@
             android:authorities="${applicationId}.provider.proximity"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -361,7 +381,8 @@
             android:authorities="${applicationId}.provider.magnetometer"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -374,7 +395,8 @@
             android:authorities="${applicationId}.provider.barometer"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -387,7 +409,8 @@
             android:authorities="${applicationId}.provider.gravity"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -400,7 +423,8 @@
             android:authorities="${applicationId}.provider.accelerometer.linear"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -413,7 +437,8 @@
             android:authorities="${applicationId}.provider.temperature"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <activity
@@ -435,7 +460,8 @@
             android:authorities="${applicationId}.provider.esm"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <service
@@ -452,7 +478,8 @@
             android:authorities="${applicationId}.provider.installations"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA" >
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
 
         <receiver
@@ -472,7 +499,8 @@
             android:enabled="@bool/display_aware"
             android:exported="true"
             android:icon="@drawable/ic_launcher_settings"
-            android:label="@string/aware_plugins">
+            android:label="@string/aware_plugins"
+            >
             <intent-filter>
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
@@ -510,7 +538,8 @@
 
         <activity
             android:name="com.aware.ui.CameraStudy"
-            android:configChanges="keyboardHidden|orientation|screenSize" >
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            >
         </activity>
 
         <service
@@ -523,7 +552,8 @@
             android:exported="true"
             android:icon="@drawable/ic_launcher"
             android:label="Stream"
-            android:noHistory="true" android:enabled="@bool/display_aware" android:launchMode="singleInstance">
+            android:noHistory="true" android:enabled="@bool/display_aware" android:launchMode="singleInstance"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.ASSIST" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -548,6 +578,13 @@
                 <data android:scheme="package" />
             </intent-filter>
         </receiver>
+
+        <receiver android:name="com.aware.Wear_Sync$AWAREListener" android:exported="true" android:enabled="true">
+            <intent-filter>
+                <action android:name="ACTION_AWARE_CONFIG_CHANGED" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>
