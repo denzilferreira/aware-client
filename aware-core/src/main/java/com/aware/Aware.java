@@ -358,6 +358,18 @@ public class Aware extends Service {
         }
         if( awareContextDevice != null && ! awareContextDevice.isClosed()) awareContextDevice.close();
     }
+
+    //TODO: check if there is a better way to detect a watch...
+    public static boolean is_watch(Context c) {
+        boolean is_watch = false;
+        Cursor device = c.getContentResolver().query(Aware_Provider.Aware_Device.CONTENT_URI, null, null, null, "1 LIMIT 1");
+        if( device != null && device.moveToFirst() ) {
+            //is_watch = device.getInt(device.getColumnIndex(Aware_Provider.Aware_Device.SDK))==20;
+            is_watch = device.getString(device.getColumnIndex(Aware_Device.RELEASE)).contains("W");
+        }
+        if( device != null && ! device.isClosed() ) device.close();
+        return is_watch;
+    }
     
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {

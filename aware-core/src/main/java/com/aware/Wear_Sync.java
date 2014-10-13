@@ -100,11 +100,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         TAG = Aware.getSetting(this, Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(this,Aware_Preferences.DEBUG_TAG):TAG;
         if(Aware.DEBUG) Log.d(TAG, "Android Wear synching created!");
 
-        Cursor device = getContentResolver().query(Aware_Provider.Aware_Device.CONTENT_URI, null, null, null, "1 LIMIT 1");
-        if( device != null && device.moveToFirst() ) {
-            is_watch = device.getInt(device.getColumnIndex(Aware_Provider.Aware_Device.SDK))==20; //TODO: check if there is a better way to detect a watch...
-        }
-        if( device != null && ! device.isClosed() ) device.close();
+        is_watch = Aware.is_watch(this);
 
         //Phone manages the connection
         if( ! is_watch ) {

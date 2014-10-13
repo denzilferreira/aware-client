@@ -35,8 +35,8 @@ dependencies {
     compile files('libs/zbar.jar')
     compile 'com.android.support:appcompat-v7:20.0.0'
     compile 'com.android.support:gridlayout-v7:20.0.0'
-    phoneCompile 'com.google.android.gms:play-services:5.2.08'
-    wearCompile 'com.google.android.gms:play-services-wearable:5.0.77'
     phoneCompile 'com.android.support:support-v4:20.0.0'
     wearCompile 'com.android.support:support-v13:20.0.0'
+    phoneCompile 'com.google.android.gms:play-services:6.1.11'
+    wearCompile 'com.google.android.gms:play-services-wearable:6.1.11'
 }
