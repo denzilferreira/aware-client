@@ -637,7 +637,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         @Override
         public void onMessageReceived(MessageEvent messageEvent) {
             super.onMessageReceived(messageEvent);
-            if(Aware.DEBUG) Log.d(TAG, "Message received! Broadcasting ACTION_AWARE_WEAR_MESSAGE_RECEIVED, extra message");
+            if(Aware.DEBUG) Log.d(TAG, "Message received!");
             Intent broadcast = new Intent(ACTION_AWARE_WEAR_MESSAGE_RECEIVED);
             broadcast.putExtra(EXTRA_MESSAGE, messageEvent.getData());
             sendBroadcast(broadcast);
@@ -652,7 +652,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         @Override
         public void onPeerDisconnected(Node peer) {
             super.onPeerDisconnected(peer);
-            if(Aware.DEBUG) Log.d(TAG,"Disconnected from peer, reconnecting...");
+            if(Aware.DEBUG) Log.d(TAG,"Disconnected from " + peer.getDisplayName() + ", reconnecting...");
             googleClient.reconnect();
         }
     }
