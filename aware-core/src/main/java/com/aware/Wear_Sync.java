@@ -648,8 +648,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         @Override
         public void onPeerDisconnected(Node peer) {
             super.onPeerDisconnected(peer);
-            if(Aware.DEBUG) Log.d(TAG,"Disconnected from " + peer.getDisplayName() + ", reconnecting...");
-            googleClient.reconnect();
+            if(Aware.DEBUG) Log.d(TAG,"Disconnected from " + peer.getDisplayName());
         }
     }
 }
