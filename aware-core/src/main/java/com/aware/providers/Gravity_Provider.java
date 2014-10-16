@@ -240,7 +240,7 @@ public class Gravity_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = getContext().getPackageName() + ".provider.gravity";
+//	    AUTHORITY = getContext().getPackageName() + ".provider.gravity";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Gravity_Provider.AUTHORITY, DATABASE_TABLES[0],

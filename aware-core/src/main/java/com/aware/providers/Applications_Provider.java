@@ -367,7 +367,7 @@ public class Applications_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = getContext().getPackageName() + ".provider.applications";
+//	    AUTHORITY = getContext().getPackageName() + ".provider.applications";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Applications_Provider.AUTHORITY, DATABASE_TABLES[0],

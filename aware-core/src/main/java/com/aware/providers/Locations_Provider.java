@@ -184,7 +184,7 @@ public class Locations_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = getContext().getPackageName() + ".provider.locations";
+//	    AUTHORITY = getContext().getPackageName() + ".provider.locations";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Locations_Provider.AUTHORITY, DATABASE_TABLES[0],

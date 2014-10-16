@@ -172,7 +172,7 @@ public class Network_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = getContext().getPackageName() + ".provider.network";
+//	    AUTHORITY = getContext().getPackageName() + ".provider.network";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Network_Provider.AUTHORITY, DATABASE_TABLES[0],
