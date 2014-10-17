@@ -686,6 +686,8 @@ public class Aware_Preferences extends PreferenceActivity {
             study_url = params[0];
             String study_api_key = study_url.substring(study_url.lastIndexOf("/")+1, study_url.length());
 
+            if( study_api_key.length() == 0 ) return null;
+
             HttpResponse request = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/webservice/client_get_study_info/" + study_api_key);
             if( request != null && request.getStatusLine().getStatusCode() == 200 ) {
                 try {
@@ -722,6 +724,14 @@ public class Aware_Preferences extends PreferenceActivity {
                 });
                 builder.setTitle("Study information");
                 builder.setMessage("Unable to retrieve study's information. Please, try again later.");
+                builder.setNegativeButton("Quit study!", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        Toast.makeText(getApplicationContext(), "Clearing settings... please wait", Toast.LENGTH_LONG).show();
+                        Aware.reset(getApplicationContext());
+                    }
+                });
                 builder.show();
             } else {
                 AlertDialog.Builder builder = new AlertDialog.Builder(Aware_Preferences.this);
@@ -898,7 +908,6 @@ public class Aware_Preferences extends PreferenceActivity {
 				HttpResponse answer = new Https(getApplicationContext()).dataPOST(study_url, data);
 				try {
                     String json_str = EntityUtils.toString(answer.getEntity());
-                    Log.d(Aware.TAG, "Server answer: " + json_str );
 
 					JSONArray configs_study = new JSONArray(json_str);
 					if( configs_study.getJSONObject(0).has("message") ) {
@@ -916,8 +925,6 @@ public class Aware_Preferences extends PreferenceActivity {
                     NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                     notManager.notify(new Random(System.currentTimeMillis()).nextInt(), mBuilder.build());
 
-					if( Aware.DEBUG ) Log.d(Aware.TAG, "Study configs: " + configs_study.toString(5));
-					
 					//add webservice automatically to configs
 					JSONObject webservice_server = new JSONObject();
 					webservice_server.put("setting", Aware_Preferences.WEBSERVICE_SERVER);
@@ -934,16 +941,21 @@ public class Aware_Preferences extends PreferenceActivity {
 					configs_study.put(status_webservice);
 					configs_study.put(webservice_server);
 					configs_study.put(study_start);
+
+                    Log.d(Aware.TAG, "Study configs: " + configs_study.toString(5));
 					
 					//Apply new configurations in AWARE Client
 					applySettings(getApplicationContext(), configs_study);
 					
 					Intent apply_settings = new Intent(Aware.ACTION_AWARE_REFRESH);
 					sendBroadcast(apply_settings);
-					
-					Intent preferences = new Intent( getApplicationContext(), Aware_Preferences.class);
-					preferences.setFlags( Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
-					startActivity(preferences);
+
+                    //Only needed if we are scanning the URL with the client
+                    if( getApplicationContext().getPackageName().equals("com.aware") ) {
+                        Intent preferences = new Intent(getApplicationContext(), Aware_Preferences.class);
+                        preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(preferences);
+                    }
 					
 					//Send data to server
 					Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);

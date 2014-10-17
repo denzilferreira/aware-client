@@ -63,14 +63,16 @@ public class WebserviceHelper extends IntentService {
 	
 	@Override
 	protected void onHandleIntent(Intent intent) {
-		
+
 		WEBSERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
 		DEVICE_ID = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
 		DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
 		DATABASE_TABLE = intent.getStringExtra(EXTRA_TABLE);
 		TABLES_FIELDS = intent.getStringExtra(EXTRA_FIELDS);
 		CONTENT_URI = Uri.parse(intent.getStringExtra(EXTRA_CONTENT_URI));
-		
+
+        if( Aware.DEBUG ) Log.d(Aware.TAG, "Synching data..." + DATABASE_TABLE);
+
 		//Fixed: not using webservices
 		if( WEBSERVER.length() == 0 ) return;
 		
@@ -197,7 +199,7 @@ public class WebserviceHelper extends IntentService {
 							}
 							context_data_entries.put(entry);
 							
-							if( context_data_entries.length() == 1000 ) {
+							if( context_data_entries.length() == 10000 ) { //10000 records per push
 								request = new ArrayList<NameValuePair>();
 								request.add(new BasicNameValuePair(Aware_Preferences.DEVICE_ID, DEVICE_ID));
 								request.add(new BasicNameValuePair("data", context_data_entries.toString()));

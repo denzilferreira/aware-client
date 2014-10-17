@@ -123,7 +123,7 @@ public class Aware_Sensor extends Service {
      * - ACTION_AWARE_SPACE_MAINTENANCE: clears old data from content providers
      * @author denzil
      */
-    public class ContextBroadcaster extends BroadcastReceiver {     
+    public class ContextBroadcaster extends BroadcastReceiver {
     	@Override
         public void onReceive(Context context, Intent intent) {
             if( intent.getAction().equals(Aware.ACTION_AWARE_CURRENT_CONTEXT) ) {

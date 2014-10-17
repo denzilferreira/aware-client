@@ -670,6 +670,18 @@ public class Aware extends Service {
     	global_settings.add("device_id");
     	global_settings.add("study_id");
     	global_settings.add("study_start");
+        global_settings.add(Aware_Preferences.STATUS_WEBSERVICE);
+        global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
+        global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
+        global_settings.add(Aware_Preferences.WEBSERVICE_SERVER);
+        global_settings.add(Aware_Preferences.STATUS_MQTT);
+        global_settings.add(Aware_Preferences.MQTT_SERVER);
+        global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
+        global_settings.add(Aware_Preferences.MQTT_PORT);
+        global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
+        global_settings.add(Aware_Preferences.MQTT_USERNAME);
+        global_settings.add(Aware_Preferences.MQTT_PASSWORD);
+        global_settings.add(Aware_Preferences.STATUS_ANDROID_WEAR);
     	
     	if( global_settings.contains(key) ) {
     		is_restricted_package = false;
@@ -698,7 +710,19 @@ public class Aware extends Service {
     	global_settings.add("debug_tag");
     	global_settings.add("study_id");
     	global_settings.add("study_start");
-    	
+        global_settings.add(Aware_Preferences.STATUS_WEBSERVICE);
+        global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
+        global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
+        global_settings.add(Aware_Preferences.WEBSERVICE_SERVER);
+        global_settings.add(Aware_Preferences.STATUS_MQTT);
+        global_settings.add(Aware_Preferences.MQTT_SERVER);
+        global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
+        global_settings.add(Aware_Preferences.MQTT_PORT);
+        global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
+        global_settings.add(Aware_Preferences.MQTT_USERNAME);
+        global_settings.add(Aware_Preferences.MQTT_PASSWORD);
+        global_settings.add(Aware_Preferences.STATUS_ANDROID_WEAR);
+
     	if( global_settings.contains(key) ) {
     		is_restricted_package = false;
     	}

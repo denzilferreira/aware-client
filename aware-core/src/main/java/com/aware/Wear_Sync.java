@@ -88,8 +88,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
     public final static PutDataMapRequest rotation = PutDataMapRequest.create("/rotation");
     public final static PutDataMapRequest screen = PutDataMapRequest.create("/screen");
     public final static PutDataMapRequest temperature = PutDataMapRequest.create("/temperature");
-
-    private final static ArrayList<AWAREContentObserver> contentObservers = new ArrayList<AWAREContentObserver>();
+    public static AWAREContentObserver accelerometerObs, installationsObs, barometerObs, batteryObs, bluetoothObs, gravityObs, gyroscopeObs, lightObs, linearObs, magnetometerObs, processorObs, proximityObs, rotationObs, screenObs, temperatureObs;
 
     @Override
     public void onCreate() {
@@ -154,220 +153,112 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
 
             if( setting.contains("status") && value.equals("true") ) {
                 if( setting.equals(Aware_Preferences.STATUS_ACCELEROMETER) ) {
-                    AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Accelerometer_Provider.Accelerometer_Data.CONTENT_URI, "accelerometer");
-                    contentObservers.add(observer);
-                    context.getContentResolver().registerContentObserver(Accelerometer_Provider.Accelerometer_Data.CONTENT_URI, true, observer);
+                    accelerometerObs = new AWAREContentObserver(new Handler(), Accelerometer_Provider.Accelerometer_Data.CONTENT_URI, "accelerometer");
+                    context.getContentResolver().registerContentObserver(Accelerometer_Provider.Accelerometer_Data.CONTENT_URI, true, accelerometerObs);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_INSTALLATIONS) ) {
-                    AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Installations_Provider.Installations_Data.CONTENT_URI, "installations");
-                    contentObservers.add(observer);
-                    context.getContentResolver().registerContentObserver(Installations_Provider.Installations_Data.CONTENT_URI, true, observer);
+                    installationsObs = new AWAREContentObserver(new Handler(), Installations_Provider.Installations_Data.CONTENT_URI, "installations");
+                    context.getContentResolver().registerContentObserver(Installations_Provider.Installations_Data.CONTENT_URI, true, installationsObs);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_BAROMETER) ) {
-                    AWAREContentObserver observer = new AWAREContentObserver(new Handler(),Barometer_Provider.Barometer_Data.CONTENT_URI,"barometer");
-                    contentObservers.add(observer);
-                    context.getContentResolver().registerContentObserver(Barometer_Provider.Barometer_Data.CONTENT_URI, true, observer);
+                    barometerObs = new AWAREContentObserver(new Handler(),Barometer_Provider.Barometer_Data.CONTENT_URI,"barometer");
+                    context.getContentResolver().registerContentObserver(Barometer_Provider.Barometer_Data.CONTENT_URI, true, barometerObs);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_BATTERY) ) {
-                    AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Battery_Provider.Battery_Data.CONTENT_URI, "battery");
-                    contentObservers.add(observer);
-                    context.getContentResolver().registerContentObserver(Battery_Provider.Battery_Data.CONTENT_URI, true, observer);
+                    batteryObs = new AWAREContentObserver(new Handler(), Battery_Provider.Battery_Data.CONTENT_URI, "battery");
+                    context.getContentResolver().registerContentObserver(Battery_Provider.Battery_Data.CONTENT_URI, true, batteryObs);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_BLUETOOTH) ) {
-                    AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Bluetooth_Provider.Bluetooth_Data.CONTENT_URI, "bluetooth");
-                    contentObservers.add(observer);
-                    context.getContentResolver().registerContentObserver(Bluetooth_Provider.Bluetooth_Data.CONTENT_URI, true, observer);
+                    bluetoothObs = new AWAREContentObserver(new Handler(), Bluetooth_Provider.Bluetooth_Data.CONTENT_URI, "bluetooth");
+                    context.getContentResolver().registerContentObserver(Bluetooth_Provider.Bluetooth_Data.CONTENT_URI, true, bluetoothObs);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_GRAVITY) ) {
-                    AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Gravity_Provider.Gravity_Data.CONTENT_URI, "gravity");
-                    contentObservers.add(observer);
-                    context.getContentResolver().registerContentObserver(Gravity_Provider.Gravity_Data.CONTENT_URI, true, observer);
+                    gravityObs = new AWAREContentObserver(new Handler(), Gravity_Provider.Gravity_Data.CONTENT_URI, "gravity");
+                    context.getContentResolver().registerContentObserver(Gravity_Provider.Gravity_Data.CONTENT_URI, true, gravityObs);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_GYROSCOPE) ) {
-                    AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Gyroscope_Provider.Gyroscope_Data.CONTENT_URI, "gyroscope");
-                    contentObservers.add(observer);
-                    context.getContentResolver().registerContentObserver(Gyroscope_Provider.Gyroscope_Data.CONTENT_URI, true, observer);
+                    gyroscopeObs = new AWAREContentObserver(new Handler(), Gyroscope_Provider.Gyroscope_Data.CONTENT_URI, "gyroscope");
+                    context.getContentResolver().registerContentObserver(Gyroscope_Provider.Gyroscope_Data.CONTENT_URI, true, gyroscopeObs);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_LIGHT) ) {
-                    AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Light_Provider.Light_Data.CONTENT_URI, "light");
-                    contentObservers.add(observer);
-                    context.getContentResolver().registerContentObserver(Light_Provider.Light_Data.CONTENT_URI, true, observer);
+                    lightObs = new AWAREContentObserver(new Handler(), Light_Provider.Light_Data.CONTENT_URI, "light");
+                    context.getContentResolver().registerContentObserver(Light_Provider.Light_Data.CONTENT_URI, true, lightObs);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_LINEAR_ACCELEROMETER) ) {
-                    AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Linear_Accelerometer_Provider.Linear_Accelerometer_Data.CONTENT_URI, "linear");
-                    contentObservers.add(observer);
-                    context.getContentResolver().registerContentObserver(Linear_Accelerometer_Provider.Linear_Accelerometer_Data.CONTENT_URI, true, observer);
+                    linearObs = new AWAREContentObserver(new Handler(), Linear_Accelerometer_Provider.Linear_Accelerometer_Data.CONTENT_URI, "linear");
+                    context.getContentResolver().registerContentObserver(Linear_Accelerometer_Provider.Linear_Accelerometer_Data.CONTENT_URI, true, linearObs);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_MAGNETOMETER) ) {
-                    AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Magnetometer_Provider.Magnetometer_Data.CONTENT_URI, "magnetometer");
-                    contentObservers.add(observer);
-                    context.getContentResolver().registerContentObserver(Magnetometer_Provider.Magnetometer_Data.CONTENT_URI, true, observer);
+                    magnetometerObs = new AWAREContentObserver(new Handler(), Magnetometer_Provider.Magnetometer_Data.CONTENT_URI, "magnetometer");
+                    context.getContentResolver().registerContentObserver(Magnetometer_Provider.Magnetometer_Data.CONTENT_URI, true, magnetometerObs);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_PROCESSOR) ) {
-                    AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Processor_Provider.Processor_Data.CONTENT_URI, "processor");
-                    contentObservers.add(observer);
-                    context.getContentResolver().registerContentObserver(Processor_Provider.Processor_Data.CONTENT_URI, true, observer);
+                    processorObs = new AWAREContentObserver(new Handler(), Processor_Provider.Processor_Data.CONTENT_URI, "processor");
+                    context.getContentResolver().registerContentObserver(Processor_Provider.Processor_Data.CONTENT_URI, true, processorObs);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_PROXIMITY) ) {
-                    AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Proximity_Provider.Proximity_Data.CONTENT_URI, "proximity");
-                    contentObservers.add(observer);
-                    context.getContentResolver().registerContentObserver(Proximity_Provider.Proximity_Data.CONTENT_URI, true, observer);
+                    proximityObs = new AWAREContentObserver(new Handler(), Proximity_Provider.Proximity_Data.CONTENT_URI, "proximity");
+                    context.getContentResolver().registerContentObserver(Proximity_Provider.Proximity_Data.CONTENT_URI, true, proximityObs);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_ROTATION) ) {
-                    AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Rotation_Provider.Rotation_Data.CONTENT_URI, "rotation");
-                    contentObservers.add(observer);
-                    context.getContentResolver().registerContentObserver(Rotation_Provider.Rotation_Data.CONTENT_URI, true, observer);
+                    rotationObs = new AWAREContentObserver(new Handler(), Rotation_Provider.Rotation_Data.CONTENT_URI, "rotation");
+                    context.getContentResolver().registerContentObserver(Rotation_Provider.Rotation_Data.CONTENT_URI, true, rotationObs);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_SCREEN) ) {
-                    AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Screen_Provider.Screen_Data.CONTENT_URI, "screen");
-                    contentObservers.add(observer);
-                    context.getContentResolver().registerContentObserver(Screen_Provider.Screen_Data.CONTENT_URI, true, observer);
+                    screenObs = new AWAREContentObserver(new Handler(), Screen_Provider.Screen_Data.CONTENT_URI, "screen");
+                    context.getContentResolver().registerContentObserver(Screen_Provider.Screen_Data.CONTENT_URI, true, screenObs);
                 }
                 if( setting.equals(Aware_Preferences.STATUS_TEMPERATURE) ) {
-                    AWAREContentObserver observer = new AWAREContentObserver(new Handler(), Temperature_Provider.Temperature_Data.CONTENT_URI, "temperature");
-                    contentObservers.add(observer);
-                    context.getContentResolver().registerContentObserver(Temperature_Provider.Temperature_Data.CONTENT_URI, true, observer);
+                    temperatureObs = new AWAREContentObserver(new Handler(), Temperature_Provider.Temperature_Data.CONTENT_URI, "temperature");
+                    context.getContentResolver().registerContentObserver(Temperature_Provider.Temperature_Data.CONTENT_URI, true, temperatureObs);
                 }
             }
 
             if( setting.contains("status") && value.equals("false") ) {
                 if (setting.equals(Aware_Preferences.STATUS_ACCELEROMETER)) {
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Accelerometer_Provider.Accelerometer_Data.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
+                    if( accelerometerObs != null ) context.getContentResolver().unregisterContentObserver(accelerometerObs);
                 }
                 if (setting.equals(Aware_Preferences.STATUS_INSTALLATIONS)) {
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Installations_Provider.Installations_Data.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
+                    if( installationsObs != null ) context.getContentResolver().unregisterContentObserver(installationsObs);
                 }
                 if (setting.equals(Aware_Preferences.STATUS_BAROMETER)) {
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Barometer_Provider.Barometer_Data.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
+                    if( barometerObs != null ) context.getContentResolver().unregisterContentObserver(barometerObs);
                 }
                 if (setting.equals(Aware_Preferences.STATUS_BATTERY)) {
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Battery_Provider.Battery_Data.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Battery_Provider.Battery_Charges.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Battery_Provider.Battery_Discharges.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
+                    if( batteryObs != null ) context.getContentResolver().unregisterContentObserver(batteryObs);
                 }
                 if (setting.equals(Aware_Preferences.STATUS_BLUETOOTH)) {
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Bluetooth_Provider.Bluetooth_Data.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Bluetooth_Provider.Bluetooth_Sensor.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
+                    if( bluetoothObs != null ) context.getContentResolver().unregisterContentObserver(bluetoothObs);
                 }
                 if (setting.equals(Aware_Preferences.STATUS_GRAVITY)) {
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Gravity_Provider.Gravity_Data.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
+                    if( gravityObs != null ) context.getContentResolver().unregisterContentObserver(gravityObs);
                 }
                 if (setting.equals(Aware_Preferences.STATUS_GYROSCOPE)) {
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Gyroscope_Provider.Gyroscope_Data.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
+                    if( gyroscopeObs != null ) context.getContentResolver().unregisterContentObserver(gyroscopeObs);
                 }
                 if (setting.equals(Aware_Preferences.STATUS_LIGHT)) {
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Light_Provider.Light_Data.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
+                    if( lightObs != null ) context.getContentResolver().unregisterContentObserver(lightObs);
                 }
                 if (setting.equals(Aware_Preferences.STATUS_LINEAR_ACCELEROMETER)) {
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Linear_Accelerometer_Provider.Linear_Accelerometer_Data.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
+                    if( linearObs != null ) context.getContentResolver().unregisterContentObserver(linearObs);
                 }
                 if (setting.equals(Aware_Preferences.STATUS_MAGNETOMETER)) {
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Magnetometer_Provider.Magnetometer_Data.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
+                    if( magnetometerObs != null ) context.getContentResolver().unregisterContentObserver(magnetometerObs);
                 }
                 if (setting.equals(Aware_Preferences.STATUS_PROCESSOR)) {
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Processor_Provider.Processor_Data.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
+                    if( processorObs != null ) context.getContentResolver().unregisterContentObserver(processorObs);
                 }
                 if (setting.equals(Aware_Preferences.STATUS_PROXIMITY)) {
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Proximity_Provider.Proximity_Data.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
+                    if( proximityObs != null ) context.getContentResolver().unregisterContentObserver(proximityObs);
                 }
                 if (setting.equals(Aware_Preferences.STATUS_ROTATION)) {
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Rotation_Provider.Rotation_Data.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
+                    if( rotationObs != null ) context.getContentResolver().unregisterContentObserver(rotationObs);
                 }
                 if (setting.equals(Aware_Preferences.STATUS_SCREEN)) {
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Screen_Provider.Screen_Data.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
+                    if( screenObs != null ) context.getContentResolver().unregisterContentObserver(screenObs);
                 }
                 if (setting.equals(Aware_Preferences.STATUS_TEMPERATURE)) {
-                    for(AWAREContentObserver obs : contentObservers ) {
-                        if ( obs.getContentProvider().toString().equals(Temperature_Provider.Temperature_Data.CONTENT_URI.toString()) ) {
-                            context.getContentResolver().unregisterContentObserver(obs);
-                            contentObservers.remove(obs);
-                        }
-                    }
+                    if( temperatureObs != null ) context.getContentResolver().unregisterContentObserver(temperatureObs);
                 }
             }
         }
