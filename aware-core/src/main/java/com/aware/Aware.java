@@ -665,11 +665,11 @@ public class Aware extends Service {
     	boolean is_restricted_package = true;
     	
     	ArrayList<String> global_settings = new ArrayList<String>();
-    	global_settings.add("debug_flag");
-    	global_settings.add("debug_tag");
-    	global_settings.add("device_id");
-    	global_settings.add("study_id");
-    	global_settings.add("study_start");
+        global_settings.add(Aware_Preferences.DEBUG_FLAG);
+        global_settings.add(Aware_Preferences.DEBUG_TAG);
+        global_settings.add("study_id");
+        global_settings.add("study_start");
+        global_settings.add(Aware_Preferences.DEVICE_ID);
         global_settings.add(Aware_Preferences.STATUS_WEBSERVICE);
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
@@ -706,10 +706,11 @@ public class Aware extends Service {
     	boolean is_restricted_package = true;
     	
     	ArrayList<String> global_settings = new ArrayList<String>();
-    	global_settings.add("debug_flag");
-    	global_settings.add("debug_tag");
+    	global_settings.add(Aware_Preferences.DEBUG_FLAG);
+    	global_settings.add(Aware_Preferences.DEBUG_TAG);
     	global_settings.add("study_id");
     	global_settings.add("study_start");
+        global_settings.add(Aware_Preferences.DEVICE_ID);
         global_settings.add(Aware_Preferences.STATUS_WEBSERVICE);
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
@@ -726,12 +727,7 @@ public class Aware extends Service {
     	if( global_settings.contains(key) ) {
     		is_restricted_package = false;
     	}
-    	
-    	//Only AWARE client can change the device ID if needed
-    	if( key.equals("device_id") && ! context.getPackageName().equals("com.aware") ) {
-    		return;
-    	}
-    	
+
     	ContentValues setting = new ContentValues();
         setting.put(Aware_Settings.SETTING_KEY, key);
         setting.put(Aware_Settings.SETTING_VALUE, value.toString());
@@ -853,9 +849,11 @@ public class Aware extends Service {
         Intent aware_apply = new Intent( Aware.ACTION_AWARE_REFRESH );
         c.sendBroadcast(aware_apply);
 
-        Intent preferences = new Intent( c, Aware_Preferences.class);
-        preferences.setFlags( Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
-        c.startActivity(preferences);
+        if( c.getPackageName().equals("com.aware") ) {
+            Intent preferences = new Intent( c, Aware_Preferences.class);
+            preferences.setFlags( Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
+            c.startActivity(preferences);
+        }
     }
 
     private class Update_Check extends AsyncTask<Void, Void, Boolean> {
