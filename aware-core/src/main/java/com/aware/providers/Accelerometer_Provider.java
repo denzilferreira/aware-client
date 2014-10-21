@@ -239,7 +239,7 @@ public class Accelerometer_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-//	    AUTHORITY = getContext().getPackageName() + ".provider.accelerometer";
+	    AUTHORITY = getContext().getPackageName() + ".provider.accelerometer";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Accelerometer_Provider.AUTHORITY,

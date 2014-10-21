@@ -199,7 +199,7 @@ public class WebserviceHelper extends IntentService {
 							}
 							context_data_entries.put(entry);
 							
-							if( context_data_entries.length() == 10000 ) { //10000 records per push
+							if( context_data_entries.length() == 5000 ) { //5000 records per push
 								request = new ArrayList<NameValuePair>();
 								request.add(new BasicNameValuePair(Aware_Preferences.DEVICE_ID, DEVICE_ID));
 								request.add(new BasicNameValuePair("data", context_data_entries.toString()));

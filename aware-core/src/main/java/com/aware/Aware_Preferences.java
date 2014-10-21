@@ -64,6 +64,7 @@ import android.widget.Toast;
 
 import com.aware.providers.Aware_Provider;
 import com.aware.providers.Aware_Provider.Aware_Settings;
+import com.aware.ui.Aware_Activity;
 import com.aware.ui.CameraStudy;
 import com.aware.ui.Plugins_Manager;
 import com.aware.ui.Stream_UI;
@@ -505,6 +506,11 @@ public class Aware_Preferences extends PreferenceActivity {
      */
     public static final String STATUS_ANDROID_WEAR = "status_android_wear";
 
+    /**
+     * Activate/deactivate keyboard logging
+     */
+    public static final String STATUS_KEYBOARD = "status_keyboard";
+
     private static boolean is_refreshing = false;
 
     @Override
@@ -720,6 +726,8 @@ public class Aware_Preferences extends PreferenceActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
+                        //if part of a study, you can't change settings.
+                        if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) { finish(); }
                     }
                 });
                 builder.setTitle("Study information");
@@ -732,6 +740,7 @@ public class Aware_Preferences extends PreferenceActivity {
                         Aware.reset(getApplicationContext());
                     }
                 });
+                builder.setCancelable(false);
                 builder.show();
             } else {
                 AlertDialog.Builder builder = new AlertDialog.Builder(Aware_Preferences.this);
@@ -739,6 +748,8 @@ public class Aware_Preferences extends PreferenceActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
+                        //if part of a study, you can't change settings.
+                        if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) { finish(); }
                     }
                 });
                 builder.setNegativeButton("Quit study!", new DialogInterface.OnClickListener() {
@@ -764,6 +775,7 @@ public class Aware_Preferences extends PreferenceActivity {
                     e.printStackTrace();
                 }
                 builder.setView(study_ui);
+                builder.setCancelable(false);
                 builder.show();
             }
         }
@@ -803,12 +815,16 @@ public class Aware_Preferences extends PreferenceActivity {
     		new Async_SensorLoading().execute();
     	}
 
-        if( Aware.getSetting( getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && ! isAccessibilityServiceActive() ) {
+        if( Aware.getSetting( getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && ! Applications.isAccessibilityServiceActive(getApplicationContext()) ) {
             Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
             accessibilitySettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(accessibilitySettings);
             Toast.makeText(getApplicationContext(), getResources().getText(R.string.aware_activate_accessibility), Toast.LENGTH_LONG).show();
     	}
+
+        if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) {
+            new Async_StudyData().execute(Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
+        }
     }
     
     @Override
@@ -1041,24 +1057,7 @@ public class Aware_Preferences extends PreferenceActivity {
             return row;
         }
     }
-    
-    /**
-     * Check if the accessibility service for AWARE Aware is active
-     * @return boolean isActive
-     */
-    private boolean isAccessibilityServiceActive() {
-        AccessibilityManager accessibilityManager = (AccessibilityManager) getSystemService(ACCESSIBILITY_SERVICE);
-        if( accessibilityManager.isEnabled() ) {
-            List<ServiceInfo> accessibilityServices = accessibilityManager.getAccessibilityServiceList();
-            for( ServiceInfo s : accessibilityServices ) {
-                if( s.name.equalsIgnoreCase("com.aware.Applications") || s.name.equalsIgnoreCase("com.aware.ApplicationsJB") ) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    
+
     /**
      * Developer UI options
      * - Debug flag
@@ -1356,13 +1355,13 @@ public class Aware_Preferences extends PreferenceActivity {
         notifications.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
-				if( isAccessibilityServiceActive() && notifications.isChecked() ) {
+				if( Applications.isAccessibilityServiceActive(getApplicationContext()) && notifications.isChecked() ) {
 					Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_NOTIFICATIONS, notifications.isChecked());
 					notifications.setChecked(true);
 					framework.startApplications();
 					return true;
 				}
-				if (! isAccessibilityServiceActive() ) {
+				if (! Applications.isAccessibilityServiceActive(getApplicationContext()) ) {
 					showDialog(Aware_Preferences.DIALOG_ERROR_ACCESSIBILITY);
 				}
 				Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_NOTIFICATIONS, false);
@@ -1370,18 +1369,37 @@ public class Aware_Preferences extends PreferenceActivity {
 				return false;
 			}
 		});
+        final CheckBoxPreference keyboard = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_KEYBOARD);
+        keyboard.setChecked(Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_KEYBOARD).equals("true"));
+        keyboard.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                if( Applications.isAccessibilityServiceActive(getApplicationContext()) && keyboard.isChecked() ) {
+                    Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_KEYBOARD, keyboard.isChecked());
+                    keyboard.setChecked(true);
+                    framework.startApplications();
+                    return true;
+                }
+                if (! Applications.isAccessibilityServiceActive(getApplicationContext()) ) {
+                    showDialog(Aware_Preferences.DIALOG_ERROR_ACCESSIBILITY);
+                }
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_KEYBOARD, false);
+                keyboard.setChecked(false);
+                return false;
+            }
+        });
         final CheckBoxPreference crashes = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_CRASHES);
         crashes.setChecked(Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_CRASHES).equals("true"));
         crashes.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
-				if( isAccessibilityServiceActive() && crashes.isChecked() ) {
+				if( Applications.isAccessibilityServiceActive(getApplicationContext()) && crashes.isChecked() ) {
 					Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_CRASHES, crashes.isChecked());
 					crashes.setChecked(true);
 					framework.startApplications();
 					return true;
 				}
-				if (! isAccessibilityServiceActive() ) {
+				if (! Applications.isAccessibilityServiceActive(getApplicationContext()) ) {
 					showDialog(Aware_Preferences.DIALOG_ERROR_ACCESSIBILITY);
 				}
 				Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_CRASHES, false);
@@ -1389,8 +1407,8 @@ public class Aware_Preferences extends PreferenceActivity {
 				return false;
 			}
 		});
-    	final CheckBoxPreference applications = (CheckBoxPreference) findPreference("status_applications");
-        if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && ! isAccessibilityServiceActive() ) {
+    	final CheckBoxPreference applications = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_APPLICATIONS);
+        if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && ! Applications.isAccessibilityServiceActive(getApplicationContext()) ) {
             showDialog(Aware_Preferences.DIALOG_ERROR_ACCESSIBILITY);
             Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS, false );
             framework.stopApplications();
@@ -1399,13 +1417,13 @@ public class Aware_Preferences extends PreferenceActivity {
         applications.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                if( isAccessibilityServiceActive() && applications.isChecked() ) {
+                if( Applications.isAccessibilityServiceActive(getApplicationContext()) && applications.isChecked() ) {
                     Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS, true);
                     applications.setChecked(true);
                     framework.startApplications();
                     return true;
                 }else {
-                    if( ! isAccessibilityServiceActive() ) {
+                    if( ! Applications.isAccessibilityServiceActive(getApplicationContext()) ) {
                         showDialog(Aware_Preferences.DIALOG_ERROR_ACCESSIBILITY);
                     }  
                     

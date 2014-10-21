@@ -213,7 +213,7 @@ public class Mqtt_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-//	    AUTHORITY = getContext().getPackageName() + ".provider.mqtt";
+	    AUTHORITY = getContext().getPackageName() + ".provider.mqtt";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Mqtt_Provider.AUTHORITY, DATABASE_TABLES[0], MQTT);

@@ -279,7 +279,7 @@ public class Battery_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-//	    AUTHORITY = getContext().getPackageName() + ".provider.battery";
+	    AUTHORITY = getContext().getPackageName() + ".provider.battery";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Battery_Provider.AUTHORITY, DATABASE_TABLES[0],

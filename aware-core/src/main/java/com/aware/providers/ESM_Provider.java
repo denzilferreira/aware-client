@@ -188,7 +188,7 @@ public class ESM_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-//	    AUTHORITY = getContext().getPackageName() + ".provider.esm";
+	    AUTHORITY = getContext().getPackageName() + ".provider.esm";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(ESM_Provider.AUTHORITY, DATABASE_TABLES[0],

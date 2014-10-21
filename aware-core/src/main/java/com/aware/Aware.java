@@ -379,18 +379,17 @@ public class Aware extends Service {
             
             if( Aware.DEBUG ) Log.d(TAG,"AWARE framework is active...");
             startAllServices();
-            
+
+            Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
+            if( enabled_plugins != null && enabled_plugins.moveToFirst() ) {
+                do {
+                    startPlugin(getApplicationContext(), enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME)));
+                }while(enabled_plugins.moveToNext());
+            }
+            if( enabled_plugins != null && ! enabled_plugins.isClosed() ) enabled_plugins.close();
+
             //Only the client keeps the plugins running and checks for updates
             if( getPackageName().equals("com.aware") ) {
-
-	            Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
-            	if( enabled_plugins != null && enabled_plugins.moveToFirst() ) {
-            		do {
-            			startPlugin(getApplicationContext(), enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME)));
-            		}while(enabled_plugins.moveToNext());
-            	}
-            	if( enabled_plugins != null && ! enabled_plugins.isClosed() ) enabled_plugins.close();
-	            
 	            if( Aware.getSetting(getApplicationContext(), Aware_Preferences.AWARE_AUTO_UPDATE).equals("true") ) {
 	            	if( aware_preferences.getLong(PREF_LAST_UPDATE, 0) == 0 || (aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 0 && System.currentTimeMillis()-aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 6*60*60*1000) ) { //check every 6h
 	            		new Update_Check().execute();
@@ -728,6 +727,9 @@ public class Aware extends Service {
     		is_restricted_package = false;
     	}
 
+        //Only the client can set the Device ID
+        if( key.equals(Aware_Preferences.DEVICE_ID) && ! context.getPackageName().equals("com.aware") ) return;
+
     	ContentValues setting = new ContentValues();
         setting.put(Aware_Settings.SETTING_KEY, key);
         setting.put(Aware_Settings.SETTING_VALUE, value.toString());
@@ -849,11 +851,9 @@ public class Aware extends Service {
         Intent aware_apply = new Intent( Aware.ACTION_AWARE_REFRESH );
         c.sendBroadcast(aware_apply);
 
-        if( c.getPackageName().equals("com.aware") ) {
-            Intent preferences = new Intent( c, Aware_Preferences.class);
-            preferences.setFlags( Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
-            c.startActivity(preferences);
-        }
+        Intent preferences = new Intent( c, Aware_Preferences.class);
+        preferences.setFlags( Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
+        c.startActivity(preferences);
     }
 
     private class Update_Check extends AsyncTask<Void, Void, Boolean> {

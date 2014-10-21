@@ -34,6 +34,7 @@ import android.content.pm.ServiceInfo;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
+import android.inputmethodservice.KeyboardView;
 import android.net.Uri;
 import android.support.v4.accessibilityservice.AccessibilityServiceInfoCompat;
 import android.util.Log;
@@ -45,6 +46,7 @@ import com.aware.providers.Applications_Provider.Applications_Crashes;
 import com.aware.providers.Applications_Provider.Applications_Foreground;
 import com.aware.providers.Applications_Provider.Applications_History;
 import com.aware.providers.Applications_Provider.Applications_Notifications;
+import com.aware.providers.Keyboard_Provider;
 import com.aware.utils.Encrypter;
 import com.aware.utils.WebserviceHelper;
 
@@ -86,6 +88,11 @@ public class Applications extends AccessibilityService {
      * Broadcasted event: application just crashed
      */
     public static final String ACTION_AWARE_APPLICATIONS_CRASHES = "ACTION_AWARE_APPLICATIONS_CRASHES";
+
+    /**
+     * Broadcasted event: keyboard input detected
+     */
+    public static final String ACTION_AWARE_KEYBOARD = "ACTION_AWARE_KEYBOARD";
     
     /**
      * Clones an AccessibilityEvent
@@ -117,8 +124,8 @@ public class Applications extends AccessibilityService {
     
     /**
      * Given a package name, get application label in the default language of the device
-     * @param Application package name
-     * @return String with application name
+     * @param package_name
+     * @return appName
      */
     private String getApplicationName( String package_name ) {
     	PackageManager packageManager = getPackageManager();
@@ -140,12 +147,7 @@ public class Applications extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_NOTIFICATIONS).equals("true") && event.getEventType() == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED ) {
-        	
-        	//FIXED: Duplicated accessibility events. Because we have the accessibility service both in manifest as well as in service for compabitility with Honeycomb and Gingerbread...
-        	if( lastNotification != null && ( lastNotification.getPackageName().toString().equalsIgnoreCase(event.getPackageName().toString()) || (lastNotification.getText().size()>0 && event.getText().size()>0 && lastNotification.getText().get(0).equals(event.getText().get(0))) )) {
-        		return;
-        	}
-        	
+
         	Notification notificationDetails = (Notification) event.getParcelableData();
         	
         	if( notificationDetails != null ) {
@@ -177,12 +179,7 @@ public class Applications extends AccessibilityService {
                 repeatingIntent = PendingIntent.getService(getApplicationContext(), 0, updateApps, 0);
                 alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+1000, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS)) * 1000, repeatingIntent);
             }
-            
-            //FIXED: Duplicated accessibility events. This is caused by accessibility service definition in xml (Android >2.3) and in code (Android 2.3)
-            if(lastApplication != null && (lastApplication.getPackageName().toString().equalsIgnoreCase(event.getPackageName().toString()) || (lastApplication.getText().size()>0 && event.getText().size()>0 && lastApplication.getText().get(0).equals(event.getText().get(0))) )) {
-                return;
-            }
-            
+
             PackageManager packageManager = getPackageManager();
             PackageInfo pkgInfo = null;
             ApplicationInfo appInfo = null;
@@ -256,20 +253,30 @@ public class Applications extends AccessibilityService {
             backgroundService.setAction(ACTION_AWARE_APPLICATIONS_HISTORY);
             startService(backgroundService);
         }
+
+        if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_KEYBOARD).equals("true") && event.getEventType() == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED ) {
+
+            ContentValues keyboard = new ContentValues();
+            keyboard.put(Keyboard_Provider.Keyboard_Data.TIMESTAMP, System.currentTimeMillis());
+            keyboard.put(Keyboard_Provider.Keyboard_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+            keyboard.put(Keyboard_Provider.Keyboard_Data.PACKAGE_NAME, (String) event.getPackageName());
+            keyboard.put(Keyboard_Provider.Keyboard_Data.BEFORE_TEXT, (String) event.getBeforeText());
+            keyboard.put(Keyboard_Provider.Keyboard_Data.CURRENT_TEXT, event.getText().toString());
+            keyboard.put(Keyboard_Provider.Keyboard_Data.IS_PASSWORD, event.isPassword());
+
+            getContentResolver().insert(Keyboard_Provider.Keyboard_Data.CONTENT_URI, keyboard);
+
+            if( Aware.DEBUG ) Log.d(Aware.TAG, "Keyboard: " + keyboard.toString());
+
+            Intent keyboard_data = new Intent( ACTION_AWARE_KEYBOARD );
+            sendBroadcast(keyboard_data);
+        }
     }
     
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
-        
-        //Backwards compatibility with Honeycomb and Android 2.3...
-        AccessibilityServiceInfo info = new AccessibilityServiceInfo();
-        info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
-        info.feedbackType = AccessibilityServiceInfoCompat.FEEDBACK_ALL_MASK;
-        info.notificationTimeout = 50;
-        info.packageNames = null;
-        setServiceInfo(info);
-        
+
         if( Aware.DEBUG ) Log.d("AWARE","Aware service connected to accessibility services...");
         
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
@@ -306,7 +313,7 @@ public class Applications extends AccessibilityService {
     public void onCreate() {
         super.onCreate();
         
-        if( ! isAccessibilityServiceActive() ) {
+        if( ! isAccessibilityServiceActive( getApplicationContext() ) ) {
             Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
             accessibilitySettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(accessibilitySettings);
@@ -351,13 +358,12 @@ public class Applications extends AccessibilityService {
      * Check if the accessibility service for AWARE Aware is active
      * @return boolean isActive
      */
-    private boolean isAccessibilityServiceActive() {
-        AccessibilityManager accessibilityManager = (AccessibilityManager) getSystemService(ACCESSIBILITY_SERVICE);
+    public static boolean isAccessibilityServiceActive(Context c) {
+        AccessibilityManager accessibilityManager = (AccessibilityManager) c.getSystemService(ACCESSIBILITY_SERVICE);
         if( accessibilityManager.isEnabled() ) {
-            @SuppressWarnings("deprecation")
             List<ServiceInfo> accessibilityServices = accessibilityManager.getAccessibilityServiceList();
             for( ServiceInfo s : accessibilityServices ) {
-                if( s.name.equalsIgnoreCase("com.aware.Applications") || s.name.equalsIgnoreCase("com.aware.ApplicationsJB") ) {
+                if( s.name.equalsIgnoreCase("com.aware.Applications") ) {
                     return true;
                 }
             }
@@ -378,7 +384,7 @@ public class Applications extends AccessibilityService {
             
         	String[] DATABASE_TABLES = Applications_Provider.DATABASE_TABLES;
         	String[] TABLES_FIELDS = Applications_Provider.TABLES_FIELDS;
-        	Uri[] CONTEXT_URIS = new Uri[]{ Applications_Foreground.CONTENT_URI, Applications_History.CONTENT_URI, Applications_Notifications.CONTENT_URI, Applications_Crashes.CONTENT_URI };
+        	Uri[] CONTEXT_URIS = new Uri[]{ Applications_Foreground.CONTENT_URI, Applications_History.CONTENT_URI, Applications_Notifications.CONTENT_URI, Applications_Crashes.CONTENT_URI, Keyboard_Provider.Keyboard_Data.CONTENT_URI };
         	
         	if( Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true") && intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA) ) {
         		for( int i=0; i<DATABASE_TABLES.length; i++ ) {

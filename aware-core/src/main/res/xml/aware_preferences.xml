@@ -93,6 +93,13 @@
                 android:title="Application installations" />
             <CheckBoxPreference
                 android:defaultValue="false"
+                android:key="status_keyboard"
+                android:dependency="status_applications"
+                android:persistent="true"
+                android:summary="Logs keyboard input (no passwords)"
+                android:title="Keyboard" />
+            <CheckBoxPreference
+                android:defaultValue="false"
                 android:dependency="status_applications"
                 android:key="status_notifications"
                 android:persistent="true"

@@ -3,8 +3,9 @@ apply plugin: 'com.android.application' //AWARE is an application
 //apply plugin: 'com.android.library' //AWARE is a library
 
 android {
-    compileSdkVersion 19
+    compileSdkVersion 20
     buildToolsVersion '20.0.0'
+    defaultPublishConfig "phoneRelease"
     defaultConfig {
         applicationId "com.aware"
         minSdkVersion 10 //Android 2.3.3
@@ -18,14 +19,11 @@ android {
     }
     productFlavors {
         wear {
-            minSdkVersion 13
-            applicationId 'com.aware'
+            minSdkVersion 20
             targetSdkVersion 20
         }
         phone {
-            applicationId 'com.aware'
-            targetSdkVersion 19
-            minSdkVersion 10
+
         }
     }
 }
