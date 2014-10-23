@@ -10,10 +10,7 @@ See the GNU General Public License for more details: http://www.gnu.org/licenses
 */
 package com.aware;
 
-import java.util.List;
-
 import android.accessibilityservice.AccessibilityService;
-import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.ActivityManager;
 import android.app.ActivityManager.ProcessErrorStateInfo;
 import android.app.ActivityManager.RunningAppProcessInfo;
@@ -34,9 +31,7 @@ import android.content.pm.ServiceInfo;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
-import android.inputmethodservice.KeyboardView;
 import android.net.Uri;
-import android.support.v4.accessibilityservice.AccessibilityServiceInfoCompat;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
@@ -49,6 +44,8 @@ import com.aware.providers.Applications_Provider.Applications_Notifications;
 import com.aware.providers.Keyboard_Provider;
 import com.aware.utils.Encrypter;
 import com.aware.utils.WebserviceHelper;
+
+import java.util.List;
 
 /**
  * Service that logs application usage on the device. 
@@ -66,8 +63,6 @@ public class Applications extends AccessibilityService {
     private static AlarmManager alarmManager = null;
     private static Intent updateApps = null;
     private static PendingIntent repeatingIntent = null;
-    private static AccessibilityEvent lastApplication = null;
-    private static AccessibilityEvent lastNotification = null;
     
     /**
      * Broadcasted event: a new application is visible on the foreground
@@ -93,35 +88,7 @@ public class Applications extends AccessibilityService {
      * Broadcasted event: keyboard input detected
      */
     public static final String ACTION_AWARE_KEYBOARD = "ACTION_AWARE_KEYBOARD";
-    
-    /**
-     * Clones an AccessibilityEvent
-     */
-    private AccessibilityEvent clone(AccessibilityEvent event) {
-        AccessibilityEvent clone = AccessibilityEvent.obtain();
-        
-        clone.setAddedCount(event.getAddedCount());
-        clone.setBeforeText(event.getBeforeText());
-        clone.setChecked(event.isChecked());
-        clone.setClassName(event.getClassName());
-        clone.setContentDescription(event.getContentDescription());
-        clone.setCurrentItemIndex(event.getCurrentItemIndex());
-        clone.setEventTime(event.getEventTime());
-        clone.setEventType(event.getEventType());
-        clone.setEnabled(event.isEnabled());
-        clone.setFromIndex(event.getFromIndex());
-        clone.setFullScreen(event.isFullScreen());
-        clone.setItemCount(event.getItemCount());
-        clone.setPackageName(event.getPackageName());
-        clone.setParcelableData(event.getParcelableData());
-        clone.setPassword(event.isPassword());
-        clone.setRemovedCount(event.getRemovedCount());
-        clone.getText().clear();
-        clone.getText().addAll(event.getText());
 
-        return clone;
-    }
-    
     /**
      * Given a package name, get application label in the default language of the device
      * @param package_name
@@ -168,8 +135,6 @@ public class Applications extends AccessibilityService {
             	Intent notification = new Intent(ACTION_AWARE_APPLICATIONS_NOTIFICATIONS);
             	sendBroadcast(notification);
         	}
-        	
-        	lastNotification = clone(event);
         }
         
     	if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ) {
@@ -181,14 +146,21 @@ public class Applications extends AccessibilityService {
             }
 
             PackageManager packageManager = getPackageManager();
-            PackageInfo pkgInfo = null;
-            ApplicationInfo appInfo = null;
+
+            ApplicationInfo appInfo;
             try {
                 appInfo = packageManager.getApplicationInfo(event.getPackageName().toString(), PackageManager.GET_ACTIVITIES);
-                pkgInfo = packageManager.getPackageInfo(event.getPackageName().toString(), PackageManager.GET_META_DATA);
             } catch( final NameNotFoundException e ) {
                 appInfo = null;
             }
+
+            PackageInfo pkgInfo;
+            try {
+                pkgInfo = packageManager.getPackageInfo(event.getPackageName().toString(), PackageManager.GET_META_DATA);
+            } catch (NameNotFoundException e ) {
+                pkgInfo = null;
+            }
+
             String appName = ( appInfo != null ) ? (String) packageManager.getApplicationLabel(appInfo):"";
             
             ContentValues rowData = new ContentValues();
@@ -196,7 +168,7 @@ public class Applications extends AccessibilityService {
             rowData.put(Applications_Foreground.DEVICE_ID, Aware.getSetting(getApplicationContext(),Aware_Preferences.DEVICE_ID));
             rowData.put(Applications_Foreground.PACKAGE_NAME, event.getPackageName().toString());
             rowData.put(Applications_Foreground.APPLICATION_NAME, appName);
-            rowData.put(Applications_Foreground.IS_SYSTEM_APP, isSystemPackage(pkgInfo));
+            rowData.put(Applications_Foreground.IS_SYSTEM_APP, ( pkgInfo != null ) ? isSystemPackage(pkgInfo) : false );
             
             if( Aware.DEBUG ) Log.d(Aware.TAG, "FOREGROUND: " + rowData.toString());
 
@@ -207,9 +179,7 @@ public class Applications extends AccessibilityService {
             }catch( SQLException e ) {
                 if(Aware.DEBUG) Log.d(TAG,e.getMessage());
             }
-        
-            lastApplication = clone(event);
-            
+
             Intent newForeground = new Intent(ACTION_AWARE_APPLICATIONS_FOREGROUND);
             sendBroadcast(newForeground);
             
@@ -255,7 +225,6 @@ public class Applications extends AccessibilityService {
         }
 
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_KEYBOARD).equals("true") && event.getEventType() == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED ) {
-
             ContentValues keyboard = new ContentValues();
             keyboard.put(Keyboard_Provider.Keyboard_Data.TIMESTAMP, System.currentTimeMillis());
             keyboard.put(Keyboard_Provider.Keyboard_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
@@ -330,7 +299,9 @@ public class Applications extends AccessibilityService {
     
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-    	
+
+        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+
     	if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS).length() == 0 ) {
         	Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS, 30);
         }

@@ -28,7 +28,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.pm.ServiceInfo;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -50,10 +49,11 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.accessibility.AccessibilityManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
@@ -64,7 +64,6 @@ import android.widget.Toast;
 
 import com.aware.providers.Aware_Provider;
 import com.aware.providers.Aware_Provider.Aware_Settings;
-import com.aware.ui.Aware_Activity;
 import com.aware.ui.CameraStudy;
 import com.aware.ui.Plugins_Manager;
 import com.aware.ui.Stream_UI;
@@ -671,6 +670,13 @@ public class Aware_Preferences extends PreferenceActivity {
     	}
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.aware_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
     private class Async_StudyData extends AsyncTask<String, Void, JSONObject> {
 
         private String study_url = "";
@@ -1002,7 +1008,18 @@ public class Aware_Preferences extends PreferenceActivity {
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if( navigationToggle.onOptionsItemSelected(item)) return true;
+        switch(item.getItemId()) {
+            case R.id.aware_qrcode:
+                if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) {
+                    new Async_StudyData().execute(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
+                } else {
+                    Intent join_study = new Intent( Aware_Preferences.this, CameraStudy.class );
+                    startActivityForResult(join_study, REQUEST_JOIN_STUDY);
+                }
+            break;
+        }
+
+        if( navigationToggle.onOptionsItemSelected(item) ) return true;
         return super.onOptionsItemSelected(item);
     }
     

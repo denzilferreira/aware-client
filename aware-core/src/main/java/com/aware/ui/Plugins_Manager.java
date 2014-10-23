@@ -10,30 +10,6 @@ See the GNU General Public License for more details: http://www.gnu.org/licenses
 */
 package com.aware.ui;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.ParseException;
-import org.apache.http.util.EntityUtils;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
@@ -60,6 +36,30 @@ import com.aware.Aware;
 import com.aware.R;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.utils.Https;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.ParseException;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 
 /**
  * UI to manage installed plugins. 
@@ -210,9 +210,9 @@ public class Plugins_Manager extends Aware_Activity {
     
 	/**
 	 * Given a package and class name, check if the class exists or not.
-	 * @param String package_name
-	 * @param String class_name
-	 * @return true if exists, false otherwise
+	 * @param package_name
+	 * @param class_name
+	 * @return boolean
 	 */
 	private boolean isClassAvailable( String package_name, String class_name ) {
 		try{
@@ -242,8 +242,7 @@ public class Plugins_Manager extends Aware_Activity {
     			final int status = installed_plugins.getInt(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_STATUS));
     			
     			final View pkg_view = inflater.inflate(R.layout.plugins_store_pkg_list_item, null, false);
-    			pkg_view.setTag(package_name); //each view has the package name as a tag for easier references
-    			
+
     			try {
     				ImageView pkg_icon = (ImageView) pkg_view.findViewById(R.id.pkg_icon);
     				if( status != PLUGIN_NOT_INSTALLED ) {
@@ -251,7 +250,7 @@ public class Plugins_Manager extends Aware_Activity {
     					pkg_icon.setImageDrawable(appInfo.loadIcon(getPackageManager()));
     				} else {
     					byte[] img = installed_plugins.getBlob(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_ICON));
-    					if( img != null ) pkg_icon.setImageBitmap(BitmapFactory.decodeByteArray(img, 0, img.length));
+    					if( img.length > 0 ) pkg_icon.setImageBitmap(BitmapFactory.decodeByteArray(img, 0, img.length));
     				}
     				
     				TextView pkg_title = (TextView) pkg_view.findViewById(R.id.pkg_title);
@@ -350,7 +349,7 @@ public class Plugins_Manager extends Aware_Activity {
 									});
     								builder.create().show();
     							}
-    		    			});
+                            });
     						break;
     					case PLUGIN_NOT_INSTALLED:
     						pkg_state.setImageResource(R.drawable.ic_pkg_download);
@@ -373,7 +372,7 @@ public class Plugins_Manager extends Aware_Activity {
     								});
     								builder.create().show();
     							}
-    		    			});
+                            });
     						break;
     				}
     				store_grid.addView(pkg_view);
@@ -412,15 +411,12 @@ public class Plugins_Manager extends Aware_Activity {
 						//check if we have this plugin already in our database.
 						Cursor is_cached = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + plugin.getString("package") + "'", null, null );
 						if( is_cached != null && is_cached.moveToFirst() ) {
-							
 							int version = is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins.PLUGIN_VERSION));
-							String package_name = is_cached.getString(is_cached.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-							
 							//we have it already, so lets check if it is updated
 							if( plugin.getInt("version") > version ) {
 								ContentValues data = new ContentValues();
 								data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_UPDATED);
-								getContentResolver().update(Aware_Plugins.CONTENT_URI, data, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+								getContentResolver().update(Aware_Plugins.CONTENT_URI, data, Aware_Plugins._ID + "=" + is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins._ID)), null);
 							}
 						} else {
 							//this is a new plugin available on the server that we don't have yet!

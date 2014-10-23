@@ -188,10 +188,20 @@ public class Aware_Activity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
+                        if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) { finish(); }
                     }
                 });
                 builder.setTitle("Study information");
                 builder.setMessage("Unable to retrieve study's information. Please, try again later.");
+                builder.setNegativeButton("Quit study!", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        Toast.makeText(getApplicationContext(), "Clearing settings... please wait", Toast.LENGTH_LONG).show();
+                        Aware.reset(getApplicationContext());
+                    }
+                });
+                builder.setCancelable(false);
                 builder.show();
             } else {
                 AlertDialog.Builder builder = new AlertDialog.Builder(Aware_Activity.this);
@@ -199,6 +209,7 @@ public class Aware_Activity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
+                        if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) { finish(); }
                     }
                 });
                 builder.setNegativeButton("Quit study!", new DialogInterface.OnClickListener() {
@@ -228,8 +239,17 @@ public class Aware_Activity extends Activity {
             }
         }
     }
-	
-	@Override
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) {
+            new Async_StudyData().execute(Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
+        }
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if( requestCode == Aware_Preferences.REQUEST_JOIN_STUDY ) {
@@ -299,8 +319,12 @@ public class Aware_Activity extends Activity {
 	            			break;
 		            	case 3: //Join study
 		            		//TODO: make ui for listing available studies
-		            		Intent join_study = new Intent( getApplicationContext(), CameraStudy.class );
-		                    startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY, animations);
+                            if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) {
+                                new Async_StudyData().execute(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
+                            } else {
+                                Intent join_study = new Intent(getApplicationContext(), CameraStudy.class);
+                                startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY, animations);
+                            }
 		            		break;
 	            	}
 	            	navigationDrawer.closeDrawer(navigationList);

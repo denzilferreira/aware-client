@@ -15,6 +15,7 @@ android {
         release {
             runProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            applicationIdSuffix "" //add suffix for plugins and applications (e.g., .plugin.xxx or .application.xxx)
         }
     }
     productFlavors {
