@@ -85,11 +85,6 @@ public class Applications extends AccessibilityService {
     public static final String ACTION_AWARE_APPLICATIONS_CRASHES = "ACTION_AWARE_APPLICATIONS_CRASHES";
 
     /**
-     * Broadcasted event: keyboard input detected
-     */
-    public static final String ACTION_AWARE_KEYBOARD = "ACTION_AWARE_KEYBOARD";
-
-    /**
      * Given a package name, get application label in the default language of the device
      * @param package_name
      * @return appName
@@ -237,7 +232,7 @@ public class Applications extends AccessibilityService {
 
             if( Aware.DEBUG ) Log.d(Aware.TAG, "Keyboard: " + keyboard.toString());
 
-            Intent keyboard_data = new Intent( ACTION_AWARE_KEYBOARD );
+            Intent keyboard_data = new Intent( Keyboard.ACTION_AWARE_KEYBOARD );
             sendBroadcast(keyboard_data);
         }
     }
@@ -281,7 +276,12 @@ public class Applications extends AccessibilityService {
     @Override
     public void onCreate() {
         super.onCreate();
-        
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
+        filter.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
+        registerReceiver(awareMonitor, filter);
+
         if( ! isAccessibilityServiceActive( getApplicationContext() ) ) {
             Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
             accessibilitySettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -355,7 +355,7 @@ public class Applications extends AccessibilityService {
             
         	String[] DATABASE_TABLES = Applications_Provider.DATABASE_TABLES;
         	String[] TABLES_FIELDS = Applications_Provider.TABLES_FIELDS;
-        	Uri[] CONTEXT_URIS = new Uri[]{ Applications_Foreground.CONTENT_URI, Applications_History.CONTENT_URI, Applications_Notifications.CONTENT_URI, Applications_Crashes.CONTENT_URI, Keyboard_Provider.Keyboard_Data.CONTENT_URI };
+        	Uri[] CONTEXT_URIS = new Uri[]{ Applications_Foreground.CONTENT_URI, Applications_History.CONTENT_URI, Applications_Notifications.CONTENT_URI, Applications_Crashes.CONTENT_URI };
         	
         	if( Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true") && intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA) ) {
         		for( int i=0; i<DATABASE_TABLES.length; i++ ) {

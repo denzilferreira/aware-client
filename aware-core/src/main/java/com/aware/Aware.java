@@ -192,6 +192,7 @@ public class Aware extends Service {
     private static Intent esmSrv = null;
     private static Intent installationsSrv = null;
     private static Intent androidWearSrv = null;
+    private static Intent keyboard = null;
     
     private final String PREF_FREQUENCY_WATCHDOG = "frequency_watchdog";
     private final String PREF_LAST_UPDATE = "last_update";
@@ -448,8 +449,8 @@ public class Aware extends Service {
      * @param package_name
      */
     public static void stopPlugin(Context context, String package_name ) {
-    	Cursor is_installed = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
-    	if( is_installed != null && is_installed.moveToFirst() ) {
+    	Cursor cached = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+    	if( cached != null && cached.moveToFirst() ) {
     		//it's installed, stop it!
     		Intent plugin = new Intent();
     		plugin.setClassName(package_name, package_name + ".Plugin");
@@ -460,7 +461,7 @@ public class Aware extends Service {
             rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
             context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);            
     	}
-    	if( is_installed != null && ! is_installed.isClosed() ) is_installed.close();
+    	if( cached != null && ! cached.isClosed() ) cached.close();
     }
     
     /**
@@ -470,13 +471,15 @@ public class Aware extends Service {
      * @param package_name
      */
     public static void startPlugin(Context context, String package_name ) {
+
+        if( Aware.DEBUG ) Log.d(TAG, "Starting: " + package_name);
+
     	//Check if plugin is installed
-    	Cursor is_installed = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
-    	if( is_installed != null && is_installed.moveToFirst() ) {
-    		//We might just have it cached, but not installed
+    	Cursor cached = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+    	if( cached != null && cached.moveToFirst() ) {
+            //Installed on the phone
     		if( isClassAvailable(context, package_name, "Plugin") ) {
-    			//it's installed, start it!
-        		Intent plugin = new Intent();
+    			Intent plugin = new Intent();
         		plugin.setClassName(package_name, package_name + ".Plugin");
         		context.startService(plugin);
         		if( Aware.DEBUG ) Log.d(TAG, package_name + " started...");
@@ -484,10 +487,9 @@ public class Aware extends Service {
         		ContentValues rowData = new ContentValues();
                 rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
                 context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
-                is_installed.close();
+                cached.close();
+                return;
     		}
-            is_installed.close();
-            return;
     	}
 
         //Request the missing plugin
@@ -514,7 +516,7 @@ public class Aware extends Service {
                     NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(awareContext);
                     mBuilder.setSmallIcon(R.drawable.ic_stat_aware_plugin_dependency);
                     mBuilder.setContentTitle("AWARE");
-                    mBuilder.setContentText("Plugin missing: " + json_package.getString("title")+". Tap to install.");
+                    mBuilder.setContentText("Missing: " + json_package.getString("title")+". Install?");
                     mBuilder.setDefaults(Notification.DEFAULT_ALL);
                     mBuilder.setAutoCancel(true);
 
@@ -1397,6 +1399,10 @@ public class Aware extends Service {
         if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_ANDROID_WEAR).equals("true") ) {
             startAndroidWear();
         }else stopAndroidWear();
+
+        if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_KEYBOARD).equals("true") ) {
+            startKeyboard();
+        }else stopKeyboard();
     }
     
     /**
@@ -1429,6 +1435,22 @@ public class Aware extends Service {
         stopESM();
         stopInstallations();
         stopAndroidWear();
+        stopKeyboard();
+    }
+
+    /**
+     * Start keyboard module
+     */
+    protected void startKeyboard() {
+        if( keyboard == null ) keyboard = new Intent(awareContext, Keyboard.class);
+        awareContext.startService(keyboard);
+    }
+
+    /**
+     * Stop keyboard module
+     */
+    protected void stopKeyboard() {
+        if( keyboard != null ) awareContext.stopService(keyboard);
     }
 
     /**

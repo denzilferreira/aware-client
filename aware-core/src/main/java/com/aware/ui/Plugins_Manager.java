@@ -139,6 +139,7 @@ public class Plugins_Manager extends Aware_Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+        drawUI();
 		if( ! is_refreshing ) {
 			new Async_PluginUpdater().execute();
 		}

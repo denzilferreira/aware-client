@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.aware"
     xmlns:tools="http://schemas.android.com/tools"
-    android:versionCode="340"
+    android:versionCode="341"
     android:versionName="3.0" >
 
     <uses-sdk
@@ -71,6 +71,7 @@
             android:enabled="@bool/display_aware"
             android:exported="true"
             android:icon="@drawable/ic_launcher"
+            android:theme="@android:style/Theme.DeviceDefault.Light.DarkActionBar"
             android:label="@string/aware_sensors"
             android:parentActivityName="com.aware.Aware_Preferences">
             <intent-filter>
@@ -121,6 +122,7 @@
 
         <!-- AWARE Services -->
 
+        <service android:name="com.aware.Keyboard" android:exported="true"></service>
         <service
             android:name="com.aware.Aware"
             android:exported="true" >

@@ -901,7 +901,7 @@ public class Aware_Preferences extends PreferenceActivity {
 			}
 			
 			//Now start plugins
-			for( int j=0;j<plugins.length();j++ ) {
+			for( int j=0; j<plugins.length(); j++ ) {
 				try {
 					Aware.startPlugin( context, plugins.getString(j) );
 				} catch (JSONException e) {
@@ -982,7 +982,7 @@ public class Aware_Preferences extends PreferenceActivity {
 					//Send data to server
 					Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
 					sendBroadcast(sync);
-					
+
 				} catch (ParseException e) {
 					e.printStackTrace();
 				} catch (IOException e) {
@@ -1395,6 +1395,7 @@ public class Aware_Preferences extends PreferenceActivity {
                     Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_KEYBOARD, keyboard.isChecked());
                     keyboard.setChecked(true);
                     framework.startApplications();
+                    framework.startKeyboard();
                     return true;
                 }
                 if (! Applications.isAccessibilityServiceActive(getApplicationContext()) ) {
@@ -1402,6 +1403,7 @@ public class Aware_Preferences extends PreferenceActivity {
                 }
                 Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_KEYBOARD, false);
                 keyboard.setChecked(false);
+                framework.stopKeyboard();
                 return false;
             }
         });

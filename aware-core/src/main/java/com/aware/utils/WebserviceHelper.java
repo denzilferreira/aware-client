@@ -43,13 +43,6 @@ public class WebserviceHelper extends IntentService {
 	public static final String EXTRA_FIELDS = "fields";
 	public static final String EXTRA_CONTENT_URI = "uri";
 
-	private String WEBSERVER;
-	private String DEVICE_ID;
-	private String DATABASE_TABLE;
-	private String TABLES_FIELDS;
-	private Uri CONTENT_URI;
-	private boolean DEBUG = false;
-	
 	public WebserviceHelper() {
 		super(Aware.TAG + " Webservice Sync");
 	}
@@ -64,12 +57,12 @@ public class WebserviceHelper extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 
-		WEBSERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
-		DEVICE_ID = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
-		DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
-		DATABASE_TABLE = intent.getStringExtra(EXTRA_TABLE);
-		TABLES_FIELDS = intent.getStringExtra(EXTRA_FIELDS);
-		CONTENT_URI = Uri.parse(intent.getStringExtra(EXTRA_CONTENT_URI));
+		String WEBSERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
+		String DEVICE_ID = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
+		boolean DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
+		String DATABASE_TABLE = intent.getStringExtra(EXTRA_TABLE);
+		String TABLES_FIELDS = intent.getStringExtra(EXTRA_FIELDS);
+		Uri CONTENT_URI = Uri.parse(intent.getStringExtra(EXTRA_CONTENT_URI));
 
         if( Aware.DEBUG ) Log.d(Aware.TAG, "Synching data..." + DATABASE_TABLE);
 
