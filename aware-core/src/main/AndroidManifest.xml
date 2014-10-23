@@ -100,6 +100,7 @@
         <activity
             android:name="com.aware.ui.CameraStudy"
             android:configChanges="keyboardHidden|orientation|screenSize"
+            android:enabled="@bool/display_aware"
             >
         </activity>
         <activity

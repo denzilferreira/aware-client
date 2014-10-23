@@ -1008,17 +1008,10 @@ public class Aware_Preferences extends PreferenceActivity {
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
-            case R.id.aware_qrcode:
-                if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) {
-                    new Async_StudyData().execute(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
-                } else {
-                    Intent join_study = new Intent( Aware_Preferences.this, CameraStudy.class );
-                    startActivityForResult(join_study, REQUEST_JOIN_STUDY);
-                }
-            break;
+        if( item.getTitle().equals("QRCode") ) {
+            Intent join_study = new Intent( Aware_Preferences.this, CameraStudy.class );
+            startActivityForResult(join_study, REQUEST_JOIN_STUDY);
         }
-
         if( navigationToggle.onOptionsItemSelected(item) ) return true;
         return super.onOptionsItemSelected(item);
     }
