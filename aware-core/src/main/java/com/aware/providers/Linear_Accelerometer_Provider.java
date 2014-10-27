@@ -26,6 +26,7 @@ import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
+import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
 /**
@@ -253,7 +254,7 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = getContext().getPackageName() + ".provider.accelerometer.linear";
+	    AUTHORITY = BuildConfig.PACKAGE_NAME + ".provider.accelerometer.linear";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Linear_Accelerometer_Provider.AUTHORITY,

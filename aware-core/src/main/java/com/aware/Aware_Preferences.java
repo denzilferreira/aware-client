@@ -111,7 +111,7 @@ public class Aware_Preferences extends PreferenceActivity {
     
     //Request ID for joining study
     public static final int REQUEST_JOIN_STUDY = 1;
-    
+
     /**
      * Activate/deactive AWARE debug messages (boolean)
      */
@@ -910,15 +910,24 @@ public class Aware_Preferences extends PreferenceActivity {
 			}
 		}
     }
-    
+
+    /**
+     * Service that allows plugins/applications to send data to AWARE's dashboard study
+     */
     public static class StudyConfig extends IntentService {
-    	public StudyConfig() {
+
+        /**
+         * Received broadcast to join a study
+         */
+        public static final String EXTRA_JOIN_STUDY = "study_url";
+
+        public StudyConfig() {
 			super("Study Config Service");
 		}
 
 		@Override
     	protected void onHandleIntent(Intent intent) {
-			String study_url = intent.getStringExtra("study_url");
+			String study_url = intent.getStringExtra(EXTRA_JOIN_STUDY);
 			
 			if( Aware.DEBUG ) Log.d(Aware.TAG, "Scanned: " + study_url);
 			

@@ -26,6 +26,7 @@ import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
+import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
 /**
@@ -240,7 +241,7 @@ public class Gravity_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = getContext().getPackageName() + ".provider.gravity";
+	    AUTHORITY = BuildConfig.PACKAGE_NAME + ".provider.gravity";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Gravity_Provider.AUTHORITY, DATABASE_TABLES[0],

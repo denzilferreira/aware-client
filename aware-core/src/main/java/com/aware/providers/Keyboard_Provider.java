@@ -14,6 +14,7 @@ import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
+import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
 import java.util.HashMap;
@@ -154,7 +155,7 @@ public class Keyboard_Provider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        AUTHORITY = getContext().getPackageName() + ".provider.keyboard";
+        AUTHORITY = BuildConfig.PACKAGE_NAME + ".provider.keyboard";
 
         sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Keyboard_Provider.AUTHORITY,

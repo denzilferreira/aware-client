@@ -26,6 +26,7 @@ import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
+import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
 /**
@@ -166,7 +167,7 @@ public class Screen_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = getContext().getPackageName() + ".provider.screen";
+	    AUTHORITY = BuildConfig.PACKAGE_NAME + ".provider.screen";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Screen_Provider.AUTHORITY, DATABASE_TABLES[0],

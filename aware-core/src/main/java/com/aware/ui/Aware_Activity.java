@@ -2,14 +2,10 @@ package com.aware.ui;
 
 import android.app.Activity;
 import android.app.ActivityOptions;
-import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -24,21 +20,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.Aware_Preferences.StudyConfig;
 import com.aware.R;
-import com.aware.utils.Https;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.ParseException;
-import org.apache.http.util.EntityUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
 
 public class Aware_Activity extends Activity {
 	
@@ -54,7 +39,7 @@ public class Aware_Activity extends Activity {
 		
 		navigationDrawer = (DrawerLayout) findViewById(R.id.aware_ui_main);
         navigationList = (ListView) findViewById(R.id.aware_navigation);
-        
+
         navigationToggle = new ActionBarDrawerToggle( this, navigationDrawer, R.drawable.ic_drawer, R.string.drawer_open, R.string.drawer_close) {
             @Override
             public void onDrawerClosed(View drawerView) {
@@ -117,12 +102,8 @@ public class Aware_Activity extends Activity {
             			startActivity(plugin_manager, animations);
             			break;
 	            	case 3: //Studies
-//                        if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) {
-//                            new Async_StudyData().execute(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
-//                        } else {
                             Intent join_study = new Intent( getApplicationContext(), CameraStudy.class );
                             startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY, animations);
-//                        }
                         break;
             	}
             	navigationDrawer.closeDrawer(navigationList);
@@ -135,115 +116,9 @@ public class Aware_Activity extends Activity {
         }
 	}
 
-//    private class Async_StudyData extends AsyncTask<String, Void, JSONObject> {
-//
-//        private String study_url = "";
-//        private ProgressDialog loader;
-//
-//        @Override
-//        protected void onPreExecute() {
-//            super.onPreExecute();
-//            loader = new ProgressDialog(Aware_Activity.this);
-//            loader.setTitle("Loading study");
-//            loader.setMessage("Please wait...");
-//            loader.setCancelable(false);
-//            loader.setIndeterminate(true);
-//            loader.show();
-//        }
-//
-//        @Override
-//        protected JSONObject doInBackground(String... params) {
-//            study_url = params[0];
-//            String study_api_key = study_url.substring(study_url.lastIndexOf("/")+1, study_url.length());
-//
-//            HttpResponse request = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/webservice/client_get_study_info/" + study_api_key);
-//            if( request != null && request.getStatusLine().getStatusCode() == 200 ) {
-//                try {
-//                    String json_str = EntityUtils.toString(request.getEntity());
-//                    if( json_str.equals("[]") ) {
-//                        return null;
-//                    }
-//                    JSONObject study_data = new JSONObject(json_str);
-//                    return study_data;
-//                } catch (ParseException e) {
-//                    e.printStackTrace();
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//            return null;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(JSONObject result) {
-//            super.onPostExecute(result);
-//
-//            loader.dismiss();
-//
-//            if( result == null ) {
-//                AlertDialog.Builder builder = new AlertDialog.Builder(Aware_Activity.this);
-//                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        dialog.dismiss();
-//                    }
-//                });
-//                builder.setTitle("Study information");
-//                builder.setMessage("Unable to retrieve study's information. Please, try again later.");
-//                builder.setNegativeButton("Quit study!", new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        dialog.dismiss();
-//                        Toast.makeText(getApplicationContext(), "Clearing settings... please wait", Toast.LENGTH_LONG).show();
-//                        Aware.reset(getApplicationContext());
-//                    }
-//                });
-//                builder.show();
-//            } else {
-//                AlertDialog.Builder builder = new AlertDialog.Builder(Aware_Activity.this);
-//                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        dialog.dismiss();
-//                    }
-//                });
-//                builder.setNegativeButton("Quit study!", new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        dialog.dismiss();
-//                        Toast.makeText(getApplicationContext(), "Clearing settings... please wait", Toast.LENGTH_LONG).show();
-//                        Aware.reset(getApplicationContext());
-//                    }
-//                });
-//                builder.setTitle("Study information");
-//                LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-//                View study_ui = inflater.inflate(R.layout.study_info, null);
-//                TextView study_name = (TextView) study_ui.findViewById(R.id.study_name);
-//                TextView study_description = (TextView) study_ui.findViewById(R.id.study_description);
-//                TextView study_pi = (TextView) study_ui.findViewById(R.id.study_pi);
-//
-//                try {
-//                    study_name.setText((result.getString("study_name").length()>0 ? result.getString("study_name"): "Not available"));
-//                    study_description.setText((result.getString("study_description").length()>0?result.getString("study_description"):"Not available."));
-//                    study_pi.setText("PI: " + result.getString("researcher_first") + " " + result.getString("researcher_last") + "\nContact: " + result.getString("researcher_contact"));
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//                builder.setView(study_ui);
-//                builder.show();
-//            }
-//        }
-//    }
-
     @Override
     protected void onResume() {
         super.onResume();
-
-//        if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) {
-//            new Async_StudyData().execute(Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
-//        }
     }
 
     @Override

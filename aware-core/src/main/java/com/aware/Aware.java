@@ -53,7 +53,6 @@ import com.aware.providers.Aware_Provider.Aware_Settings;
 import com.aware.ui.Plugins_Manager;
 import com.aware.ui.Stream_UI;
 import com.aware.utils.Aware_Plugin;
-import com.aware.utils.Converters;
 import com.aware.utils.Https;
 import com.aware.utils.WebserviceHelper;
 
@@ -235,15 +234,7 @@ public class Aware extends Service {
         super.onCreate();
         
         awareContext = getApplicationContext();
-
-        aware_preferences = getSharedPreferences("aware_core_prefs", MODE_PRIVATE);
-        if( aware_preferences.getAll().isEmpty() ) {
-        	SharedPreferences.Editor editor = aware_preferences.edit();
-        	editor.putInt(PREF_FREQUENCY_WATCHDOG, CONST_FREQUENCY_WATCHDOG);
-        	editor.putLong(PREF_LAST_SYNC, 0);
-        	editor.putLong(PREF_LAST_UPDATE, 0);
-        	editor.commit();
-        }
+        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
@@ -257,20 +248,31 @@ public class Aware extends Service {
         filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
         filter.addAction(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
         awareContext.registerReceiver(aware_BR, filter);
-        
-        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        
-        awareStatusMonitor = new Intent( getApplicationContext(), Aware.class );
-        repeatingIntent = PendingIntent.getService(getApplicationContext(), 0,  awareStatusMonitor, 0);
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+1000, aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000, repeatingIntent);
-        
+
         Intent synchronise = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
         webserviceUploadIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, synchronise, 0);
         
         if( ! Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED) ) {
             stopSelf();
-        } else {
-        	SharedPreferences prefs = getSharedPreferences( getPackageName(), Context.MODE_PRIVATE );
+            return;
+        }
+
+        aware_preferences = getSharedPreferences("aware_core_prefs", MODE_PRIVATE);
+        if( aware_preferences.getAll().isEmpty() ) {
+            SharedPreferences.Editor editor = aware_preferences.edit();
+            editor.putInt(PREF_FREQUENCY_WATCHDOG, CONST_FREQUENCY_WATCHDOG);
+            editor.putLong(PREF_LAST_SYNC, 0);
+            editor.putLong(PREF_LAST_UPDATE, 0);
+            editor.commit();
+        }
+
+        if ( getPackageName().equals("com.aware") ) {
+
+            awareStatusMonitor = new Intent( getApplicationContext(), Aware.class );
+            repeatingIntent = PendingIntent.getService(getApplicationContext(), 0,  awareStatusMonitor, 0);
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+1000, aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000, repeatingIntent);
+
+            SharedPreferences prefs = getSharedPreferences( getPackageName(), Context.MODE_PRIVATE );
         	if( prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0 ) {
         		PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
         		prefs.edit().commit(); //commit changes
@@ -296,11 +298,8 @@ public class Aware extends Service {
             get_device_info();
             
             if( Aware.DEBUG ) Log.d(TAG,"AWARE framework is created!");
-            
-            //Fixed: only the client application does a ping to AWARE's server
-            if( getPackageName().equals("com.aware") ) {
-            	new AsyncPing().execute();
-            }
+
+            new AsyncPing().execute();
         }
     }
     
@@ -379,18 +378,20 @@ public class Aware extends Service {
             TAG = Aware.getSetting(awareContext,Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(awareContext,Aware_Preferences.DEBUG_TAG):TAG;
             
             if( Aware.DEBUG ) Log.d(TAG,"AWARE framework is active...");
-            startAllServices();
 
-            Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
-            if( enabled_plugins != null && enabled_plugins.moveToFirst() ) {
-                do {
-                    startPlugin(getApplicationContext(), enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME)));
-                }while(enabled_plugins.moveToNext());
-            }
-            if( enabled_plugins != null && ! enabled_plugins.isClosed() ) enabled_plugins.close();
-
-            //Only the client keeps the plugins running and checks for updates
+            //Only the client keeps the services and plugins running and checks for updates
             if( getPackageName().equals("com.aware") ) {
+
+                startAllServices();
+
+                Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
+                if( enabled_plugins != null && enabled_plugins.moveToFirst() ) {
+                    do {
+                        startPlugin(getApplicationContext(), enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME)));
+                    }while(enabled_plugins.moveToNext());
+                }
+                if( enabled_plugins != null && ! enabled_plugins.isClosed() ) enabled_plugins.close();
+
 	            if( Aware.getSetting(getApplicationContext(), Aware_Preferences.AWARE_AUTO_UPDATE).equals("true") ) {
 	            	if( aware_preferences.getLong(PREF_LAST_UPDATE, 0) == 0 || (aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 0 && System.currentTimeMillis()-aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 6*60*60*1000) ) { //check every 6h
 	            		new Update_Check().execute();
@@ -421,8 +422,10 @@ public class Aware extends Service {
                     }
                 }
 
-                //Check if study is open or still exists
-                new Study_Check().execute();
+                //Framework checks if study is active
+                if( getPackageName().equals("com.aware") ) {
+                    new Study_Check().execute();
+                }
             }
             
             if( ! Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).equals("0") ) {

@@ -26,6 +26,7 @@ import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
+import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
 /**
@@ -173,7 +174,7 @@ public class Processor_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-		AUTHORITY = getContext().getPackageName() + ".provider.processor";
+		AUTHORITY = BuildConfig.PACKAGE_NAME + ".provider.processor";
 		
 		sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Processor_Provider.AUTHORITY, DATABASE_TABLES[0],

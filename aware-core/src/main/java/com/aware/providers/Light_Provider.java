@@ -26,6 +26,7 @@ import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
+import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
 /**
@@ -234,7 +235,7 @@ public class Light_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = getContext().getPackageName() + ".provider.light";
+	    AUTHORITY = BuildConfig.PACKAGE_NAME + ".provider.light";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Light_Provider.AUTHORITY, DATABASE_TABLES[0],

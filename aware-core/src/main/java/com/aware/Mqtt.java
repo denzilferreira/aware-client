@@ -26,6 +26,7 @@ import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
@@ -46,7 +47,7 @@ import com.aware.utils.Aware_Sensor;
  * @author denzil
  *
  */
-public class Mqtt extends Aware_Sensor {
+public class Mqtt extends Aware_Sensor implements MqttCallback {
 	
     /**
 	 * Logging tag (default = "AWARE::MQTT")
@@ -147,72 +148,68 @@ public class Mqtt extends Aware_Sensor {
 	public static final String EXTRA_MESSAGE = "message";
 	
 	private static MqttClient MQTT_CLIENT = null;
-	private static MqttConnectOptions MQTT_OPTIONS = null;
-	
-	private static MqttCallback MQTT_CALLBACK = new MqttCallback() {
-        @Override
-        public void messageArrived(String topic, MqttMessage message) throws Exception {
-            
-        	ContentValues rowData = new ContentValues();
-            rowData.put(Mqtt_Messages.TIMESTAMP, System.currentTimeMillis());
-            rowData.put(Mqtt_Messages.DEVICE_ID, Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID));
-            rowData.put(Mqtt_Messages.TOPIC, topic);
-            rowData.put(Mqtt_Messages.MESSAGE, message.toString());
-            rowData.put(Mqtt_Messages.STATUS, MQTT_MSG_RECEIVED);
-            
-            try {
-            	mContext.getContentResolver().insert(Mqtt_Messages.CONTENT_URI, rowData);
-            }catch( SQLiteException e ) {
-                if(Aware.DEBUG) Log.d(TAG,e.getMessage());
-            }catch( SQLException e ) {
-                if(Aware.DEBUG) Log.d(TAG,e.getMessage());
-            }
-        
-            Intent mqttMsg = new Intent(ACTION_AWARE_MQTT_MSG_RECEIVED);
-            mqttMsg.putExtra(EXTRA_TOPIC, topic);
-            mqttMsg.putExtra(EXTRA_MESSAGE, message.toString());
-            mContext.sendBroadcast(mqttMsg);
-            
-            if( topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/broadcasts") ||  topic.equals(Aware.getSetting(mContext, "study_id") + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/broadcasts") ) {
-                Intent broadcast = new Intent(message.toString());
-                mContext.sendBroadcast(broadcast);
-            }
-            
-            if( topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/esm") ||  topic.equals(Aware.getSetting(mContext, "study_id") + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/esm")) {
-                Intent queueESM = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
-                queueESM.putExtra(ESM.EXTRA_ESM, message.toString());
-                mContext.sendBroadcast(queueESM);
-            }
-            
-            if( topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/configuration") ||  topic.equals(Aware.getSetting(mContext, "study_id") + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/configuration") ) {
-                JSONArray configs = new JSONArray(message.toString());
-                Aware_Preferences.applySettings(mContext, configs);
-                
-                Intent apply_settings = new Intent(Aware.ACTION_AWARE_REFRESH);
-                mContext.sendBroadcast(apply_settings);
-            }
-            
-            if( Aware.DEBUG ) Log.d(TAG,"MQTT: Message received: \n topic = "+topic+ "\n message = "+message.toString());
-        }
-        
-        @Override
-        public void deliveryComplete(IMqttDeliveryToken arg0) {
-            if( Aware.DEBUG ) Log.d(TAG,"MQTT: Message delivered to server: " + arg0.toString());
-        }
-        
-        @Override
-        public void connectionLost(Throwable arg0) {
-            if( Aware.DEBUG ) Log.d(TAG,"MQTT: Connection lost to server... AWARE will reconnect in 5 minutes");
-        }
-    };
-	
 	private static Context mContext = null;
 	
 	/**
 	 * Activity-Service binder
 	 */
 	private final IBinder serviceBinder = new ServiceBinder();
-	public class ServiceBinder extends Binder {
+
+    @Override
+    public void connectionLost(Throwable throwable) {
+        if( Aware.DEBUG ) Log.d(TAG,"MQTT: Connection lost to server... AWARE will reconnect in 5 minutes");
+    }
+
+    @Override
+    public void messageArrived(String topic, MqttMessage message) throws Exception {
+        ContentValues rowData = new ContentValues();
+        rowData.put(Mqtt_Messages.TIMESTAMP, System.currentTimeMillis());
+        rowData.put(Mqtt_Messages.DEVICE_ID, Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID));
+        rowData.put(Mqtt_Messages.TOPIC, topic);
+        rowData.put(Mqtt_Messages.MESSAGE, message.toString());
+        rowData.put(Mqtt_Messages.STATUS, MQTT_MSG_RECEIVED);
+
+        try {
+            mContext.getContentResolver().insert(Mqtt_Messages.CONTENT_URI, rowData);
+        }catch( SQLiteException e ) {
+            if(Aware.DEBUG) Log.d(TAG,e.getMessage());
+        }catch( SQLException e ) {
+            if(Aware.DEBUG) Log.d(TAG,e.getMessage());
+        }
+
+        Intent mqttMsg = new Intent(ACTION_AWARE_MQTT_MSG_RECEIVED);
+        mqttMsg.putExtra(EXTRA_TOPIC, topic);
+        mqttMsg.putExtra(EXTRA_MESSAGE, message.toString());
+        mContext.sendBroadcast(mqttMsg);
+
+        if( topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/broadcasts") ||  topic.equals(Aware.getSetting(mContext, "study_id") + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/broadcasts") ) {
+            Intent broadcast = new Intent(message.toString());
+            mContext.sendBroadcast(broadcast);
+        }
+
+        if( topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/esm") ||  topic.equals(Aware.getSetting(mContext, "study_id") + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/esm")) {
+            Intent queueESM = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
+            queueESM.putExtra(ESM.EXTRA_ESM, message.toString());
+            mContext.sendBroadcast(queueESM);
+        }
+
+        if( topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/configuration") ||  topic.equals(Aware.getSetting(mContext, "study_id") + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/configuration") ) {
+            JSONArray configs = new JSONArray(message.toString());
+            Aware_Preferences.applySettings(mContext, configs);
+
+            Intent apply_settings = new Intent(Aware.ACTION_AWARE_REFRESH);
+            mContext.sendBroadcast(apply_settings);
+        }
+
+        if( Aware.DEBUG ) Log.d(TAG,"MQTT: Message received: \n topic = "+topic+ "\n message = "+message.toString());
+    }
+
+    @Override
+    public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
+        if( Aware.DEBUG ) Log.d(TAG,"MQTT: Message delivered to server: " + iMqttDeliveryToken.toString());
+    }
+
+    public class ServiceBinder extends Binder {
 		Mqtt getService() {
 			return Mqtt.getService();
 		}
@@ -239,7 +236,6 @@ public class Mqtt extends Aware_Sensor {
      * - ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE - subscribe to a topic - extras: (String) topic
      * - ACTION_AWARE_MQTT_TOPIC_UNSUBSCRIBE - unsubscribe from a topic - extras: (String) topic
      * @author df
-     *
      */
     public static class MQTTReceiver extends BroadcastReceiver {
         public void onReceive(Context context, Intent intent) {
@@ -306,6 +302,7 @@ public class Mqtt extends Aware_Sensor {
             }
         };
     }
+    private static final MQTTReceiver mqttReceiver = new MQTTReceiver();
     
 	@Override
 	public void onCreate() {
@@ -317,12 +314,20 @@ public class Mqtt extends Aware_Sensor {
 		DATABASE_TABLES = Mqtt_Provider.DATABASE_TABLES;
     	TABLES_FIELDS = Mqtt_Provider.TABLES_FIELDS;
     	CONTEXT_URIS = new Uri[]{ Mqtt_Messages.CONTENT_URI, Mqtt_Subscriptions.CONTENT_URI };
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Mqtt.ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
+        filter.addAction(Mqtt.ACTION_AWARE_MQTT_TOPIC_UNSUBSCRIBE);
+        filter.addAction(Mqtt.ACTION_AWARE_MQTT_MSG_PUBLISH);
+        registerReceiver(mqttReceiver, filter);
     }
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		
+
+        unregisterReceiver(mqttReceiver);
+
 		if( MQTT_CLIENT != null && MQTT_CLIENT.isConnected() ) {
             try {
             	MQTT_MESSAGES_PERSISTENCE.close();
@@ -374,7 +379,7 @@ public class Mqtt extends Aware_Sensor {
         	//It's OK because we use the same client ID for all instances of the client.
         }
         
-        MQTT_OPTIONS = new MqttConnectOptions();
+        MqttConnectOptions MQTT_OPTIONS = new MqttConnectOptions();
         MQTT_OPTIONS.setCleanSession(false); //false to resume any pending messages
         MQTT_OPTIONS.setConnectionTimeout( Integer.parseInt(MQTT_KEEPALIVE) + 10 ); //add 10 seconds to keep alive as connection timeout
         MQTT_OPTIONS.setKeepAliveInterval( Integer.parseInt(MQTT_KEEPALIVE) );
@@ -383,7 +388,7 @@ public class Mqtt extends Aware_Sensor {
         
     	try {
     		MQTT_CLIENT = new MqttClient( MQTT_URL, String.valueOf(Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).hashCode()), MQTT_MESSAGES_PERSISTENCE );
-    		MQTT_CLIENT.setCallback( MQTT_CALLBACK );
+    		MQTT_CLIENT.setCallback( this );
     		
     		//Make connection in secondary thread
 			new MQTTAsync().execute( MQTT_OPTIONS );
@@ -482,7 +487,7 @@ public class Mqtt extends Aware_Sensor {
 	 * Subscribe to a topic
 	 * @param topicName
 	 */
-	private static boolean subscribe(String topicName) {
+	public static boolean subscribe(String topicName) {
 	    if( MQTT_CLIENT != null && MQTT_CLIENT.isConnected() ) {
             try {
                 MQTT_CLIENT.subscribe( topicName );
@@ -501,7 +506,7 @@ public class Mqtt extends Aware_Sensor {
 	 * Unsubscribe a topic
 	 * @param topicName
 	 */
-	private static boolean unsubscribe(String topicName) {
+	public static boolean unsubscribe(String topicName) {
 	    if( MQTT_CLIENT != null && MQTT_CLIENT.isConnected() ) {
             try {
                 MQTT_CLIENT.unsubscribe(topicName);

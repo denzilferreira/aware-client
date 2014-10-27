@@ -26,6 +26,7 @@ import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
+import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
 /**
@@ -292,7 +293,7 @@ public class Aware_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = getContext().getPackageName() + ".provider.aware";
+	    AUTHORITY = BuildConfig.PACKAGE_NAME + ".provider.aware";
 	    
         sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Aware_Provider.AUTHORITY, DATABASE_TABLES[0], DEVICE_INFO);
