@@ -57,6 +57,8 @@ public class WebserviceHelper extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 
+        if( ! getPackageName().equals("com.aware") ) return; //only the client does this.
+
 		String WEBSERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
 		String DEVICE_ID = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
 		boolean DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");

@@ -93,13 +93,6 @@ import java.util.UUID;
  */
 public class Aware_Preferences extends PreferenceActivity {
 
-    private static final Aware framework = Aware.getService();
-
-    private static SensorManager mSensorMgr;
-    private static DrawerLayout navigationDrawer;
-    private static ListView navigationList;
-    private static ActionBarDrawerToggle navigationToggle;
-    
     private static final int DIALOG_ERROR_ACCESSIBILITY = 1;
     private static final int DIALOG_ERROR_MISSING_PARAMETERS = 2;
     private static final int DIALOG_ERROR_MISSING_SENSOR = 3;
@@ -510,6 +503,11 @@ public class Aware_Preferences extends PreferenceActivity {
      */
     public static final String STATUS_KEYBOARD = "status_keyboard";
 
+    private static final Aware framework = Aware.getService();
+    private static SensorManager mSensorMgr;
+    private static DrawerLayout navigationDrawer;
+    private static ListView navigationList;
+    private static ActionBarDrawerToggle navigationToggle;
     private static boolean is_refreshing = false;
 
     @Override
@@ -573,9 +571,10 @@ public class Aware_Preferences extends PreferenceActivity {
         
         addPreferencesFromResource(R.xml.aware_preferences);
         setContentView(R.layout.aware_ui);
-        
+
         navigationDrawer = (DrawerLayout) findViewById(R.id.aware_ui_main);
         navigationList = (ListView) findViewById(R.id.aware_navigation);
+
         navigationToggle = new ActionBarDrawerToggle( this, navigationDrawer, R.drawable.ic_drawer, R.string.drawer_open, R.string.drawer_close) {
             @Override
             public void onDrawerClosed(View drawerView) {

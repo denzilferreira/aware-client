@@ -71,7 +71,6 @@
             android:enabled="@bool/display_aware"
             android:exported="true"
             android:icon="@drawable/ic_launcher"
-            android:theme="@android:style/Theme.DeviceDefault.Light.DarkActionBar"
             android:label="@string/aware_sensors"
             android:parentActivityName="com.aware.Aware_Preferences">
             <intent-filter>
