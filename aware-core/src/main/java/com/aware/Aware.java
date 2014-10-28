@@ -379,10 +379,11 @@ public class Aware extends Service {
             
             if( Aware.DEBUG ) Log.d(TAG,"AWARE framework is active...");
 
-            //Only the client keeps the services and plugins running and checks for updates
-            if( getPackageName().equals("com.aware") ) {
+            //Plugins need to be able to start services too, as requested in their settings
+            startAllServices();
 
-                startAllServices();
+            //Only the client keeps the plugins running and checks for updates of the client
+            if( getPackageName().equals("com.aware") ) {
 
                 Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
                 if( enabled_plugins != null && enabled_plugins.moveToFirst() ) {
@@ -494,6 +495,7 @@ public class Aware extends Service {
                 return;
     		}
     	}
+        if( cached != null && ! cached.isClosed() ) cached.close();
 
         //Request the missing plugin
         new PluginDependencyTask().execute(package_name);
