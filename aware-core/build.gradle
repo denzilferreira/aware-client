@@ -15,7 +15,6 @@ android {
         release {
             runProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
-//            applicationIdSuffix ".plugin.google.activity_recognition.core" //add suffix for plugins and applications (e.g., .plugin.xxx.core or .application.xxx.core)
         }
     }
     productFlavors {
@@ -40,7 +39,3 @@ dependencies {
     phoneCompile 'com.android.support:support-v4:21.0.0'
     wearCompile 'com.android.support:support-v13:21.0.0'
 }
-
-//Note: you'll need to add these lines to your plugin/application settings.gradle to import externally the AWARE client's project
-//include ':aware-core'
-//project(':aware-core').projectDir = new File(settingsDir, '../aware-client/aware-core')
