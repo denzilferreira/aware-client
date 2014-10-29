@@ -240,40 +240,34 @@ public class Battery_Provider extends ContentProvider {
 		switch (sUriMatcher.match(uri)) {
 		case BATTERY:
 			long battery_id = database.insertWithOnConflict(DATABASE_TABLES[0], Battery_Data.TECHNOLOGY, values, SQLiteDatabase.CONFLICT_IGNORE);
-
-			if (battery_id > 0) {
-				Uri batteryUri = ContentUris.withAppendedId(
-						Battery_Data.CONTENT_URI, battery_id);
-				getContext().getContentResolver()
-						.notifyChange(batteryUri, null);
-				return batteryUri;
-			}
-			throw new SQLException("Failed to insert row into " + uri);
+            if (battery_id > 0) {
+                Uri batteryUri = ContentUris.withAppendedId(Battery_Data.CONTENT_URI, battery_id);
+                getContext().getContentResolver().notifyChange(batteryUri, null);
+                return batteryUri;
+            }
+            throw new SQLException("Failed to insert row into " + uri);
 		case BATTERY_DISCHARGE:
 			long battery_d_id = database.insertWithOnConflict(DATABASE_TABLES[1], Battery_Discharges.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
-			if (battery_d_id > 0) {
-				Uri batteryUri = ContentUris.withAppendedId(
-						Battery_Discharges.CONTENT_URI, battery_d_id);
-				getContext().getContentResolver()
-						.notifyChange(batteryUri, null);
-				return batteryUri;
-			}
-			throw new SQLException("Failed to insert row into " + uri);
+            if (battery_d_id > 0) {
+                Uri batteryUri = ContentUris.withAppendedId(
+                        Battery_Discharges.CONTENT_URI, battery_d_id);
+                getContext().getContentResolver()
+                        .notifyChange(batteryUri, null);
+                return batteryUri;
+            }
+            throw new SQLException("Failed to insert row into " + uri);
 		case BATTERY_CHARGE:
-			long battery_c_id = database.insertWithOnConflict(DATABASE_TABLES[2],
-					Battery_Charges.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
-			if (battery_c_id > 0) {
-				Uri batteryUri = ContentUris.withAppendedId(
-						Battery_Charges.CONTENT_URI, battery_c_id);
-				getContext().getContentResolver()
-						.notifyChange(batteryUri, null);
-				return batteryUri;
-			}
-			throw new SQLException("Failed to insert row into " + uri);
+            long battery_c_id = database.insertWithOnConflict(DATABASE_TABLES[2],
+                    Battery_Charges.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
+            if (battery_c_id > 0) {
+                Uri batteryUri = ContentUris.withAppendedId(
+                        Battery_Charges.CONTENT_URI, battery_c_id);
+                getContext().getContentResolver()
+                        .notifyChange(batteryUri, null);
+                return batteryUri;
+            }
+            throw new SQLException("Failed to insert row into " + uri);
 		default:
-
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
 	}

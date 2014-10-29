@@ -10,8 +10,11 @@ See the GNU General Public License for more details: http://www.gnu.org/licenses
 */
 package com.aware;
 
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
@@ -66,6 +69,20 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
     public static final String ACTION_AWARE_GRAVITY = "ACTION_AWARE_GRAVITY";
     public static final String EXTRA_DATA = "data";
     public static final String EXTRA_SENSOR = "sensor";
+
+    public static final String ACTION_AWARE_GRAVITY_LABEL = "ACTION_AWARE_GRAVITY_LABEL";
+    public static final String EXTRA_LABEL = "label";
+    private static String LABEL = "";
+
+    private static DataLabel dataLabeler = new DataLabel();
+    public static class DataLabel extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if( intent.getAction().equals(ACTION_AWARE_GRAVITY_LABEL)) {
+                LABEL = intent.getStringExtra(EXTRA_LABEL);
+            }
+        }
+    }
     
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -81,6 +98,7 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
         rowData.put(Gravity_Data.VALUES_1, event.values[1]);
         rowData.put(Gravity_Data.VALUES_2, event.values[2]);
         rowData.put(Gravity_Data.ACCURACY, event.accuracy);
+        rowData.put(Gravity_Data.LABEL, LABEL);
         
         try {
         	if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("false") ) {
@@ -170,6 +188,10 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
     	CONTEXT_URIS = new Uri[]{ Gravity_Sensor.CONTENT_URI, Gravity_Data.CONTENT_URI };
         
         if(Aware.DEBUG) Log.d(TAG,"Gravity service created!");
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_AWARE_GRAVITY_LABEL);
+        registerReceiver(dataLabeler, filter);
     }
     
     @Override
@@ -182,6 +204,8 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
         sensorThread.quit();
         
         wakeLock.release();
+
+        unregisterReceiver(dataLabeler);
         
         if(Aware.DEBUG) Log.d(TAG,"Gravity service terminated...");
     }

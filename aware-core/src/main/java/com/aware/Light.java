@@ -10,8 +10,11 @@ See the GNU General Public License for more details: http://www.gnu.org/licenses
 */
 package com.aware;
 
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
@@ -66,6 +69,20 @@ public class Light extends Aware_Sensor implements SensorEventListener {
     public static final String ACTION_AWARE_LIGHT = "ACTION_AWARE_LIGHT";
     public static final String EXTRA_DATA = "data";
     public static final String EXTRA_SENSOR = "sensor";
+
+    public static final String ACTION_AWARE_LIGHT_LABEL = "ACTION_AWARE_LIGHT_LABEL";
+    public static final String EXTRA_LABEL = "label";
+    private static String LABEL = "";
+
+    private static DataLabel dataLabeler = new DataLabel();
+    public static class DataLabel extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if( intent.getAction().equals(ACTION_AWARE_LIGHT_LABEL)) {
+                LABEL = intent.getStringExtra(EXTRA_LABEL);
+            }
+        }
+    }
     
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -79,6 +96,7 @@ public class Light extends Aware_Sensor implements SensorEventListener {
         rowData.put(Light_Data.TIMESTAMP, System.currentTimeMillis());
         rowData.put(Light_Data.LIGHT_LUX, event.values[0]);
         rowData.put(Light_Data.ACCURACY, event.accuracy);
+        rowData.put(Light_Data.LABEL, LABEL);
         
         try {
         	if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("false") ) {
@@ -167,6 +185,10 @@ public class Light extends Aware_Sensor implements SensorEventListener {
     	CONTEXT_URIS = new Uri[]{ Light_Sensor.CONTENT_URI, Light_Data.CONTENT_URI };
         
         if(Aware.DEBUG) Log.d(TAG,"Light service created!");
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_AWARE_LIGHT_LABEL);
+        registerReceiver(dataLabeler, filter);
     }
     
     @Override
@@ -178,7 +200,9 @@ public class Light extends Aware_Sensor implements SensorEventListener {
         sensorThread.quit();
         
         wakeLock.release();
-        
+
+        unregisterReceiver(dataLabeler);
+
         if(Aware.DEBUG) Log.d(TAG,"Light service terminated...");
     }
     

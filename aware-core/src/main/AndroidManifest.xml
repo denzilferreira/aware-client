@@ -265,7 +265,7 @@
         <service android:name="com.aware.Aware$DownloadPluginService" android:exported="true"></service>
 
         <service android:name="com.aware.Wear_Sync" android:exported="true"></service>
-        <service android:name="com.aware.Wear_Sync$WearListener" android:exported="true" android:enabled="@bool/display_aware">
+        <service android:name="com.aware.Wear_Service" android:exported="true" android:enabled="@bool/display_aware">
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.BIND_LISTENER"/>
             </intent-filter>
@@ -288,11 +288,6 @@
                 <action android:name="android.intent.action.PACKAGE_ADDED" />
                 <action android:name="android.intent.action.PACKAGE_REMOVED" />
                 <data android:scheme="package" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name="com.aware.Wear_Sync$AWAREListener" android:exported="true">
-            <intent-filter>
-                <action android:name="ACTION_AWARE_CONFIG_CHANGED" />
             </intent-filter>
         </receiver>
         <receiver

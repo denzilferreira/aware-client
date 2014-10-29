@@ -10,8 +10,11 @@ See the GNU General Public License for more details: http://www.gnu.org/licenses
 */
 package com.aware;
 
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
@@ -63,6 +66,22 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
      * ContentProvider: Temperature_Provider
      */
     public static final String ACTION_AWARE_TEMPERATURE = "ACTION_AWARE_TEMPERATURE";
+    public static final String EXTRA_DATA = "data";
+    public static final String EXTRA_SENSOR = "sensor";
+
+    public static final String ACTION_AWARE_TEMPERATURE_LABEL = "ACTION_AWARE_TEMPERATURE_LABEL";
+    public static final String EXTRA_LABEL = "label";
+    private static String LABEL = "";
+
+    private static DataLabel dataLabeler = new DataLabel();
+    public static class DataLabel extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if( intent.getAction().equals(ACTION_AWARE_TEMPERATURE_LABEL)) {
+                LABEL = intent.getStringExtra(EXTRA_LABEL);
+            }
+        }
+    }
     
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -76,11 +95,13 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
         rowData.put(Temperature_Data.TIMESTAMP, System.currentTimeMillis());
         rowData.put(Temperature_Data.TEMPERATURE_CELSIUS, event.values[0]);
         rowData.put(Temperature_Data.ACCURACY, event.accuracy);
+        rowData.put(Temperature_Data.LABEL, LABEL);
         
         try {
             getContentResolver().insert(Temperature_Data.CONTENT_URI, rowData);
             
             Intent temperatureData = new Intent(ACTION_AWARE_TEMPERATURE);
+            temperatureData.putExtra(EXTRA_DATA, rowData);
             sendBroadcast(temperatureData);
             
             if( Aware.DEBUG ) Log.d(TAG, "Temperature:"+ rowData.toString());
@@ -109,6 +130,11 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
             try {
                 getContentResolver().insert(Temperature_Sensor.CONTENT_URI, rowData);
                 if( Aware.DEBUG ) Log.d(TAG, "Temperature sensor info: "+ rowData.toString());
+
+                Intent temp = new Intent(ACTION_AWARE_TEMPERATURE);
+                temp.putExtra(EXTRA_SENSOR, rowData);
+                sendBroadcast(temp);
+
             }catch( SQLiteException e ) {
                 if(Aware.DEBUG) Log.d(TAG,e.getMessage());
             }catch( SQLException e ) {
@@ -154,7 +180,10 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
         CONTEXT_URIS = new Uri[] { Temperature_Sensor.CONTENT_URI, Temperature_Data.CONTENT_URI };
         
         if(Aware.DEBUG) Log.d(TAG,"Temperature service created!");
-    
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_AWARE_TEMPERATURE_LABEL);
+        registerReceiver(dataLabeler, filter);
     }
     
     @Override
@@ -166,6 +195,8 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
         sensorThread.quit();
         
         wakeLock.release();
+
+        unregisterReceiver(dataLabeler);
         
         if(Aware.DEBUG) Log.d(TAG,"Temperature service terminated...");
     }
