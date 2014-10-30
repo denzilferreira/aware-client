@@ -158,12 +158,7 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         
         mGravity = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
-        
-        if(mGravity == null) {
-            if(Aware.DEBUG) Log.w(TAG,"This device does not have a gravity sensor!");
-            stopSelf();
-        }
-        
+
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
 
         if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_GRAVITY).length() > 0 ) {
@@ -180,18 +175,25 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
         
         sensorHandler = new Handler(sensorThread.getLooper());
         mSensorManager.registerListener(this, mGravity, SAMPLING_RATE, sensorHandler);
-        
-        saveSensorDevice(mGravity);
-        
+
         DATABASE_TABLES = Gravity_Provider.DATABASE_TABLES;
     	TABLES_FIELDS = Gravity_Provider.TABLES_FIELDS;
     	CONTEXT_URIS = new Uri[]{ Gravity_Sensor.CONTENT_URI, Gravity_Data.CONTENT_URI };
-        
-        if(Aware.DEBUG) Log.d(TAG,"Gravity service created!");
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_GRAVITY_LABEL);
         registerReceiver(dataLabeler, filter);
+
+        if(mGravity == null) {
+            if(Aware.DEBUG) Log.w(TAG,"This device does not have a gravity sensor!");
+            Aware.setSetting(this, Aware_Preferences.STATUS_GRAVITY, false);
+            stopSelf();
+            return;
+        } else {
+            saveSensorDevice(mGravity);
+        }
+
+        if(Aware.DEBUG) Log.d(TAG,"Gravity service created!");
     }
     
     @Override

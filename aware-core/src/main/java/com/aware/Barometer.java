@@ -154,12 +154,7 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         
         mPressure = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
-        
-        if(mPressure == null) {
-            if(Aware.DEBUG) Log.w(TAG,"This device does not have a barometer sensor!");
-            stopSelf();
-        }
-        
+
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
         if( Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_BAROMETER).length() > 0 ) {
             SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_BAROMETER));
@@ -179,14 +174,21 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
         
         sensorHandler = new Handler(sensorThread.getLooper());
         mSensorManager.registerListener(this, mPressure, SAMPLING_RATE, sensorHandler);
-        
-        saveSensorDevice(mPressure);
-        
-        if(Aware.DEBUG) Log.d(TAG,"Barometer service created!");
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_BAROMETER_LABEL);
         registerReceiver(dataLabeler, filter);
+
+        if(mPressure == null) {
+            if(Aware.DEBUG) Log.w(TAG,"This device does not have a barometer sensor!");
+            Aware.setSetting(this, Aware_Preferences.STATUS_BAROMETER, false);
+            stopSelf();
+            return;
+        } else {
+            saveSensorDevice(mPressure);
+        }
+
+        if(Aware.DEBUG) Log.d(TAG,"Barometer service created!");
     }
     
     @Override

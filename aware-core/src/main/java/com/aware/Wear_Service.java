@@ -30,7 +30,7 @@ public class Wear_Service extends WearableListenerService {
         super.onDataChanged(dataEvents);
 
         if( Aware.is_watch(getApplicationContext()) ) {
-            if( Aware.DEBUG ) Log.d(Aware.TAG, "This is a watch, not doing backup");
+            if( Aware.DEBUG ) Log.d(Aware.TAG, "Data changed in Android Wear...");
             return;
         }
 

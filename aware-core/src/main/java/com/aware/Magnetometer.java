@@ -158,12 +158,7 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         
         mMagnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        
-        if(mMagnetometer == null) {
-            if(Aware.DEBUG) Log.w(TAG,"This device does not have a magnetometer!");
-            stopSelf();
-        }
-        
+
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
         if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER).length() > 0 ) {
             SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_MAGNETOMETER));
@@ -183,14 +178,21 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
         
         sensorHandler = new Handler(sensorThread.getLooper());
         mSensorManager.registerListener(this, mMagnetometer, SAMPLING_RATE, sensorHandler);
-        
-        saveSensorDevice(mMagnetometer);
-        
-        if(Aware.DEBUG) Log.d(TAG,"Magnetometer service created!");
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_MAGNETOMETER_LABEL);
         registerReceiver(dataLabeler, filter);
+
+        if(mMagnetometer == null) {
+            if(Aware.DEBUG) Log.w(TAG,"This device does not have a magnetometer!");
+            Aware.setSetting(this, Aware_Preferences.STATUS_MAGNETOMETER, false);
+            stopSelf();
+            return;
+        } else {
+            saveSensorDevice(mMagnetometer);
+        }
+        
+        if(Aware.DEBUG) Log.d(TAG,"Magnetometer service created!");
     }
     
     @Override

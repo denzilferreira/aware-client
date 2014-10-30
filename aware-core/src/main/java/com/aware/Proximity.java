@@ -153,12 +153,7 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         
         mProximity = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-        
-        if(mProximity == null) {
-            if(Aware.DEBUG) Log.w(TAG,"This device does not have a proximity sensor!");
-            stopSelf();
-        }
-        
+
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
         if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY).length() > 0 ) {
             SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROXIMITY));
@@ -174,18 +169,25 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
         
         sensorHandler = new Handler(sensorThread.getLooper());
         mSensorManager.registerListener(this, mProximity, SAMPLING_RATE, sensorHandler);
-        
-        saveSensorDevice(mProximity);
-        
+
         DATABASE_TABLES = Proximity_Provider.DATABASE_TABLES;
         TABLES_FIELDS = Proximity_Provider.TABLES_FIELDS;
         CONTEXT_URIS = new Uri[]{ Proximity_Sensor.CONTENT_URI, Proximity_Data.CONTENT_URI };
-        
-        if(Aware.DEBUG) Log.d(TAG,"Proximity service created!");
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_PROXIMITY_LABEL);
         registerReceiver(dataLabeler, filter);
+
+        if(mProximity == null) {
+            if(Aware.DEBUG) Log.w(TAG,"This device does not have a proximity sensor!");
+            Aware.setSetting(this, Aware_Preferences.STATUS_PROXIMITY, false);
+            stopSelf();
+            return;
+        } else {
+            saveSensorDevice(mProximity);
+        }
+
+        if(Aware.DEBUG) Log.d(TAG,"Proximity service created!");
     }
     
     @Override

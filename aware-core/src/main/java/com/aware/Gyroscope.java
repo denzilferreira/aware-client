@@ -156,12 +156,7 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         
         mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        
-        if(mGyroscope == null) {
-            if(Aware.DEBUG) Log.w(TAG,"This device does not have a gyroscope!");
-            stopSelf();
-        }
-        
+
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
         if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_GYROSCOPE ).length() > 0 ) {
             SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE));
@@ -177,18 +172,25 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
         
         sensorHandler = new Handler(sensorThread.getLooper());
         mSensorManager.registerListener(this, mGyroscope, SAMPLING_RATE, sensorHandler);
-        
-        saveGyroscopeDevice(mGyroscope);
-        
+
         DATABASE_TABLES = Gyroscope_Provider.DATABASE_TABLES;
     	TABLES_FIELDS = Gyroscope_Provider.TABLES_FIELDS;
     	CONTEXT_URIS = new Uri[]{ Gyroscope_Sensor.CONTENT_URI, Gyroscope_Data.CONTENT_URI };
-        
-        if(Aware.DEBUG) Log.d(TAG,"Gyroscope service created!");
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_GYROSCOPE_LABEL);
         registerReceiver(dataLabeler, filter);
+
+        if(mGyroscope == null) {
+            if(Aware.DEBUG) Log.w(TAG,"This device does not have a gyroscope!");
+            Aware.setSetting(this, Aware_Preferences.STATUS_GYROSCOPE, false);
+            stopSelf();
+            return;
+        } else {
+            saveGyroscopeDevice(mGyroscope);
+        }
+
+        if(Aware.DEBUG) Log.d(TAG,"Gyroscope service created!");
     }
     
     @Override

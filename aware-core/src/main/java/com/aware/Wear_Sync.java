@@ -84,7 +84,11 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
     public final static PutDataMapRequest rotation = PutDataMapRequest.create("/rotation");
     public final static PutDataMapRequest screen = PutDataMapRequest.create("/screen");
     public final static PutDataMapRequest temperature = PutDataMapRequest.create("/temperature");
-    public static AWAREContentObserver accelerometerObs, installationsObs, barometerObs, batteryObs, bluetoothObs, gravityObs, gyroscopeObs, lightObs, linearObs, magnetometerObs, processorObs, proximityObs, rotationObs, screenObs, temperatureObs;
+    private static AWAREContentObserver accelerometerObs,
+            installationsObs, barometerObs, batteryObs,
+            bluetoothObs, gravityObs, gyroscopeObs, lightObs,
+            linearObs, magnetometerObs, processorObs, proximityObs,
+            rotationObs, screenObs, temperatureObs;
 
     private final AWAREListener awareConfigListener = new AWAREListener();
 
@@ -144,7 +148,6 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
      * Monitors AWARE's sensors enable/disable
      */
     public static class AWAREListener extends BroadcastReceiver {
-
         @Override
         public void onReceive(Context context, Intent intent) {
             String setting = intent.getStringExtra(Aware.EXTRA_CONFIG_SETTING);
@@ -276,7 +279,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         TextView wear_battery = (TextView) card.findViewById(R.id.wear_battery);
         TextView wear_last_sync = (TextView) card.findViewById(R.id.wear_last_sync);
 
-        wear_status.setText("Status: " + ((googleClient.isConnected())?"Connected":"Disconnected"));
+        wear_status.setText("Status: " + ( googleClient.isConnected() ? "Connected" : "Disconnected" ) );
 
         Cursor last_watch_battery = context.getContentResolver().query(Battery_Provider.Battery_Data.CONTENT_URI, null, Aware_Preferences.DEVICE_ID + " NOT LIKE '" + Aware.getSetting(context, Aware_Preferences.DEVICE_ID) + "'", null, Battery_Provider.Battery_Data.TIMESTAMP + " DESC LIMIT 1");
         if( last_watch_battery != null && last_watch_battery.moveToFirst() ) {
@@ -302,11 +305,9 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
      * - Sends data from watch to smartphone as we record it.
      */
     public static class AWAREContentObserver extends ContentObserver {
-
         private final Uri CONTENT_URI;
         private final String PATH;
         private final Context CONTEXT;
-        private String LABEL = "";
 
         public AWAREContentObserver(Handler handler, Uri content_uri, String watch_path, Context context) {
            super(handler);
@@ -314,8 +315,6 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
            PATH = watch_path;
            CONTEXT = context;
         }
-
-        public void setLabel(String lbl) { LABEL = lbl; }
 
         @Override
         public void onChange(boolean selfChange) {
@@ -333,13 +332,10 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                     for(String field : columns ) {
                         if (field.contains("timestamp") || field.contains("double")) {
                             data.put(field, latest.getDouble(latest.getColumnIndex(field)));
-                            continue;
+
+                        } else {
+                            data.put(field, latest.getString(latest.getColumnIndex(field)));
                         }
-                        if( field.contains("label") ) {
-                            data.put(field, LABEL);
-                            continue;
-                        }
-                        data.put(field, latest.getString(latest.getColumnIndex(field)));
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -419,13 +415,11 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
             if(Aware.DEBUG) Log.d(TAG, "Android Wear service terminated...");
             googleClient.disconnect();
         }
-
         unregisterReceiver(awareConfigListener);
     }
 
     private final IBinder serviceBinder = new ServiceBinder();
 
-    //On Android Wear connected
     @Override
     public void onConnected(Bundle bundle) {
         if( Aware.DEBUG ) {

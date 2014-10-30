@@ -156,12 +156,7 @@ public class Light extends Aware_Sensor implements SensorEventListener {
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         
         mLight = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
-        
-        if(mLight == null) {
-            if(Aware.DEBUG) Log.w(TAG,"This device does not have a light sensor!");
-            stopSelf();
-        }
-        
+
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
         if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_LIGHT).length() > 0 ) {
             SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LIGHT));
@@ -177,18 +172,25 @@ public class Light extends Aware_Sensor implements SensorEventListener {
         
         sensorHandler = new Handler(sensorThread.getLooper());
         mSensorManager.registerListener(this, mLight, SAMPLING_RATE, sensorHandler);
-        
-        saveSensorDevice(mLight);
-        
+
         DATABASE_TABLES = Light_Provider.DATABASE_TABLES;
     	TABLES_FIELDS = Light_Provider.TABLES_FIELDS;
     	CONTEXT_URIS = new Uri[]{ Light_Sensor.CONTENT_URI, Light_Data.CONTENT_URI };
-        
-        if(Aware.DEBUG) Log.d(TAG,"Light service created!");
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_LIGHT_LABEL);
         registerReceiver(dataLabeler, filter);
+
+        if(mLight == null) {
+            if(Aware.DEBUG) Log.w(TAG,"This device does not have a light sensor!");
+            Aware.setSetting(this, Aware_Preferences.STATUS_LIGHT, false);
+            stopSelf();
+            return;
+        } else {
+            saveSensorDevice(mLight);
+        }
+
+        if(Aware.DEBUG) Log.d(TAG,"Light service created!");
     }
     
     @Override

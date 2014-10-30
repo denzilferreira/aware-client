@@ -163,12 +163,7 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         
         mRotation = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-        
-        if(mRotation == null) {
-            if(Aware.DEBUG) Log.w(TAG,"This device does not have a rotation sensor!");
-            stopSelf();
-        }
-        
+
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
         if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_ROTATION).length() > 0 ) {
             SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_ROTATION));
@@ -190,12 +185,19 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
         DATABASE_TABLES = Rotation_Provider.DATABASE_TABLES;
         TABLES_FIELDS = Rotation_Provider.TABLES_FIELDS;
         CONTEXT_URIS = new Uri[]{ Rotation_Sensor.CONTENT_URI, Rotation_Data.CONTENT_URI };
-        
-        if(Aware.DEBUG) Log.d(TAG,"Rotation service created!");
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_ROTATION_LABEL);
         registerReceiver(dataLabeler, filter);
+
+        if(mRotation == null) {
+            if(Aware.DEBUG) Log.w(TAG,"This device does not have a rotation sensor!");
+            Aware.setSetting(this, Aware_Preferences.STATUS_ROTATION, false);
+            stopSelf();
+            return;
+        }
+
+        if(Aware.DEBUG) Log.d(TAG,"Rotation service created!");
     }
     
     @Override

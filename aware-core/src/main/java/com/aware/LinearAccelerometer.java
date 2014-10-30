@@ -160,12 +160,7 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         
         mLinearAccelerator = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        
-        if(mLinearAccelerator == null) {
-            if(Aware.DEBUG) Log.w(TAG,"This device does not have a linear-accelerometer!");
-            stopSelf();
-        }
-        
+
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
         if(Aware.getSetting(this, Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER).length() > 0 ) {
             SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER));
@@ -181,18 +176,25 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
         
         sensorHandler = new Handler(sensorThread.getLooper());
         mSensorManager.registerListener(this, mLinearAccelerator, SAMPLING_RATE, sensorHandler);
-        
-        saveAccelerometerDevice(mLinearAccelerator);
-        
+
         DATABASE_TABLES = Linear_Accelerometer_Provider.DATABASE_TABLES;
     	TABLES_FIELDS = Linear_Accelerometer_Provider.TABLES_FIELDS;
     	CONTEXT_URIS = new Uri[]{ Linear_Accelerometer_Sensor.CONTENT_URI, Linear_Accelerometer_Data.CONTENT_URI };
-    	
-        if(Aware.DEBUG) Log.d(TAG,"Linear-accelerometer service created!");
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_LINEAR_LABEL);
         registerReceiver(dataLabeler, filter);
+
+        if(mLinearAccelerator == null) {
+            if(Aware.DEBUG) Log.w(TAG,"This device does not have a linear-accelerometer!");
+            Aware.setSetting(this, Aware_Preferences.STATUS_LINEAR_ACCELEROMETER, false);
+            stopSelf();
+            return;
+        } else {
+            saveAccelerometerDevice(mLinearAccelerator);
+        }
+
+        if(Aware.DEBUG) Log.d(TAG,"Linear-accelerometer service created!");
     }
     
     @Override

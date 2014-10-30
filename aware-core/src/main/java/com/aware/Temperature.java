@@ -150,13 +150,7 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
         
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-        
-        if( android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.HONEYCOMB ) {
-            mTemperature = mSensorManager.getDefaultSensor(Sensor.TYPE_TEMPERATURE);
-        } else {
-            mTemperature = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
-        }
-    
+
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
         if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_TEMPERATURE).length() > 0 ) {
             SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_TEMPERATURE));
@@ -172,18 +166,31 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
         
         sensorHandler = new Handler(sensorThread.getLooper());
         mSensorManager.registerListener(this, mTemperature, SAMPLING_RATE, sensorHandler);
-        
-        saveSensorDevice(mTemperature);
-        
+
         DATABASE_TABLES = Temperature_Provider.DATABASE_TABLES;
         TABLES_FIELDS = Temperature_Provider.TABLES_FIELDS;
         CONTEXT_URIS = new Uri[] { Temperature_Sensor.CONTENT_URI, Temperature_Data.CONTENT_URI };
-        
-        if(Aware.DEBUG) Log.d(TAG,"Temperature service created!");
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_TEMPERATURE_LABEL);
         registerReceiver(dataLabeler, filter);
+
+        if( android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.HONEYCOMB ) {
+            mTemperature = mSensorManager.getDefaultSensor(Sensor.TYPE_TEMPERATURE);
+        } else {
+            mTemperature = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
+        }
+
+        if( mTemperature == null ) {
+            if( DEBUG ) Log.d(TAG, "This device does not have a temperature sensor.");
+            Aware.setSetting(this, Aware_Preferences.STATUS_TEMPERATURE, false);
+            stopSelf();
+            return;
+        } else {
+            saveSensorDevice(mTemperature);
+        }
+
+        if(Aware.DEBUG) Log.d(TAG,"Temperature service created!");
     }
     
     @Override

@@ -160,11 +160,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        if(mAccelerometer == null) {
-            if(Aware.DEBUG) Log.w(TAG,"This device does not have an accelerometer!");
-            stopSelf();
-        }
-        
+
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
 
         if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER).length() > 0 ) {
@@ -185,14 +181,21 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         
         sensorHandler = new Handler(sensorThread.getLooper());
         mSensorManager.registerListener(this, mAccelerometer, SAMPLING_RATE, sensorHandler);
-        
-        saveAccelerometerDevice(mAccelerometer);
-        
-        if(Aware.DEBUG) Log.d(TAG,"Accelerometer service created!");
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_ACCELEROMETER_LABEL);
         registerReceiver(dataLabeler, filter);
+
+        if(mAccelerometer == null) {
+            if(Aware.DEBUG) Log.w(TAG,"This device does not have an accelerometer!");
+            Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, false);
+            stopSelf();
+            return;
+        } else {
+            saveAccelerometerDevice(mAccelerometer);
+        }
+
+        if(Aware.DEBUG) Log.d(TAG,"Accelerometer service created!");
     }
     
     @Override
