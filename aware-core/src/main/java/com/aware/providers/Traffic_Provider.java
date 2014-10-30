@@ -119,8 +119,11 @@ public class Traffic_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case TRAFFIC:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 
@@ -159,9 +162,11 @@ public class Traffic_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case TRAFFIC:
+            database.beginTransaction();
 			long traffic_id = database.insertWithOnConflict(DATABASE_TABLES[0],
 					Traffic_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (traffic_id > 0) {
 				Uri trafficUri = ContentUris.withAppendedId(
 						Traffic_Data.CONTENT_URI, traffic_id);
@@ -260,8 +265,11 @@ public class Traffic_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case TRAFFIC:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 

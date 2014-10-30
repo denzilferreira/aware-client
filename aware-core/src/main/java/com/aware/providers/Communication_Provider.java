@@ -150,15 +150,20 @@ public class Communication_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case CALLS:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case MESSAGES:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[1], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
-
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
 
@@ -198,9 +203,11 @@ public class Communication_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case CALLS:
+            database.beginTransaction();
 			long call_id = database.insertWithOnConflict(DATABASE_TABLES[0],
 					Calls_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (call_id > 0) {
 				Uri callsUri = ContentUris.withAppendedId(
 						Calls_Data.CONTENT_URI, call_id);
@@ -209,9 +216,11 @@ public class Communication_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case MESSAGES:
+            database.beginTransaction();
 			long message_id = database.insertWithOnConflict(DATABASE_TABLES[1],
 					Messages_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (message_id > 0) {
 				Uri messagesUri = ContentUris.withAppendedId(
 						Messages_Data.CONTENT_URI, message_id);
@@ -314,15 +323,20 @@ public class Communication_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case CALLS:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case MESSAGES:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[1], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
-
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
 

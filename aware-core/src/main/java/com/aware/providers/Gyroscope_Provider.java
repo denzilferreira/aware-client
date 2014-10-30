@@ -160,12 +160,18 @@ public class Gyroscope_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case GYRO_DEV:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case GYRO_DATA:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[1], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 
@@ -208,9 +214,11 @@ public class Gyroscope_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case GYRO_DEV:
+            database.beginTransaction();
 			long gyro_id = database.insertWithOnConflict(DATABASE_TABLES[0],
 					Gyroscope_Sensor.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (gyro_id > 0) {
 				Uri gyroUri = ContentUris.withAppendedId(
 						Gyroscope_Sensor.CONTENT_URI, gyro_id);
@@ -219,9 +227,11 @@ public class Gyroscope_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case GYRO_DATA:
+            database.beginTransaction();
 			long gyroData_id = database.insertWithOnConflict(DATABASE_TABLES[1],
 					Gyroscope_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (gyroData_id > 0) {
 				Uri gyroDataUri = ContentUris.withAppendedId(
 						Gyroscope_Data.CONTENT_URI, gyroData_id);
@@ -335,15 +345,20 @@ public class Gyroscope_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case GYRO_DEV:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case GYRO_DATA:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[1], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
-
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
 

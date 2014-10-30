@@ -110,8 +110,11 @@ public class TimeZone_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case TIMEZONE:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 
@@ -149,9 +152,11 @@ public class TimeZone_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case TIMEZONE:
+            database.beginTransaction();
 			long timezone_id = database.insertWithOnConflict(DATABASE_TABLES[0],
 					TimeZone_Data.TIMEZONE, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (timezone_id > 0) {
 				Uri tele_uri = ContentUris.withAppendedId(
 						TimeZone_Data.CONTENT_URI, timezone_id);
@@ -230,8 +235,11 @@ public class TimeZone_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case TIMEZONE:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 

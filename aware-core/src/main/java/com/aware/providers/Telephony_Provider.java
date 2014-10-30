@@ -262,20 +262,32 @@ public class Telephony_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case TELEPHONY:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case GSM:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[1], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case NEIGHBOR:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[2], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case CDMA:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[3], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 
@@ -325,9 +337,11 @@ public class Telephony_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case TELEPHONY:
+            database.beginTransaction();
 			long tele_id = database.insertWithOnConflict(DATABASE_TABLES[0],
 					Telephony_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (tele_id > 0) {
 				Uri tele_uri = ContentUris.withAppendedId(
 						Telephony_Data.CONTENT_URI, tele_id);
@@ -336,9 +350,11 @@ public class Telephony_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case GSM:
+            database.beginTransaction();
 			long gsm_id = database.insertWithOnConflict(DATABASE_TABLES[1],
 					GSM_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (gsm_id > 0) {
 				Uri gsm_uri = ContentUris.withAppendedId(GSM_Data.CONTENT_URI,
 						gsm_id);
@@ -347,9 +363,11 @@ public class Telephony_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case NEIGHBOR:
+            database.beginTransaction();
 			long neighbor_id = database.insertWithOnConflict(DATABASE_TABLES[2],
 					GSM_Neighbors_Data.DEVICE_ID, values,SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (neighbor_id > 0) {
 				Uri neighbor_uri = ContentUris.withAppendedId(
 						GSM_Neighbors_Data.CONTENT_URI, neighbor_id);
@@ -359,9 +377,11 @@ public class Telephony_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case CDMA:
+            database.beginTransaction();
 			long cdma_id = database.insertWithOnConflict(DATABASE_TABLES[3],
 					CDMA_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (cdma_id > 0) {
 				Uri cdma_uri = ContentUris.withAppendedId(
 						CDMA_Data.CONTENT_URI, cdma_id);
@@ -531,20 +551,32 @@ public class Telephony_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case TELEPHONY:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case GSM:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[1], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case NEIGHBOR:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[2], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case CDMA:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[3], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 

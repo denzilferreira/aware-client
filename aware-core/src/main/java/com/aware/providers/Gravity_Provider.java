@@ -164,12 +164,18 @@ public class Gravity_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case SENSOR_DEV:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case SENSOR_DATA:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[1], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 
@@ -211,9 +217,11 @@ public class Gravity_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case SENSOR_DEV:
+            database.beginTransaction();
 			long accel_id = database.insertWithOnConflict(DATABASE_TABLES[0],
 					Gravity_Sensor.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (accel_id > 0) {
 				Uri accelUri = ContentUris.withAppendedId(
 						Gravity_Sensor.CONTENT_URI, accel_id);
@@ -222,9 +230,11 @@ public class Gravity_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case SENSOR_DATA:
+            database.beginTransaction();
 			long accelData_id = database.insertWithOnConflict(DATABASE_TABLES[1],
 					Gravity_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (accelData_id > 0) {
 				Uri accelDataUri = ContentUris.withAppendedId(
 						Gravity_Data.CONTENT_URI, accelData_id);
@@ -305,7 +315,6 @@ public class Gravity_Provider extends ContentProvider {
 			qb.setProjectionMap(sensorDataMap);
 			break;
 		default:
-
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
 		try {
@@ -336,15 +345,20 @@ public class Gravity_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case SENSOR_DEV:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case SENSOR_DATA:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[1], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
-
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
 

@@ -136,12 +136,18 @@ public class Mqtt_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case MQTT:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case MQTT_SUBSCRIPTION:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[1], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 
@@ -184,9 +190,11 @@ public class Mqtt_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case MQTT:
+            database.beginTransaction();
 			long mqtt_id = database.insertWithOnConflict(DATABASE_TABLES[0],
 					Mqtt_Messages.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (mqtt_id > 0) {
 				Uri mqttUri = ContentUris.withAppendedId(
 						Mqtt_Messages.CONTENT_URI, mqtt_id);
@@ -195,9 +203,11 @@ public class Mqtt_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case MQTT_SUBSCRIPTION:
+            database.beginTransaction();
 			long mqtt_sub_id = database.insertWithOnConflict(DATABASE_TABLES[1],
 					Mqtt_Subscriptions.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (mqtt_sub_id > 0) {
 				Uri mqttSubUri = ContentUris.withAppendedId(
 						Mqtt_Subscriptions.CONTENT_URI, mqtt_sub_id);
@@ -299,12 +309,18 @@ public class Mqtt_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case MQTT:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case MQTT_SUBSCRIPTION:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[1], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 

@@ -152,15 +152,20 @@ public class Bluetooth_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case BT_DEV:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case BT_DATA:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[1], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
-
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
 
@@ -199,9 +204,11 @@ public class Bluetooth_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case BT_DEV:
+            database.beginTransaction();
 			long rowId = database.insertWithOnConflict(DATABASE_TABLES[0],
 					Bluetooth_Sensor.BT_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (rowId > 0) {
 				Uri bluetoothUri = ContentUris.withAppendedId(
 						Bluetooth_Sensor.CONTENT_URI, rowId);
@@ -211,9 +218,11 @@ public class Bluetooth_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case BT_DATA:
+            database.beginTransaction();
 			long btId = database.insertWithOnConflict(DATABASE_TABLES[1],
 					Bluetooth_Data.BT_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (btId > 0) {
 				Uri bluetoothUri = ContentUris.withAppendedId(
 						Bluetooth_Data.CONTENT_URI, btId);
@@ -323,18 +332,22 @@ public class Bluetooth_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case BT_DEV:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case BT_DATA:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[1], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
-
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
-
 		getContext().getContentResolver().notifyChange(uri, null);
 		return count;
 	}

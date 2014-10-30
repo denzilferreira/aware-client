@@ -153,12 +153,18 @@ public class WiFi_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case WIFI_DATA:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case WIFI_DEV:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[1], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 
@@ -200,9 +206,11 @@ public class WiFi_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case WIFI_DATA:
+            database.beginTransaction();
 			long wifiID = database.insertWithOnConflict(DATABASE_TABLES[0],
 					WiFi_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (wifiID > 0) {
 				Uri wifiUri = ContentUris.withAppendedId(WiFi_Data.CONTENT_URI,
 						wifiID);
@@ -211,9 +219,11 @@ public class WiFi_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case WIFI_DEV:
+            database.beginTransaction();
 			long wifiDevID = database.insertWithOnConflict(DATABASE_TABLES[1],
 					WiFi_Sensor.DEVICE_ID, values,SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (wifiDevID > 0) {
 				Uri wifiUri = ContentUris.withAppendedId(
 						WiFi_Sensor.CONTENT_URI, wifiDevID);
@@ -318,12 +328,18 @@ public class WiFi_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case WIFI_DATA:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case WIFI_DEV:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[1], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 

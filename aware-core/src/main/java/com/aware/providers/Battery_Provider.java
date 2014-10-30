@@ -184,16 +184,25 @@ public class Battery_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case BATTERY:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case BATTERY_DISCHARGE:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[1], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case BATTERY_CHARGE:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[2], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown URI " + uri);
@@ -239,7 +248,10 @@ public class Battery_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case BATTERY:
+            database.beginTransaction();
 			long battery_id = database.insertWithOnConflict(DATABASE_TABLES[0], Battery_Data.TECHNOLOGY, values, SQLiteDatabase.CONFLICT_IGNORE);
+            database.setTransactionSuccessful();
+            database.endTransaction();
             if (battery_id > 0) {
                 Uri batteryUri = ContentUris.withAppendedId(Battery_Data.CONTENT_URI, battery_id);
                 getContext().getContentResolver().notifyChange(batteryUri, null);
@@ -247,7 +259,10 @@ public class Battery_Provider extends ContentProvider {
             }
             throw new SQLException("Failed to insert row into " + uri);
 		case BATTERY_DISCHARGE:
+            database.beginTransaction();
 			long battery_d_id = database.insertWithOnConflict(DATABASE_TABLES[1], Battery_Discharges.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
+            database.setTransactionSuccessful();
+            database.endTransaction();
             if (battery_d_id > 0) {
                 Uri batteryUri = ContentUris.withAppendedId(
                         Battery_Discharges.CONTENT_URI, battery_d_id);
@@ -257,8 +272,11 @@ public class Battery_Provider extends ContentProvider {
             }
             throw new SQLException("Failed to insert row into " + uri);
 		case BATTERY_CHARGE:
+            database.beginTransaction();
             long battery_c_id = database.insertWithOnConflict(DATABASE_TABLES[2],
                     Battery_Charges.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
+            database.setTransactionSuccessful();
+            database.endTransaction();
             if (battery_c_id > 0) {
                 Uri batteryUri = ContentUris.withAppendedId(
                         Battery_Charges.CONTENT_URI, battery_c_id);
@@ -394,16 +412,25 @@ public class Battery_Provider extends ContentProvider {
 		int count;
 		switch (sUriMatcher.match(uri)) {
 		case BATTERY:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case BATTERY_DISCHARGE:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[1], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case BATTERY_CHARGE:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[2], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown URI " + uri);

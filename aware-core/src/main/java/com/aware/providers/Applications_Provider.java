@@ -257,20 +257,32 @@ public class Applications_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case FOREGROUND:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case APPLICATIONS:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[1], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case NOTIFICATIONS:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[2], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case ERROR:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[3], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown URI " + uri);
@@ -318,8 +330,11 @@ public class Applications_Provider extends ContentProvider {
 				initialValues) : new ContentValues();
 		switch (sUriMatcher.match(uri)) {
 		case FOREGROUND:
+            database.beginTransaction();
 			long foreground_id = database.insertWithOnConflict(DATABASE_TABLES[0],
 					Applications_Foreground.APPLICATION_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (foreground_id > 0) {
 				Uri foregroundUri = ContentUris.withAppendedId(
 						Applications_Foreground.CONTENT_URI, foreground_id);
@@ -329,8 +344,11 @@ public class Applications_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case APPLICATIONS:
+            database.beginTransaction();
 			long applications_id = database.insertWithOnConflict(DATABASE_TABLES[1],
 					Applications_History.PACKAGE_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (applications_id > 0) {
 				Uri applicationsUri = ContentUris.withAppendedId(
 						Applications_History.CONTENT_URI, applications_id);
@@ -340,8 +358,11 @@ public class Applications_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case NOTIFICATIONS:
+            database.beginTransaction();
 			long notifications_id = database.insertWithOnConflict(DATABASE_TABLES[2],
 					Applications_Notifications.PACKAGE_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (notifications_id > 0) {
 				Uri notificationsUri = ContentUris.withAppendedId(
 						Applications_Notifications.CONTENT_URI,
@@ -352,8 +373,11 @@ public class Applications_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case ERROR:
+            database.beginTransaction();
 			long error_id = database.insertWithOnConflict(DATABASE_TABLES[3],
 					Applications_Crashes.PACKAGE_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (error_id > 0) {
 				Uri errorsUri = ContentUris.withAppendedId(
 						Applications_Crashes.CONTENT_URI, error_id);
@@ -527,20 +551,32 @@ public class Applications_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case FOREGROUND:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case APPLICATIONS:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[1], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case NOTIFICATIONS:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[2], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case ERROR:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[3], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown URI " + uri);

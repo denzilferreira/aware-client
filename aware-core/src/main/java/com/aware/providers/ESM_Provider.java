@@ -133,8 +133,11 @@ public class ESM_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case ESMS_QUEUE:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 
@@ -172,9 +175,11 @@ public class ESM_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case ESMS_QUEUE:
+            database.beginTransaction();
 			long quest_id = database.insertWithOnConflict(DATABASE_TABLES[0],
 					ESM_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (quest_id > 0) {
 				Uri questUri = ContentUris.withAppendedId(ESM_Data.CONTENT_URI,
 						quest_id);
@@ -271,8 +276,11 @@ public class ESM_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case ESMS_QUEUE:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown URI " + uri);

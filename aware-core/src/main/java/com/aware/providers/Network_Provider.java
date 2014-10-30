@@ -114,8 +114,11 @@ public class Network_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case NETWORK:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 
@@ -154,9 +157,11 @@ public class Network_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case NETWORK:
+            database.beginTransaction();
 			long network_id = database.insertWithOnConflict(DATABASE_TABLES[0],
 					Network_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (network_id > 0) {
 				Uri networkUri = ContentUris.withAppendedId(
 						Network_Data.CONTENT_URI, network_id);
@@ -243,8 +248,11 @@ public class Network_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case NETWORK:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 

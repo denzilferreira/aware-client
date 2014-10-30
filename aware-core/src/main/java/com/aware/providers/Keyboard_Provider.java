@@ -101,8 +101,11 @@ public class Keyboard_Provider extends ContentProvider {
         int count = 0;
         switch (sUriMatcher.match(uri)) {
             case KEYBOARD:
+                database.beginTransaction();
                 count = database.delete(DATABASE_TABLES[0], selection,
                         selectionArgs);
+                database.setTransactionSuccessful();
+                database.endTransaction();
                 break;
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);
@@ -138,8 +141,11 @@ public class Keyboard_Provider extends ContentProvider {
                 initialValues) : new ContentValues();
         switch (sUriMatcher.match(uri)) {
             case KEYBOARD:
+                database.beginTransaction();
                 long keyboard_id = database.insertWithOnConflict(DATABASE_TABLES[0],
                         Keyboard_Data.PACKAGE_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
+                database.setTransactionSuccessful();
+                database.endTransaction();
                 if (keyboard_id > 0) {
                     Uri installationsUri = ContentUris.withAppendedId(
                             Keyboard_Data.CONTENT_URI, keyboard_id);
@@ -229,8 +235,11 @@ public class Keyboard_Provider extends ContentProvider {
         int count = 0;
         switch (sUriMatcher.match(uri)) {
             case KEYBOARD:
+                database.beginTransaction();
                 count = database.update(DATABASE_TABLES[0], values, selection,
                         selectionArgs);
+                database.setTransactionSuccessful();
+                database.endTransaction();
                 break;
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);

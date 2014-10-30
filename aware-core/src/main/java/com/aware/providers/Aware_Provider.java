@@ -203,16 +203,25 @@ public class Aware_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case DEVICE_INFO:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case SETTING:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[1], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case PLUGIN:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[2], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown URI " + uri);
@@ -257,8 +266,11 @@ public class Aware_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case DEVICE_INFO:
+            database.beginTransaction();
 			long dev_id = database.insertWithOnConflict(DATABASE_TABLES[0],
 					Aware_Device.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (dev_id > 0) {
 				Uri devUri = ContentUris.withAppendedId(
 						Aware_Device.CONTENT_URI, dev_id);
@@ -267,8 +279,11 @@ public class Aware_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case SETTING:
+            database.beginTransaction();
 			long sett_id = database.insertWithOnConflict(DATABASE_TABLES[1],
 					Aware_Settings.SETTING_KEY, values, SQLiteDatabase.CONFLICT_IGNORE);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (sett_id > 0) {
 				Uri settUri = ContentUris.withAppendedId(
 						Aware_Settings.CONTENT_URI, sett_id);
@@ -277,8 +292,11 @@ public class Aware_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case PLUGIN:
+            database.beginTransaction();
 			long plug_id = database.insertWithOnConflict(DATABASE_TABLES[2],
 					Aware_Plugins.PLUGIN_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (plug_id > 0) {
 				Uri settUri = ContentUris.withAppendedId(
 						Aware_Plugins.CONTENT_URI, plug_id);
@@ -398,16 +416,25 @@ public class Aware_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case DEVICE_INFO:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case SETTING:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[1], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case PLUGIN:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[2], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown URI " + uri);

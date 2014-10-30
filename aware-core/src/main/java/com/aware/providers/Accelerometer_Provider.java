@@ -167,12 +167,18 @@ public class Accelerometer_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case ACCEL_DEV:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case ACCEL_DATA:
-			count = database.delete(DATABASE_TABLES[1], selection,
+            database.beginTransaction();
+            count = database.delete(DATABASE_TABLES[1], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown URI " + uri);
@@ -211,30 +217,36 @@ public class Accelerometer_Provider extends ContentProvider {
 		ContentValues values = (initialValues != null) ? new ContentValues(
 				initialValues) : new ContentValues();
 
-		switch (sUriMatcher.match(uri)) {
-		case ACCEL_DEV:
-			long accel_id = database.insertWithOnConflict(DATABASE_TABLES[0],
-                    Accelerometer_Sensor.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-            if (accel_id > 0) {
-                Uri accelUri = ContentUris.withAppendedId(
-                        Accelerometer_Sensor.CONTENT_URI, accel_id);
-                getContext().getContentResolver().notifyChange(accelUri, null);
-                return accelUri;
-            }
-            throw new SQLException("Failed to insert row into " + uri);
-		case ACCEL_DATA:
-			long accelData_id = database.insertWithOnConflict(DATABASE_TABLES[1],
-                    Accelerometer_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-            if (accelData_id > 0) {
-                Uri accelDataUri = ContentUris.withAppendedId(
-                        Accelerometer_Data.CONTENT_URI, accelData_id);
-                getContext().getContentResolver().notifyChange(accelDataUri,
-                        null);
-                return accelDataUri;
-            }
-            throw new SQLException("Failed to insert row into " + uri);
-		default:
-			throw new IllegalArgumentException("Unknown URI " + uri);
+        switch (sUriMatcher.match(uri)) {
+            case ACCEL_DEV:
+                database.beginTransaction();
+                long accel_id = database.insertWithOnConflict(DATABASE_TABLES[0],
+                        Accelerometer_Sensor.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
+                database.setTransactionSuccessful();
+                database.endTransaction();
+                if (accel_id > 0) {
+                    Uri accelUri = ContentUris.withAppendedId(
+                            Accelerometer_Sensor.CONTENT_URI, accel_id);
+                    getContext().getContentResolver().notifyChange(accelUri, null);
+                    return accelUri;
+                }
+                throw new SQLException("Failed to insert row into " + uri);
+            case ACCEL_DATA:
+                database.beginTransaction();
+                long accelData_id = database.insertWithOnConflict(DATABASE_TABLES[1],
+                        Accelerometer_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
+                database.setTransactionSuccessful();
+                database.endTransaction();
+                if (accelData_id > 0) {
+                    Uri accelDataUri = ContentUris.withAppendedId(
+                            Accelerometer_Data.CONTENT_URI, accelData_id);
+                    getContext().getContentResolver().notifyChange(accelDataUri,
+                            null);
+                    return accelDataUri;
+                }
+                throw new SQLException("Failed to insert row into " + uri);
+            default:
+                throw new IllegalArgumentException("Unknown URI " + uri);
 		}
 	}
 
@@ -346,15 +358,20 @@ public class Accelerometer_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case ACCEL_DEV:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case ACCEL_DATA:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[1], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
-			database.close();
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
 		getContext().getContentResolver().notifyChange(uri, null);

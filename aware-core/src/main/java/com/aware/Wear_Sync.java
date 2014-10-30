@@ -90,7 +90,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
             linearObs, magnetometerObs, processorObs, proximityObs,
             rotationObs, screenObs, temperatureObs;
 
-    private final AWAREListener awareConfigListener = new AWAREListener();
+    private static final AWAREListener awareConfigListener = new AWAREListener();
 
     @Override
     public void onCreate() {
@@ -150,6 +150,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
     public static class AWAREListener extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+
             String setting = intent.getStringExtra(Aware.EXTRA_CONFIG_SETTING);
             String value = intent.getStringExtra(Aware.EXTRA_CONFIG_VALUE);
 
@@ -320,9 +321,6 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         public void onChange(boolean selfChange) {
             super.onChange(selfChange);
 
-            //If it's the phone, don't do anything
-            if( ! Aware.is_watch(CONTEXT) ) return;
-
             Cursor latest = CONTEXT.getContentResolver().query(CONTENT_URI, null, null, null, "timestamp DESC LIMIT 1");
             if( latest != null && latest.moveToFirst() ) {
                 JSONObject data = new JSONObject();
@@ -332,7 +330,6 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                     for(String field : columns ) {
                         if (field.contains("timestamp") || field.contains("double")) {
                             data.put(field, latest.getDouble(latest.getColumnIndex(field)));
-
                         } else {
                             data.put(field, latest.getString(latest.getColumnIndex(field)));
                         }

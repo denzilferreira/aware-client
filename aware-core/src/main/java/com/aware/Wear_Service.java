@@ -30,11 +30,13 @@ public class Wear_Service extends WearableListenerService {
         super.onDataChanged(dataEvents);
 
         if( Aware.is_watch(getApplicationContext()) ) {
-            if( Aware.DEBUG ) Log.d(Aware.TAG, "Data changed in Android Wear...");
+            if( Aware.DEBUG ) Log.d(Aware.TAG, "This is the watch, not replicating data...");
             return;
+        } else {
+            if( Aware.DEBUG ) Log.d(Aware.TAG, "This is the phone, replicating data...");
         }
 
-        for(DataEvent event : dataEvents ) {
+        for( DataEvent event : dataEvents ) {
             DataMapItem datamapItem = DataMapItem.fromDataItem(event.getDataItem());
             saveData(datamapItem.getDataMap().getString("json"));
         }

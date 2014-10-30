@@ -118,8 +118,11 @@ public class Processor_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case PROCESSOR:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 
@@ -155,9 +158,11 @@ public class Processor_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case PROCESSOR:
+            database.beginTransaction();
 			long processor_id = database.insertWithOnConflict(DATABASE_TABLES[0],
 					Processor_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (processor_id > 0) {
 				Uri processorUri = ContentUris.withAppendedId(
 						Processor_Data.CONTENT_URI, processor_id);
@@ -253,8 +258,11 @@ public class Processor_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case PROCESSOR:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 

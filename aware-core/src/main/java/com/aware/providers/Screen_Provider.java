@@ -110,8 +110,11 @@ public class Screen_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case SCREEN:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 
@@ -149,9 +152,11 @@ public class Screen_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case SCREEN:
+            database.beginTransaction();
 			long screen_id = database.insertWithOnConflict(DATABASE_TABLES[0],
 					Screen_Data.DEVICE_ID, values,SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (screen_id > 0) {
 				Uri screenUri = ContentUris.withAppendedId(
 						Screen_Data.CONTENT_URI, screen_id);
@@ -232,8 +237,11 @@ public class Screen_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case SCREEN:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 

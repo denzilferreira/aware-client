@@ -126,8 +126,11 @@ public class Locations_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case LOCATIONS:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 
@@ -166,9 +169,11 @@ public class Locations_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case LOCATIONS:
+            database.beginTransaction();
 			long location_id = database.insertWithOnConflict(DATABASE_TABLES[0],
 					Locations_Data.PROVIDER, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (location_id > 0) {
 				Uri locationUri = ContentUris.withAppendedId(
 						Locations_Data.CONTENT_URI, location_id);
@@ -266,11 +271,13 @@ public class Locations_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case LOCATIONS:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
-
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
 

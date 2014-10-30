@@ -165,12 +165,18 @@ public class Magnetometer_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case SENSOR_DEV:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case SENSOR_DATA:
+            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[1], selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
 
@@ -212,9 +218,11 @@ public class Magnetometer_Provider extends ContentProvider {
 
 		switch (sUriMatcher.match(uri)) {
 		case SENSOR_DEV:
+            database.beginTransaction();
 			long accel_id = database.insertWithOnConflict(DATABASE_TABLES[0],
 					Magnetometer_Sensor.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (accel_id > 0) {
 				Uri accelUri = ContentUris.withAppendedId(
 						Magnetometer_Sensor.CONTENT_URI, accel_id);
@@ -223,9 +231,11 @@ public class Magnetometer_Provider extends ContentProvider {
 			}
 			throw new SQLException("Failed to insert row into " + uri);
 		case SENSOR_DATA:
+            database.beginTransaction();
 			long accelData_id = database.insertWithOnConflict(DATABASE_TABLES[1],
 					Magnetometer_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			if (accelData_id > 0) {
 				Uri accelDataUri = ContentUris.withAppendedId(
 						Magnetometer_Data.CONTENT_URI, accelData_id);
@@ -345,15 +355,20 @@ public class Magnetometer_Provider extends ContentProvider {
 		int count = 0;
 		switch (sUriMatcher.match(uri)) {
 		case SENSOR_DEV:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		case SENSOR_DATA:
+            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[1], values, selection,
 					selectionArgs);
+            database.setTransactionSuccessful();
+            database.endTransaction();
 			break;
 		default:
-
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
 
