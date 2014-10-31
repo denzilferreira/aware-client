@@ -84,13 +84,12 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
     public final static PutDataMapRequest rotation = PutDataMapRequest.create("/rotation");
     public final static PutDataMapRequest screen = PutDataMapRequest.create("/screen");
     public final static PutDataMapRequest temperature = PutDataMapRequest.create("/temperature");
+
     private static AWAREContentObserver accelerometerObs,
             installationsObs, barometerObs, batteryObs,
             bluetoothObs, gravityObs, gyroscopeObs, lightObs,
             linearObs, magnetometerObs, processorObs, proximityObs,
             rotationObs, screenObs, temperatureObs;
-
-    private static final AWAREListener awareConfigListener = new AWAREListener();
 
     @Override
     public void onCreate() {
@@ -266,6 +265,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
             }
         }
     }
+    private static AWAREListener awareConfigListener = new AWAREListener();
 
     /**
      * Get Android Wear's contextual card

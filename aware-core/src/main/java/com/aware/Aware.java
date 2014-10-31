@@ -266,39 +266,39 @@ public class Aware extends Service {
             editor.commit();
         }
 
-        if ( getPackageName().equals("com.aware") ) {
+        //this sets the default settings to all plugins too
+        SharedPreferences prefs = getSharedPreferences( getPackageName(), Context.MODE_PRIVATE );
+        if( prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0 ) {
+            PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
+            prefs.edit().commit(); //commit changes
+        } else {
+            PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, false);
+        }
 
-            awareStatusMonitor = new Intent( getApplicationContext(), Aware.class );
-            repeatingIntent = PendingIntent.getService(getApplicationContext(), 0,  awareStatusMonitor, 0);
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+1000, aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000, repeatingIntent);
-
-            SharedPreferences prefs = getSharedPreferences( getPackageName(), Context.MODE_PRIVATE );
-        	if( prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0 ) {
-        		PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
-        		prefs.edit().commit(); //commit changes
-        	} else {
-        		PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, false);
-        	}
-        	
-        	Map<String,?> defaults = prefs.getAll();
-            for(Map.Entry<String, ?> entry : defaults.entrySet()) {
-                if( Aware.getSetting(getApplicationContext(), entry.getKey()).length() == 0 ) {
-                    Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue());
-                }
+        Map<String,?> defaults = prefs.getAll();
+        for(Map.Entry<String, ?> entry : defaults.entrySet()) {
+            if( Aware.getSetting(getApplicationContext(), entry.getKey()).length() == 0 ) {
+                Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue());
             }
-            
-        	if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0 ) {
-	        	UUID uuid = UUID.randomUUID();
-	            Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString());
-        	}
-            
-        	DEBUG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_FLAG).equals("true");
-            TAG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(awareContext,Aware_Preferences.DEBUG_TAG):TAG;
-            
-            get_device_info();
-            
-            if( Aware.DEBUG ) Log.d(TAG,"AWARE framework is created!");
+        }
 
+        if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0 ) {
+            UUID uuid = UUID.randomUUID();
+            Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString());
+        }
+
+        DEBUG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_FLAG).equals("true");
+        TAG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(awareContext,Aware_Preferences.DEBUG_TAG):TAG;
+
+        get_device_info();
+
+        if( Aware.DEBUG ) Log.d(TAG,"AWARE framework is created!");
+
+        //Only the official client will do this.
+        if ( getPackageName().equals("com.aware") ) {
+            awareStatusMonitor = new Intent(getApplicationContext(), Aware.class);
+            repeatingIntent = PendingIntent.getService(getApplicationContext(), 0, awareStatusMonitor, 0);
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000, aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000, repeatingIntent);
             new AsyncPing().execute();
         }
     }
@@ -359,12 +359,11 @@ public class Aware extends Service {
         if( awareContextDevice != null && ! awareContextDevice.isClosed()) awareContextDevice.close();
     }
 
-    //TODO: check if there is a better way to detect a watch...
+    //TODO: check if there is a better way to detect a watch... for now we are looking for a W on the release name (W, W.1, W.2...)
     public static boolean is_watch(Context c) {
         boolean is_watch = false;
         Cursor device = c.getContentResolver().query(Aware_Provider.Aware_Device.CONTENT_URI, null, null, null, "1 LIMIT 1");
         if( device != null && device.moveToFirst() ) {
-            //is_watch = device.getInt(device.getColumnIndex(Aware_Provider.Aware_Device.SDK))==20;
             is_watch = device.getString(device.getColumnIndex(Aware_Device.RELEASE)).contains("W");
         }
         if( device != null && ! device.isClosed() ) device.close();
@@ -382,17 +381,15 @@ public class Aware extends Service {
             //Plugins need to be able to start services too, as requested in their settings
             startAllServices();
 
-            //Only the client keeps the plugins running and checks for updates of the client
+            Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
+            if( enabled_plugins != null && enabled_plugins.moveToFirst() ) {
+                do {
+                    startPlugin(getApplicationContext(), enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME)));
+                }while(enabled_plugins.moveToNext());
+            }
+            if( enabled_plugins != null && ! enabled_plugins.isClosed() ) enabled_plugins.close();
+
             if( getPackageName().equals("com.aware") ) {
-
-                Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
-                if( enabled_plugins != null && enabled_plugins.moveToFirst() ) {
-                    do {
-                        startPlugin(getApplicationContext(), enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME)));
-                    }while(enabled_plugins.moveToNext());
-                }
-                if( enabled_plugins != null && ! enabled_plugins.isClosed() ) enabled_plugins.close();
-
 	            if( Aware.getSetting(getApplicationContext(), Aware_Preferences.AWARE_AUTO_UPDATE).equals("true") ) {
 	            	if( aware_preferences.getLong(PREF_LAST_UPDATE, 0) == 0 || (aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 0 && System.currentTimeMillis()-aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 6*60*60*1000) ) { //check every 6h
 	            		new Update_Check().execute();
@@ -423,7 +420,7 @@ public class Aware extends Service {
                     }
                 }
 
-                //Framework checks if study is active
+                //client checks if study is active
                 if( getPackageName().equals("com.aware") ) {
                     new Study_Check().execute();
                 }
@@ -433,8 +430,11 @@ public class Aware extends Service {
                 Intent dataCleaning = new Intent(ACTION_AWARE_SPACE_MAINTENANCE);
                 awareContext.sendBroadcast(dataCleaning);
             }
-        } else { //Turn off all enabled plugins
-        	Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
+        } else { //Turn off all enabled plugins and services
+
+            stopAllServices();
+
+            Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
         	if( enabled_plugins != null && enabled_plugins.moveToFirst() ) {
         		do {
         			stopPlugin(getApplicationContext(), enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME)));
@@ -492,6 +492,7 @@ public class Aware extends Service {
                 rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
                 context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
                 cached.close();
+
                 return;
     		}
     	}
@@ -742,11 +743,6 @@ public class Aware extends Service {
         setting.put(Aware_Settings.SETTING_VALUE, value.toString());
         setting.put(Aware_Settings.SETTING_PACKAGE_NAME, context.getPackageName());
 
-        Intent wearBroadcast = new Intent(ACTION_AWARE_CONFIG_CHANGED);
-        wearBroadcast.putExtra(EXTRA_CONFIG_SETTING, key);
-        wearBroadcast.putExtra(EXTRA_CONFIG_VALUE, value.toString());
-        context.sendBroadcast(wearBroadcast);
-
         Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "'" + (is_restricted_package ? " AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE '" + context.getPackageName() + "'" : ""), null, null);
         //update
         if( qry != null && qry.moveToFirst() ) {
@@ -772,6 +768,11 @@ public class Aware extends Service {
             }
         }
         if( qry != null && ! qry.isClosed() ) qry.close();
+
+        Intent wearBroadcast = new Intent(ACTION_AWARE_CONFIG_CHANGED);
+        wearBroadcast.putExtra(EXTRA_CONFIG_SETTING, key);
+        wearBroadcast.putExtra(EXTRA_CONFIG_VALUE, value.toString());
+        context.sendBroadcast(wearBroadcast);
     }
     
     @Override
@@ -785,6 +786,9 @@ public class Aware extends Service {
         if( storage_BR != null ) awareContext.unregisterReceiver(storage_BR);
     }
 
+    /**
+     * Client: check if a certain study is still ongoing, resets client otherwise.
+     */
     private class Study_Check extends AsyncTask<Void, Void, Boolean> {
         @Override
         protected Boolean doInBackground(Void... voids) {
@@ -804,7 +808,6 @@ public class Aware extends Service {
             }
             return false;
         }
-
         @Override
         protected void onPostExecute(Boolean is_closed) {
             super.onPostExecute(is_closed);
@@ -863,6 +866,9 @@ public class Aware extends Service {
         c.startActivity(preferences);
     }
 
+    /**
+     * Client: check if there is an update to the client.
+     */
     private class Update_Check extends AsyncTask<Void, Void, Boolean> {
     	String filename = "", whats_new = "";
     	int version = 0;
@@ -929,11 +935,10 @@ public class Aware extends Service {
     }
     
     /**
-     * AWARE's plugin monitor
+     * Client's plugin monitor
      * - Installs a plugin that was just downloaded
      * - Checks if a package is a plugin or not
      * @author denzilferreira
-     *
      */
     public static class PluginMonitor extends BroadcastReceiver {
     	private static PackageManager mPkgManager;
@@ -1022,7 +1027,7 @@ public class Aware extends Service {
     }
     
     /**
-     * Fetches info from webservices on the installed plugins.
+     * Fetches info from webservices on installed plugins.
      * @author denzilferreira
      *
      */
@@ -1167,7 +1172,6 @@ public class Aware extends Service {
 		public UpdateFrameworkService() {
 			super("Update Framework service");			
 		}
-
 		@Override
 		protected void onHandleIntent(Intent intent) {
 			String filename = intent.getStringExtra("filename");
@@ -1199,7 +1203,8 @@ public class Aware extends Service {
     public static class Aware_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            
+
+            //We are only synching the device information, not aware's settings and active plugins.
         	String[] DATABASE_TABLES = Aware_Provider.DATABASE_TABLES;
         	String[] TABLES_FIELDS = Aware_Provider.TABLES_FIELDS;
         	Uri[] CONTEXT_URIS = new Uri[]{ Aware_Device.CONTENT_URI };
@@ -1278,7 +1283,10 @@ public class Aware extends Service {
         }
     }
     private static final Aware_Broadcaster aware_BR = new Aware_Broadcaster();
-    
+
+    /**
+     * Checks if we have access to the storage of the device. Turns off AWARE when we don't, turns it back on when available again.
+     */
     public static class Storage_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
