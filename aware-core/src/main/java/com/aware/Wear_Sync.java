@@ -99,7 +99,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         if(Aware.DEBUG) Log.d(TAG, "Android Wear synching created!");
 
         //Phone manages the connection
-        if( ! Aware.is_watch(this) ) {
+        if( ! Aware.is_watch(getApplicationContext()) ) {
             googleClient = new GoogleApiClient.Builder(this)
                     .addApi(Wearable.API)
                     .addConnectionCallbacks(this)
@@ -115,10 +115,6 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
             Intent apply = new Intent(Aware.ACTION_AWARE_REFRESH);
             sendBroadcast(apply);
         }
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Aware.ACTION_AWARE_CONFIG_CHANGED);
-        registerReceiver(awareConfigListener, filter);
     }
 
     @Override
@@ -265,7 +261,6 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
             }
         }
     }
-    private static AWAREListener awareConfigListener = new AWAREListener();
 
     /**
      * Get Android Wear's contextual card
@@ -412,7 +407,6 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
             if(Aware.DEBUG) Log.d(TAG, "Android Wear service terminated...");
             googleClient.disconnect();
         }
-        unregisterReceiver(awareConfigListener);
     }
 
     private final IBinder serviceBinder = new ServiceBinder();

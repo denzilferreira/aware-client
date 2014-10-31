@@ -477,6 +477,7 @@ public class Aware extends Service {
     public static void startPlugin(Context context, String package_name ) {
 
         if( Aware.DEBUG ) Log.d(TAG, "Starting: " + package_name);
+        if( awareContext == null ) awareContext = context;
 
     	//Check if plugin is installed
     	Cursor cached = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
