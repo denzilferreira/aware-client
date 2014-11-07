@@ -23,6 +23,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -34,7 +35,9 @@ import com.aware.providers.Barometer_Provider;
 import com.aware.providers.Barometer_Provider.Barometer_Data;
 import com.aware.providers.Barometer_Provider.Barometer_Sensor;
 import com.aware.utils.Aware_Sensor;
-import com.aware.utils.Converters;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * AWARE Barometer module
@@ -68,6 +71,13 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
     public static final String ACTION_AWARE_BAROMETER_LABEL = "ACTION_AWARE_BAROMETER_LABEL";
     public static final String EXTRA_LABEL = "label";
 
+    /**
+     * Until today, no available Android phone samples higher than 208Hz (Nexus 7).
+     * http://ilessendata.blogspot.com/2012/11/android-accelerometer-sampling-rates.html
+     */
+    private static ContentValues[] data_buffer;
+    private static List<ContentValues> data_values = new ArrayList<ContentValues>();
+
     private static String LABEL = "";
 
     private static DataLabel dataLabeler = new DataLabel();
@@ -93,22 +103,59 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
         rowData.put(Barometer_Data.AMBIENT_PRESSURE, event.values[0]);
         rowData.put(Barometer_Data.ACCURACY, event.accuracy);
         rowData.put(Barometer_Data.LABEL, LABEL);
-        
-        try {
-        	if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("false") ) {
-        		getContentResolver().insert(Barometer_Data.CONTENT_URI, rowData);
-        	}
-            
+
+        if( data_values.size() < 250 ) {
+            data_values.add(rowData);
+
             Intent pressureData = new Intent(ACTION_AWARE_BAROMETER);
             pressureData.putExtra(EXTRA_DATA, rowData);
             sendBroadcast(pressureData);
-            
+
             if( Aware.DEBUG ) Log.d(TAG, "Barometer:"+ rowData.toString());
+
+            return;
+        }
+
+        data_buffer = new ContentValues[data_values.size()];
+        data_values.toArray(data_buffer);
+
+        try {
+        	if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("false") ) {
+        		new AsyncStore().execute(data_buffer);
+        	}
         }catch( SQLiteException e ) {
             if(Aware.DEBUG) Log.d(TAG,e.getMessage());
         }catch( SQLException e ) {
             if(Aware.DEBUG) Log.d(TAG,e.getMessage());
         }
+        data_values.clear();
+    }
+
+    /**
+     * Database I/O on different thread
+     */
+    private class AsyncStore extends AsyncTask<ContentValues[], Void, Void> {
+        @Override
+        protected Void doInBackground(ContentValues[]... data) {
+            getContentResolver().bulkInsert(Barometer_Data.CONTENT_URI, data[0]);
+            return null;
+        }
+    }
+
+    /**
+     * Calculates the sampling rate in Hz (i.e., how many samples did we collect in the past second)
+     * @param context
+     * @return hz
+     */
+    public static int getFrequency(Context context) {
+        int hz = 0;
+        String[] columns = new String[]{ "count(*) as frequency", "datetime("+ Barometer_Data.TIMESTAMP+"/1000, 'unixepoch','localtime') as sample_time" };
+        Cursor qry = context.getContentResolver().query(Barometer_Data.CONTENT_URI, columns, "1) group by (sample_time", null, "sample_time DESC LIMIT 1 OFFSET 2");
+        if( qry != null && qry.moveToFirst() ) {
+            hz = qry.getInt(0);
+        }
+        if( qry != null && ! qry.isClosed() ) qry.close();
+        return hz;
     }
     
     private void saveSensorDevice(Sensor sensor) {

@@ -29,11 +29,16 @@ public class Wear_Service extends WearableListenerService {
     public void onDataChanged(DataEventBuffer dataEvents) {
         super.onDataChanged(dataEvents);
 
+        //Only client replicates the data
+        if( ! getPackageName().equals("com.aware.") ) {
+            return;
+        }
+
         if( Aware.is_watch(getApplicationContext()) ) {
-            if( Aware.DEBUG ) Log.d(Aware.TAG, "This is the watch, not replicating data...");
+            if( Aware.DEBUG ) Log.d(Aware.TAG, "This is the watch client");
             return;
         } else {
-            if( Aware.DEBUG ) Log.d(Aware.TAG, "This is the phone, replicating data...");
+            if( Aware.DEBUG ) Log.d(Aware.TAG, "This is the phone client, replicating watch data");
         }
 
         for( DataEvent event : dataEvents ) {
@@ -45,6 +50,10 @@ public class Wear_Service extends WearableListenerService {
     public void saveData( String data ) {
         try {
             JSONObject json = new JSONObject(data);
+
+            //We only replicate the data that is not about this phone...
+            if( json.getString("device_id").equals(Aware.getSetting(this, Aware_Preferences.DEVICE_ID)) ) return;
+
             if( Aware.DEBUG ) Log.d(Aware.TAG, "Saving: " + json.toString(5));
 
             Uri content_uri = Uri.parse(json.getString("content_uri"));
@@ -65,7 +74,7 @@ public class Wear_Service extends WearableListenerService {
                 getContentResolver().insert( content_uri, watch_data );
                 if( Aware.DEBUG ) Log.d(Aware.TAG, "Saved on the phone!");
             } catch( SQLException e ) {
-                Log.e( Aware.TAG, "ERROR:" + e.getMessage() );
+                if( Aware.DEBUG ) Log.e( Aware.TAG, "ERROR: " + e.getMessage() );
             }
             last_sync = System.currentTimeMillis();
         }

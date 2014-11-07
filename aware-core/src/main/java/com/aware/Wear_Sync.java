@@ -1,13 +1,10 @@
 package com.aware;
 
 import android.content.BroadcastReceiver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.database.ContentObserver;
 import android.database.Cursor;
-import android.database.SQLException;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
@@ -19,7 +16,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.aware.providers.Accelerometer_Provider;
-import com.aware.providers.Aware_Provider;
 import com.aware.providers.Barometer_Provider;
 import com.aware.providers.Battery_Provider;
 import com.aware.providers.Bluetooth_Provider;
@@ -39,25 +35,18 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.wearable.DataApi;
-import com.google.android.gms.wearable.DataEvent;
-import com.google.android.gms.wearable.DataEventBuffer;
-import com.google.android.gms.wearable.DataMapItem;
-import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
-import com.google.android.gms.wearable.WearableListenerService;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
-import java.util.Iterator;
 
 public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
@@ -68,6 +57,8 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
 
     private static GoogleApiClient googleClient;
     private static Node peer;
+
+    private static boolean is_connected = false;
 
     public final static PutDataMapRequest accelerometer = PutDataMapRequest.create("/accelerometer");
     public final static PutDataMapRequest installations = PutDataMapRequest.create("/installations");
@@ -105,6 +96,8 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
                     .build();
+
+        //Watch listens for changes in AWARE's settings to replicate data to phone.
         } else {
             googleClient = new GoogleApiClient.Builder(this)
                     .addApi(Wearable.API)
@@ -133,6 +126,9 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 if( result.getNodes().size() > 0 ) {
                     peer = result.getNodes().get(0);
                     Log.d(TAG, "Connected to " + (Aware.is_watch(getApplicationContext())?"smartphone":"watch")); //if we are on the watch, show smartphone and vice-versa.
+                    is_connected = true;
+                } else {
+                    is_connected = false;
                 }
             }
         });
@@ -145,6 +141,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
     public static class AWAREListener extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+            if( ! intent.getAction().equals(Aware.ACTION_AWARE_CONFIG_CHANGED) ) return;
 
             String setting = intent.getStringExtra(Aware.EXTRA_CONFIG_SETTING);
             String value = intent.getStringExtra(Aware.EXTRA_CONFIG_VALUE);
@@ -275,9 +272,15 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         TextView wear_battery = (TextView) card.findViewById(R.id.wear_battery);
         TextView wear_last_sync = (TextView) card.findViewById(R.id.wear_last_sync);
 
-        wear_status.setText("Status: " + ( googleClient.isConnected() ? "Connected" : "Disconnected" ) );
+        wear_status.setText("Status: " + ( is_connected ? "Connected" : "Disconnected" ) );
 
-        Cursor last_watch_battery = context.getContentResolver().query(Battery_Provider.Battery_Data.CONTENT_URI, null, Aware_Preferences.DEVICE_ID + " NOT LIKE '" + Aware.getSetting(context, Aware_Preferences.DEVICE_ID) + "'", null, Battery_Provider.Battery_Data.TIMESTAMP + " DESC LIMIT 1");
+        Calendar today = Calendar.getInstance();
+        today.setTimeInMillis(System.currentTimeMillis());
+        today.set(Calendar.HOUR_OF_DAY, 0);
+        today.set(Calendar.MINUTE,0);
+        today.set(Calendar.SECOND,0);
+
+        Cursor last_watch_battery = context.getContentResolver().query(Battery_Provider.Battery_Data.CONTENT_URI, null, Aware_Preferences.DEVICE_ID + " NOT LIKE '" + Aware.getSetting(context, Aware_Preferences.DEVICE_ID) + "' AND timestamp > " + today.getTimeInMillis(), null, Battery_Provider.Battery_Data.TIMESTAMP + " DESC LIMIT 1");
         if( last_watch_battery != null && last_watch_battery.moveToFirst() ) {
             wear_battery.setText("Battery: " + last_watch_battery.getInt(last_watch_battery.getColumnIndex(Battery_Provider.Battery_Data.LEVEL)) + "%");
         } else {
@@ -416,6 +419,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         if( Aware.DEBUG ) {
             Log.d(TAG, "Connected!");
         }
+        is_connected = true;
     }
 
     //On Android Wear suspended
@@ -424,6 +428,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         if( Aware.DEBUG ) {
             Log.d(TAG, "Connection suspended!");
         }
+        is_connected = false;
     }
 
     //On Android Wear failed
@@ -432,6 +437,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         if( Aware.DEBUG ) {
             Log.d(TAG, "Connection failed!");
         }
+        is_connected = false;
     }
 
     public class ServiceBinder extends Binder {

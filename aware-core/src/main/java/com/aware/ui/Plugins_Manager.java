@@ -39,7 +39,6 @@ import com.aware.utils.Https;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -403,10 +402,10 @@ public class Plugins_Manager extends Aware_Activity {
     	@Override
 		protected Void doInBackground(Void... params) {
     		//Check for updates on the server side
-    		HttpResponse response = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/plugins/get_plugins" + (( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) ? "/" + Aware.getSetting(getApplicationContext(), "study_id") : "") );
+    		HttpResponse response = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/plugins/get_plugins" + (( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) ? "/" + Aware.getSetting(getApplicationContext(), "study_id") : ""), true );
 			if( response != null && response.getStatusLine().getStatusCode() == 200 ) {
 				try {
-					JSONArray plugins = new JSONArray(EntityUtils.toString(response.getEntity()));
+					JSONArray plugins = new JSONArray(Https.undoGZIP(response));
 					for( int i=0; i< plugins.length(); i++ ) {
 						JSONObject plugin = plugins.getJSONObject(i);
 						//check if we have this plugin already in our database.
@@ -436,8 +435,6 @@ public class Plugins_Manager extends Aware_Activity {
 				} catch (ParseException e) {
 					e.printStackTrace();
 				} catch (JSONException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}

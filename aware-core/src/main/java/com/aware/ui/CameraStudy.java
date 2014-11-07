@@ -37,7 +37,6 @@ import net.sourceforge.zbar.SymbolSet;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -176,10 +175,10 @@ public class CameraStudy extends Aware_Activity implements PreviewCallback, Auto
 			study_url = params[0];
 			String study_api_key = study_url.substring(study_url.lastIndexOf("/")+1, study_url.length());
 
-			HttpResponse request = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/webservice/client_get_study_info/" + study_api_key);
+			HttpResponse request = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/webservice/client_get_study_info/" + study_api_key, true);
 			if( request != null && request.getStatusLine().getStatusCode() == 200 ) {
 				try {
-                    String json_str = EntityUtils.toString(request.getEntity());
+                    String json_str = Https.undoGZIP(request);
                     if( json_str.equals("[]") ) {
                         return null;
                     }
@@ -188,8 +187,6 @@ public class CameraStudy extends Aware_Activity implements PreviewCallback, Auto
 				} catch (ParseException e) {
 					e.printStackTrace();
 				} catch (JSONException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}

@@ -1,25 +1,13 @@
 package com.aware.utils;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.util.ArrayList;
+import android.content.Context;
+import android.util.Log;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
+import com.aware.Aware;
+import com.aware.R;
 
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -36,11 +24,28 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 
-import android.content.Context;
-import android.util.Log;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.util.ArrayList;
+import java.util.zip.GZIPInputStream;
 
-import com.aware.Aware;
-import com.aware.R;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
 //import org.apache.http.conn.ssl.SSLSocketFactory;
 //import org.apache.http.conn.ssl.X509HostnameVerifier;
 
@@ -159,15 +164,17 @@ public class Https extends DefaultHttpClient {
 	}
 	
 	/**
-	 * Make a POST to the URL, with the ArrayList<NameValuePair> data
+	 * Make a POST to the URL, with the ArrayList<NameValuePair> data, using gzip
 	 * @param url
 	 * @param data
-	 * @return HttpEntity with server response. Use EntityUtils to extract values or object
+     * @param is_gzipped
+	 * @return HttpResponse with server response. Use EntityUtils on response's getEntity().getContent() to extract values or object. If gzipped, use Https.undoGZIP on the response.
 	 */
-	public HttpResponse dataPOST(String url, ArrayList<NameValuePair> data) {
+	public HttpResponse dataPOST(String url, ArrayList<NameValuePair> data, boolean is_gzipped) {
 		try{
 			HttpPost httpPost = new HttpPost(url);
 			httpPost.setEntity(new UrlEncodedFormEntity(data));
+            if( is_gzipped ) httpPost.addHeader("Accept-Encoding", "gzip"); //send data compressed
 			HttpResponse httpResponse = this.execute(httpPost);
 			
 			int statusCode = httpResponse.getStatusLine().getStatusCode();
@@ -193,16 +200,65 @@ public class Https extends DefaultHttpClient {
 			return null;
 		}
 	}
+
+    /**
+     * Given a gzipped server response, restore content
+     * @param response
+     * @return
+     */
+    public static String undoGZIP(HttpResponse response) {
+        String decoded = "";
+        HttpEntity gzipped = response.getEntity();
+        if( gzipped != null ) {
+            try {
+                InputStream in = gzipped.getContent();
+                Header contentEncode = response.getFirstHeader("Content-Encoding");
+                if( contentEncode != null && contentEncode.getValue().equalsIgnoreCase("gzip") ) {
+                    in = new GZIPInputStream(in);
+                    decoded = restore(in);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return decoded;
+    }
+
+    /**
+     * Decodes an compressed stream
+     * @param is
+     * @return
+     */
+    private static String restore(InputStream is) {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        try {
+            while ((line = reader.readLine()) != null) {
+                sb.append(line + "\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return sb.toString();
+    }
 	
 	/**
 	 * Request a GET from an URL. 
 	 * @param url
 	 * @return HttpEntity with the content of the reply. Use EntityUtils to get content.
 	 */
-	public HttpResponse dataGET(String url) {
+	public HttpResponse dataGET(String url, boolean is_gzipped) {
 		try {
 			HttpGet httpGet = new HttpGet(url);
-			HttpResponse httpResponse = this.execute(httpGet);
+            httpGet.addHeader("Accept-Encoding", "gzip"); //send data compressed
+            HttpResponse httpResponse = this.execute(httpGet);
 		
 			int statusCode = httpResponse.getStatusLine().getStatusCode();
 			if( statusCode != 200 ) {

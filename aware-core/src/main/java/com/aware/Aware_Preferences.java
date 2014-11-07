@@ -29,7 +29,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
-import android.database.Cursor;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
@@ -62,7 +61,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.aware.providers.Aware_Provider;
 import com.aware.providers.Aware_Provider.Aware_Settings;
 import com.aware.ui.CameraStudy;
 import com.aware.ui.Plugins_Manager;
@@ -73,12 +71,10 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -559,12 +555,8 @@ public class Aware_Preferences extends PreferenceActivity {
         
         mSensorMgr = (SensorManager) getSystemService(SENSOR_SERVICE);
 
-        Cursor device = getContentResolver().query(Aware_Provider.Aware_Device.CONTENT_URI, null, null, null, "1 LIMIT 1");
-        if( device != null && device.moveToFirst() ) {
-            is_watch = device.getInt(device.getColumnIndex(Aware_Provider.Aware_Device.SDK))==20; //TODO: check if there is a better way to detect a watch...
-        }
-        if( device != null && ! device.isClosed() ) device.close();
-        
+        is_watch = Aware.is_watch(this);
+
         //Start the Aware
         Intent startAware = new Intent( getApplicationContext(), Aware.class );
         startService(startAware);
@@ -699,10 +691,10 @@ public class Aware_Preferences extends PreferenceActivity {
 
             if( study_api_key.length() == 0 ) return null;
 
-            HttpResponse request = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/webservice/client_get_study_info/" + study_api_key);
+            HttpResponse request = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/webservice/client_get_study_info/" + study_api_key, true);
             if( request != null && request.getStatusLine().getStatusCode() == 200 ) {
                 try {
-                    String json_str = EntityUtils.toString(request.getEntity());
+                    String json_str = Https.undoGZIP(request);
                     if( json_str.equals("[]") ) {
                         return null;
                     }
@@ -711,8 +703,6 @@ public class Aware_Preferences extends PreferenceActivity {
                 } catch (ParseException e) {
                     e.printStackTrace();
                 } catch (JSONException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
@@ -732,7 +722,10 @@ public class Aware_Preferences extends PreferenceActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
                         //if part of a study, you can't change settings.
-                        if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) { finish(); }
+                        if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) {
+                            Toast.makeText(getApplicationContext(), "As part of a study, no changes are allowed.", Toast.LENGTH_LONG).show();
+                            finish();
+                        }
                     }
                 });
                 builder.setTitle("Study information");
@@ -935,9 +928,9 @@ public class Aware_Preferences extends PreferenceActivity {
 				//Request study settings
 				ArrayList<NameValuePair> data = new ArrayList<NameValuePair>();
 				data.add(new BasicNameValuePair(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID)));
-				HttpResponse answer = new Https(getApplicationContext()).dataPOST(study_url, data);
+				HttpResponse answer = new Https(getApplicationContext()).dataPOST(study_url, data, true);
 				try {
-                    String json_str = EntityUtils.toString(answer.getEntity());
+                    String json_str = Https.undoGZIP(answer);
 
 					JSONArray configs_study = new JSONArray(json_str);
 					if( configs_study.getJSONObject(0).has("message") ) {
@@ -992,8 +985,6 @@ public class Aware_Preferences extends PreferenceActivity {
 					sendBroadcast(sync);
 
 				} catch (ParseException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
 					e.printStackTrace();
 				} catch (JSONException e) {
 					e.printStackTrace();

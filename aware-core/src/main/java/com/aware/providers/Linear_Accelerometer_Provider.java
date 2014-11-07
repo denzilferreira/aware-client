@@ -25,6 +25,7 @@ import android.os.Environment;
 import android.provider.BaseColumns;
 import android.util.Log;
 
+import com.aware.Accelerometer;
 import com.aware.Aware;
 import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
@@ -261,6 +262,64 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
 	}
+
+    /**
+     * Batch insert for high performance sensors (e.g., accelerometer, etc)
+     * @param uri
+     * @param values
+     * @return values.length
+     */
+    @Override
+    public int bulkInsert(Uri uri, ContentValues[] values) {
+        if( ! initializeDB() ) {
+            Log.w(AUTHORITY,"Database unavailable...");
+            return 0;
+        }
+
+        int count = 0;
+        switch ( sUriMatcher.match(uri) ) {
+            case ACCEL_DEV:
+                database.beginTransaction();
+                for (ContentValues v : values) {
+                    long id;
+                    try {
+                        id = database.insertOrThrow( DATABASE_TABLES[0], Linear_Accelerometer_Sensor.DEVICE_ID, v );
+                    } catch ( SQLException e ) {
+                        id = database.replace( DATABASE_TABLES[0], Linear_Accelerometer_Sensor.DEVICE_ID, v );
+                    }
+                    if( id <= 0 ) {
+                        Log.w(Accelerometer.TAG, "Failed to insert/replace row into " + uri);
+                    } else {
+                        count++;
+                    }
+                }
+                database.setTransactionSuccessful();
+                database.endTransaction();
+                getContext().getContentResolver().notifyChange(uri, null);
+                return count;
+            case ACCEL_DATA:
+                database.beginTransaction();
+                for (ContentValues v : values) {
+                    long id;
+                    try {
+                        id = database.insertOrThrow( DATABASE_TABLES[1], Linear_Accelerometer_Data.DEVICE_ID, v );
+                    } catch ( SQLException e ) {
+                        id = database.replace( DATABASE_TABLES[1], Linear_Accelerometer_Data.DEVICE_ID, v );
+                    }
+                    if( id <= 0 ) {
+                        Log.w(Accelerometer.TAG, "Failed to insert/replace row into " + uri);
+                    } else {
+                        count++;
+                    }
+                }
+                database.setTransactionSuccessful();
+                database.endTransaction();
+                getContext().getContentResolver().notifyChange(uri, null);
+                return count;
+            default:
+                throw new IllegalArgumentException("Unknown URI " + uri);
+        }
+    }
 
 	@Override
 	public boolean onCreate() {

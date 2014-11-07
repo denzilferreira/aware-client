@@ -301,8 +301,8 @@
             </intent-filter>
         </receiver>
 
-        <!-- Listens to changes in the watch's settings -->
-        <receiver android:name="com.aware.Wear_Sync$AWAREListener" android:exported="true">
+        <!-- Set in /values/bools the value of is_watch if deploying in Android Wear -->
+        <receiver android:name="com.aware.Wear_Sync$AWAREListener" android:exported="true" android:enabled="@bool/is_watch">
             <intent-filter>
                 <action android:name="ACTION_AWARE_CONFIG_CHANGED"></action>
             </intent-filter>

@@ -16,7 +16,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.hardware.Sensor;
@@ -24,6 +23,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -35,7 +35,9 @@ import com.aware.providers.Accelerometer_Provider;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Data;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Sensor;
 import com.aware.utils.Aware_Sensor;
-import com.aware.utils.Converters;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * AWARE Accelerometer module
@@ -49,7 +51,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     /**
      * Logging tag (default = "AWARE::Accelerometer")
      */
-    private static String TAG = "AWARE::Accelerometer";
+    public static String TAG = "AWARE::Accelerometer";
     
     /**
      * Sensor update frequency in microseconds, default 200000
@@ -76,6 +78,13 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     public static final String ACTION_AWARE_ACCELEROMETER_LABEL = "ACTION_AWARE_ACCELEROMETER_LABEL";
     public static final String EXTRA_LABEL = "label";
 
+    /**
+     * Until today, no available Android phone samples higher than 208Hz (Nexus 7).
+     * http://ilessendata.blogspot.com/2012/11/android-accelerometer-sampling-rates.html
+     */
+    private static ContentValues[] data_buffer;
+    private static List<ContentValues> data_values = new ArrayList<ContentValues>();
+
     private static DataLabel dataLabeler = new DataLabel();
     public static class DataLabel extends BroadcastReceiver {
         @Override
@@ -101,22 +110,59 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         rowData.put(Accelerometer_Data.VALUES_2, event.values[2]);
         rowData.put(Accelerometer_Data.ACCURACY, event.accuracy);
         rowData.put(Accelerometer_Data.LABEL, LABEL);
-        
-        try {
-        	if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("false") ) {
-        		getContentResolver().insert(Accelerometer_Data.CONTENT_URI, rowData);
-        	}
-            
+
+        if( data_values.size() < 250 ) {
+            data_values.add(rowData);
+
             Intent accelData = new Intent(ACTION_AWARE_ACCELEROMETER);
             accelData.putExtra(EXTRA_DATA, rowData);
             sendBroadcast(accelData);
-            
+
             if( Aware.DEBUG ) Log.d(TAG, "Accelerometer: "+ rowData.toString());
+
+            return;
+        }
+
+        data_buffer = new ContentValues[data_values.size()];
+        data_values.toArray(data_buffer);
+
+        try {
+        	if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("false") ) {
+        		new AsyncStore().execute(data_buffer);
+        	}
         }catch( SQLiteException e ) {
             if(Aware.DEBUG) Log.d(TAG,e.getMessage());
         }catch( SQLException e ) {
             if(Aware.DEBUG) Log.d(TAG,e.getMessage());
         }
+        data_values.clear();
+    }
+
+    /**
+     * Database I/O on different thread
+     */
+    private class AsyncStore extends AsyncTask<ContentValues[], Void, Void> {
+        @Override
+        protected Void doInBackground(ContentValues[]... data) {
+            getContentResolver().bulkInsert(Accelerometer_Data.CONTENT_URI, data[0]);
+            return null;
+        }
+    }
+
+    /**
+     * Calculates the sampling rate in Hz (i.e., how many samples did we collect in the past second)
+     * @param context
+     * @return hz
+     */
+    public static int getFrequency(Context context) {
+        int hz = 0;
+        String[] columns = new String[]{ "count(*) as frequency", "datetime("+Accelerometer_Data.TIMESTAMP+"/1000, 'unixepoch','localtime') as sample_time" };
+        Cursor qry = context.getContentResolver().query(Accelerometer_Data.CONTENT_URI, columns, "1) group by (sample_time", null, "sample_time DESC LIMIT 1 OFFSET 2");
+        if( qry != null && qry.moveToFirst() ) {
+            hz = qry.getInt(0);
+        }
+        if( qry != null && ! qry.isClosed() ) qry.close();
+        return hz;
     }
 
     private void saveAccelerometerDevice(Sensor acc) {
@@ -135,10 +181,8 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
             rowData.put(Accelerometer_Sensor.VERSION, acc.getVersion());
             
             try {
-            	if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("false") ) {
-            		getContentResolver().insert(Accelerometer_Sensor.CONTENT_URI, rowData);
-            	}
-            	
+                getContentResolver().insert(Accelerometer_Sensor.CONTENT_URI, rowData);
+
             	Intent accel_dev = new Intent(ACTION_AWARE_ACCELEROMETER);
             	accel_dev.putExtra(EXTRA_SENSOR, rowData);
             	sendBroadcast(accel_dev);
@@ -186,7 +230,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         filter.addAction(ACTION_AWARE_ACCELEROMETER_LABEL);
         registerReceiver(dataLabeler, filter);
 
-        if(mAccelerometer == null) {
+        if( mAccelerometer == null ) {
             if(Aware.DEBUG) Log.w(TAG,"This device does not have an accelerometer!");
             Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, false);
             stopSelf();

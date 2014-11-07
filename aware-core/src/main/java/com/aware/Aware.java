@@ -310,7 +310,7 @@ public class Aware extends Service {
 	        ArrayList<NameValuePair> device_ping = new ArrayList<NameValuePair>();
 	        device_ping.add(new BasicNameValuePair(Aware_Preferences.DEVICE_ID, Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID)));
 	        device_ping.add(new BasicNameValuePair("ping", String.valueOf(System.currentTimeMillis())));
-	        new Https(awareContext).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping);
+	        new Https(awareContext).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
 	        return true;
 		}
     	
@@ -512,10 +512,10 @@ public class Aware extends Service {
 
             String package_name = params[0];
 
-            HttpResponse response = new Https(awareContext).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name);
+            HttpResponse response = new Https(awareContext).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
             if( response != null && response.getStatusLine().getStatusCode() == 200 ) {
                 try {
-                    String data = EntityUtils.toString(response.getEntity());
+                    String data = Https.undoGZIP(response);
                     if( data.equals("[]") ) return null;
 
                     JSONObject json_package = new JSONObject(data);
@@ -539,8 +539,6 @@ public class Aware extends Service {
                 } catch (ParseException e) {
                     e.printStackTrace();
                 } catch (JSONException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
@@ -795,14 +793,12 @@ public class Aware extends Service {
         protected Boolean doInBackground(Void... voids) {
             ArrayList<NameValuePair> data = new ArrayList<NameValuePair>();
             data.add(new BasicNameValuePair(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID)));
-            HttpResponse response = new Https(getApplicationContext()).dataPOST(Aware.getSetting(getApplicationContext(),Aware_Preferences.WEBSERVICE_SERVER), data);
+            HttpResponse response = new Https(getApplicationContext()).dataPOST(Aware.getSetting(getApplicationContext(),Aware_Preferences.WEBSERVICE_SERVER), data, true);
             if( response != null && response.getStatusLine().getStatusCode() == 200) {
                 try {
-                    String json_str = EntityUtils.toString(response.getEntity());
+                    String json_str = Https.undoGZIP(response);
                     JSONArray j_array = new JSONArray(json_str);
                     return j_array.getJSONObject(0).has("message");
-                } catch (IOException e) {
-                    e.printStackTrace();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -884,10 +880,10 @@ public class Aware extends Service {
 				return false;
 			}
 			
-    		HttpResponse response = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/awaredev/framework_latest");
+    		HttpResponse response = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/awaredev/framework_latest", true);
 	        if( response != null && response.getStatusLine().getStatusCode() == 200 ) {
 	        	try {
-					JSONArray data = new JSONArray(EntityUtils.toString(response.getEntity()));
+					JSONArray data = new JSONArray(Https.undoGZIP(response));
 					JSONObject latest_framework = data.getJSONObject(0);
 					
 					if( Aware.DEBUG ) Log.d(Aware.TAG, "Latest: " + latest_framework.toString());
@@ -901,8 +897,6 @@ public class Aware extends Service {
 					}
 					return false;
 				} catch (ParseException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
 					e.printStackTrace();
 				} catch (JSONException e) {
 					e.printStackTrace();
@@ -1042,10 +1036,10 @@ public class Aware extends Service {
     		app = params[0];
     		
     		JSONObject json_package = null;
-            HttpResponse http_request = new Https(awareContext).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + app.packageName);
+            HttpResponse http_request = new Https(awareContext).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + app.packageName, true);
             if( http_request != null && http_request.getStatusLine().getStatusCode() == 200 ) {
             	try {
-            		String json_string = EntityUtils.toString(http_request.getEntity());
+            		String json_string = Https.undoGZIP(http_request);
             		if( ! json_string.equals("[]") ) {
             			json_package = new JSONObject(json_string);
                         icon = Plugins_Manager.cacheImage("http://api.awareframework.com" + json_package.getString("iconpath"), awareContext);
@@ -1053,8 +1047,6 @@ public class Aware extends Service {
 				} catch (ParseException e) {
 					e.printStackTrace();
 				} catch (JSONException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
 					e.printStackTrace();
 				}
             }
@@ -1132,10 +1124,10 @@ public class Aware extends Service {
     		String package_name = intent.getStringExtra("package_name");
     		boolean is_update = intent.getBooleanExtra("is_update", false);
     		
-    		HttpResponse response = new Https(awareContext).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name);
+    		HttpResponse response = new Https(awareContext).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
     		if( response != null && response.getStatusLine().getStatusCode() == 200 ) {
     			try {
-    				JSONObject json_package = new JSONObject(EntityUtils.toString(response.getEntity()));
+    				JSONObject json_package = new JSONObject(Https.undoGZIP(response));
     				
         			//Create the folder where all the databases will be stored on external storage
     		        File folders = new File(Environment.getExternalStorageDirectory()+"/AWARE/plugins/");
@@ -1156,8 +1148,6 @@ public class Aware extends Service {
         		} catch (ParseException e) {
     				e.printStackTrace();
     			} catch (JSONException e) {
-    				e.printStackTrace();
-    			} catch (IOException e) {
     				e.printStackTrace();
     			}
     		}
