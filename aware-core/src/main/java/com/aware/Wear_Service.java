@@ -2,8 +2,9 @@ package com.aware;
 
 import android.content.ContentValues;
 import android.content.Intent;
-import android.database.SQLException;
+import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import com.google.android.gms.wearable.DataEvent;
@@ -13,87 +14,151 @@ import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.WearableListenerService;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Created by denzil on 29/10/14.
  */
 public class Wear_Service extends WearableListenerService {
 
-    public static long last_sync = 0;
+    private ContentValues[] watch_data_buffer;
+    private List<ContentValues> watch_data_values = new ArrayList<ContentValues>();
+
+    public static long last_sync;
+
+    private Node peer;
 
     @Override
     public void onDataChanged(DataEventBuffer dataEvents) {
         super.onDataChanged(dataEvents);
 
-        //Only client replicates the data
-        if( ! getPackageName().equals("com.aware.") ) {
+        if( Aware.is_watch(this) ) {
+            //The watch doesn't replicate data locally from the phone
             return;
-        }
-
-        if( Aware.is_watch(getApplicationContext()) ) {
-            if( Aware.DEBUG ) Log.d(Aware.TAG, "This is the watch client");
-            return;
-        } else {
-            if( Aware.DEBUG ) Log.d(Aware.TAG, "This is the phone client, replicating watch data");
         }
 
         for( DataEvent event : dataEvents ) {
             DataMapItem datamapItem = DataMapItem.fromDataItem(event.getDataItem());
-            saveData(datamapItem.getDataMap().getString("json"));
+            Uri content_uri = Uri.parse(datamapItem.getDataMap().getString("content_uri"));
+            saveData(datamapItem.getDataMap().getString("json"), content_uri);
         }
     }
 
-    public void saveData( String data ) {
+    public void saveData( String data, Uri content_uri ) {
         try {
-            JSONObject json = new JSONObject(data);
+            JSONArray data_buffer = new JSONArray(data);
 
-            //We only replicate the data that is not about this phone...
-            if( json.getString("device_id").equals(Aware.getSetting(this, Aware_Preferences.DEVICE_ID)) ) return;
+            Log.d(Wear_Sync.TAG, "Saving to phone: " + data_buffer.length() + " records");
 
-            if( Aware.DEBUG ) Log.d(Aware.TAG, "Saving: " + json.toString(5));
+            for( int i = 0; i<data_buffer.length(); i++ ) {
 
-            Uri content_uri = Uri.parse(json.getString("content_uri"));
+                JSONObject json = data_buffer.getJSONObject(i);
 
-            Iterator<String> keys = json.keys();
-            ContentValues watch_data = new ContentValues();
-            while( keys.hasNext() ) {
-                String key = keys.next();
-                if( key.equals("_id") || key.equals("content_uri") ) continue;
-                if( key.contains("timestamp") || key.contains("double") ) {
-                    watch_data.put(key, json.getDouble(key));
-                } else {
-                    watch_data.put(key, json.getString(key));
+                Iterator<String> keys = json.keys();
+                ContentValues watch_data = new ContentValues();
+                while( keys.hasNext() ) {
+                    String key = keys.next();
+                    if( key.contains("timestamp") || key.contains("double") ) {
+                        watch_data.put(key, json.getDouble(key));
+                    } else {
+                        watch_data.put(key, json.getString(key));
+                    }
                 }
+                watch_data_values.add(watch_data);
             }
 
-            try {
-                getContentResolver().insert( content_uri, watch_data );
-                if( Aware.DEBUG ) Log.d(Aware.TAG, "Saved on the phone!");
-            } catch( SQLException e ) {
-                if( Aware.DEBUG ) Log.e( Aware.TAG, "ERROR: " + e.getMessage() );
-            }
+            watch_data_buffer = new ContentValues[watch_data_values.size()];
+            watch_data_values.toArray(watch_data_buffer);
+
+            new AsyncStore(content_uri).execute(watch_data_buffer);
+
+            watch_data_values.clear();
+
             last_sync = System.currentTimeMillis();
         }
         catch (JSONException e ) {}
     }
 
+    /**
+     * Asynchronous data storage on database.
+     */
+    private class AsyncStore extends AsyncTask<ContentValues[], Void, Void> {
+        private Uri content_uri;
+
+        public AsyncStore(Uri uri) {
+            content_uri = uri;
+        }
+
+        @Override
+        protected Void doInBackground(ContentValues[]... data) {
+            getContentResolver().bulkInsert( content_uri, data[0] );
+            return null;
+        }
+    }
+
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
         super.onMessageReceived(messageEvent);
-        if(Aware.DEBUG) Log.d(Aware.TAG, "Message received!");
-        Intent broadcast = new Intent(Wear_Sync.ACTION_AWARE_WEAR_MESSAGE_RECEIVED);
-        broadcast.putExtra(Wear_Sync.EXTRA_MESSAGE, messageEvent.getData());
-        sendBroadcast(broadcast);
+
+        if(Aware.DEBUG) Log.d(Wear_Sync.TAG, "Message received!");
+
+        if( messageEvent.getPath().equals("/wear_sync") ) {
+            if( Aware.is_watch(getApplicationContext()) ) {
+                try {
+                    JSONObject json = new JSONObject(new String(messageEvent.getData()));
+                    //change in configuration
+                    if( json.get("command").equals("config") ) {
+                        Intent wear_change = new Intent(Aware.ACTION_AWARE_CONFIG_CHANGED);
+                        wear_change.putExtra(Aware.EXTRA_CONFIG_SETTING, json.getString(Aware.EXTRA_CONFIG_SETTING));
+                        wear_change.putExtra(Aware.EXTRA_CONFIG_VALUE, json.getString(Aware.EXTRA_CONFIG_VALUE));
+                        sendBroadcast(wear_change);
+                    }
+
+                } catch( JSONException e ) {
+                    Log.d(Wear_Sync.TAG, e.getMessage());
+                }
+            }
+        }
+
+        if( messageEvent.getPath().equals("/get_latest") ) {
+            try{
+                Uri content_uri = Uri.parse(new String(messageEvent.getData()));
+
+                String latest_timestamp = "0";
+                Cursor last_entry = getContentResolver().query(content_uri, new String[]{"timestamp"}, Aware_Preferences.DEVICE_ID + " NOT LIKE '" + Aware.getSetting(this, Aware_Preferences.DEVICE_ID) + "'", null, "timestamp DESC LIMIT 1");
+                if( last_entry != null && last_entry.moveToFirst() ) {
+                    latest_timestamp = String.valueOf(last_entry.getDouble(0));
+                }
+                if( last_entry != null && ! last_entry.isClosed() ) last_entry.close();
+
+                //This broadcast will let the watch know whats the latest data we have on the phone
+                Intent broadcast = new Intent(Wear_Sync.ACTION_AWARE_WEAR_MESSAGE);
+
+                broadcast.putExtra(Wear_Sync.EXTRA_TOPIC, "latest");
+                JSONObject obj = new JSONObject();
+                obj.put("content_uri", content_uri.toString());
+                obj.put("latest_timestamp", latest_timestamp);
+
+                broadcast.putExtra(Wear_Sync.EXTRA_MESSAGE, obj.toString());
+                sendBroadcast(broadcast);
+
+            } catch( JSONException e ) {
+                Log.d(Wear_Sync.TAG, e.getMessage());
+            }
+        }
     }
 
     @Override
     public void onPeerConnected(Node peer) {
         super.onPeerConnected(peer);
         if(Aware.DEBUG) Log.d(Aware.TAG, "Connected to: " + peer.getDisplayName());
+        this.peer = peer;
     }
 
     @Override

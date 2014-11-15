@@ -1201,7 +1201,8 @@ public class Aware extends Service {
         	Uri[] CONTEXT_URIS = new Uri[]{ Aware_Device.CONTENT_URI };
         	
         	if( intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA) && Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true") ) {
-            	Intent webserviceHelper = new Intent( WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE );
+            	Intent webserviceHelper = new Intent( context, WebserviceHelper.class );
+                webserviceHelper.setAction( WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE );
     			webserviceHelper.putExtra( WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[0] );
         		webserviceHelper.putExtra( WebserviceHelper.EXTRA_FIELDS, TABLES_FIELDS[0] );
         		webserviceHelper.putExtra( WebserviceHelper.EXTRA_CONTENT_URI, CONTEXT_URIS[0].toString() );
@@ -1214,7 +1215,8 @@ public class Aware extends Service {
                 
                 //Clear remotely if webservices are active
                 if( Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true") ) {
-	        		Intent webserviceHelper = new Intent( WebserviceHelper.ACTION_AWARE_WEBSERVICE_CLEAR_TABLE );
+	        		Intent webserviceHelper = new Intent( context, WebserviceHelper.class );
+                    webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_CLEAR_TABLE );
 	        		webserviceHelper.putExtra( WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[0] );
 	        		context.startService(webserviceHelper);
                 }

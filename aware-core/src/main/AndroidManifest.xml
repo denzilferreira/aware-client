@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.aware"
     xmlns:tools="http://schemas.android.com/tools"
-    android:versionCode="342"
+    android:versionCode="343"
     android:versionName="3.0" >
 
     <uses-sdk
@@ -271,6 +271,8 @@
             </intent-filter>
         </service>
 
+        <service android:name="com.aware.Wear_Sync$Wear_Bg" android:exported="true" />
+
         <!-- AWARE BroadcastReceivers -->
 
         <receiver
@@ -298,13 +300,6 @@
                 <action android:name="android.intent.action.MEDIA_UNMOUNTED" />
 
                 <data android:scheme="file" />
-            </intent-filter>
-        </receiver>
-
-        <!-- Set in /values/bools the value of is_watch if deploying in Android Wear -->
-        <receiver android:name="com.aware.Wear_Sync$AWAREListener" android:exported="true" android:enabled="@bool/is_watch">
-            <intent-filter>
-                <action android:name="ACTION_AWARE_CONFIG_CHANGED"></action>
             </intent-filter>
         </receiver>
 

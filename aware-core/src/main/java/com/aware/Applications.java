@@ -359,7 +359,8 @@ public class Applications extends AccessibilityService {
         	
         	if( Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true") && intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA) ) {
         		for( int i=0; i<DATABASE_TABLES.length; i++ ) {
-        			Intent webserviceHelper = new Intent(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
+        			Intent webserviceHelper = new Intent( context, WebserviceHelper.class);
+                    webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
         			webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
             		webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, TABLES_FIELDS[i]);
             		webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, CONTEXT_URIS[i].toString());
@@ -375,7 +376,8 @@ public class Applications extends AccessibilityService {
             		
             		//Clear remotely
             		if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true") ) {
-	            		Intent webserviceHelper = new Intent(WebserviceHelper.ACTION_AWARE_WEBSERVICE_CLEAR_TABLE);
+	            		Intent webserviceHelper = new Intent( context, WebserviceHelper.class );
+                        webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_CLEAR_TABLE);
 	            		webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
 	            		context.startService(webserviceHelper);
             		}

@@ -1007,7 +1007,7 @@ public class Aware_Preferences extends PreferenceActivity {
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if( item.getTitle().equals("QRCode") ) {
+        if( item != null && item.getTitle() != null && item.getTitle().equals("QRCode") ) {
             Intent join_study = new Intent( Aware_Preferences.this, CameraStudy.class );
             startActivityForResult(join_study, REQUEST_JOIN_STUDY);
         }

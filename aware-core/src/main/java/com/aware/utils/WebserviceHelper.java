@@ -100,10 +100,8 @@ public class WebserviceHelper extends IntentService {
     		    if( DEBUG ) {
                     HttpResponse copy = response;
                     try {
-                        if( DEBUG ) Log.d(Aware.TAG, EntityUtils.toString(copy.getEntity()));
+                        if( DEBUG ) Log.d(Aware.TAG, Https.undoGZIP(copy));
                     } catch (ParseException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
