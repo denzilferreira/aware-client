@@ -20,7 +20,6 @@ import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -61,7 +60,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.aware.providers.Aware_Provider.Aware_Settings;
 import com.aware.ui.CameraStudy;
 import com.aware.ui.Plugins_Manager;
 import com.aware.ui.Stream_UI;
@@ -874,22 +872,26 @@ public class Aware_Preferences extends PreferenceActivity {
 		}
 		
 		if( plugins != null ) {
-			//set all the configs also on the plugins...
+			//set the configs also on the plugins...
 			for( int j=0; j<plugins.length(); j++) {
-				for( int i = 0; i < configs.length(); i++) {
-					try {
-						JSONObject conf = configs.getJSONObject(i);
-						if( conf.has("plugins") ) continue;
-						
-						ContentValues newSettings = new ContentValues();
-						newSettings.put(Aware_Settings.SETTING_KEY, conf.getString("setting"));
-						newSettings.put(Aware_Settings.SETTING_VALUE, conf.get("value").toString() );
-						newSettings.put(Aware_Settings.SETTING_PACKAGE_NAME, plugins.getString(j));
-						context.getContentResolver().insert(Aware_Settings.CONTENT_URI, newSettings);
-					}catch(JSONException e) {
-						e.printStackTrace();
-					}
-				}
+                //[ plugins: [ {plugin: package_name, settings[{setting:key, value:value} ] }, …, {} ] ]
+
+
+
+//				for( int i = 0; i < configs.length(); i++) {
+//					try {
+//						JSONObject conf = configs.getJSONObject(i);
+//						if( conf.has("plugins") ) continue;
+//
+//						ContentValues newSettings = new ContentValues();
+//						newSettings.put(Aware_Settings.SETTING_KEY, conf.getString("setting"));
+//						newSettings.put(Aware_Settings.SETTING_VALUE, conf.get("value").toString() );
+//						newSettings.put(Aware_Settings.SETTING_PACKAGE_NAME, plugins.getString(j));
+//						context.getContentResolver().insert(Aware_Settings.CONTENT_URI, newSettings);
+//					}catch(JSONException e) {
+//						e.printStackTrace();
+//					}
+//				}
 			}
 			
 			//Now start plugins

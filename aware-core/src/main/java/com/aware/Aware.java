@@ -60,13 +60,11 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -517,7 +515,7 @@ public class Aware extends Service {
                 try {
 
                     String data = Https.undoGZIP(response);
-                    if( data.equals("[]") ) return null;
+                    if( data.length() < 10 ) return null;
 
                     JSONObject json_package = new JSONObject(data);
 
@@ -677,6 +675,7 @@ public class Aware extends Service {
         global_settings.add("study_id");
         global_settings.add("study_start");
         global_settings.add(Aware_Preferences.DEVICE_ID);
+        global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
         global_settings.add(Aware_Preferences.STATUS_WEBSERVICE);
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
@@ -719,6 +718,7 @@ public class Aware extends Service {
     	global_settings.add("study_start");
         global_settings.add(Aware_Preferences.DEVICE_ID);
         global_settings.add(Aware_Preferences.STATUS_WEBSERVICE);
+        global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
         global_settings.add(Aware_Preferences.WEBSERVICE_SERVER);
@@ -852,8 +852,8 @@ public class Aware extends Service {
             do {
                 Aware.stopPlugin(c, active_plugins.getString(active_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME)));
             } while(active_plugins.moveToNext());
-            active_plugins.close();
         }
+        if( active_plugins != null && ! active_plugins.isClosed() ) active_plugins.close();
 
         //Apply fresh state
         Intent aware_apply = new Intent( Aware.ACTION_AWARE_REFRESH );
@@ -978,8 +978,10 @@ public class Aware extends Service {
                     
                     //Refresh stream UI if visible
                     context.sendBroadcast(new Intent(Stream_UI.ACTION_AWARE_UPDATE_STREAM));
-                    
-                    //all done
+
+                    //Apply fresh state
+                    Intent aware_apply = new Intent( Aware.ACTION_AWARE_REFRESH );
+                    context.sendBroadcast(aware_apply);
                     return;
                 }
                 
@@ -1002,6 +1004,10 @@ public class Aware extends Service {
                 //Deleting
                 context.getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
                 if( Aware.DEBUG ) Log.d(TAG,"AWARE plugin removed:" + packageName);
+
+                //Apply fresh state
+                Intent aware_apply = new Intent( Aware.ACTION_AWARE_REFRESH );
+                context.sendBroadcast(aware_apply);
                 
                 //Refresh stream UI if visible
                 context.sendBroadcast(new Intent(Stream_UI.ACTION_AWARE_UPDATE_STREAM));
