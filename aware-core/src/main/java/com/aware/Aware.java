@@ -515,6 +515,7 @@ public class Aware extends Service {
             HttpResponse response = new Https(awareContext).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
             if( response != null && response.getStatusLine().getStatusCode() == 200 ) {
                 try {
+
                     String data = Https.undoGZIP(response);
                     if( data.equals("[]") ) return null;
 

@@ -1,6 +1,6 @@
 //Uncomment to choose how to treat the project. Use it as a library for AWARE-applications or plugins
-apply plugin: 'com.android.application' //AWARE is an application
-//apply plugin: 'com.android.library' //AWARE is a library
+//apply plugin: 'com.android.application' //AWARE is an application
+apply plugin: 'com.android.library' //AWARE is a library
 
 android {
     compileSdkVersion 21
