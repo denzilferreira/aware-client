@@ -20,6 +20,7 @@ import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -60,6 +61,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.aware.providers.Aware_Provider;
 import com.aware.ui.CameraStudy;
 import com.aware.ui.Plugins_Manager;
 import com.aware.ui.Stream_UI;
@@ -872,26 +874,27 @@ public class Aware_Preferences extends PreferenceActivity {
 		}
 		
 		if( plugins != null ) {
-			//set the configs also on the plugins...
-			for( int j=0; j<plugins.length(); j++) {
-                //[ plugins: [ {plugin: package_name, settings[{setting:key, value:value} ] }, …, {} ] ]
+			//set the configs for the plugins...
+			for( int i=0; i<plugins.length(); i++) {
+                try {
+                    JSONArray plugin_settings = plugins.getJSONArray(0);
+                    for( int j=0; j<plugin_settings.length(); j++ ) {
+                        JSONObject setting = plugin_settings.getJSONObject(j);
+                        String package_name = setting.getString("plugin");
+                        JSONArray package_settings = setting.getJSONArray("settings");
 
-
-
-//				for( int i = 0; i < configs.length(); i++) {
-//					try {
-//						JSONObject conf = configs.getJSONObject(i);
-//						if( conf.has("plugins") ) continue;
-//
-//						ContentValues newSettings = new ContentValues();
-//						newSettings.put(Aware_Settings.SETTING_KEY, conf.getString("setting"));
-//						newSettings.put(Aware_Settings.SETTING_VALUE, conf.get("value").toString() );
-//						newSettings.put(Aware_Settings.SETTING_PACKAGE_NAME, plugins.getString(j));
-//						context.getContentResolver().insert(Aware_Settings.CONTENT_URI, newSettings);
-//					}catch(JSONException e) {
-//						e.printStackTrace();
-//					}
-//				}
+                        for( int k = 0; k<package_settings.length(); k++) {
+                            JSONObject plugin_setting = package_settings.getJSONObject(k);
+                            ContentValues newSettings = new ContentValues();
+                            newSettings.put(Aware_Provider.Aware_Settings.SETTING_KEY, plugin_setting.getString("setting"));
+                            newSettings.put(Aware_Provider.Aware_Settings.SETTING_VALUE, plugin_setting.get("value").toString() );
+                            newSettings.put(Aware_Provider.Aware_Settings.SETTING_PACKAGE_NAME, package_name);
+                            context.getContentResolver().insert(Aware_Provider.Aware_Settings.CONTENT_URI, newSettings);
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
 			}
 			
 			//Now start plugins
