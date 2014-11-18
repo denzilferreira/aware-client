@@ -33,6 +33,7 @@ import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
+import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -736,6 +737,10 @@ public class Aware_Preferences extends PreferenceActivity {
                         dialog.dismiss();
                         Toast.makeText(getApplicationContext(), "Clearing settings... please wait", Toast.LENGTH_LONG).show();
                         Aware.reset(getApplicationContext());
+
+                        Intent preferences = new Intent(getApplicationContext(), Aware_Preferences.class);
+                        preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(preferences);
                     }
                 });
                 builder.setCancelable(false);
@@ -747,7 +752,10 @@ public class Aware_Preferences extends PreferenceActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
                         //if part of a study, you can't change settings.
-                        if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) { finish(); }
+                        if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) {
+                            Toast.makeText(getApplicationContext(), "As part of a study, no changes are allowed.", Toast.LENGTH_LONG).show();
+                            finish();
+                        }
                     }
                 });
                 builder.setNegativeButton("Quit study!", new DialogInterface.OnClickListener() {
@@ -756,6 +764,10 @@ public class Aware_Preferences extends PreferenceActivity {
                         dialog.dismiss();
                         Toast.makeText(getApplicationContext(), "Clearing settings... please wait", Toast.LENGTH_LONG).show();
                         Aware.reset(getApplicationContext());
+
+                        Intent preferences = new Intent(getApplicationContext(), Aware_Preferences.class);
+                        preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(preferences);
                     }
                 });
                 builder.setTitle("Study information");
@@ -857,55 +869,64 @@ public class Aware_Preferences extends PreferenceActivity {
      * @param configs
      */
     protected static void applySettings( Context context, JSONArray configs ) {
-    	JSONArray plugins = null;
-    	
-    	//Apply all settings in AWARE Client
-		for( int i=0; i<configs.length(); i++ ) {
-			try {
-				JSONObject conf = configs.getJSONObject(i);
-				if( conf.has("plugins") ) {
-					plugins = conf.getJSONArray("plugins");
-				} else {
-					Aware.setSetting( context, conf.getString("setting"), conf.get("value") );
-				}
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		if( plugins != null ) {
-			//set the configs for the plugins...
-			for( int i=0; i<plugins.length(); i++) {
-                try {
-                    JSONArray plugin_settings = plugins.getJSONArray(0);
-                    for( int j=0; j<plugin_settings.length(); j++ ) {
-                        JSONObject setting = plugin_settings.getJSONObject(j);
-                        String package_name = setting.getString("plugin");
-                        JSONArray package_settings = setting.getJSONArray("settings");
+        //First reset the client to default settings...
+        Aware.reset(context);
 
-                        for( int k = 0; k<package_settings.length(); k++) {
-                            JSONObject plugin_setting = package_settings.getJSONObject(k);
-                            ContentValues newSettings = new ContentValues();
-                            newSettings.put(Aware_Provider.Aware_Settings.SETTING_KEY, plugin_setting.getString("setting"));
-                            newSettings.put(Aware_Provider.Aware_Settings.SETTING_VALUE, plugin_setting.get("value").toString() );
-                            newSettings.put(Aware_Provider.Aware_Settings.SETTING_PACKAGE_NAME, package_name);
-                            context.getContentResolver().insert(Aware_Provider.Aware_Settings.CONTENT_URI, newSettings);
-                        }
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+        //Now apply the new settings
+        JSONArray plugins = new JSONArray();
+    	JSONArray sensors = new JSONArray();
+
+        for( int i = 0; i<configs.length(); i++ ) {
+            try {
+                JSONObject element = configs.getJSONObject(i);
+                if( element.has("plugins") ) {
+                    plugins = element.getJSONArray("plugins");
                 }
-			}
-			
-			//Now start plugins
-			for( int j=0; j<plugins.length(); j++ ) {
-				try {
-					Aware.startPlugin( context, plugins.getString(j) );
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-			}
-		}
+                if( element.has("sensors")) {
+                    sensors = element.getJSONArray("sensors");
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        //Set the sensors' settings first
+        for( int i=0; i < sensors.length(); i++ ) {
+            try {
+                JSONObject sensor_config = sensors.getJSONObject(i);
+                Aware.setSetting( context, sensor_config.getString("setting"), sensor_config.get("value") );
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        //Set the plugins' settings now
+        ArrayList<String> active_plugins = new ArrayList<String>();
+        for( int i=0; i < plugins.length(); i++ ) {
+            try{
+                JSONObject plugin_config = plugins.getJSONObject(i);
+                String package_name = plugin_config.getString("plugin");
+                active_plugins.add(package_name);
+
+                JSONArray plugin_settings = plugin_config.getJSONArray("settings");
+                for(int j=0; j<plugin_settings.length(); j++) {
+                    JSONObject plugin_setting = plugin_settings.getJSONObject(j);
+
+                    ContentValues newSettings = new ContentValues();
+                    newSettings.put(Aware_Provider.Aware_Settings.SETTING_KEY, plugin_setting.getString("setting"));
+                    newSettings.put(Aware_Provider.Aware_Settings.SETTING_VALUE, plugin_setting.get("value").toString() );
+                    newSettings.put(Aware_Provider.Aware_Settings.SETTING_PACKAGE_NAME, package_name);
+                    context.getContentResolver().insert(Aware_Provider.Aware_Settings.CONTENT_URI, newSettings);
+                }
+            }catch( JSONException e ) {
+                e.printStackTrace();
+            }
+        }
+
+        //Now start plugins
+        for( String package_name : active_plugins ) {
+            Aware.startPlugin(context, package_name);
+        }
     }
 
     /**
@@ -937,6 +958,8 @@ public class Aware_Preferences extends PreferenceActivity {
 				try {
                     String json_str = Https.undoGZIP(answer);
 
+                    Log.d(Aware.TAG, "Read:" + json_str);
+
 					JSONArray configs_study = new JSONArray(json_str);
 					if( configs_study.getJSONObject(0).has("message") ) {
                         Toast.makeText(getApplicationContext(), "This study is not available.", Toast.LENGTH_LONG).show();
@@ -953,24 +976,7 @@ public class Aware_Preferences extends PreferenceActivity {
                     NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                     notManager.notify(new Random(System.currentTimeMillis()).nextInt(), mBuilder.build());
 
-					//add webservice automatically to configs
-					JSONObject webservice_server = new JSONObject();
-					webservice_server.put("setting", Aware_Preferences.WEBSERVICE_SERVER);
-					webservice_server.put("value", study_url);
-					
-					JSONObject status_webservice = new JSONObject();
-					status_webservice.put("setting", Aware_Preferences.STATUS_WEBSERVICE);
-					status_webservice.put("value", true);
-					
-					JSONObject study_start = new JSONObject();
-					study_start.put("setting", "study_start");
-					study_start.put("value", System.currentTimeMillis());
-					
-					configs_study.put(status_webservice);
-					configs_study.put(webservice_server);
-					configs_study.put(study_start);
-
-                    Log.d(Aware.TAG, "Study configs: " + configs_study.toString(5));
+					if( Aware.DEBUG ) Log.d(Aware.TAG, "Study configs: " + configs_study.toString(5));
 					
 					//Apply new configurations in AWARE Client
 					applySettings(getApplicationContext(), configs_study);

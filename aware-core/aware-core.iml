@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module external.linked.project.path="$MODULE_DIR$" external.root.project.path="$MODULE_DIR$/.." external.system.id="GRADLE" external.system.module.group="aware-client" external.system.module.version="unspecified" type="JAVA_MODULE" version="4">
+<module external.linked.project.path="$MODULE_DIR$" external.root.project.path="$MODULE_DIR$/../../com.aware.plugin.smartesms" external.system.id="GRADLE" external.system.module.group="com.aware.plugin.smartesms" external.system.module.version="unspecified" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="android-gradle" name="Android-Gradle">
       <configuration>
@@ -10,7 +10,7 @@
       <configuration>
         <option name="SELECTED_BUILD_VARIANT" value="phoneDebug" />
         <option name="ASSEMBLE_TASK_NAME" value="assemblePhoneDebug" />
-        <option name="COMPILE_JAVA_TASK_NAME" value="compilePhoneDebugJava" />
+        <option name="COMPILE_JAVA_TASK_NAME" value="compilePhoneDebugSources" />
         <option name="ASSEMBLE_TEST_TASK_NAME" value="assemblePhoneDebugTest" />
         <option name="SOURCE_GEN_TASK_NAME" value="generatePhoneDebugSources" />
         <option name="TEST_SOURCE_GEN_TASK_NAME" value="generatePhoneDebugTestSources" />

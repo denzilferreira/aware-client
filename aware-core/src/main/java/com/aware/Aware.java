@@ -843,7 +843,7 @@ public class Aware extends Service {
             Aware.setSetting(c, entry.getKey(), entry.getValue());
         }
 
-        //Restore old Device ID
+        //Keep previous AWARE Device ID
         Aware.setSetting(c, Aware_Preferences.DEVICE_ID, device_id);
 
         //Turn off all active plugins
@@ -858,10 +858,6 @@ public class Aware extends Service {
         //Apply fresh state
         Intent aware_apply = new Intent( Aware.ACTION_AWARE_REFRESH );
         c.sendBroadcast(aware_apply);
-
-        Intent preferences = new Intent( c, Aware_Preferences.class);
-        preferences.setFlags( Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
-        c.startActivity(preferences);
     }
 
     /**

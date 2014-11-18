@@ -18,14 +18,17 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -55,6 +58,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -233,7 +237,7 @@ public class Plugins_Manager extends Aware_Activity {
 		//Build UI
 		Cursor installed_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, Aware_Plugins.PLUGIN_NAME + " ASC");
     	if( installed_plugins != null && installed_plugins.moveToFirst()) {
-    		do{
+            do{
     			final String package_name = installed_plugins.getString(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
     			final String name = installed_plugins.getString(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_NAME));
     			final String description = installed_plugins.getString(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_DESCRIPTION));
@@ -398,7 +402,15 @@ public class Plugins_Manager extends Aware_Activity {
         		loading_plugins.setVisibility(View.VISIBLE);
     		}
     	}
-    	
+
+        private boolean is_installed(String package_name) {
+            List<PackageInfo> installed = getPackageManager().getInstalledPackages(0);
+            for(PackageInfo p : installed) {
+                if( p.packageName.toString().equals(package_name) ) return true;
+            }
+            return false;
+        }
+
     	@Override
 		protected Void doInBackground(Void... params) {
     		//Check for updates on the server side
@@ -408,29 +420,39 @@ public class Plugins_Manager extends Aware_Activity {
 					JSONArray plugins = new JSONArray(Https.undoGZIP(response));
 					for( int i=0; i< plugins.length(); i++ ) {
 						JSONObject plugin = plugins.getJSONObject(i);
-						//check if we have this plugin already in our database.
-						Cursor is_cached = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + plugin.getString("package") + "'", null, null );
+
+                        boolean new_data = false;
+                        Cursor is_cached = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + plugin.getString("package") + "'", null, null );
 						if( is_cached != null && is_cached.moveToFirst() ) {
-							int version = is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins.PLUGIN_VERSION));
-							//we have it already, so lets check if it is updated
-							if( plugin.getInt("version") > version ) {
-								ContentValues data = new ContentValues();
-								data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_UPDATED);
-								getContentResolver().update(Aware_Plugins.CONTENT_URI, data, Aware_Plugins._ID + "=" + is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins._ID)), null);
-							}
-						} else {
-							//this is a new plugin available on the server that we don't have yet!
-							ContentValues data = new ContentValues();
-							data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
-							data.put(Aware_Plugins.PLUGIN_DESCRIPTION, plugin.getString("desc"));
-							data.put(Aware_Plugins.PLUGIN_VERSION, plugin.getInt("version"));
-							data.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, plugin.getString("package"));
-							data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
-							data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_NOT_INSTALLED);
-							data.put(Aware_Plugins.PLUGIN_ICON, cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()));
-							getContentResolver().insert(Aware_Plugins.CONTENT_URI, data);
+							if( ! is_installed(plugin.getString("package")) ) {
+                                //We used to have it installed, now we don't, remove from database
+                                getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + plugin.getString("package") + "'", null);
+                                new_data = true;
+                            } else {
+                                int version = is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins.PLUGIN_VERSION));
+                                //Lets check if it is updated
+                                if( plugin.getInt("version") > version ) {
+                                    ContentValues data = new ContentValues();
+                                    data.put(Aware_Plugins.PLUGIN_ICON, cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()));
+                                    data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_UPDATED);
+                                    getContentResolver().update(Aware_Plugins.CONTENT_URI, data, Aware_Plugins._ID + "=" + is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins._ID)), null);
+                                }
+                            }
 						}
-						if( is_cached != null && ! is_cached.isClosed() ) is_cached.close();
+                        if( is_cached != null && ! is_cached.isClosed() ) is_cached.close();
+
+                        if( new_data ) {
+                            //this is a new plugin available on the server that we don't have yet!
+                            ContentValues data = new ContentValues();
+                            data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
+                            data.put(Aware_Plugins.PLUGIN_DESCRIPTION, plugin.getString("desc"));
+                            data.put(Aware_Plugins.PLUGIN_VERSION, plugin.getInt("version"));
+                            data.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, plugin.getString("package"));
+                            data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
+                            data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_NOT_INSTALLED);
+                            data.put(Aware_Plugins.PLUGIN_ICON, cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()));
+                            getContentResolver().insert(Aware_Plugins.CONTENT_URI, data);
+                        }
 					}
 				} catch (ParseException e) {
 					e.printStackTrace();
