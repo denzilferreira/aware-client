@@ -106,29 +106,13 @@ public class Stream_UI extends Aware_Activity {
     private View buildCard(View content) {
 
         CardView card = new CardView( this );
+        LayoutParams params = new LayoutParams( LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT );
+        params.setMargins( 0,0,0,10 );
+        card.setLayoutParams(params);
+
         content.setBackgroundColor(Color.WHITE);
         content.setPadding(20, 20, 20, 20);
         card.addView(content);
-
-//        LinearLayout card = new LinearLayout( this );
-//
-//        LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-//        card.setLayoutParams(params);
-//        card.setOrientation(LinearLayout.VERTICAL);
-//
-//        content.setBackgroundColor(Color.WHITE);
-//        content.setPadding(20, 20, 20, 20);
-//
-//        card.addView(content);
-//
-//        LinearLayout shadow = new LinearLayout(this);
-//        LayoutParams params_shadow = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-//        params_shadow.setMargins(0, 0, 0, 10);
-//        shadow.setBackgroundColor(this.getResources().getColor(R.color.card_shadow));
-//        shadow.setMinimumHeight(5);
-//        shadow.setLayoutParams(params_shadow);
-//
-//        card.addView(shadow);
 
         return card;
     }

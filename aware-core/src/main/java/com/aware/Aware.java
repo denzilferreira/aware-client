@@ -41,8 +41,10 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
+import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 
@@ -437,10 +439,9 @@ public class Aware extends Service {
         		do {
         			stopPlugin(getApplicationContext(), enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME)));
         		}while(enabled_plugins.moveToNext());
-        		enabled_plugins.close();
+                if( Aware.DEBUG ) Log.w(TAG,"AWARE plugins disabled...");
         	}
         	if( enabled_plugins != null && ! enabled_plugins.isClosed()) enabled_plugins.close();
-        	if( Aware.DEBUG ) Log.w(TAG,"AWARE plugins disabled...");
         }
         return START_STICKY;
     }
@@ -490,8 +491,8 @@ public class Aware extends Service {
         		ContentValues rowData = new ContentValues();
                 rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
                 context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
-                cached.close();
 
+                cached.close();
                 return;
     		}
     	}
@@ -571,11 +572,11 @@ public class Aware extends Service {
     	}
     	
     	String ui_class = package_name + ".ContextCard";
-    	LinearLayout card = new LinearLayout(context);
-    	LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-    	card.setLayoutParams(params);
-    	card.setOrientation(LinearLayout.VERTICAL);
-    	
+    	CardView card = new CardView(context);
+    	LayoutParams params = new LayoutParams( LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT );
+        params.setMargins( 0,0,0,10 );
+        card.setLayoutParams(params);
+
     	try {
 			Context packageContext = context.createPackageContext(package_name, Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY);
 			
@@ -611,15 +612,7 @@ public class Aware extends Service {
 				ui.setBackgroundColor(Color.WHITE);
 				ui.setPadding(20, 20, 20, 20);
 				card.addView(ui);
-				
-				LinearLayout shadow = new LinearLayout(context);
-				LayoutParams params_shadow = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-				params_shadow.setMargins(0, 0, 0, 10);
-				shadow.setBackgroundColor(context.getResources().getColor(R.color.card_shadow));
-				shadow.setMinimumHeight(5);
-				shadow.setLayoutParams(params_shadow);
-				card.addView(shadow);
-				
+
 				return card;
 			} else {
 				return null;

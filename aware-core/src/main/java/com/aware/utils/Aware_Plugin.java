@@ -73,6 +73,7 @@ public class Aware_Plugin extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
         DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true")?true:false;
         
