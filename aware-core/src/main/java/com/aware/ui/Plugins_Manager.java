@@ -22,11 +22,13 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -234,6 +236,9 @@ public class Plugins_Manager extends Aware_Activity {
 		
 		//Build UI
 		Cursor installed_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, Aware_Plugins.PLUGIN_NAME + " ASC");
+
+        if(Aware.DEBUG ) Log.d(Aware.TAG,"Plugins:" + DatabaseUtils.dumpCursorToString(installed_plugins));
+
     	if( installed_plugins != null && installed_plugins.moveToFirst()) {
             do{
     			final String package_name = installed_plugins.getString(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
@@ -252,7 +257,7 @@ public class Plugins_Manager extends Aware_Activity {
     					pkg_icon.setImageDrawable(appInfo.loadIcon(getPackageManager()));
     				} else {
     					byte[] img = installed_plugins.getBlob(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_ICON));
-    					if( img.length > 0 ) pkg_icon.setImageBitmap(BitmapFactory.decodeByteArray(img, 0, img.length));
+                        if( img != null && img.length > 0 ) pkg_icon.setImageBitmap(BitmapFactory.decodeByteArray(img, 0, img.length));
     				}
     				
     				TextView pkg_title = (TextView) pkg_view.findViewById(R.id.pkg_title);

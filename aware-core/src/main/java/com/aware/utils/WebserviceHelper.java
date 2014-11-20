@@ -27,12 +27,10 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class WebserviceHelper extends IntentService {
@@ -59,8 +57,6 @@ public class WebserviceHelper extends IntentService {
 	
 	@Override
 	protected void onHandleIntent(Intent intent) {
-
-        if( ! getPackageName().equals("com.aware") ) return; //only the client does this.
 
 		String WEBSERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
 		String DEVICE_ID = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
@@ -173,7 +169,7 @@ public class WebserviceHelper extends IntentService {
                         int batch_total = (Math.round(context_data.getCount()/batch_size) > 0 ? Math.round(context_data.getCount()/batch_size) : 1 );
                         int batch_count = 0;
 
-                        Log.d(Aware.TAG, "Syncing " + context_data.getCount() + " from " + DATABASE_TABLE + " in " + batch_total + " batches");
+                        if(DEBUG) Log.d(Aware.TAG, "Syncing " + context_data.getCount() + " from " + DATABASE_TABLE + " in " + batch_total + " batches");
 						long start = System.currentTimeMillis();
 
 						do {
@@ -218,7 +214,7 @@ public class WebserviceHelper extends IntentService {
 						if( context_data_entries.length() > 0 ) {
 
                             batch_count++;
-                            Log.d(Aware.TAG, "Sync batch "+ batch_count + "/" + batch_total);
+                            if( DEBUG ) Log.d(Aware.TAG, "Sync batch "+ batch_count + "/" + batch_total);
 
                             request = new ArrayList<NameValuePair>();
 							request.add(new BasicNameValuePair(Aware_Preferences.DEVICE_ID, DEVICE_ID));
@@ -226,7 +222,7 @@ public class WebserviceHelper extends IntentService {
 							new Https(getApplicationContext()).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
 						}
 
-                        Log.d(Aware.TAG, "Sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis()-start)/1000));
+                        if( DEBUG ) Log.d(Aware.TAG, "Sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis()-start)/1000));
 
 					} else {
 						if( DEBUG ) Log.d(Aware.TAG, "Nothing new in " + DATABASE_TABLE +"!" + " URI=" + CONTENT_URI.toString() );

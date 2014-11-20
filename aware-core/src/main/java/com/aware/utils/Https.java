@@ -257,7 +257,7 @@ public class Https extends DefaultHttpClient {
 	public HttpResponse dataGET(String url, boolean is_gzipped) {
 		try {
 			HttpGet httpGet = new HttpGet(url);
-            httpGet.addHeader("Accept-Encoding", "gzip"); //send data compressed
+            if( is_gzipped ) httpGet.addHeader("Accept-Encoding", "gzip"); //send data compressed
             HttpResponse httpResponse = this.execute(httpGet);
 		
 			int statusCode = httpResponse.getStatusLine().getStatusCode();

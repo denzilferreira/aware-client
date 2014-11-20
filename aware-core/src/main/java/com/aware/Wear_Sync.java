@@ -86,8 +86,8 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
     public final static PutDataMapRequest screen = PutDataMapRequest.create("/screen");
     public final static PutDataMapRequest temperature = PutDataMapRequest.create("/temperature");
 
-    private AWAREListener settingListener = new AWAREListener();
-    private WearMessageListener wearListener = new WearMessageListener();
+    private static AWAREListener settingListener = new AWAREListener();
+    private static WearMessageListener wearListener = new WearMessageListener();
 
     private AlarmManager alarmManager;
     private Intent wearBg;
@@ -95,9 +95,9 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
 
     private static ArrayList<String> databases = new ArrayList<String>();
 
-    private static final long FREQUENCY = 1 * 60 * 1000; //5 minutes
+    private static final long FREQUENCY = 5 * 60 * 1000; //sync data to phone every 5 minutes
 
-    private void addDatabase(String d) {
+    public static void addDatabase(String d) {
         boolean found = false;
         for( String dd : databases ) {
             if( dd.equals(d) ) {
@@ -110,7 +110,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         }
     }
 
-    private void removeDatabase(String d) {
+    public static void removeDatabase(String d) {
         int index = -1;
         for(String dd : databases ) {
             index++;
@@ -135,7 +135,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
             if( intent.getAction() != null && intent.getAction().equals(ACTION_WEAR_SYNC) ) {
 
                 String database = intent.getStringExtra("content_uri");
-                String latest_timestamp = intent.getStringExtra("latest_timestamp");
+                double latest_timestamp = Double.valueOf(intent.getStringExtra("latest_timestamp"));
 
                 Uri CONTENT_URI = Uri.parse(database);
                 JSONArray data_array = new JSONArray();
@@ -172,7 +172,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                 }
                 if( watch_data != null && ! watch_data.isClosed() ) watch_data.close();
             } else {
-                Log.d(TAG, "Background sync running! Databases to sync: " + databases.size());
+                if( DEBUG ) Log.d(TAG,"Background sync: " + databases.size() + " sensors active");
                 for( String database : databases ) {
                     Wearable.MessageApi.sendMessage(googleClient, peer.getId(), "/get_latest", database.getBytes());
                 }
@@ -298,7 +298,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
             alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
             wearBg = new Intent(this, Wear_Bg.class);
             wearBgRepeat = PendingIntent.getService(this, 0, wearBg, PendingIntent.FLAG_UPDATE_CURRENT);
-            alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000, FREQUENCY, wearBgRepeat);
+            alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis() + 1000, FREQUENCY, wearBgRepeat);
         }
     }
 
@@ -321,7 +321,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
                     is_connected = true;
 
                     if( Aware.is_watch(getApplicationContext()) ) {
-                        Cursor active_sensors = getContentResolver().query(Aware_Provider.Aware_Settings.CONTENT_URI, null, Aware_Provider.Aware_Settings.SETTING_KEY + " LIKE '%STATUS_%' AND " + Aware_Provider.Aware_Settings.SETTING_PACKAGE_NAME +" LIKE 'com.aware' AND " + Aware_Provider.Aware_Settings.SETTING_VALUE +" LIKE 'true'", null, null);
+                        Cursor active_sensors = getContentResolver().query(Aware_Provider.Aware_Settings.CONTENT_URI, null, Aware_Provider.Aware_Settings.SETTING_KEY + " LIKE '%status_%' AND " + Aware_Provider.Aware_Settings.SETTING_PACKAGE_NAME +" LIKE 'com.aware' AND " + Aware_Provider.Aware_Settings.SETTING_VALUE +" LIKE 'true'", null, null);
                         if( active_sensors != null && active_sensors.moveToFirst() ) {
                             do{
                                 Log.d(TAG,"ACTIVE ON WATCH: " + active_sensors.getString(active_sensors.getColumnIndex(Aware_Provider.Aware_Settings.SETTING_KEY)));
@@ -344,29 +344,21 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
     }
 
     /**
-     * Receives messages from phone
+     * Phone needs to tell the watch what he has...
      */
-    public class WearMessageListener extends BroadcastReceiver {
+    public static class WearMessageListener extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if( intent.getAction().equals(Wear_Sync.ACTION_AWARE_WEAR_MESSAGE) ) {
-
                 String topic = intent.getStringExtra(EXTRA_TOPIC);
                 String message = new String(intent.getStringExtra(EXTRA_MESSAGE));
 
                 if( topic.equals("latest") ) {
                     try{
                         JSONObject data = new JSONObject(message);
-
-                        String content_uri = data.getString("content_uri");
-                        String latest_timestamp = data.getString("latest_timestamp");
-
-                        Intent wearbg = new Intent(context, Wear_Bg.class);
-                        wearbg.setAction(Wear_Bg.ACTION_WEAR_SYNC);
-                        wearbg.putExtra("content_uri", content_uri);
-                        wearbg.putExtra("latest_timestamp", latest_timestamp);
-                        context.startService(wearbg);
-
+                        if( googleClient != null && peer != null ) {
+                            Wearable.MessageApi.sendMessage(googleClient, peer.getId(), "/start_sync", data.toString().getBytes());
+                        }
                     } catch(JSONException e) {
                         Log.d(TAG, e.getMessage());
                     }
@@ -378,7 +370,7 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
     /**
      * Monitors AWARE's sensors enable/disable
      */
-    public class AWAREListener extends BroadcastReceiver {
+    public static class AWAREListener extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             String setting = intent.getStringExtra(Aware.EXTRA_CONFIG_SETTING);
@@ -386,18 +378,21 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
 
             //Notify the phone that we are changing settings on the watch's client
             if( Aware.is_watch(context) ) {
-                Log.d(TAG, "Watch received a change in settings");
+                if( DEBUG ) Log.d(TAG, "Watch received a change in settings");
 
                 try {
                     JSONObject message = new JSONObject();
                     message.put("command","config");
                     message.put(Aware.EXTRA_CONFIG_SETTING, setting);
                     message.put(Aware.EXTRA_CONFIG_VALUE, value);
-                    Wearable.MessageApi.sendMessage(googleClient, peer.getId(), "/wear_sync", message.toString().getBytes());
+
+                    if( googleClient != null && peer != null ) {
+                        Wearable.MessageApi.sendMessage(googleClient, peer.getId(), "/config", message.toString().getBytes());
+                    }
                 } catch( JSONException e ) {}
 
             } else {
-                Log.d(TAG, "Phone received a change in settings");
+                if( DEBUG ) Log.d(TAG, "Phone received a change in settings");
             }
 
             if( setting.contains("status") && value.equals("true") ) {

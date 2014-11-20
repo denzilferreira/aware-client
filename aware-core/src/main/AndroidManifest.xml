@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.aware"
     xmlns:tools="http://schemas.android.com/tools"
-    android:versionCode="345"
+    android:versionCode="346"
     android:versionName="3.0" >
 
     <uses-sdk
@@ -256,7 +256,6 @@
         </service>
         <service
             android:name="com.aware.utils.WebserviceHelper"
-            android:enabled="true"
             android:exported="true" >
             <intent-filter>
                 <action android:name="ACTION_AWARE_WEBSERVICE_SYNC_TABLE" />
@@ -273,8 +272,7 @@
                 <action android:name="com.google.android.gms.wearable.BIND_LISTENER"/>
             </intent-filter>
         </service>
-
-        <service android:name="com.aware.Wear_Sync$Wear_Bg" android:exported="true" />
+        <service android:name="com.aware.Wear_Sync$Wear_Bg" android:exported="true" android:enabled="@bool/display_aware" />
 
         <!-- AWARE BroadcastReceivers -->
 

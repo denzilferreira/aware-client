@@ -54,7 +54,7 @@ public class Wear_Service extends WearableListenerService {
         try {
             JSONArray data_buffer = new JSONArray(data);
 
-            Log.d(Wear_Sync.TAG, "Saving to phone: " + data_buffer.length() + " records");
+            if( Aware.DEBUG ) Log.d(Wear_Sync.TAG, "Saving to phone: " + data_buffer.length() + " records");
 
             for( int i = 0; i<data_buffer.length(); i++ ) {
 
@@ -106,9 +106,9 @@ public class Wear_Service extends WearableListenerService {
     public void onMessageReceived(MessageEvent messageEvent) {
         super.onMessageReceived(messageEvent);
 
-        if(Aware.DEBUG) Log.d(Wear_Sync.TAG, "Message received!");
+        if(Aware.DEBUG) Log.d(Wear_Sync.TAG, "Message received: " + messageEvent.toString());
 
-        if( messageEvent.getPath().equals("/wear_sync") ) {
+        if( messageEvent.getPath().equals("/config") ) {
             if( Aware.is_watch(getApplicationContext()) ) {
                 try {
                     JSONObject json = new JSONObject(new String(messageEvent.getData()));
@@ -119,9 +119,8 @@ public class Wear_Service extends WearableListenerService {
                         wear_change.putExtra(Aware.EXTRA_CONFIG_VALUE, json.getString(Aware.EXTRA_CONFIG_VALUE));
                         sendBroadcast(wear_change);
                     }
-
                 } catch( JSONException e ) {
-                    Log.d(Wear_Sync.TAG, e.getMessage());
+                    e.printStackTrace();
                 }
             }
         }
@@ -139,8 +138,8 @@ public class Wear_Service extends WearableListenerService {
 
                 //This broadcast will let the watch know whats the latest data we have on the phone
                 Intent broadcast = new Intent(Wear_Sync.ACTION_AWARE_WEAR_MESSAGE);
-
                 broadcast.putExtra(Wear_Sync.EXTRA_TOPIC, "latest");
+
                 JSONObject obj = new JSONObject();
                 obj.put("content_uri", content_uri.toString());
                 obj.put("latest_timestamp", latest_timestamp);
@@ -149,7 +148,25 @@ public class Wear_Service extends WearableListenerService {
                 sendBroadcast(broadcast);
 
             } catch( JSONException e ) {
-                Log.d(Wear_Sync.TAG, e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        if( messageEvent.getPath().equals("/start_sync") ) {
+            try {
+                JSONObject data = new JSONObject(new String(messageEvent.getData()));
+
+                String content_uri = data.getString("content_uri");
+                String latest_timestamp = data.getString("latest_timestamp");
+
+                Intent wearbg = new Intent(this, Wear_Sync.Wear_Bg.class);
+                wearbg.setAction(Wear_Sync.Wear_Bg.ACTION_WEAR_SYNC);
+                wearbg.putExtra("content_uri", content_uri);
+                wearbg.putExtra("latest_timestamp", latest_timestamp);
+                startService(wearbg);
+
+            } catch(JSONException e) {
+                e.printStackTrace();
             }
         }
     }
