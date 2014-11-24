@@ -2,24 +2,6 @@
 <pre-dex-items>
 
     <item
-        dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-5ca7cad479f319ca1e2dadefbd0a2c6fe375c69e.jar"
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-wearable/6.1.11/classes.jar"
-        jumboMode="false"
-        revision="20.0.0"
-        sha1="711351f12980fffdff7f1b0be9303ac6611affd8"/>
-    <item
-        dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-eed15f6d504a68a6939292263ae5750f1c9e6392.jar"
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/support-v13/21.0.0/classes.jar"
-        jumboMode="false"
-        revision="20.0.0"
-        sha1="0c0c19759e5868604a3b4c2c0074ee9404d73c76"/>
-    <item
-        dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/internal_impl-21.0.0-9f0c1cc42151a8e2f7a279ac72bb772628f968a0.jar"
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/support-v13/21.0.0/libs/internal_impl-21.0.0.jar"
-        jumboMode="false"
-        revision="20.0.0"
-        sha1="5a8e01742aee890c56fe638ea7c921b91a3fdc62"/>
-    <item
         dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-6ee7b735d3e2f2e77b298734b2f17d661fa3c045.jar"
         jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.0/classes.jar"
         jumboMode="false"
@@ -67,6 +49,12 @@
         jumboMode="false"
         revision="20.0.0"
         sha1="0a7b88ba1496a0b4af76069ad40dacd3897149e0"/>
+    <item
+        dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/debug/classes-aea938fb30711b198b397b447451b71eebfe1367.jar"
+        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services/6.1.71/classes.jar"
+        jumboMode="false"
+        revision="20.0.0"
+        sha1="0f6d5c1ef2e982c3b7858408e3df389cf5d202da"/>
     <item
         dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-f8bd359a95f3ff02be976d4efd4e42105b06ff4e.jar"
         jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/gridlayout-v7/21.0.0/classes.jar"

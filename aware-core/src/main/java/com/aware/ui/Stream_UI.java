@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.widget.CardView;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.ProgressBar;
@@ -40,6 +41,7 @@ public class Stream_UI extends Aware_Activity {
     public static final String ACTION_AWARE_STREAM_CLOSED = "ACTION_AWARE_STREAM_CLOSED";
 	
 	private static LinearLayout stream_container;
+    private static ImageButton add_to_stream;
 
     private Handler refreshHandler = new Handler();
     private final Runnable refresher = new Runnable() {
@@ -59,6 +61,14 @@ public class Stream_UI extends Aware_Activity {
 		super.onCreate(arg0);
 		
 		stream_container = (LinearLayout) findViewById(R.id.stream_container);
+        add_to_stream = (ImageButton) findViewById(R.id.change_stream);
+        add_to_stream.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent plugin_manager = new Intent( getApplicationContext(), Plugins_Manager.class);
+                startActivity(plugin_manager);
+            }
+        });
 
 		IntentFilter filter = new IntentFilter(ACTION_AWARE_UPDATE_STREAM);
 		registerReceiver(stream_updater, filter);
@@ -75,23 +85,8 @@ public class Stream_UI extends Aware_Activity {
 	
 	private void loadStream() {
 		stream_container.removeAllViews();
-        TextView empty_message = new TextView( this );
-        empty_message.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent plugin_manager = new Intent( getApplicationContext(), Plugins_Manager.class);
-                startActivity(plugin_manager);
-            }
-        });
-        empty_message.setText("Tap to activate/download more!");
 
-        stream_container.addView(buildCard(empty_message));
-
-        if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_ANDROID_WEAR).equals("true") ) {
-            stream_container.addView(buildCard(Wear_Sync.getContextCard(getApplicationContext())));
-        }
-		
-		Cursor get_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, Aware_Plugins.PLUGIN_NAME + " DESC");
+        Cursor get_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, Aware_Plugins.PLUGIN_NAME + " DESC");
 		if( get_plugins != null && get_plugins.moveToFirst() ) {
 			do {
 				View card = Aware.getContextCard( this, get_plugins.getString( get_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME)) );
@@ -101,10 +96,14 @@ public class Stream_UI extends Aware_Activity {
 			} while(get_plugins.moveToNext());			
 		}
         if( get_plugins != null && ! get_plugins.isClosed() ) get_plugins.close();
+
+        //Aware-core cards
+        if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_ANDROID_WEAR).equals("true") ) {
+            stream_container.addView(buildCard(Wear_Sync.getContextCard(getApplicationContext())));
+        }
 	}
 
     private View buildCard(View content) {
-
         CardView card = new CardView( this );
         LayoutParams params = new LayoutParams( LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT );
         params.setMargins( 0,0,0,10 );
@@ -113,7 +112,6 @@ public class Stream_UI extends Aware_Activity {
         content.setBackgroundColor(Color.WHITE);
         content.setPadding(20, 20, 20, 20);
         card.addView(content);
-
         return card;
     }
 

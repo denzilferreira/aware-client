@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.aware"
     xmlns:tools="http://schemas.android.com/tools"
-    android:versionCode="346"
+    android:versionCode="347"
     android:versionName="3.0" >
 
     <uses-sdk
@@ -12,7 +12,6 @@
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -28,11 +27,8 @@
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
     <uses-permission android:name="android.permission.CAMERA" />
 
-    <!-- For reading QRCodes -->
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
-
-    <!-- Compatibility for Android Wear -->
     <uses-feature android:name="android.hardware.type.watch" />
 
     <permission
@@ -56,6 +52,7 @@
     <uses-permission android:name="com.aware.WRITE_CONTEXT_DATA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:icon="@drawable/ic_launcher"
@@ -90,6 +87,7 @@
             android:icon="@drawable/ic_launcher"
             android:label="Stream"
             android:noHistory="true" android:enabled="@bool/display_aware" android:launchMode="singleInstance"
+            android:configChanges="keyboardHidden|orientation|screenSize"
             >
             <intent-filter>
                 <action android:name="android.intent.action.ASSIST" />
@@ -307,13 +305,15 @@
         <!-- AWARE ContentProviders -->
 
         <!-- FOR PLUGINS/APPS COMMENT STARTS HERE -->
+
         <provider
             android:name="com.aware.providers.Bluetooth_Provider"
             android:authorities="${applicationId}.provider.bluetooth"
             android:exported="true"
             android:enabled="@bool/display_aware"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
-            android:writePermission="com.aware.WRITE_CONTEXT_DATA">
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
         </provider>
         <provider
             android:name="com.aware.providers.Applications_Provider"

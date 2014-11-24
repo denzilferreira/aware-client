@@ -476,6 +476,7 @@ public class Aware extends Service {
     public static void startPlugin(Context context, String package_name ) {
 
         if( Aware.DEBUG ) Log.d(TAG, "Starting: " + package_name);
+
         if( awareContext == null ) awareContext = context;
 
     	//Check if plugin is installed
@@ -668,7 +669,6 @@ public class Aware extends Service {
         global_settings.add("study_id");
         global_settings.add("study_start");
         global_settings.add(Aware_Preferences.DEVICE_ID);
-        global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
         global_settings.add(Aware_Preferences.STATUS_WEBSERVICE);
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
@@ -680,7 +680,6 @@ public class Aware extends Service {
         global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
         global_settings.add(Aware_Preferences.MQTT_USERNAME);
         global_settings.add(Aware_Preferences.MQTT_PASSWORD);
-        global_settings.add(Aware_Preferences.STATUS_ANDROID_WEAR);
     	
     	if( global_settings.contains(key) ) {
     		is_restricted_package = false;
@@ -711,7 +710,6 @@ public class Aware extends Service {
     	global_settings.add("study_start");
         global_settings.add(Aware_Preferences.DEVICE_ID);
         global_settings.add(Aware_Preferences.STATUS_WEBSERVICE);
-        global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
         global_settings.add(Aware_Preferences.WEBSERVICE_SERVER);
@@ -722,7 +720,6 @@ public class Aware extends Service {
         global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
         global_settings.add(Aware_Preferences.MQTT_USERNAME);
         global_settings.add(Aware_Preferences.MQTT_PASSWORD);
-        global_settings.add(Aware_Preferences.STATUS_ANDROID_WEAR);
 
     	if( global_settings.contains(key) ) {
     		is_restricted_package = false;
