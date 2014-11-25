@@ -41,7 +41,6 @@ public class Stream_UI extends Aware_Activity {
     public static final String ACTION_AWARE_STREAM_CLOSED = "ACTION_AWARE_STREAM_CLOSED";
 	
 	private static LinearLayout stream_container;
-    private static ImageButton add_to_stream;
 
     private Handler refreshHandler = new Handler();
     private final Runnable refresher = new Runnable() {
@@ -61,7 +60,7 @@ public class Stream_UI extends Aware_Activity {
 		super.onCreate(arg0);
 		
 		stream_container = (LinearLayout) findViewById(R.id.stream_container);
-        add_to_stream = (ImageButton) findViewById(R.id.change_stream);
+        ImageButton add_to_stream = (ImageButton) findViewById(R.id.change_stream);
         add_to_stream.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

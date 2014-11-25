@@ -236,7 +236,6 @@ public class Plugins_Manager extends Aware_Activity {
 		
 		//Build UI
 		Cursor installed_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, Aware_Plugins.PLUGIN_NAME + " ASC");
-
         if(Aware.DEBUG ) Log.d(Aware.TAG,"Plugins:" + DatabaseUtils.dumpCursorToString(installed_plugins));
 
     	if( installed_plugins != null && installed_plugins.moveToFirst()) {

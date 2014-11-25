@@ -505,7 +505,6 @@ public class Aware_Preferences extends PreferenceActivity {
     private static DrawerLayout navigationDrawer;
     private static ListView navigationList;
     private static ActionBarDrawerToggle navigationToggle;
-    private static boolean is_refreshing = false;
 
     @Override
     protected Dialog onCreateDialog(int id) {
@@ -660,6 +659,8 @@ public class Aware_Preferences extends PreferenceActivity {
         	UUID uuid = UUID.randomUUID();
             Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString());
     	}
+
+
     }
 
     @Override
@@ -670,7 +671,6 @@ public class Aware_Preferences extends PreferenceActivity {
     }
 
     private class Async_StudyData extends AsyncTask<String, Void, JSONObject> {
-
         private String study_url = "";
         private ProgressDialog loader;
 
@@ -791,39 +791,12 @@ public class Aware_Preferences extends PreferenceActivity {
         }
     }
 
-    private class Async_SensorLoading extends AsyncTask<Void, Void, Void> {
-    	@Override
-    	protected void onPreExecute() {
-    		super.onPreExecute();
-    		is_refreshing = true;
-    	}
-    	
-    	@Override
-    	protected Void doInBackground(Void... params) {
-    		publishProgress();
-    		return null;
-    	}
-    	
-    	@Override
-    	protected void onProgressUpdate(Void... values) {
-    		super.onProgressUpdate(values);
-    		developerOptions();
-    		servicesOptions();
-    	}
-    	
-    	@Override
-    	protected void onPostExecute(Void result) {
-    		super.onPostExecute(result);
-    		is_refreshing = false; 		
-    	}
-    }
-    
     @Override
     protected void onResume() {
     	super.onResume();
-    	if( ! is_refreshing ) {
-    		new Async_SensorLoading().execute();
-    	}
+
+        developerOptions();
+        servicesOptions();
 
         if( Aware.getSetting( getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && ! Applications.isAccessibilityServiceActive(getApplicationContext()) ) {
             Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
@@ -1025,16 +998,7 @@ public class Aware_Preferences extends PreferenceActivity {
         if( navigationToggle.onOptionsItemSelected(item) ) return true;
         return super.onOptionsItemSelected(item);
     }
-    
-    public class UIUpdater extends BroadcastReceiver {
-    	@Override
-    	public void onReceive(Context context, Intent intent) {
-    		if( ! is_refreshing ) {
-    			new Async_SensorLoading().execute();
-    		}
-    	}
-    }
-    
+
     /**
      * Navigation adapter
      * @author denzil
