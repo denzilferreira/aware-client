@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wearableApp package="com.aware">
+    <versionCode>348</versionCode>
+    <versionName>3.0</versionName>
+    <rawPathResId>aware_wear</rawPathResId>
+</wearableApp>
