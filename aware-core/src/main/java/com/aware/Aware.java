@@ -313,14 +313,6 @@ public class Aware extends Service {
 	        new Https(awareContext).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
 	        return true;
 		}
-    	
-    	@Override
-    	protected void onPostExecute(Boolean result) {
-    		super.onPostExecute(result);
-    		if( result && Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
-    			sendBroadcast(new Intent(Aware.ACTION_AWARE_SYNC_DATA));
-    		}
-    	}
     }
     
     private void get_device_info() {
@@ -381,15 +373,16 @@ public class Aware extends Service {
             //Plugins need to be able to start services too, as requested in their settings
             startAllServices();
 
-            Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
-            if( enabled_plugins != null && enabled_plugins.moveToFirst() ) {
-                do {
-                    startPlugin(getApplicationContext(), enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME)));
-                }while(enabled_plugins.moveToNext());
-            }
-            if( enabled_plugins != null && ! enabled_plugins.isClosed() ) enabled_plugins.close();
-
+            //The official client takes care of keeping the plugins running
             if( getPackageName().equals("com.aware") ) {
+                Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
+                if( enabled_plugins != null && enabled_plugins.moveToFirst() ) {
+                    do {
+                        startPlugin(getApplicationContext(), enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME)));
+                    }while(enabled_plugins.moveToNext());
+                }
+                if( enabled_plugins != null && ! enabled_plugins.isClosed() ) enabled_plugins.close();
+
 	            if( Aware.getSetting(getApplicationContext(), Aware_Preferences.AWARE_AUTO_UPDATE).equals("true") ) {
 	            	if( aware_preferences.getLong(PREF_LAST_UPDATE, 0) == 0 || (aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 0 && System.currentTimeMillis()-aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 6*60*60*1000) ) { //check every 6h
 	            		new Update_Check().execute();
@@ -499,8 +492,31 @@ public class Aware extends Service {
     	}
         if( cached != null && ! cached.isClosed() ) cached.close();
 
-        //Request the missing plugin
-        new PluginDependencyTask().execute(package_name);
+        if( is_bundled(package_name) ) {
+            try {
+                Class c = Class.forName( package_name + ".Plugin");
+                Intent plugin = new Intent(context, c.newInstance().getClass() );
+                context.startService(plugin);
+                if( Aware.DEBUG ) Log.d(TAG, "Bundled " + package_name + ".Plugin started...");
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        } else {
+            //Request the missing plugin
+            new PluginDependencyTask().execute(package_name);
+        }
+    }
+
+    private static boolean is_bundled(String pkg) {
+        for( Package p : Package.getPackages() ) {
+            if(DEBUG) Log.d(TAG, "Bundled package:" + p.getName());
+            if( p.getName().equals(pkg) ) return true;
+        }
+        return false;
     }
 
     /**
