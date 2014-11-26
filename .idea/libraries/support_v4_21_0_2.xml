@@ -3,6 +3,7 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/aware-core/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.2/classes.jar!/" />
       <root url="file://$PROJECT_DIR$/aware-core/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.2/res" />
+      <root url="jar://$PROJECT_DIR$/aware-core/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.2/libs/internal_impl-21.0.2.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
