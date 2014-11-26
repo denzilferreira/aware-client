@@ -19,6 +19,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -445,7 +446,17 @@ public class Aware extends Service {
      * @param package_name
      */
     public static void stopPlugin(Context context, String package_name ) {
-    	Cursor cached = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+
+        //Check if plugin is bundled within an application/plugin
+        Intent bundled = new Intent();
+        bundled.setClassName(context.getPackageName(), package_name + ".Plugin");
+        boolean result = context.stopService(bundled);
+        if( result == true ) {
+            if( Aware.DEBUG ) Log.d(TAG, "Bundled " + package_name + ".Plugin stopped...");
+            return;
+        }
+
+        Cursor cached = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
     	if( cached != null && cached.moveToFirst() ) {
     		//it's installed, stop it!
     		Intent plugin = new Intent();
@@ -468,11 +479,18 @@ public class Aware extends Service {
      */
     public static void startPlugin(Context context, String package_name ) {
 
-        if( Aware.DEBUG ) Log.d(TAG, "Starting: " + package_name);
-
         if( awareContext == null ) awareContext = context;
 
-    	//Check if plugin is installed
+        //Check if plugin is bundled within an application/plugin
+        Intent bundled = new Intent();
+        bundled.setClassName(context.getPackageName(), package_name + ".Plugin");
+        ComponentName result = context.startService(bundled);
+        if( result != null ) {
+            if( Aware.DEBUG ) Log.d(TAG, "Bundled " + package_name + ".Plugin started...");
+            return;
+        }
+
+    	//Check if plugin is cached
     	Cursor cached = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
     	if( cached != null && cached.moveToFirst() ) {
             //Installed on the phone
@@ -492,31 +510,8 @@ public class Aware extends Service {
     	}
         if( cached != null && ! cached.isClosed() ) cached.close();
 
-        if( is_bundled(package_name) ) {
-            try {
-                Class c = Class.forName( package_name + ".Plugin");
-                Intent plugin = new Intent(context, c.newInstance().getClass() );
-                context.startService(plugin);
-                if( Aware.DEBUG ) Log.d(TAG, "Bundled " + package_name + ".Plugin started...");
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        } else {
-            //Request the missing plugin
-            new PluginDependencyTask().execute(package_name);
-        }
-    }
-
-    private static boolean is_bundled(String pkg) {
-        for( Package p : Package.getPackages() ) {
-            if(DEBUG) Log.d(TAG, "Bundled package:" + p.getName());
-            if( p.getName().equals(pkg) ) return true;
-        }
-        return false;
+        //Ok, not bundled or installed, request the missing plugin from the server
+        new PluginDependencyTask().execute(package_name);
     }
 
     /**
