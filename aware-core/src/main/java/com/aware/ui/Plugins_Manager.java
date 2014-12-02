@@ -96,10 +96,10 @@ public class Plugins_Manager extends Aware_Activity {
 	
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
-		setContentView(R.layout.plugins_store_ui);
-		
-		super.onCreate(savedInstanceState);
-    	
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.plugins_store_ui);
+
     	inflater = getLayoutInflater();
     	store_grid = (GridLayout) findViewById(R.id.plugins_store_grid);
     	loading_plugins = (ProgressBar) findViewById(R.id.loading_plugins);

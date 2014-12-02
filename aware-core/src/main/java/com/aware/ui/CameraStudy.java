@@ -60,17 +60,15 @@ public class CameraStudy extends Aware_Activity implements PreviewCallback, Auto
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-    	setContentView(R.layout.aware_study_join);
-    	
     	super.onCreate(savedInstanceState);
-        
+        setContentView(R.layout.aware_study_join);
         lockCamera();
     }
     
     @Override
     protected void onResume() {
     	super.onResume();
-    	lockCamera();
+        lockCamera();
     }
     
     @Override

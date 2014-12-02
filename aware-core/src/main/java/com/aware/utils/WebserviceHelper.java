@@ -42,7 +42,7 @@ public class WebserviceHelper extends IntentService {
 	public static final String EXTRA_FIELDS = "fields";
 	public static final String EXTRA_CONTENT_URI = "uri";
 
-    private static final int batch_size = 50000;
+    private static final int batch_size = 10000;
 
 	public WebserviceHelper() {
 		super(Aware.TAG + " Webservice Sync");

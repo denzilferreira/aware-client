@@ -108,31 +108,14 @@ public class Wear_Service extends WearableListenerService {
 
         if(Aware.DEBUG) Log.d(Wear_Sync.TAG, "Message received: " + messageEvent.toString());
 
-        if( messageEvent.getPath().equals("/config") ) {
-            if( Aware.is_watch(getApplicationContext()) ) {
-                try {
-                    JSONObject json = new JSONObject(new String(messageEvent.getData()));
-                    //change in configuration
-                    if( json.get("command").equals("config") ) {
-                        Intent wear_change = new Intent(Aware.ACTION_AWARE_CONFIG_CHANGED);
-                        wear_change.putExtra(Aware.EXTRA_CONFIG_SETTING, json.getString(Aware.EXTRA_CONFIG_SETTING));
-                        wear_change.putExtra(Aware.EXTRA_CONFIG_VALUE, json.getString(Aware.EXTRA_CONFIG_VALUE));
-                        sendBroadcast(wear_change);
-                    }
-                } catch( JSONException e ) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
         if( messageEvent.getPath().equals("/get_latest") ) {
             try{
                 Uri content_uri = Uri.parse(new String(messageEvent.getData()));
 
-                String latest_timestamp = "0";
+                double latest_timestamp = 0;
                 Cursor last_entry = getContentResolver().query(content_uri, new String[]{"timestamp"}, Aware_Preferences.DEVICE_ID + " NOT LIKE '" + Aware.getSetting(this, Aware_Preferences.DEVICE_ID) + "'", null, "timestamp DESC LIMIT 1");
                 if( last_entry != null && last_entry.moveToFirst() ) {
-                    latest_timestamp = String.valueOf(last_entry.getDouble(0));
+                    latest_timestamp = last_entry.getDouble(0);
                 }
                 if( last_entry != null && ! last_entry.isClosed() ) last_entry.close();
 
@@ -157,7 +140,7 @@ public class Wear_Service extends WearableListenerService {
                 JSONObject data = new JSONObject(new String(messageEvent.getData()));
 
                 String content_uri = data.getString("content_uri");
-                String latest_timestamp = data.getString("latest_timestamp");
+                double latest_timestamp = data.getDouble("latest_timestamp");
 
                 Intent wearbg = new Intent(this, Wear_Sync.Wear_Bg.class);
                 wearbg.setAction(Wear_Sync.Wear_Bg.ACTION_WEAR_SYNC);

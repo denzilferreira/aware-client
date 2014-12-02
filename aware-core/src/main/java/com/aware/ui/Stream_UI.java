@@ -53,12 +53,10 @@ public class Stream_UI extends Aware_Activity {
 	
 	@Override
 	protected void onCreate(Bundle arg0) {
-		
-		setContentView(R.layout.stream_ui);
-		
-		//This is a fix for the navigation drawer consistency across all activities in AWARE
-		super.onCreate(arg0);
-		
+        super.onCreate(arg0);
+
+        setContentView(R.layout.stream_ui);
+
 		stream_container = (LinearLayout) findViewById(R.id.stream_container);
         ImageButton add_to_stream = (ImageButton) findViewById(R.id.change_stream);
         add_to_stream.setOnClickListener(new View.OnClickListener() {

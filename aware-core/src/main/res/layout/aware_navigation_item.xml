@@ -10,8 +10,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical|left"
-        android:paddingRight="12dp"
-        android:src="@drawable/ic_action_nav_placeholder" />
+        android:src="@drawable/ic_action_nav_placeholder"
+        android:adjustViewBounds="false"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="24dp" />
 
     <TextView
         android:id="@+id/nav_title"
@@ -21,6 +23,7 @@
         android:layout_weight="1"
         android:text="Item"
         android:textAppearance="?android:attr/textAppearanceListItem"
-        android:textColor="@android:color/white" />
+        android:textColor="#FFFFFF"
+        android:textSize="14sp" />
 
 </LinearLayout>

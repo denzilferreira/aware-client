@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="preferencefragment-0.1.1">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/aware-core/build/intermediates/exploded-aar/com.github.machinarius/preferencefragment/0.1.1/classes.jar!/" />
+      <root url="file://$PROJECT_DIR$/aware-core/build/intermediates/exploded-aar/com.github.machinarius/preferencefragment/0.1.1/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
