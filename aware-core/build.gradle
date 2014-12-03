@@ -47,4 +47,7 @@ dependencies {
     wearCompile 'com.android.support:support-v13:21.0.0'
     wearCompile 'com.google.android.gms:play-services-wearable:6.1.71'
     wearCompile 'com.google.android.support:wearable:1.0.0'
+
+    //For phone package, bundle Android Wear's compiled AWARE
+    wearApp files('./src/main/res/raw/aware_wear.apk')
 }
