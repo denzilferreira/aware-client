@@ -10,7 +10,6 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -123,6 +122,12 @@ public class Aware_Activity extends ActionBarActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.aware_menu, menu);
+
+        //Most watches don't have a camera
+        if( Aware.is_watch(this) ) {
+           MenuItem qrcode = menu.findItem(R.id.aware_qrcode);
+           qrcode.setVisible(false);
+        }
         return super.onCreateOptionsMenu(menu);
     }
 	
@@ -278,7 +283,12 @@ public class Aware_Activity extends ActionBarActivity {
         protected void onPostExecute(JSONObject result) {
             super.onPostExecute(result);
 
-            loader.dismiss();
+            try{
+                loader.dismiss();
+            }catch( IllegalArgumentException e ) {
+                //It's ok, we might get here if we couldn't get study info.
+                return;
+            }
 
             if( result == null ) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(Aware_Activity.this);

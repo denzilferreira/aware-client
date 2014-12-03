@@ -17,6 +17,7 @@ import android.app.Dialog;
 import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.content.ContentValues;
 import android.content.Context;
@@ -2082,11 +2083,21 @@ public class Aware_Preferences extends Aware_Activity {
     protected void onResume() {
     	super.onResume();
 
-        if( Aware.getSetting( getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && ! Applications.isAccessibilityServiceActive(getApplicationContext()) ) {
+        if( Aware.getSetting( getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") || Aware.getSetting( getApplicationContext(), Aware_Preferences.STATUS_KEYBOARD).equals("true") && ! Applications.isAccessibilityServiceActive(getApplicationContext()) ) {
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
+            mBuilder.setSmallIcon(R.drawable.ic_stat_aware_accessibility);
+            mBuilder.setContentTitle("AWARE configuration");
+            mBuilder.setContentText(getResources().getString(R.string.aware_activate_accessibility));
+            mBuilder.setDefaults(Notification.DEFAULT_ALL);
+            mBuilder.setAutoCancel(true);
+
             Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
             accessibilitySettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(accessibilitySettings);
-            Toast.makeText(getApplicationContext(), getResources().getText(R.string.aware_activate_accessibility), Toast.LENGTH_LONG).show();
+
+            PendingIntent clickIntent = PendingIntent.getActivity(getApplicationContext(), 0, accessibilitySettings, PendingIntent.FLAG_UPDATE_CURRENT);
+            mBuilder.setContentIntent(clickIntent);
+            NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            notManager.notify(Applications.ACCESSIBILITY_NOTIFICATION_ID, mBuilder.build());
     	}
 
         if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) {
@@ -2224,7 +2235,7 @@ public class Aware_Preferences extends Aware_Activity {
 					if( Aware.DEBUG ) Log.d(Aware.TAG, "Study configs: " + configs_study.toString(5));
 					
 					//Apply new configurations in AWARE Client
-					applySettings(getApplicationContext(), configs_study);
+					applySettings( getApplicationContext(), configs_study );
 					
 					Intent apply_settings = new Intent(Aware.ACTION_AWARE_REFRESH);
 					sendBroadcast(apply_settings);

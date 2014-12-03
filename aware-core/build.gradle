@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId "com.aware"
-        versionCode 350
+        versionCode 351
         versionName "3.1"
     }
 
@@ -23,7 +23,7 @@ android {
         wear {
             applicationId "com.aware"
             minSdkVersion 20
-            targetSdkVersion 21
+            targetSdkVersion 20
         }
         phone {
             applicationId "com.aware"

@@ -260,6 +260,10 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
         
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):"AWARE::Proximity";
 
+        if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY).length() == 0 ) {
+            Aware.setSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY, SAMPLING_RATE);
+        }
+
         if(SAMPLING_RATE != Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROXIMITY))) {
             SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROXIMITY));
             sensorHandler.removeCallbacksAndMessages(null);

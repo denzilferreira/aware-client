@@ -269,6 +269,11 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
     public int onStartCommand(Intent intent, int flags, int startId) {
         
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
+
+        if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER).length() == 0 ) {
+            Aware.setSetting(this, Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER, SAMPLING_RATE);
+        }
+
         if(SAMPLING_RATE != Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER))) {
             SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER));
             sensorHandler.removeCallbacksAndMessages(null);

@@ -17,6 +17,7 @@ import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
@@ -32,6 +33,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
@@ -63,6 +65,7 @@ public class Applications extends AccessibilityService {
     private static AlarmManager alarmManager = null;
     private static Intent updateApps = null;
     private static PendingIntent repeatingIntent = null;
+    public static final int ACCESSIBILITY_NOTIFICATION_ID = 42;
     
     /**
      * Broadcasted event: a new application is visible on the foreground
@@ -282,12 +285,6 @@ public class Applications extends AccessibilityService {
         filter.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
         registerReceiver(awareMonitor, filter);
 
-        if( ! isAccessibilityServiceActive( getApplicationContext() ) ) {
-            Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
-            accessibilitySettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(accessibilitySettings);
-        }
-        
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS).length() == 0 ) {
         	Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS, 30);
         }
@@ -311,6 +308,23 @@ public class Applications extends AccessibilityService {
             updateApps.setAction(ACTION_AWARE_APPLICATIONS_HISTORY);
             repeatingIntent = PendingIntent.getService(getApplicationContext(), 0, updateApps, 0);
             alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+1000, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS)) * 1000, repeatingIntent);
+        }
+
+        if( ! isAccessibilityServiceActive( getApplicationContext() ) ) {
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
+            mBuilder.setSmallIcon(R.drawable.ic_stat_aware_accessibility);
+            mBuilder.setContentTitle("AWARE configuration");
+            mBuilder.setContentText(getResources().getString(R.string.aware_activate_accessibility));
+            mBuilder.setDefaults(Notification.DEFAULT_ALL);
+            mBuilder.setAutoCancel(true);
+
+            Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
+            accessibilitySettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+            PendingIntent clickIntent = PendingIntent.getActivity(getApplicationContext(), 0, accessibilitySettings, PendingIntent.FLAG_UPDATE_CURRENT);
+            mBuilder.setContentIntent(clickIntent);
+            NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            notManager.notify(Applications.ACCESSIBILITY_NOTIFICATION_ID, mBuilder.build());
         }
     	
     	return super.onStartCommand(intent, flags, startId);

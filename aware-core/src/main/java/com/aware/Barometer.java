@@ -258,6 +258,10 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
         
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
 
+        if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_BAROMETER).length() == 0 ) {
+            Aware.setSetting(this, Aware_Preferences.FREQUENCY_BAROMETER, SAMPLING_RATE);
+        }
+
         if(SAMPLING_RATE != Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_BAROMETER))) { //changed setting
             SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_BAROMETER));
             sensorHandler.removeCallbacksAndMessages(null);
