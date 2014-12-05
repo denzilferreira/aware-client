@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:minWidth="300dip"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/esm_instructions"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" android:id="@+id/esm_answers">
+
+    </LinearLayout>
+
+</LinearLayout>

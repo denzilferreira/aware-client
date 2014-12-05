@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.aware"
-    android:versionCode="352"
-    android:versionName="3.2">
-
-    <uses-sdk android:minSdkVersion="10" android:targetSdkVersion="21"></uses-sdk>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.aware">
 
     <!-- FOR PLUGINS/APPS COMMENT STARTS HERE -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />

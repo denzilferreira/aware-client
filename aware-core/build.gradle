@@ -16,6 +16,7 @@ android {
 
     buildTypes {
         release {
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
@@ -43,5 +44,5 @@ dependencies {
     wearCompile 'com.google.android.gms:play-services-wearable:6.1.71'
     wearCompile 'com.google.android.support:wearable:1.0.0'
 
-//    wearApp project(path: ':aware-core', configuration: 'wearRelease')
+    wearApp project(':aware-wear')
 }

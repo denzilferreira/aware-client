@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="clean_old_data_values">
+        <item >0</item>
+        <item >1</item>
+        <item >2</item>
+    </string-array>
+    <string-array name="clean_old_data_readable">
+        <item >Never</item>
+        <item >Weekly</item>
+        <item >Monthly</item>
+    </string-array>
+    <string-array name="frequency_values">
+        <item>200000</item>
+        <item>60000</item>
+        <item>20000</item>
+        <item>0</item>
+    </string-array>
+    <string-array name="frequency_readable">
+        <item>Slow</item>
+        <item>Normal</item>
+        <item>Fast</item>
+        <item>Fastest</item>
+    </string-array>
+</resources>

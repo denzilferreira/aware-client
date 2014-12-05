@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- False for AWARE plugins/applications -->
+    <item name="display_aware" type="bool" format="boolean">true</item>
+</resources>

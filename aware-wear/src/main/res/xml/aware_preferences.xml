@@ -1,0 +1,637 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory
+        android:key="debug_flags"
+        android:title="@string/aware_developer" >
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="debug_flag"
+            android:persistent="true"
+            android:summary="@string/aware_debug_summary"
+            android:title="@string/aware_debug_title" />
+
+        <EditTextPreference
+            android:defaultValue="AWARE"
+            android:dependency="debug_flag"
+            android:key="debug_tag"
+            android:persistent="true"
+            android:summary="@string/aware_debug_tag_summary"
+            android:title="@string/aware_debug_tag" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="aware_auto_update"
+            android:persistent="true"
+            android:summary="@string/aware_auto_update_version"
+            android:title="@string/aware_auto_update" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="debug_db_slow"
+            android:persistent="true"
+            android:summary="No database storage with high-performance sensors (e.g., accelerometer, gyroscope, etc.)"
+            android:title="Lightweight I/O" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="device_ids"
+        android:title="Device" >
+        <EditTextPreference
+            android:key="device_id"
+            android:persistent="true"
+            android:selectable="false"
+            android:summary="UUID:"
+            android:title="@string/aware_device_id" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="sensors"
+        android:summary="AWARE default sensors"
+        android:title="Sensors" >
+        <PreferenceScreen
+            android:key="accelerometer"
+            android:summary="Acceleration, including the force of gravity (m/s^2) *"
+            android:title="Accelerometer" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_accelerometer"
+                android:persistent="true"
+                android:title="Activate" />
+
+            <ListPreference
+                android:dependency="status_accelerometer"
+                android:defaultValue="200000"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
+                android:key="frequency_accelerometer"
+                android:persistent="true"
+                android:title="Sampling rate" />
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="applications"
+            android:summary="Application usage"
+            android:title="Applications" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_applications"
+                android:persistent="true"
+                android:summary="Current visible and background applications"
+                android:title="Application usage" />
+
+            <EditTextPreference
+                android:defaultValue="30"
+                android:dependency="status_applications"
+                android:inputType="number"
+                android:key="frequency_applications"
+                android:persistent="true"
+                android:summary="30 seconds"
+                android:title="Update frequency of background applications" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_installations"
+                android:persistent="true"
+                android:summary="Application installs, uninstalls and updates"
+                android:title="Application installations" />
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_keyboard"
+                android:dependency="status_applications"
+                android:persistent="true"
+                android:summary="Logs keyboard input (no passwords)"
+                android:title="Keyboard" />
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:dependency="status_applications"
+                android:key="status_notifications"
+                android:persistent="true"
+                android:summary="Notifications sent by any application, without text content"
+                android:title="Application notifications" />
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:dependency="status_applications"
+                android:key="status_crashes"
+                android:persistent="true"
+                android:summary="Captures application crashes (error and ANR), together with a log trace"
+                android:title="Application crashes" />
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="barometer"
+            android:summary="Atmospheric air pressure (mbar/hPa) *"
+            android:title="Barometer" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_barometer"
+                android:persistent="true"
+                android:title="Activate" />
+
+            <ListPreference
+                android:dependency="status_barometer"
+                android:defaultValue="200000"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
+                android:key="frequency_barometer"
+                android:persistent="true"
+                android:title="Sampling rate" />
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="battery"
+            android:summary="Battery and power events"
+            android:title="Battery" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_battery"
+                android:persistent="true"
+                android:title="Activate" />
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="bluetooth"
+            android:summary="Bluetooth sensing"
+            android:title="Bluetooth" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_bluetooth"
+                android:persistent="true"
+                android:title="Activate" />
+
+            <EditTextPreference
+                android:defaultValue="60"
+                android:dependency="status_bluetooth"
+                android:inputType="number"
+                android:key="frequency_bluetooth"
+                android:persistent="true"
+                android:summary="60 seconds"
+                android:title="Scanning update frequency" />
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="communication"
+            android:summary="Communication usage (calls/messages)"
+            android:title="Communication" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_communication_events"
+                android:persistent="true"
+                android:summary="User in call, not in call"
+                android:title="User availability" />
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_calls"
+                android:persistent="true"
+                android:summary="Calls made, received, missed"
+                android:title="Call events" />
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_messages"
+                android:persistent="true"
+                android:summary="Sent or received SMS/MMS"
+                android:title="Message events" />
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="esm"
+            android:summary="Mobile questionnaires"
+            android:title="Mobile ESM" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_esm"
+                android:persistent="true"
+                android:summary="Allow remote and applications ESM requests for human-based sensing"
+                android:title="Active" />
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="gravity"
+            android:summary="Force of gravity as a 3D vector with direction and magnitude of gravity (m/s^2) *"
+            android:title="Gravity" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_gravity"
+                android:persistent="true"
+                android:title="Active" />
+
+            <ListPreference
+                android:dependency="status_gravity"
+                android:defaultValue="200000"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
+                android:key="frequency_gravity"
+                android:persistent="true"
+                android:title="Sampling rate" />
+
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="gyroscope"
+            android:summary="Rate of rotation of device (rad/s) *"
+            android:title="Gyroscope" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_gyroscope"
+                android:persistent="true"
+                android:title="Active" />
+
+            <ListPreference
+                android:dependency="status_gyroscope"
+                android:defaultValue="200000"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
+                android:key="frequency_gyroscope"
+                android:persistent="true"
+                android:title="Sampling rate" />
+
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="locations"
+            android:summary="User&apos;s estimated location by GPS and network triangulation"
+            android:title="Locations" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_location_gps"
+                android:persistent="true"
+                android:summary="GPS location tracking"
+                android:title="GPS" />
+
+            <EditTextPreference
+                android:defaultValue="180"
+                android:dependency="status_location_gps"
+                android:key="frequency_location_gps"
+                android:persistent="true"
+                android:inputType="number"
+                android:summary="X in seconds (default = 180). 0 is always on."
+                android:title="GPS update frequency" />
+            <EditTextPreference
+                android:defaultValue="150"
+                android:dependency="status_location_gps"
+                android:key="min_location_gps_accuracy"
+                android:persistent="true"
+                android:inputType="number"
+                android:summary="Desired GPS accuracy in meters (default = 150). 0 keeps GPS always on."
+                android:title="GPS accuracy" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_location_network"
+                android:persistent="true"
+                android:summary="Network triangulation location tracking"
+                android:title="Network triangulation (cell tower and Wi-Fi)" />
+
+            <EditTextPreference
+                android:defaultValue="300"
+                android:dependency="status_location_network"
+                android:key="frequency_location_network"
+                android:persistent="true"
+                android:inputType="number"
+                android:summary="X in seconds (default = 300). 0 will keep network triangulation always on."
+                android:title="Network update frequency" />
+            <EditTextPreference
+                android:defaultValue="1500"
+                android:dependency="status_location_network"
+                android:key="min_location_network_accuracy"
+                android:persistent="true"
+                android:inputType="number"
+                android:summary="Desired network accuracy in meters (default = 1500). 0 keeps network triangulation always on."
+                android:title="Network accuracy" />
+            <EditTextPreference
+                android:defaultValue="300"
+                android:dependency="status_location_gps"
+                android:key="location_expiration_time"
+                android:persistent="true"
+                android:inputType="number"
+                android:summary="300 seconds"
+                android:title="Location expires after..." />
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="light"
+            android:summary="Ambient light (lux) *"
+            android:title="Light" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_light"
+                android:persistent="true"
+                android:title="Active" />
+
+            <ListPreference
+                android:dependency="status_light"
+                android:defaultValue="200000"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
+                android:key="frequency_light"
+                android:persistent="true"
+                android:title="Sampling rate" />
+
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="linear_accelerometer"
+            android:summary="Acceleration, excluding the force of gravity (m/s^2) *"
+            android:title="Linear accelerometer" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_linear_accelerometer"
+                android:persistent="true"
+                android:title="Active" />
+
+            <ListPreference
+                android:dependency="status_linear_accelerometer"
+                android:defaultValue="200000"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
+                android:key="frequency_linear_accelerometer"
+                android:persistent="true"
+                android:title="Sampling rate" />
+
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="network"
+            android:summary="Network usage and traffic"
+            android:title="Network" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_network_events"
+                android:persistent="true"
+                android:summary="Network usage states"
+                android:title="Network events" />
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_network_traffic"
+                android:persistent="true"
+                android:summary="Wi-Fi &amp; mobile network traffic (bytes,packets)"
+                android:title="Network traffic" />
+
+            <EditTextPreference
+                android:defaultValue="60"
+                android:inputType="number"
+                android:key="frequency_network_traffic"
+                android:persistent="true"
+                android:summary="60 seconds"
+                android:title="Network traffic update frequency" />
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="magnetometer"
+            android:summary="Geomagnetic field strength around the device (µT) *"
+            android:title="Magnetometer" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_magnetometer"
+                android:persistent="true"
+                android:title="Active" />
+
+            <ListPreference
+                android:dependency="status_magnetometer"
+                android:defaultValue="200000"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
+                android:key="frequency_magnetometer"
+                android:persistent="true"
+                android:title="Sampling rate" />
+
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="processor"
+            android:summary="CPU workload for user, system and idle (%)"
+            android:title="Processor workload" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_processor"
+                android:persistent="true"
+                android:title="Active" />
+
+            <EditTextPreference
+                android:defaultValue="10"
+                android:dependency="status_processor"
+                android:inputType="number"
+                android:key="frequency_processor"
+                android:persistent="true"
+                android:summary="10 seconds"
+                android:title="Update frequency" />
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="timezone"
+            android:summary="Tracks user&apos;s current timezone"
+            android:title="Timezone" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_timezone"
+                android:persistent="true"
+                android:title="Active" />
+
+            <EditTextPreference
+                android:defaultValue="3600"
+                android:dependency="status_timezone"
+                android:inputType="number"
+                android:key="frequency_timezone"
+                android:persistent="true"
+                android:summary="3600 seconds"
+                android:title="Update frequency" />
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="proximity"
+            android:summary="Proximity sensor distance (cm or device-dependent metric for far and near) *"
+            android:title="Proximity" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_proximity"
+                android:persistent="true"
+                android:title="Active" />
+
+            <ListPreference
+                android:dependency="status_proximity"
+                android:defaultValue="200000"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
+                android:key="frequency_proximity"
+                android:persistent="true"
+                android:title="Sampling rate" />
+
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="rotation"
+            android:summary="Orientation of the device in all axis *"
+            android:title="Rotation" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_rotation"
+                android:persistent="true"
+                android:title="Active" />
+
+            <ListPreference
+                android:dependency="status_rotation"
+                android:defaultValue="200000"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
+                android:key="frequency_rotation"
+                android:persistent="true"
+                android:title="Sampling rate" />
+
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="screen"
+            android:summary="Screen events (on/off, locked/unlocked)"
+            android:title="Screen usage" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_screen"
+                android:persistent="true"
+                android:summary="Capture screen on/off and other screen related events"
+                android:summaryOff="Screen is inactive"
+                android:title="Active" />
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="temperature"
+            android:summary="Ambient air temperature (Celsius) *"
+            android:title="Temperature" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_temperature"
+                android:persistent="true"
+                android:title="Active" />
+
+            <ListPreference
+                android:dependency="status_temperature"
+                android:defaultValue="200000"
+                android:entries="@array/frequency_readable"
+                android:entryValues="@array/frequency_values"
+                android:key="frequency_temperature"
+                android:persistent="true"
+                android:title="Sampling rate" />
+
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="telephony"
+            android:summary="Mobile operator and specifications, cell tower and neighbor scanning"
+            android:title="Telephony" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_telephony"
+                android:persistent="true"
+                android:title="Active" />
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="wifi"
+            android:summary="Wi-Fi sensing"
+            android:title="Wi-Fi" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_wifi"
+                android:persistent="true"
+                android:title="Active" />
+
+            <EditTextPreference
+                android:defaultValue="60"
+                android:dependency="status_wifi"
+                android:inputType="number"
+                android:key="frequency_wifi"
+                android:persistent="true"
+                android:summary="60 seconds"
+                android:title="Wi-Fi scanning update frequency" />
+        </PreferenceScreen>
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="wearables"
+        android:summary="Wearables, sensors"
+        android:title="External sensors">
+        <PreferenceScreen
+            android:key="external_android_wear"
+            android:title="Android Wear">
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_android_wear"
+                android:persistent="true"
+                android:title="Active"/>
+        </PreferenceScreen>
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="data_exchange"
+        android:summary="Webservices, MQTT"
+        android:title="Context exchange protocols" >
+        <PreferenceScreen
+            android:key="mqtt"
+            android:summary="Allows remove questionnaires, P2P context exchange"
+            android:title="AWARE MQTT Server" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_mqtt"
+                android:persistent="true"
+                android:title="Active" />
+
+            <EditTextPreference
+                android:key="mqtt_server"
+                android:persistent="true"
+                android:summary="URL/IP address"
+                android:title="AWARE Server MQTT server" />
+            <EditTextPreference
+                android:defaultValue="1883"
+                android:inputType="number"
+                android:key="mqtt_port"
+                android:persistent="true"
+                android:summary="1883"
+                android:title="MQTT port" />
+            <EditTextPreference
+                android:key="mqtt_username"
+                android:persistent="true"
+                android:summary="User credentials username"
+                android:title="MQTT username" />
+            <EditTextPreference
+                android:inputType="textPassword"
+                android:key="mqtt_password"
+                android:persistent="true"
+                android:summary="User credentials password"
+                android:title="MQTT password" />
+            <EditTextPreference
+                android:defaultValue="600"
+                android:inputType="number"
+                android:key="mqtt_keep_alive"
+                android:persistent="true"
+                android:summary="600 seconds"
+                android:title="MQTT keep alive" />
+            <EditTextPreference
+                android:defaultValue="2"
+                android:inputType="number"
+                android:key="mqtt_qos"
+                android:persistent="true"
+                android:summary="0 - No guarantee, 1 - At least once, 2 - Exactly once (default = 2)"
+                android:title="MQTT QoS" />
+            <EditTextPreference
+                android:defaultValue="tcp"
+                android:key="mqtt_protocol"
+                android:persistent="true"
+                android:summary="tcp"
+                android:title="Connection protocol (tcp/ssl)" />
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:key="webservice"
+            android:summary="Join research studies, sync data"
+            android:title="AWARE Webservices Server" >
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_webservice"
+                android:persistent="true"
+                android:title="Active" />
+
+            <EditTextPreference
+                android:key="webservice_server"
+                android:persistent="true"
+                android:summary="URL/IP address"
+                android:title="AWARE Server Webservice" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="webservice_wifi_only"
+                android:persistent="true"
+                android:summary="Upload data to webservices only when connected to Wi-Fi"
+                android:title="Wi-Fi only" />
+
+            <EditTextPreference
+                android:defaultValue="30"
+                android:inputType="number"
+                android:key="frequency_webservice"
+                android:persistent="true"
+                android:summary="30 minutes"
+                android:title="Upload frequency (in minutes, 0 to disable)." />
+
+            <ListPreference
+                android:defaultValue="0"
+                android:entries="@array/clean_old_data_readable"
+                android:entryValues="@array/clean_old_data_values"
+                android:key="frequency_clean_old_data"
+                android:persistent="true"
+                android:summary="How frequently to clean old data?"
+                android:title="Clean old data?" />
+        </PreferenceScreen>
+    </PreferenceCategory>
+
+</PreferenceScreen>
