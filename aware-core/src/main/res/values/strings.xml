@@ -21,4 +21,6 @@
     <string name="aware_device_id">AWARE Device ID</string>
     <string name="aware_esm_questions">Mobile ESM waiting...</string>
     <string name="aware_activate_accessibility">Activate AWARE in Accessibility Services.</string>
+    <string name="aware_team">Team</string>
+    <string name="aware_qrcode">QRCode</string>
 </resources>

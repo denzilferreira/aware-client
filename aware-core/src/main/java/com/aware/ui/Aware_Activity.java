@@ -44,7 +44,7 @@ public class Aware_Activity extends ActionBarActivity {
 	private DrawerLayout navigationDrawer;
 	private ListView navigationList;
 	private ActionBarDrawerToggle navigationToggle;
-	private Toolbar toolbar;
+	public static Toolbar toolbar;
 
     @Override
     public void setContentView(int layoutResID) {
@@ -145,11 +145,20 @@ public class Aware_Activity extends ActionBarActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if( item != null && item.getTitle() != null && item.getTitle().equals("QRCode") ) {
-            Intent join_study = new Intent( Aware_Activity.this, CameraStudy.class );
-            startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
+        if( item != null && item.getTitle() != null ){
+            if( item.getTitle().equals(getString(R.string.aware_qrcode)) ) {
+                Intent join_study = new Intent(Aware_Activity.this, CameraStudy.class);
+                startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
+            }
+            if( item.getTitle().equals(getString(R.string.aware_team)) ) {
+                Intent about_us = new Intent(Aware_Activity.this, About.class);
+                startActivity(about_us);
+            }
         }
-        return super.onOptionsItemSelected(item);
+        switch (item.getItemId()) {
+            case android.R.id.home: onBackPressed(); return true;
+            default: return super.onOptionsItemSelected(item);
+        }
     }
     
     /**

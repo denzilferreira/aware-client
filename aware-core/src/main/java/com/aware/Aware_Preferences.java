@@ -2055,9 +2055,6 @@ public class Aware_Preferences extends Aware_Activity {
         Intent startAware = new Intent( getApplicationContext(), Aware.class );
         startService(startAware);
 
-        setContentView(R.layout.aware_ui);
-        getSupportFragmentManager().executePendingTransactions();
-
         SharedPreferences prefs = getSharedPreferences( getPackageName(), Context.MODE_PRIVATE );
     	if( prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0 ) {
             PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
@@ -2077,6 +2074,9 @@ public class Aware_Preferences extends Aware_Activity {
         	UUID uuid = UUID.randomUUID();
             Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString());
     	}
+
+        setContentView(R.layout.aware_ui);
+        getSupportFragmentManager().executePendingTransactions();
     }
 
     @Override

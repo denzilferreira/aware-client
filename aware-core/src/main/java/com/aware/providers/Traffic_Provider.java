@@ -183,7 +183,7 @@ public class Traffic_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = BuildConfig.PACKAGE_NAME + ".provider.traffic";
+	    AUTHORITY = getContext().getPackageName() + ".provider.traffic";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Traffic_Provider.AUTHORITY, DATABASE_TABLES[0],

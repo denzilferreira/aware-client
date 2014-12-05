@@ -305,7 +305,7 @@ public class Accelerometer_Provider extends ContentProvider {
 
     @Override
 	public boolean onCreate() {
-	    AUTHORITY = BuildConfig.PACKAGE_NAME + ".provider.accelerometer";
+	    AUTHORITY = getContext().getPackageName() + ".provider.accelerometer";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Accelerometer_Provider.AUTHORITY,

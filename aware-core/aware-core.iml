@@ -10,7 +10,7 @@
       <configuration>
         <option name="SELECTED_BUILD_VARIANT" value="phoneDebug" />
         <option name="ASSEMBLE_TASK_NAME" value="assemblePhoneDebug" />
-        <option name="COMPILE_JAVA_TASK_NAME" value="compilePhoneDebugJava" />
+        <option name="COMPILE_JAVA_TASK_NAME" value="compilePhoneDebugSources" />
         <option name="ASSEMBLE_TEST_TASK_NAME" value="assemblePhoneDebugTest" />
         <option name="SOURCE_GEN_TASK_NAME" value="generatePhoneDebugSources" />
         <option name="TEST_SOURCE_GEN_TASK_NAME" value="generatePhoneDebugTestSources" />
@@ -31,6 +31,7 @@
       <sourceFolder url="file://$MODULE_DIR$/build/generated/source/buildConfig/phone/debug" isTestSource="false" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/build/generated/source/rs/phone/debug" isTestSource="false" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/build/generated/res/rs/phone/debug" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/build/generated/res/generated/phone/debug" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/phoneDebug/res" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/phoneDebug/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/phoneDebug/assets" type="java-resource" />
@@ -43,6 +44,7 @@
       <sourceFolder url="file://$MODULE_DIR$/build/generated/source/buildConfig/test/phone/debug" isTestSource="true" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/build/generated/source/rs/test/phone/debug" isTestSource="true" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/build/generated/res/rs/test/phone/debug" type="java-test-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/build/generated/res/generated/test/phone/debug" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/phone/res" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/phone/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/phone/assets" type="java-resource" />

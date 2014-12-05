@@ -306,7 +306,7 @@ public class Proximity_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = BuildConfig.PACKAGE_NAME + ".provider.proximity";
+	    AUTHORITY = getContext().getPackageName() + ".provider.proximity";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Proximity_Provider.AUTHORITY, DATABASE_TABLES[0],

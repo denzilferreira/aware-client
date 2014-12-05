@@ -239,7 +239,7 @@ public class WiFi_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = BuildConfig.PACKAGE_NAME + ".provider.wifi";
+	    AUTHORITY = getContext().getPackageName() + ".provider.wifi";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(WiFi_Provider.AUTHORITY, DATABASE_TABLES[0],

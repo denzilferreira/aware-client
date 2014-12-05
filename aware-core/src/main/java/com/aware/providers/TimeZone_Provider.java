@@ -172,7 +172,7 @@ public class TimeZone_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = BuildConfig.PACKAGE_NAME + ".provider.timezone";
+	    AUTHORITY = getContext().getPackageName() + ".provider.timezone";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(TimeZone_Provider.AUTHORITY, DATABASE_TABLES[0],

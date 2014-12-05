@@ -177,7 +177,7 @@ public class Installations_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = BuildConfig.PACKAGE_NAME + ".provider.installations";
+	    AUTHORITY = getContext().getPackageName() + ".provider.installations";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Installations_Provider.AUTHORITY,
