@@ -57,7 +57,7 @@ public class ESM_Queue extends FragmentActivity {
         
         powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        fragmentManager = (FragmentManager) getSupportFragmentManager();
+        fragmentManager = getSupportFragmentManager();
 		
         IntentFilter filter = new IntentFilter();
         filter.addAction(ESM.ACTION_AWARE_ESM_ANSWERED);
@@ -108,7 +108,7 @@ public class ESM_Queue extends FragmentActivity {
     public static int getQueueSize(Context c) {
         int size = 0;
         Cursor onqueue = c.getContentResolver().query(ESM_Data.CONTENT_URI,null, ESM_Data.STATUS + "=" + ESM.STATUS_NEW, null, null);
-        if( onqueue != null & onqueue.moveToFirst() ) {
+        if( onqueue != null && onqueue.moveToFirst() ) {
             size = onqueue.getCount();
         }
         if( onqueue != null && ! onqueue.isClosed() ) onqueue.close();
