@@ -182,9 +182,9 @@ public class Bluetooth extends Aware_Sensor {
 	/**
      * BroadcastReceiver for Bluetooth module
      * - ACTION_AWARE_BLUETOOTH_REQUEST_SCAN: request a bluetooth scan
-     * - {@link android.bluetooth.BluetoothDevice#ACTION_FOUND}: a new bluetooth device was detected
-     * - {@link android.bluetooth.BluetoothAdapter#ACTION_DISCOVERY_STARTED}: discovery has started
-     * - {@link android.bluetooth.BluetoothAdapter#ACTION_DISCOVERY_FINISHED}: discovery has finished
+     * - {@link BluetoothDevice#ACTION_FOUND}: a new bluetooth device was detected
+     * - {@link BluetoothAdapter#ACTION_DISCOVERY_STARTED}: discovery has started
+     * - {@link BluetoothAdapter#ACTION_DISCOVERY_FINISHED}: discovery has finished
      * - ACTION_AWARE_WEBSERVICE: request for webservice remote backup
      * @author denzil
      */

@@ -10,7 +10,6 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/aware-core" />
-            <option value="$PROJECT_DIR$/aware-wear" />
           </set>
         </option>
       </GradleProjectSettings>

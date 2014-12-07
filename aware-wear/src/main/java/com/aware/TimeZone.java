@@ -91,7 +91,7 @@ public class TimeZone extends Aware_Sensor {
     
     /**
      * Singleton instance of this service
-     * @return {@link com.aware.TimeZone} obj
+     * @return {@link TimeZone} obj
      */
     public static TimeZone getService() {
         if( timeZoneSrv == null ) timeZoneSrv = new TimeZone();

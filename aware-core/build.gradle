@@ -2,10 +2,15 @@
 apply plugin: 'com.android.application' //AWARE is an application
 //apply plugin: 'com.android.library' //AWARE is a library
 
+configurations {
+    wear
+}
+
 android {
     compileSdkVersion 21
     buildToolsVersion "21.1.1"
     defaultPublishConfig "phoneRelease"
+    publishNonDefault true
 
     defaultConfig {
         //Comment applicationId for plugins/applications that use AWARE as a library
@@ -34,15 +39,18 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+
     compile 'com.android.support:appcompat-v7:21.0.2'
     compile 'com.android.support:gridlayout-v7:21.0.2'
     compile 'com.android.support:cardview-v7:21.0.2'
     compile 'com.github.machinarius:preferencefragment:0.1.1'
+
     phoneCompile 'com.android.support:support-v4:21.0.2'
     phoneCompile 'com.google.android.gms:play-services:6.1.71'
+
     wearCompile 'com.android.support:support-v13:21.0.2'
     wearCompile 'com.google.android.gms:play-services-wearable:6.1.71'
     wearCompile 'com.google.android.support:wearable:1.0.0'
 
-    wearApp project(':aware-wear')
+    phoneWearApp project(path: ':aware-wear', configuration:'wearRelease')
 }

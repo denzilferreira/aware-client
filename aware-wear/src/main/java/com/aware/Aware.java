@@ -208,7 +208,7 @@ public class Aware extends Service {
     
     /**
      * Get the singleton instance to the AWARE framework
-     * @return {@link com.aware.Aware} obj
+     * @return {@link Aware} obj
      */
     public static Aware getService() {
         if( awareSrv == null ) awareSrv = new Aware();
@@ -355,7 +355,7 @@ public class Aware extends Service {
     //TODO: check if there is a better way to detect a watch... for now we are looking for a W on the release name (W, W.1, W.2...)
     public static boolean is_watch(Context c) {
         boolean is_watch = false;
-        Cursor device = c.getContentResolver().query(Aware_Device.CONTENT_URI, null, null, null, "1 LIMIT 1");
+        Cursor device = c.getContentResolver().query(Aware_Provider.Aware_Device.CONTENT_URI, null, null, null, "1 LIMIT 1");
         if( device != null && device.moveToFirst() ) {
             is_watch = device.getString(device.getColumnIndex(Aware_Device.RELEASE)).contains("W");
         }
@@ -1191,7 +1191,7 @@ public class Aware extends Service {
      * - ACTION_AWARE_SYNC_DATA = upload data to remote webservice server.
      * - ACTION_AWARE_CLEAR_DATA = clears local device's AWARE modules databases.
      * - ACTION_AWARE_REFRESH - apply changes to the configuration.
-     * - {@link android.app.DownloadManager#ACTION_DOWNLOAD_COMPLETE} - when AWARE framework update has been downloaded.
+     * - {@link DownloadManager#ACTION_DOWNLOAD_COMPLETE} - when AWARE framework update has been downloaded.
      * @author denzil
      *
      */
@@ -1214,7 +1214,7 @@ public class Aware extends Service {
             }
         	
             if( intent.getAction().equals(Aware.ACTION_AWARE_CLEAR_DATA) ) {
-                context.getContentResolver().delete(Aware_Device.CONTENT_URI, null, null);
+                context.getContentResolver().delete(Aware_Provider.Aware_Device.CONTENT_URI, null, null);
                 if( Aware.DEBUG ) Log.d(TAG,"Cleared " + CONTEXT_URIS[0]);
                 
                 //Clear remotely if webservices are active

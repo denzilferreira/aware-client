@@ -166,7 +166,7 @@ public class Network extends Aware_Sensor {
 	private static TelephonyManager teleManager = null; //tracks phone network availability
 	
 	private PhoneStateListener phoneListener = new PhoneStateListener() {
-		public void onServiceStateChanged(ServiceState serviceState) {
+		public void onServiceStateChanged(android.telephony.ServiceState serviceState) {
 			if( serviceState.getState() == ServiceState.STATE_POWER_OFF ) {
 				ContentValues mobile = new ContentValues();
                 mobile.put(Network_Data.TIMESTAMP, System.currentTimeMillis());

@@ -56,7 +56,7 @@ public class Encrypter {
      * One-way string hashing using SHA1
      * @param clear string
      * @return encrypted string
-     * @throws java.security.NoSuchAlgorithmException
+     * @throws NoSuchAlgorithmException
      */
     public static String hashSHA1( String clear ) {
     	if (clear == null ) return "";
@@ -82,13 +82,13 @@ public class Encrypter {
      * One-way string hashing using MD5
      * @param clear
      * @return
-     * @throws java.security.NoSuchAlgorithmException
+     * @throws NoSuchAlgorithmException
      */
     public static final String hashMD5(String clear) {
     	if( clear == null ) return "";
         try {
             // Create MD5 Hash
-            MessageDigest digest = MessageDigest.getInstance("MD5");
+            MessageDigest digest = java.security.MessageDigest.getInstance("MD5");
             digest.update(clear.getBytes());
             byte messageDigest[] = digest.digest();
 

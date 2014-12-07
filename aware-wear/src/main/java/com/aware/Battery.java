@@ -96,12 +96,12 @@ public class Battery extends Aware_Sensor {
 	public static final String ACTION_AWARE_PHONE_REBOOT = "ACTION_AWARE_PHONE_REBOOT";
 	
 	/**
-	 * {@link com.aware.providers.Battery_Provider.Battery_Data#STATUS} Phone shutdown
+	 * {@link Battery_Data#STATUS} Phone shutdown
 	 */
 	public static final int STATUS_PHONE_SHUTDOWN = -1;
 	
 	/**
-     * {@link com.aware.providers.Battery_Provider.Battery_Data#STATUS} Phone rebooted
+     * {@link Battery_Data#STATUS} Phone rebooted
      */
     public static final int STATUS_PHONE_REBOOT = -2;
     

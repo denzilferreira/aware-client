@@ -206,7 +206,7 @@ public class WiFi extends Aware_Sensor {
     /**
      * Background service for WiFi module
      * - ACTION_AWARE_WIFI_REQUEST_SCAN
-     * - {@link android.net.wifi.WifiManager#SCAN_RESULTS_AVAILABLE_ACTION}
+     * - {@link WifiManager#SCAN_RESULTS_AVAILABLE_ACTION}
      * - ACTION_AWARE_WEBSERVICE
      * 
      * @author df

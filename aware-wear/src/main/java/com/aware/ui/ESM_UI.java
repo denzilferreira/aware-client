@@ -174,7 +174,7 @@ public class ESM_UI extends DialogFragment {
 	                                public void onClick(View v) {
 	                                    final Dialog editOther = new Dialog(getActivity());
 	                                	editOther.setTitle("Can you be more specific, please?");
-	                                	editOther.getWindow().setType(LayoutParams.TYPE_SYSTEM_ALERT);
+	                                	editOther.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
 	                                	editOther.getWindow().setGravity(Gravity.TOP);
                                         editOther.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
 	                                	
@@ -259,7 +259,7 @@ public class ESM_UI extends DialogFragment {
 	                                            public void onClick(View v) {
 	                                            	final Dialog editOther = new Dialog(getActivity());
 	        	                                	editOther.setTitle("Can you be more specific, please?");
-	        	                                	editOther.getWindow().setType(LayoutParams.TYPE_SYSTEM_ALERT);
+	        	                                	editOther.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
 	        	                                	editOther.getWindow().setGravity(Gravity.TOP);
 	        	                                	editOther.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
 	        	                                	

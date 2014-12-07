@@ -2,95 +2,32 @@
 <items version="2" >
 
     <item
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.2/classes.jar"
+        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.support/wearable/1.0.0/classes.jar"
         jumboMode="false"
         revision="21.1.1"
-        sha1="d1bf02de1c56d942e7a9d093b8610ba1ef4128e3">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/pre-dexed/release/classes-477a0ec8e708cf0af32b2552839424462826648a.jar" />
+        sha1="6804efbb78d7facc2e1aa107c7342bee83afae45">
+        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-4088756656a5ab171b9960b832d70997f7f1e820.jar" />
     </item>
     <item
         jar="/Users/denzil/sdk/extras/android/m2repository/com/android/support/support-annotations/21.0.2/support-annotations-21.0.2.jar"
         jumboMode="false"
         revision="21.1.1"
         sha1="99373741f99a0556ee293c41e8faa1ca3ae8a4e6">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/pre-dexed/release/support-annotations-21.0.2-2e9dcbe148a4b08eb37371c2d0f3707403d512e4.jar" />
+        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/support-annotations-21.0.2-2e9dcbe148a4b08eb37371c2d0f3707403d512e4.jar" />
     </item>
     <item
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/exploded-aar/com.android.support/appcompat-v7/21.0.2/classes.jar"
+        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-wearable/6.1.71/classes.jar"
         jumboMode="false"
         revision="21.1.1"
-        sha1="7ae2d38807a43b2f2185ff4089a92c790b579e54">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/pre-dexed/release/classes-f8fe8f0debb3b2d6caa8c299f23fdc1fa1887111.jar" />
+        sha1="4ece008bb37e92b9323ee6259cbf4d4583052f9e">
+        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-03fe9f2ad32ee23b773ea5baeca4eb0659d2d70f.jar" />
     </item>
     <item
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/cardview-v7/21.0.2/classes.jar"
+        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/support-v13/21.0.2/libs/internal_impl-21.0.2.jar"
         jumboMode="false"
         revision="21.1.1"
-        sha1="b017100da14f9c158c9f5f2f508333c224b24a7c">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-db6a720a94702965de1106f7736e5621c77905b0.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/libs/mqtt-client-0.4.0.jar"
-        jumboMode="false"
-        revision="21.1.1"
-        sha1="02315d1759d01e52495e040e6e538aaa2e91c7f6">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/mqtt-client-0.4.0-f3946b570454a8db09c083f98a019138cd97ebd2.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/libs/zbar.jar"
-        jumboMode="false"
-        revision="21.1.1"
-        sha1="0a7b88ba1496a0b4af76069ad40dacd3897149e0">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/pre-dexed/release/zbar-4dea6de9f50c90af8fa1f76830563b08a1a4d96f.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/libs/zbar.jar"
-        jumboMode="false"
-        revision="21.1.1"
-        sha1="0a7b88ba1496a0b4af76069ad40dacd3897149e0">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/zbar-e0ccde72f1e7cbb2810b090799ff1e33db5f7ccc.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/appcompat-v7/21.0.2/classes.jar"
-        jumboMode="false"
-        revision="21.1.1"
-        sha1="7ae2d38807a43b2f2185ff4089a92c790b579e54">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-90c2db66f24cf179b25c497111f22a8c8b068e9f.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/exploded-aar/com.android.support/gridlayout-v7/21.0.2/classes.jar"
-        jumboMode="false"
-        revision="21.1.1"
-        sha1="9742ced04aafd9ac97dd2c66c1aa0e32d2ae7e54">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/pre-dexed/release/classes-bfdec5af7563980914ad9ce153abe4c3c84181c6.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.2/libs/internal_impl-21.0.2.jar"
-        jumboMode="false"
-        revision="21.1.1"
-        sha1="962e8b12569c56dbdcf8367eb4eac8bb129cd18f">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/pre-dexed/release/internal_impl-21.0.2-ba0d800eb71d89f8679619f111511fca74f616a0.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/exploded-aar/com.android.support/cardview-v7/21.0.2/classes.jar"
-        jumboMode="false"
-        revision="21.1.1"
-        sha1="b017100da14f9c158c9f5f2f508333c224b24a7c">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/pre-dexed/release/classes-8b3a324a47a3584ad20e4c931e9f413e66fbd1c1.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services/6.1.71/classes.jar"
-        jumboMode="false"
-        revision="21.1.1"
-        sha1="0f6d5c1ef2e982c3b7858408e3df389cf5d202da">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-aea938fb30711b198b397b447451b71eebfe1367.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/exploded-aar/com.android.support/support-v13/20.0.0/classes.jar"
-        jumboMode="false"
-        revision="21.1.1"
-        sha1="e128103d5281ddd26195a7f980b36d0d005a4e56">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/pre-dexed/release/classes-e1e02a3846afbe88ecb3e0c3dfafd9c7b2d3f492.jar" />
+        sha1="9346da9fb778af9e451211bbc3541daced174ba7">
+        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/internal_impl-21.0.2-eb75e1a4fe0f17a8c08f2bbcf9df06e35a3cdb6a.jar" />
     </item>
     <item
         jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/gridlayout-v7/21.0.2/classes.jar"
@@ -107,11 +44,25 @@
         <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/internal_impl-21.0.2-bbaa89a88b8bf86f3386503749f8b27cc2e47f2b.jar" />
     </item>
     <item
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/exploded-aar/com.google.android.gms/play-services-wearable/6.1.71/classes.jar"
+        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/libs/mqtt-client-0.4.0.jar"
         jumboMode="false"
         revision="21.1.1"
-        sha1="4ece008bb37e92b9323ee6259cbf4d4583052f9e">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/pre-dexed/release/classes-e2feb4eb886a922df075ae10ae985513e7e3b9aa.jar" />
+        sha1="02315d1759d01e52495e040e6e538aaa2e91c7f6">
+        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/mqtt-client-0.4.0-f3946b570454a8db09c083f98a019138cd97ebd2.jar" />
+    </item>
+    <item
+        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/cardview-v7/21.0.2/classes.jar"
+        jumboMode="false"
+        revision="21.1.1"
+        sha1="b017100da14f9c158c9f5f2f508333c224b24a7c">
+        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-db6a720a94702965de1106f7736e5621c77905b0.jar" />
+    </item>
+    <item
+        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/libs/zbar.jar"
+        jumboMode="false"
+        revision="21.1.1"
+        sha1="0a7b88ba1496a0b4af76069ad40dacd3897149e0">
+        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/zbar-e0ccde72f1e7cbb2810b090799ff1e33db5f7ccc.jar" />
     </item>
     <item
         jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.2/classes.jar"
@@ -121,18 +72,18 @@
         <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-dc6504b74dfb970e91bc417ea822f6070bcbfcac.jar" />
     </item>
     <item
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/exploded-aar/com.google.android.support/wearable/1.0.0/classes.jar"
+        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/appcompat-v7/21.0.2/classes.jar"
         jumboMode="false"
         revision="21.1.1"
-        sha1="6804efbb78d7facc2e1aa107c7342bee83afae45">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/pre-dexed/release/classes-1e8391d8b0428e1c97548e83c38301afaab9a6f8.jar" />
+        sha1="7ae2d38807a43b2f2185ff4089a92c790b579e54">
+        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-90c2db66f24cf179b25c497111f22a8c8b068e9f.jar" />
     </item>
     <item
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/exploded-aar/com.github.machinarius/preferencefragment/0.1.1/classes.jar"
+        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/support-v13/21.0.2/classes.jar"
         jumboMode="false"
         revision="21.1.1"
-        sha1="648463e00c6883d01b6c11a6781776203334b6fc">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/pre-dexed/release/classes-9dae411ab2591d2422bd634d6d0b314e24f43101.jar" />
+        sha1="61965ae058916e6a57950dd61b0164dc866af19a">
+        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-5414154b3dd57ff031f428e7f82435e0cd111ee3.jar" />
     </item>
     <item
         jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.github.machinarius/preferencefragment/0.1.1/classes.jar"
@@ -142,18 +93,11 @@
         <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-d7a672e71036fb579943b495217062487cafb645.jar" />
     </item>
     <item
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/libs/mqtt-client-0.4.0.jar"
+        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services/6.1.71/classes.jar"
         jumboMode="false"
         revision="21.1.1"
-        sha1="02315d1759d01e52495e040e6e538aaa2e91c7f6">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/pre-dexed/release/mqtt-client-0.4.0-e0700772598c1f309e02d1f4accba5a9d5b7957b.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/exploded-aar/com.android.support/support-v13/20.0.0/libs/internal_impl-20.0.0.jar"
-        jumboMode="false"
-        revision="21.1.1"
-        sha1="27bbd3982cdfe4468a9bf99c8c773734a9049e33">
-        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-wear/build/intermediates/pre-dexed/release/internal_impl-20.0.0-491eea915406e7d5c145f2092b66a15c6170e895.jar" />
+        sha1="0f6d5c1ef2e982c3b7858408e3df389cf5d202da">
+        <dex dex="/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-aea938fb30711b198b397b447451b71eebfe1367.jar" />
     </item>
 
 </items>

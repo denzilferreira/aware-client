@@ -118,22 +118,22 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	/**
 	 * Receive broadcast event: request to publish message to a topic <br/>
 	 * Extras: <br/>
-	 * {@link com.aware.Mqtt#EXTRA_TOPIC} <br/>
-	 * {@link com.aware.Mqtt#EXTRA_MESSAGE}
+	 * {@link Mqtt#EXTRA_TOPIC} <br/>
+	 * {@link Mqtt#EXTRA_MESSAGE}
 	 */
 	public static final String ACTION_AWARE_MQTT_MSG_PUBLISH = "ACTION_AWARE_MQTT_MSG_PUBLISH";
 	
 	/**
 	 * Receive broadcast event: subscribe to a topic.
 	 * Extras: <br/>
-	 * {@link com.aware.Mqtt#EXTRA_TOPIC}
+	 * {@link Mqtt#EXTRA_TOPIC}
 	 */
 	public static final String ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE = "ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE";
 	
 	/**
 	 * Receive broadcast event: unsubscribe from a topic.
 	 * Extras: <br/>
-	 * {@link com.aware.Mqtt#EXTRA_TOPIC}
+	 * {@link Mqtt#EXTRA_TOPIC}
 	 */
 	public static final String ACTION_AWARE_MQTT_TOPIC_UNSUBSCRIBE = "ACTION_AWARE_MQTT_TOPIC_UNSUBSCRIBE";
 	

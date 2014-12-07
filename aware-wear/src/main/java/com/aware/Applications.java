@@ -106,8 +106,8 @@ public class Applications extends AccessibilityService {
     
     /**
      * Monitors for events of: <br/>
-     * {@link android.view.accessibility.AccessibilityEvent#TYPE_WINDOW_STATE_CHANGED}
-     * {@link android.view.accessibility.AccessibilityEvent#TYPE_NOTIFICATION_STATE_CHANGED}
+     * {@link AccessibilityEvent#TYPE_WINDOW_STATE_CHANGED}
+     * {@link AccessibilityEvent#TYPE_NOTIFICATION_STATE_CHANGED}
      */
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
@@ -485,7 +485,7 @@ public class Applications extends AccessibilityService {
                                 if(Aware.DEBUG) Log.d(TAG,e.getMessage());
                             }
                         }
-                    }catch(NameNotFoundException e) {
+                    }catch(PackageManager.NameNotFoundException e) {
                     }catch( IllegalStateException e ) {
                     } finally {
                     	if( appUnclosed != null && ! appUnclosed.isClosed() ) appUnclosed.close();

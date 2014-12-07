@@ -1,1 +1,2 @@
-include ':aware-core', ':aware-wear'
+include ':aware-core'
+include ':aware-wear'

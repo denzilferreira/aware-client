@@ -113,7 +113,7 @@ public class Installations extends Aware_Sensor {
     
     /**
      * Singleton instance to this service
-     * @return {@link com.aware.Installations} obj
+     * @return {@link Installations} obj
      */
     public static Installations getService() {
         if( installationsSrv == null ) installationsSrv = new Installations();
@@ -130,7 +130,7 @@ public class Installations extends Aware_Sensor {
     	TABLES_FIELDS = Installations_Provider.TABLES_FIELDS;
     	CONTEXT_URIS = new Uri[]{ Installations_Data.CONTENT_URI };
         
-    	CONTEXT_PRODUCER = new ContextProducer() {
+    	CONTEXT_PRODUCER = new Aware_Sensor.ContextProducer() {
             @Override
             public void onContext() {
                 Intent sharedContext = new Intent(current_context);
@@ -170,9 +170,9 @@ public class Installations extends Aware_Sensor {
     /**
      * BroadcastReceiver for Installations module
      * - Monitor for changes in installations on the device: 
-     * {@link android.content.Intent#ACTION_PACKAGE_ADDED} <br/>
-     * {@link android.content.Intent#ACTION_PACKAGE_REPLACED} <br/>
-     * {@link android.content.Intent#ACTION_PACKAGE_REMOVED} <br/>
+     * {@link Intent#ACTION_PACKAGE_ADDED} <br/>
+     * {@link Intent#ACTION_PACKAGE_REPLACED} <br/>
+     * {@link Intent#ACTION_PACKAGE_REMOVED} <br/>
      * @author denzil
      */
     public static class Packages_Monitor extends BroadcastReceiver {

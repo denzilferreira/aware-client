@@ -19,8 +19,6 @@
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
     <uses-permission android:name="android.permission.CAMERA" />
 
-    <uses-feature android:name="android.hardware.type.watch" />
-
     <permission
         android:name="com.aware.READ_CONTEXT_DATA"
         android:description="@string/read_permission"

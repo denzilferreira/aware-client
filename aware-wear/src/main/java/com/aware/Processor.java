@@ -145,7 +145,7 @@ public class Processor extends Aware_Sensor {
     
     /**
      * Singleton instance of this service
-     * @return {@link com.aware.Processor} obj
+     * @return {@link Processor} obj
      */
     public static Processor getService() {
         if( processorSrv == null ) processorSrv = new Processor();
@@ -195,7 +195,7 @@ public class Processor extends Aware_Sensor {
      * [user]
      * [system]
      * [idle]
-     * @return {@link java.util.HashMap}<String, Integer> with user, system and idle keys and values
+     * @return {@link HashMap}<String, Integer> with user, system and idle keys and values
      */
     public static HashMap<String, Integer> getProcessorLoad() {
         HashMap<String, Integer> processor = new HashMap<String, Integer>();
