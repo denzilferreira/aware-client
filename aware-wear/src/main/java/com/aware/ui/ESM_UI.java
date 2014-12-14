@@ -10,11 +10,6 @@ See the GNU General Public License for more details: http://www.gnu.org/licenses
 */
 package com.aware.ui;
 
-import java.util.ArrayList;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ContentValues;
@@ -47,6 +42,11 @@ import com.aware.Aware_Preferences;
 import com.aware.ESM;
 import com.aware.R;
 import com.aware.providers.ESM_Provider.ESM_Data;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.util.ArrayList;
 
 /**
  * Loads any ESM from the database and displays it on the screen as a system alert.
@@ -323,7 +323,8 @@ public class ESM_UI extends DialogFragment {
 			                    rowData.put(ESM_Data.STATUS, ESM.STATUS_ANSWERED);
 			                    
 			                    sContext.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm_id, null);    
-			                    
+			                    selected_options.clear();
+
 			                    Intent answer = new Intent(ESM.ACTION_AWARE_ESM_ANSWERED);
 			                    getActivity().sendBroadcast(answer);
 			                    
@@ -383,7 +384,7 @@ public class ESM_UI extends DialogFragment {
 						final JSONArray answers = new JSONArray(visible_esm.getString(visible_esm.getColumnIndex(ESM_Data.QUICK_ANSWERS)));
 					    final LinearLayout answersHolder = (LinearLayout) layout.findViewById(R.id.esm_answers);
 					    
-					    //If we have more than 3 possibilities, better that the UI is vertical for UX
+					    //If we have more than 3 possibilities, use a vertical layout for UX
                         if( answers.length() > 3 ) {
                         	answersHolder.setOrientation(LinearLayout.VERTICAL);
                         }
