@@ -1,0 +1,14 @@
+/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/classes/wear/release
+/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/internal_impl-21.0.2-eb75e1a4fe0f17a8c08f2bbcf9df06e35a3cdb6a.jar
+/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/support-annotations-21.0.2-2e9dcbe148a4b08eb37371c2d0f3707403d512e4.jar
+/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/zbar-e0ccde72f1e7cbb2810b090799ff1e33db5f7ccc.jar
+/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-d7a672e71036fb579943b495217062487cafb645.jar
+/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-5414154b3dd57ff031f428e7f82435e0cd111ee3.jar
+/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-db6a720a94702965de1106f7736e5621c77905b0.jar
+/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-c43a758a4c06873aac458909bbe2adda6bfb69ef.jar
+/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/internal_impl-21.0.2-bbaa89a88b8bf86f3386503749f8b27cc2e47f2b.jar
+/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/mqtt-client-0.4.0-f3946b570454a8db09c083f98a019138cd97ebd2.jar
+/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-4088756656a5ab171b9960b832d70997f7f1e820.jar
+/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-90c2db66f24cf179b25c497111f22a8c8b068e9f.jar
+/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-dc6504b74dfb970e91bc417ea822f6070bcbfcac.jar
+/Users/denzil/Dropbox/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-03fe9f2ad32ee23b773ea5baeca4eb0659d2d70f.jar

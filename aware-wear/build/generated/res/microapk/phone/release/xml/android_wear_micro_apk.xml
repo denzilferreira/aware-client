@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wearableApp package="com.aware">
+    <versionCode>352</versionCode>
+    <versionName>3.2</versionName>
+    <rawPathResId>android_wear_micro_apk</rawPathResId>
+</wearableApp>

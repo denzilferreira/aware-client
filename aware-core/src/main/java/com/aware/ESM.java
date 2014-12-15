@@ -302,8 +302,6 @@ public class ESM extends Aware_Sensor {
                             if( Aware.DEBUG ) Log.d(TAG, "ESM:"+ rowData.toString());
                         }catch( SQLiteException e ) {
                             if(Aware.DEBUG) Log.d(TAG,e.getMessage());
-                        }catch( SQLException e ) {
-                            if(Aware.DEBUG) Log.d(TAG,e.getMessage());
                         }
                     }
                     

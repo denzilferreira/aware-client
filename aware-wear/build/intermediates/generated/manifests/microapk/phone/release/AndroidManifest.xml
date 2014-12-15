@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest package="" xmlns:android="http://schemas.android.com/apk/res/android">
+            <uses-sdk android:minSdkVersion="10" android:targetSdkVersion="21"/>
+    <application>
+        <meta-data android:name="com.google.android.wearable.beta.app"
+                   android:resource="@xml/android_wear_micro_apk" />
+   </application>
+</manifest>
