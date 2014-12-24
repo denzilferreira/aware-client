@@ -104,13 +104,13 @@ public class Aware extends Service {
     public static final String ACTION_AWARE_SYNC_DATA = "ACTION_AWARE_SYNC_DATA";
     
     /**
-     * Received broadcast on all modules<br/>
+     * Received broadcast on all modules
      * - Cleans the data collected on the device
      */
     public static final String ACTION_AWARE_CLEAR_DATA = "ACTION_AWARE_CLEAR_DATA";
     
     /**
-     * Received broadcast: refresh the framework active sensors.<br/>
+     * Received broadcast: refresh the framework active sensors.
      */
     public static final String ACTION_AWARE_REFRESH = "ACTION_AWARE_REFRESH";
     
@@ -197,7 +197,7 @@ public class Aware extends Service {
     private final String PREF_FREQUENCY_WATCHDOG = "frequency_watchdog";
     private final String PREF_LAST_UPDATE = "last_update";
     private final String PREF_LAST_SYNC = "last_sync";
-    private final int CONST_FREQUENCY_WATCHDOG = 300;
+    private final int CONST_FREQUENCY_WATCHDOG = 5 * 60; //5 minutes check
     
     private SharedPreferences aware_preferences;
     
@@ -472,7 +472,7 @@ public class Aware extends Service {
     }
     
     /**
-     * Starts a plugin. Expects the package name of the plugin.<br/>
+     * Starts a plugin. Expects the package name of the plugin.
      * It checks if the plugin does exist on the phone. If it doesn't, it will request the user to install it automatically.
      * @param context
      * @param package_name

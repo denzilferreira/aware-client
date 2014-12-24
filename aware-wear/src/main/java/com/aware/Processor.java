@@ -10,13 +10,6 @@ See the GNU General Public License for more details: http://www.gnu.org/licenses
 */
 package com.aware;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
@@ -31,6 +24,13 @@ import android.util.Log;
 import com.aware.providers.Processor_Provider;
 import com.aware.providers.Processor_Provider.Processor_Data;
 import com.aware.utils.Aware_Sensor;
+
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.HashMap;
 
 /**
  * Service that logs CPU activity on the device
@@ -195,7 +195,7 @@ public class Processor extends Aware_Sensor {
      * [user]
      * [system]
      * [idle]
-     * @return {@link HashMap}<String, Integer> with user, system and idle keys and values
+     * @return {@link HashMap} with user, system and idle keys and values
      */
     public static HashMap<String, Integer> getProcessorLoad() {
         HashMap<String, Integer> processor = new HashMap<String, Integer>();

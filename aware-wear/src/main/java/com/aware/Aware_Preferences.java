@@ -111,10 +111,10 @@ public class Aware_Preferences extends Aware_Activity {
     public static final String STATUS_ACCELEROMETER = "status_accelerometer";
     
     /**
-     * Accelerometer frequency in milliseconds: e.g., <br/>
-     * 0 - fastest <br/>
-     * 20000 - game <br/>
-     * 60000 - UI <br/>
+     * Accelerometer frequency in milliseconds: e.g., 
+     * 0 - fastest 
+     * 20000 - game 
+     * 60000 - UI 
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_ACCELEROMETER = "frequency_accelerometer";
@@ -180,10 +180,10 @@ public class Aware_Preferences extends Aware_Activity {
     public static final String STATUS_GRAVITY = "status_gravity";
     
     /**
-     * Gravity frequency in milliseconds: e.g., <br/>
-     * 0 - fastest <br/>
-     * 20000 - game <br/>
-     * 60000 - UI <br/>
+     * Gravity frequency in milliseconds: e.g., 
+     * 0 - fastest 
+     * 20000 - game 
+     * 60000 - UI 
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_GRAVITY = "frequency_gravity";
@@ -194,10 +194,10 @@ public class Aware_Preferences extends Aware_Activity {
     public static final String STATUS_GYROSCOPE = "status_gyroscope";
     
     /**
-     * Gyroscope frequency in milliseconds: e.g., <br/>
-     * 0 - fastest <br/>
-     * 20000 - game <br/>
-     * 60000 - UI <br/>
+     * Gyroscope frequency in milliseconds: e.g., 
+     * 0 - fastest 
+     * 20000 - game 
+     * 60000 - UI 
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_GYROSCOPE = "frequency_gyroscope";
@@ -243,10 +243,10 @@ public class Aware_Preferences extends Aware_Activity {
     public static final String STATUS_LIGHT = "status_light";
     
     /**
-     * Light frequency in milliseconds: e.g., <br/>
-     * 0 - fastest <br/>
-     * 20000 - game <br/>
-     * 60000 - UI <br/>
+     * Light frequency in milliseconds: e.g., 
+     * 0 - fastest 
+     * 20000 - game 
+     * 60000 - UI 
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_LIGHT = "frequency_light";
@@ -257,10 +257,10 @@ public class Aware_Preferences extends Aware_Activity {
     public static final String STATUS_LINEAR_ACCELEROMETER = "status_linear_accelerometer";
     
     /**
-     * Linear accelerometer frequency in milliseconds: e.g., <br/>
-     * 0 - fastest <br/>
-     * 20000 - game <br/>
-     * 60000 - UI <br/>
+     * Linear accelerometer frequency in milliseconds: e.g., 
+     * 0 - fastest 
+     * 20000 - game 
+     * 60000 - UI 
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_LINEAR_ACCELEROMETER = "frequency_linear_accelerometer";
@@ -286,10 +286,10 @@ public class Aware_Preferences extends Aware_Activity {
     public static final String STATUS_MAGNETOMETER = "status_magnetometer";
     
     /**
-     * Magnetometer frequency in milliseconds: e.g., <br/>
-     * 0 - fastest <br/>
-     * 20000 - game <br/>
-     * 60000 - UI <br/>
+     * Magnetometer frequency in milliseconds: e.g., 
+     * 0 - fastest 
+     * 20000 - game 
+     * 60000 - UI 
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_MAGNETOMETER = "frequency_magnetometer";
@@ -300,10 +300,10 @@ public class Aware_Preferences extends Aware_Activity {
     public static final String STATUS_BAROMETER = "status_barometer";
     
     /**
-     * Barometer frequency in milliseconds: e.g., <br/>
-     * 0 - fastest <br/>
-     * 20000 - game <br/>
-     * 60000 - UI <br/>
+     * Barometer frequency in milliseconds: e.g., 
+     * 0 - fastest 
+     * 20000 - game 
+     * 60000 - UI 
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_BAROMETER = "frequency_barometer";
@@ -334,10 +334,10 @@ public class Aware_Preferences extends Aware_Activity {
     public static final String STATUS_PROXIMITY = "status_proximity";
     
     /**
-     * Proximity frequency in milliseconds: e.g., <br/>
-     * 0 - fastest <br/>
-     * 20000 - game <br/>
-     * 60000 - UI <br/>
+     * Proximity frequency in milliseconds: e.g., 
+     * 0 - fastest 
+     * 20000 - game 
+     * 60000 - UI 
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_PROXIMITY = "frequency_proximity";
@@ -348,10 +348,10 @@ public class Aware_Preferences extends Aware_Activity {
     public static final String STATUS_ROTATION = "status_rotation";
     
     /**
-     * Rotation frequency in milliseconds: e.g., <br/>
-     * 0 - fastest <br/>
-     * 20000 - game <br/>
-     * 60000 - UI <br/>
+     * Rotation frequency in milliseconds: e.g., 
+     * 0 - fastest 
+     * 20000 - game 
+     * 60000 - UI 
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_ROTATION = "frequency_rotation";
@@ -367,10 +367,10 @@ public class Aware_Preferences extends Aware_Activity {
     public static final String STATUS_TEMPERATURE = "status_temperature";
     
     /**
-     * Temperature frequency in milliseconds: e.g., <br/>
-     * 0 - fastest <br/>
-     * 20000 - game <br/>
-     * 60000 - UI <br/>
+     * Temperature frequency in milliseconds: e.g., 
+     * 0 - fastest 
+     * 20000 - game 
+     * 60000 - UI 
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_TEMPERATURE = "frequency_temperature";
@@ -426,16 +426,16 @@ public class Aware_Preferences extends Aware_Activity {
     public static final String MQTT_KEEP_ALIVE = "mqtt_keep_alive";
     
     /**
-     * MQTT QoS (default = 2)<br/>
-     * 0 - no guarantee <br/>
-     * 1 - at least once <br/>
+     * MQTT QoS (default = 2)
+     * 0 - no guarantee 
+     * 1 - at least once 
      * 2 - exactly once
      */
     public static final String MQTT_QOS = "mqtt_qos";
     
     /**
-     * MQTT Connection protocol (default = tcp)<br/>
-     * tcp - unsecure <br/>
+     * MQTT Connection protocol (default = tcp)
+     * tcp - unsecure 
      * ssl - secure 
      */
     public static final String MQTT_PROTOCOL = "mqtt_protocol";
@@ -461,10 +461,10 @@ public class Aware_Preferences extends Aware_Activity {
     public static final String FREQUENCY_WEBSERVICE = "frequency_webservice";
     
     /**
-     * How frequently to clean old data?<br/>
-     * 0 - never<br/>
-     * 1 - weekly<br/>
-     * 2 - monthly<br/>
+     * How frequently to clean old data?
+     * 0 - never
+     * 1 - weekly
+     * 2 - monthly
      */
     public static final String FREQUENCY_CLEAN_OLD_DATA = "frequency_clean_old_data";
 

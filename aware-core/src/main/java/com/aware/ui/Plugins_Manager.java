@@ -391,7 +391,7 @@ public class Plugins_Manager extends Aware_Activity {
 	}
 	
     /**
-     * Checks for changes on the server side and updates database.<br/>
+     * Checks for changes on the server side and updates database.
      * If changes were detected, result is true and a refresh of UI is requested.
      * @author denzil
      */

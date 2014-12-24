@@ -170,9 +170,9 @@ public class Installations extends Aware_Sensor {
     /**
      * BroadcastReceiver for Installations module
      * - Monitor for changes in installations on the device: 
-     * {@link Intent#ACTION_PACKAGE_ADDED} <br/>
-     * {@link Intent#ACTION_PACKAGE_REPLACED} <br/>
-     * {@link Intent#ACTION_PACKAGE_REMOVED} <br/>
+     * {@link Intent#ACTION_PACKAGE_ADDED} 
+     * {@link Intent#ACTION_PACKAGE_REPLACED} 
+     * {@link Intent#ACTION_PACKAGE_REMOVED} 
      * @author denzil
      */
     public static class Packages_Monitor extends BroadcastReceiver {

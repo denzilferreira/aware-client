@@ -15,8 +15,8 @@ public final class R {
 		public static final int circle_radius = 0x7f01002c;
 		public static final int circle_radius_pressed = 0x7f01002d;
 		public static final int layout_box = 0x7f01001f;
-		public static final int rectLayout = 0x7f0100d9;
-		public static final int roundLayout = 0x7f0100da;
+		public static final int rectLayout = 0x7f0100ce;
+		public static final int roundLayout = 0x7f0100cf;
 		public static final int shadow_width = 0x7f010031;
 		public static final int update_interval = 0x7f010033;
 	}
@@ -142,19 +142,19 @@ public final class R {
 		public static final int ic_full_sad = 0x7f0200b5;
 	}
 	public static final class id {
-		public static final int action_error = 0x7f0b0064;
-		public static final int action_success = 0x7f0b0066;
+		public static final int action_error = 0x7f0b0063;
+		public static final int action_success = 0x7f0b0065;
 		public static final int all = 0x7f0b0013;
-		public static final int animation = 0x7f0b0067;
+		public static final int animation = 0x7f0b0066;
 		public static final int bottom = 0x7f0b0014;
-		public static final int dismiss_overlay_button = 0x7f0b006a;
-		public static final int dismiss_overlay_explain = 0x7f0b0069;
-		public static final int error_message = 0x7f0b0065;
+		public static final int dismiss_overlay_button = 0x7f0b0069;
+		public static final int dismiss_overlay_explain = 0x7f0b0068;
+		public static final int error_message = 0x7f0b0064;
 		public static final int left = 0x7f0b0015;
-		public static final int message = 0x7f0b0068;
+		public static final int message = 0x7f0b0067;
 		public static final int right = 0x7f0b0016;
-		public static final int text = 0x7f0b0092;
-		public static final int title = 0x7f0b003c;
+		public static final int text = 0x7f0b0091;
+		public static final int title = 0x7f0b003b;
 		public static final int top = 0x7f0b0017;
 	}
 	public static final class layout {
@@ -193,7 +193,7 @@ public final class R {
 		public static final int CircledImageView_shadow_width = 7;
 		public static final int[] DelayedConfirmationView = { 0x7f010033 };
 		public static final int DelayedConfirmationView_update_interval = 0;
-		public static final int[] WatchViewStub = { 0x7f0100d9, 0x7f0100da };
+		public static final int[] WatchViewStub = { 0x7f0100ce, 0x7f0100cf };
 		public static final int WatchViewStub_rectLayout = 0;
 		public static final int WatchViewStub_roundLayout = 1;
 	}

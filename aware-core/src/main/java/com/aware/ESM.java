@@ -10,10 +10,6 @@ See the GNU General Public License for more details: http://www.gnu.org/licenses
 */
 package com.aware;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -23,7 +19,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.Binder;
@@ -35,6 +30,10 @@ import com.aware.providers.ESM_Provider;
 import com.aware.providers.ESM_Provider.ESM_Data;
 import com.aware.ui.ESM_Queue;
 import com.aware.utils.Aware_Sensor;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * AWARE ESM module
@@ -113,45 +112,45 @@ public class ESM extends Aware_Sensor {
     public static final int STATUS_SCHEDULED = 5;
     
     /**
-     * ESM Dialog with free text <br/>
+     * ESM Dialog with free text 
      * Example: [{'esm':{'esm_type':1,'esm_title':'ESM Freetext','esm_instructions':'The user can answer an open ended question.','esm_submit':'Next','esm_expiration_threashold':20,'esm_trigger':'esm trigger example'}}]
      */
     public static final int TYPE_ESM_TEXT = 1;
     
     /**
-     * ESM Dialog with radio buttons <br/>
-     * Note: 'Other' will allow free text input from the user<br/>
+     * ESM Dialog with radio buttons 
+     * Note: 'Other' will allow free text input from the user
      * Example: [{'esm':{'esm_type':2,'esm_title':'ESM Radio','esm_instructions':'The user can only choose one option','esm_radios':['Option one','Option two','Other'],'esm_submit':'Next','esm_expiration_threashold':30,'esm_trigger':'esm trigger example'}}]
      */
     public static final int TYPE_ESM_RADIO = 2;
     
     /**
-     * ESM Dialog with checkboxes <br/>
-     * Note: 'Other' will allow free text input from the user<br/>
+     * ESM Dialog with checkboxes 
+     * Note: 'Other' will allow free text input from the user
      * Example: [{'esm':{'esm_type':3,'esm_title':'ESM Checkbox','esm_instructions':'The user can choose multiple options','esm_checkboxes':['One','Two','Other'],'esm_submit':'Next','esm_expiration_threashold':40,'esm_trigger':'esm trigger example'}}]
      */
     public static final int TYPE_ESM_CHECKBOX = 3;
     
     /**
-     * ESM Dialog with likert scale<br/>
+     * ESM Dialog with likert scale
      * Example: [{'esm':{'esm_type':4,'esm_title':'ESM Likert','esm_instructions':'User rating 1 to 5 or 7 at 1 step increments','esm_likert_max':5,'esm_likert_max_label':'Great','esm_likert_min_label':'Bad','esm_likert_step':1,'esm_submit':'OK','esm_expiration_threashold':50,'esm_trigger':'esm trigger example'}}]
      */
     public static final int TYPE_ESM_LIKERT = 4;
     
     /**
-     * ESM Dialog with quick answers<br/>
+     * ESM Dialog with quick answers
      * Example: [{'esm':{'esm_type':5,'esm_title':'ESM Quick Answer','esm_instructions':'One touch answer','esm_quick_answers':['Yes','No'],'esm_expiration_threashold':60,'esm_trigger':'esm trigger example'}}]
      */
     public static final int TYPE_ESM_QUICK_ANSWERS = 5;
     
     /**
-     * Required String extra for displaying an ESM. It should contain the JSON string that defines the ESM dialog.<br/>
+     * Required String extra for displaying an ESM. It should contain the JSON string that defines the ESM dialog.
      * Examples:<p>
-     * Free text: [{'esm':{'esm_type':1,'esm_title':'ESM Freetext','esm_instructions':'The user can answer an open ended question.','esm_submit':'Next','esm_expiration_threashold':20,'esm_trigger':'esm trigger example'}}]<br/>
-     * Radio: [{'esm':{'esm_type':2,'esm_title':'ESM Radio','esm_instructions':'The user can only choose one option','esm_radios':['Option one','Option two','Other'],'esm_submit':'Next','esm_expiration_threashold':30,'esm_trigger':'esm trigger example'}}]<br/>
-     * Checkbox: [{'esm':{'esm_type':3,'esm_title':'ESM Checkbox','esm_instructions':'The user can choose multiple options','esm_checkboxes':['One','Two','Other'],'esm_submit':'Next','esm_expiration_threashold':40,'esm_trigger':'esm trigger example'}}]<br/>
-     * Likert: [{'esm':{'esm_type':4,'esm_title':'ESM Likert','esm_instructions':'User rating 1 to 5 or 7 at 1 step increments','esm_likert_max':5,'esm_likert_max_label':'Great','esm_likert_min_label':'Bad','esm_likert_step':1,'esm_submit':'OK','esm_expiration_threashold':50,'esm_trigger':'esm trigger example'}}]<br/>
-     * Quick answer: [{'esm':{'esm_type':5,'esm_title':'ESM Quick Answer','esm_instructions':'One touch answer','esm_quick_answers':['Yes','No'],'esm_expiration_threashold':60,'esm_trigger':'esm trigger example'}}]<br/>
+     * Free text: [{'esm':{'esm_type':1,'esm_title':'ESM Freetext','esm_instructions':'The user can answer an open ended question.','esm_submit':'Next','esm_expiration_threashold':20,'esm_trigger':'esm trigger example'}}]
+     * Radio: [{'esm':{'esm_type':2,'esm_title':'ESM Radio','esm_instructions':'The user can only choose one option','esm_radios':['Option one','Option two','Other'],'esm_submit':'Next','esm_expiration_threashold':30,'esm_trigger':'esm trigger example'}}]
+     * Checkbox: [{'esm':{'esm_type':3,'esm_title':'ESM Checkbox','esm_instructions':'The user can choose multiple options','esm_checkboxes':['One','Two','Other'],'esm_submit':'Next','esm_expiration_threashold':40,'esm_trigger':'esm trigger example'}}]
+     * Likert: [{'esm':{'esm_type':4,'esm_title':'ESM Likert','esm_instructions':'User rating 1 to 5 or 7 at 1 step increments','esm_likert_max':5,'esm_likert_max_label':'Great','esm_likert_min_label':'Bad','esm_likert_step':1,'esm_submit':'OK','esm_expiration_threashold':50,'esm_trigger':'esm trigger example'}}]
+     * Quick answer: [{'esm':{'esm_type':5,'esm_title':'ESM Quick Answer','esm_instructions':'One touch answer','esm_quick_answers':['Yes','No'],'esm_expiration_threashold':60,'esm_trigger':'esm trigger example'}}]
      * </p>
      * Furthermore, you can chain several mixed ESM together as a JSON array: [{esm:{}},{esm:{}},...] 
      */
@@ -230,8 +229,8 @@ public class ESM extends Aware_Sensor {
     }
     
     /**
-     * BroadcastReceiver for ESM module <br/>
-     * - Queue ESM: ACTION_AWARE_QUEUE_ESM<br/>
+     * BroadcastReceiver for ESM module 
+     * - Queue ESM: ACTION_AWARE_QUEUE_ESM
      * @author df
      */
     public static class ESMMonitor extends BroadcastReceiver {

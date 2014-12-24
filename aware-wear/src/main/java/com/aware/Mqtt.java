@@ -10,18 +10,6 @@ See the GNU General Public License for more details: http://www.gnu.org/licenses
 */
 package com.aware;
 
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
-import org.eclipse.paho.client.mqttv3.MqttSecurityException;
-import org.eclipse.paho.client.mqttv3.MqttTopic;
-import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
-import org.json.JSONArray;
-
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -41,6 +29,18 @@ import com.aware.providers.Mqtt_Provider;
 import com.aware.providers.Mqtt_Provider.Mqtt_Messages;
 import com.aware.providers.Mqtt_Provider.Mqtt_Subscriptions;
 import com.aware.utils.Aware_Sensor;
+
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
+import org.eclipse.paho.client.mqttv3.MqttSecurityException;
+import org.eclipse.paho.client.mqttv3.MqttTopic;
+import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
+import org.json.JSONArray;
 
 /**
  * Service that connects to the MQTT P2P network for AWARE
@@ -93,8 +93,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	private static String MQTT_QoS = "2";
 	
 	/**
-	 * MQTT connection protocol (default = tcp)<br/>
-	 * Options:<br/>
+	 * MQTT connection protocol (default = tcp)
+	 * Options:
 	 * tcp: unencrypted connection protocol
 	 * ssl: encrypted connection protocol
 	 */
@@ -116,23 +116,23 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	public static final String ACTION_AWARE_MQTT_MSG_RECEIVED = "ACTION_AWARE_MQTT_MSG_RECEIVED";
 	
 	/**
-	 * Receive broadcast event: request to publish message to a topic <br/>
-	 * Extras: <br/>
-	 * {@link Mqtt#EXTRA_TOPIC} <br/>
+	 * Receive broadcast event: request to publish message to a topic
+	 * Extras:
+	 * {@link Mqtt#EXTRA_TOPIC}
 	 * {@link Mqtt#EXTRA_MESSAGE}
 	 */
 	public static final String ACTION_AWARE_MQTT_MSG_PUBLISH = "ACTION_AWARE_MQTT_MSG_PUBLISH";
 	
 	/**
 	 * Receive broadcast event: subscribe to a topic.
-	 * Extras: <br/>
+	 * Extras: 
 	 * {@link Mqtt#EXTRA_TOPIC}
 	 */
 	public static final String ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE = "ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE";
 	
 	/**
 	 * Receive broadcast event: unsubscribe from a topic.
-	 * Extras: <br/>
+	 * Extras: 
 	 * {@link Mqtt#EXTRA_TOPIC}
 	 */
 	public static final String ACTION_AWARE_MQTT_TOPIC_UNSUBSCRIBE = "ACTION_AWARE_MQTT_TOPIC_UNSUBSCRIBE";

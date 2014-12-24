@@ -105,7 +105,7 @@ public class Applications extends AccessibilityService {
     }
     
     /**
-     * Monitors for events of: <br/>
+     * Monitors for events of: 
      * {@link AccessibilityEvent#TYPE_WINDOW_STATE_CHANGED}
      * {@link AccessibilityEvent#TYPE_NOTIFICATION_STATE_CHANGED}
      */
