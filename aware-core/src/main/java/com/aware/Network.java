@@ -156,7 +156,7 @@ public class Network extends Aware_Sensor {
 	public static final int STATUS_OFF = 0;
 	
 	/**
-	 * Extra for ACTION_AWARE_INTERNET_AVAILABLE<br/>
+	 * Extra for ACTION_AWARE_INTERNET_AVAILABLE
 	 * String "internet_access"
 	 */
 	public static final String EXTRA_ACCESS = "internet_access";
