@@ -46,7 +46,7 @@ dependencies {
     wearCompile 'com.android.support:support-v13:21.0.2'
     wearCompile 'com.google.android.gms:play-services-wearable:6.5.87'
     wearCompile 'com.google.android.support:wearable:1.0.0'
-//    phoneWearApp project(path: ':aware-wear', configuration: 'wearRelease') //Comment for plugins/applications that use AWARE as a library
+    phoneWearApp project(path: ':aware-core', configuration: 'wearRelease') //Comment for plugins/applications that use AWARE as a library
 }
 
 // KEEP THE NEXT LINES COMMENTED OUT: Used to create AWARE's Maven Central library
