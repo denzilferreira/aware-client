@@ -1,3 +1,4 @@
+
 //Uncomment to choose how to treat the project. Use it as a library for AWARE-applications or plugins
 apply plugin: 'com.android.application' //AWARE is an application
 //apply plugin: 'com.android.library' //AWARE is a library
@@ -13,7 +14,8 @@ android {
     publishNonDefault true
 
     defaultConfig {
-        applicationId "com.aware" //Comment for plugins/applications that use AWARE as a library
+        //Comment out for library
+        applicationId "com.aware"
         versionCode 354
         versionName "3.2.2"
     }
@@ -46,63 +48,10 @@ dependencies {
     wearCompile 'com.android.support:support-v13:21.0.2'
     wearCompile 'com.google.android.gms:play-services-wearable:6.5.87'
     wearCompile 'com.google.android.support:wearable:1.0.0'
-    phoneWearApp project(path: ':aware-core', configuration: 'wearRelease') //Comment for plugins/applications that use AWARE as a library
+
+    //Comment out for library
+    phoneWearApp project(path: ':aware-core', configuration: 'wearRelease')
 }
 
-// KEEP THE NEXT LINES COMMENTED OUT: Used to create AWARE's Maven Central library
-//apply plugin: 'maven'
-//apply plugin: 'signing'
-//
-//version = "3.2.2"
-//group = "com.aware"
-//
-//configurations {
-//    archives {
-//        extendsFrom configurations.default
-//    }
-//}
-//
-//signing {
-//    required { has("release") && gradle.taskGraph.hasTask("uploadArchives") }
-//    sign configurations.archives
-//}
-//
-//uploadArchives {
-//    configuration = configurations.archives
-//    repositories.mavenDeployer {
-//        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-//
-//        repository(url: sonatypeRepo ) {
-//            authentication(userName: sonatypeUsername, password: sonatypePassword)
-//        }
-//
-//        pom.project {
-//            name 'AWARE Library'
-//            packaging 'aar'
-//            description 'AWARE library for plugins and applications'
-//            url 'http://www.awareframework.com'
-//
-//            scm {
-//                url 'scm:git@github.com:denzilferreira/aware-client.git'
-//                connection 'scm:git@github.com:denzilferreira/aware-client.git'
-//                developerConnection 'scm:git@github.com:denzilferreira/aware-client.git'
-//            }
-//
-//            licenses {
-//                license {
-//                    name 'The Apache Software License, Version 2.0'
-//                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-//                    distribution 'repo'
-//                }
-//            }
-//
-//            developers {
-//                developer {
-//                    id 'denzilferreira'
-//                    name 'Denzil Ferreira'
-//                    email 'ferreiradenzil@gmail.com'
-//                }
-//            }
-//        }
-//    }
-//}
+//Update AWARE's library in Maven Central
+//apply from: 'maven-publish.gradle'
