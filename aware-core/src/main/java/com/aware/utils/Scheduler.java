@@ -8,6 +8,7 @@ import android.os.IBinder;
 
 /**
  * Created by denzil on 16/12/14.
+ * TODO: create a service that schedules intents with extras
  */
 public class Scheduler extends Service {
 

@@ -1,16 +1,5 @@
-/*
-Copyright (c) 2013 AWARE Mobile Context Instrumentation Middleware/Framework
-http://www.awareframework.com
 
-AWARE is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the 
-Free Software Foundation, either version 3 of the License, or (at your option) any later version (GPLv3+).
-
-AWARE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-See the GNU General Public License for more details: http://www.gnu.org/licenses/gpl.html
-*/
 package com.aware.providers;
-
-import java.util.HashMap;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -27,8 +16,9 @@ import android.util.Log;
 
 import com.aware.Accelerometer;
 import com.aware.Aware;
-import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
+
+import java.util.HashMap;
 
 /**
  * AWARE Rotation Content Provider Allows you to access all the recorded

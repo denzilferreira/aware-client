@@ -1,13 +1,4 @@
-/*
-Copyright (c) 2013 AWARE Mobile Context Instrumentation Middleware/Framework
-http://www.awareframework.com
 
-AWARE is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the 
-Free Software Foundation, either version 3 of the License, or (at your option) any later version (GPLv3+).
-
-AWARE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-See the GNU General Public License for more details: http://www.gnu.org/licenses/gpl.html
-*/
 package com.aware;
 
 import android.app.AlarmManager;
@@ -141,6 +132,11 @@ public class Aware extends Service {
     public static final String ACTION_AWARE_PLUGIN_MANAGER_REFRESH = "ACTION_AWARE_PLUGIN_MANAGER_REFRESH";
 
     /**
+     * Used when quitting a study. This will reset the device to default settings.
+     */
+    public static final String ACTION_QUIT_STUDY = "ACTION_QUIT_STUDY";
+
+    /**
      * Used by Android Wear to know which sensor has been activated to sync with phone.
      * Extras:
      * extra_config_setting: the setting key
@@ -248,6 +244,7 @@ public class Aware extends Service {
         filter.addAction(Aware.ACTION_AWARE_REFRESH);
         filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
         filter.addAction(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
+        filter.addAction(Aware.ACTION_QUIT_STUDY);
         awareContext.registerReceiver(aware_BR, filter);
 
         Intent synchronise = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
@@ -448,13 +445,16 @@ public class Aware extends Service {
     public static void stopPlugin(Context context, String package_name ) {
 
         //Check if plugin is bundled within an application/plugin
-        Intent bundled = new Intent();
-        bundled.setClassName(context.getPackageName(), package_name + ".Plugin");
-        boolean result = context.stopService(bundled);
-        if( result == true ) {
-            if( Aware.DEBUG ) Log.d(TAG, "Bundled " + package_name + ".Plugin stopped...");
-            return;
-        }
+        try {
+            Class.forName(package_name + ".Plugin");
+            Intent bundled = new Intent();
+            bundled.setClassName(context.getPackageName(), package_name + ".Plugin");
+            boolean result = context.stopService(bundled);
+            if( result ) {
+                if( Aware.DEBUG ) Log.d(TAG, "Bundled " + package_name + ".Plugin stopped...");
+                return;
+            }
+        } catch (ClassNotFoundException e ) {}
 
         Cursor cached = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
     	if( cached != null && cached.moveToFirst() ) {
@@ -482,13 +482,16 @@ public class Aware extends Service {
         if( awareContext == null ) awareContext = context;
 
         //Check if plugin is bundled within an application/plugin
-        Intent bundled = new Intent();
-        bundled.setClassName(context.getPackageName(), package_name + ".Plugin");
-        ComponentName result = context.startService(bundled);
-        if( result != null ) {
-            if( Aware.DEBUG ) Log.d(TAG, "Bundled " + package_name + ".Plugin started...");
-            return;
-        }
+        try {
+            Class.forName(package_name + ".Plugin");
+            Intent bundled = new Intent();
+            bundled.setClassName(context.getPackageName(), package_name + ".Plugin");
+            ComponentName result = context.startService(bundled);
+            if( result != null ) {
+                if( Aware.DEBUG ) Log.d(TAG, "Bundled " + package_name + ".Plugin started...");
+                return;
+            }
+        } catch (ClassNotFoundException e ) {}
 
     	//Check if plugin is cached
     	Cursor cached = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
@@ -1225,7 +1228,15 @@ public class Aware extends Service {
 	        		context.startService(webserviceHelper);
                 }
             }
-            
+
+            if( intent.getAction().equals(Aware.ACTION_QUIT_STUDY) ) {
+                Aware.reset(context);
+
+                Intent preferences = new Intent(context, Aware_Preferences.class);
+                preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                context.startActivity(preferences);
+            }
+
             if( intent.getAction().equals(Aware.ACTION_AWARE_REFRESH)) {
                 Intent refresh = new Intent(context, Aware.class);
                 context.startService(refresh);

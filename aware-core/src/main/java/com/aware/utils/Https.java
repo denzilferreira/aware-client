@@ -46,8 +46,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
-//import org.apache.http.conn.ssl.SSLSocketFactory;
-//import org.apache.http.conn.ssl.X509HostnameVerifier;
 
 public class Https extends DefaultHttpClient {
 

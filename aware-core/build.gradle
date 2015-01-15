@@ -8,16 +8,23 @@ configurations {
 }
 
 android {
+    signingConfigs {
+        debug {
+        }
+        release{
+        }
+    }
     compileSdkVersion 21
     buildToolsVersion "21.1.2"
     defaultPublishConfig "phoneRelease"
     publishNonDefault true
-
     defaultConfig {
-        //Comment out for library
+        //Comment applicationId out for library
         applicationId "com.aware"
-        versionCode 354
-        versionName "3.2.2"
+        versionCode 355
+        versionName "3.2.3"
+        targetSdkVersion 21
+        signingConfig signingConfigs.debug
     }
     buildTypes {
         release {
@@ -27,12 +34,10 @@ android {
     }
     productFlavors {
         wear {
-            minSdkVersion 20
-            targetSdkVersion 20
+            minSdkVersion 21
         }
         phone {
             minSdkVersion 10 //Android 2.3.3
-            targetSdkVersion 21
         }
     }
 }
@@ -48,7 +53,6 @@ dependencies {
     wearCompile 'com.android.support:support-v13:21.0.2'
     wearCompile 'com.google.android.gms:play-services-wearable:6.5.87'
     wearCompile 'com.google.android.support:wearable:1.0.0'
-
     //Comment out for library
     phoneWearApp project(path: ':aware-core', configuration: 'wearRelease')
 }

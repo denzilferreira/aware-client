@@ -1,13 +1,4 @@
-/*
-Copyright (c) 2013 AWARE Mobile Context Instrumentation Middleware/Framework
-http://www.awareframework.com
 
-AWARE is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the 
-Free Software Foundation, either version 3 of the License, or (at your option) any later version (GPLv3+).
-
-AWARE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-See the GNU General Public License for more details: http://www.gnu.org/licenses/gpl.html
-*/
 package com.aware;
 
 import android.content.BroadcastReceiver;
@@ -31,12 +22,10 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
 
-import com.aware.providers.Light_Provider;
 import com.aware.providers.Magnetometer_Provider;
 import com.aware.providers.Magnetometer_Provider.Magnetometer_Data;
 import com.aware.providers.Magnetometer_Provider.Magnetometer_Sensor;
 import com.aware.utils.Aware_Sensor;
-import com.aware.utils.Converters;
 
 import java.util.ArrayList;
 import java.util.List;

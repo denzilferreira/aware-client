@@ -1,6 +1,4 @@
-/**
-@author: denzil
-*/
+
 package com.aware.ui;
 
 import android.app.Activity;
