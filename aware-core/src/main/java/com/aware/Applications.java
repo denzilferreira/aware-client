@@ -2,6 +2,7 @@
 package com.aware;
 
 import android.accessibilityservice.AccessibilityService;
+import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.ActivityManager;
 import android.app.ActivityManager.ProcessErrorStateInfo;
 import android.app.ActivityManager.RunningAppProcessInfo;
@@ -19,12 +20,15 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.pm.ServiceInfo;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
+import android.support.v4.accessibilityservice.AccessibilityServiceInfoCompat;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.view.accessibility.AccessibilityEventCompat;
+import android.support.v4.view.accessibility.AccessibilityManagerCompat;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
@@ -150,8 +154,15 @@ public class Applications extends AccessibilityService {
                 pkgInfo = null;
             }
 
-            String appName = ( appInfo != null ) ? (String) packageManager.getApplicationLabel(appInfo):"";
-            
+            String appName = "";
+            try {
+                if( appInfo != null ) {
+                    appName = (String) packageManager.getApplicationLabel(appInfo);
+                }
+            } catch (Resources.NotFoundException e ) {
+                appName = "";
+            }
+
             ContentValues rowData = new ContentValues();
             rowData.put(Applications_Foreground.TIMESTAMP, System.currentTimeMillis());
             rowData.put(Applications_Foreground.DEVICE_ID, Aware.getSetting(getApplicationContext(),Aware_Preferences.DEVICE_ID));
@@ -306,7 +317,6 @@ public class Applications extends AccessibilityService {
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_accessibility);
             mBuilder.setContentTitle("AWARE configuration");
             mBuilder.setContentText(getResources().getString(R.string.aware_activate_accessibility));
-            mBuilder.setDefaults(Notification.DEFAULT_ALL);
             mBuilder.setAutoCancel(true);
 
             Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
@@ -336,12 +346,12 @@ public class Applications extends AccessibilityService {
      */
     public static boolean isAccessibilityServiceActive(Context c) {
         AccessibilityManager accessibilityManager = (AccessibilityManager) c.getSystemService(ACCESSIBILITY_SERVICE);
-        if( accessibilityManager.isEnabled() ) {
-            List<ServiceInfo> accessibilityServices = accessibilityManager.getAccessibilityServiceList();
-            for( ServiceInfo s : accessibilityServices ) {
-                if( s.name.equalsIgnoreCase("com.aware.Applications") ) {
-                    return true;
-                }
+        List<AccessibilityServiceInfo> runningServices = AccessibilityManagerCompat.getEnabledAccessibilityServiceList(accessibilityManager, AccessibilityEventCompat.TYPES_ALL_MASK);
+        for( AccessibilityServiceInfo service : runningServices ) {
+            Log.d(Aware.TAG, service.toString());
+
+            if( service.getId().contains("com.aware") ) {
+                return true;
             }
         }
         return false;
@@ -427,7 +437,7 @@ public class Applications extends AccessibilityService {
                         String appName = ( appInfo != null ) ? (String) packageManager.getApplicationLabel(appInfo):"";
                         
                         appUnclosed = getContentResolver().query(Applications_History.CONTENT_URI, null, Applications_History.PACKAGE_NAME + " LIKE '%"+app.processName+"%' AND "+Applications_History.PROCESS_ID + "=" +app.pid + " AND " + Applications_History.END_TIMESTAMP +"=0", null, null);
-                        if( appUnclosed == null || appUnclosed.moveToFirst() == false ) {
+                        if( appUnclosed == null || ! appUnclosed.moveToFirst() ) {
                             ContentValues rowData = new ContentValues();
                             rowData.put(Applications_History.TIMESTAMP, System.currentTimeMillis());
                             rowData.put(Applications_History.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
@@ -456,7 +466,7 @@ public class Applications extends AccessibilityService {
                                 if(Aware.DEBUG) Log.d(TAG,e.getMessage());
                             }
                             
-                            if( appUnclosed != null && ! appUnclosed.isClosed() ) appUnclosed.close();
+                            if( ! appUnclosed.isClosed() ) appUnclosed.close();
                             
                             //Insert new importance
                             rowData = new ContentValues();

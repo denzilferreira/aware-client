@@ -21,6 +21,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
@@ -47,6 +48,7 @@ import com.aware.providers.Aware_Provider.Aware_Settings;
 import com.aware.ui.Plugins_Manager;
 import com.aware.ui.Stream_UI;
 import com.aware.utils.Aware_Plugin;
+import com.aware.utils.DownloadPluginService;
 import com.aware.utils.Https;
 import com.aware.utils.WebserviceHelper;
 
@@ -150,12 +152,17 @@ public class Aware extends Service {
      * DownloadManager AWARE update ID, used to prompt user to install the update once finished downloading.
      */
     private static long AWARE_FRAMEWORK_DOWNLOAD_ID = 0;
-    
+
     /**
      * DownloadManager queue for plugins, in case we have multiple dependencies to install.
      */
-    private static ArrayList<Long> AWARE_PLUGIN_DOWNLOAD_IDS = new ArrayList<Long>();
-    
+    public static final ArrayList<Long> AWARE_PLUGIN_DOWNLOAD_IDS = new ArrayList<>();
+
+    /**
+     * DownloadManager queue for plugins, in case we have multiple dependencies to install.
+     */
+    public static final ArrayList<String> AWARE_PLUGIN_DOWNLOAD_PACKAGES = new ArrayList<>();
+
     private static AlarmManager alarmManager = null;
     private static PendingIntent repeatingIntent = null;
     private static Context awareContext = null;
@@ -513,54 +520,12 @@ public class Aware extends Service {
     	}
         if( cached != null && ! cached.isClosed() ) cached.close();
 
+        if( Aware.DEBUG ) Log.d(Aware.TAG, "Not installed, attempting to download from the repository...");
+
         //Ok, not bundled or installed, request the missing plugin from the server
-        new PluginDependencyTask().execute(package_name);
+        downloadPlugin(context, package_name, false);
     }
 
-    /**
-     * Downloads missing plugins as a seperate thread.
-     */
-    private static class PluginDependencyTask extends AsyncTask<String, Void, Void> {
-        @Override
-        protected Void doInBackground(String... params) {
-
-            String package_name = params[0];
-
-            HttpResponse response = new Https(awareContext).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
-            if( response != null && response.getStatusLine().getStatusCode() == 200 ) {
-                try {
-
-                    String data = Https.undoGZIP(response);
-                    if( data.length() < 10 ) return null;
-
-                    JSONObject json_package = new JSONObject(data);
-
-                    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(awareContext);
-                    mBuilder.setSmallIcon(R.drawable.ic_stat_aware_plugin_dependency);
-                    mBuilder.setContentTitle("AWARE");
-                    mBuilder.setContentText("Missing: " + json_package.getString("title")+". Install?");
-                    mBuilder.setDefaults(Notification.DEFAULT_ALL);
-                    mBuilder.setAutoCancel(true);
-
-                    Intent pluginIntent = new Intent(awareContext, DownloadPluginService.class);
-                    pluginIntent.putExtra("package_name", package_name);
-                    pluginIntent.putExtra("is_update", false);
-
-                    PendingIntent clickIntent = PendingIntent.getService(awareContext, 0, pluginIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                    mBuilder.setContentIntent(clickIntent);
-                    NotificationManager notManager = (NotificationManager) awareContext.getSystemService(Context.NOTIFICATION_SERVICE);
-                    notManager.notify( json_package.getInt("id"), mBuilder.build());
-
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-            return null;
-        }
-    }
-    
     /**
      * Requests the download of a plugin given the package name from AWARE webservices.
      * @param context
@@ -568,10 +533,21 @@ public class Aware extends Service {
      * @param is_update
      */
     public static void downloadPlugin( Context context, String package_name, boolean is_update ) {
-    	Intent pluginIntent = new Intent(context, DownloadPluginService.class);
+    	if( is_queued(package_name) ) return;
+
+        AWARE_PLUGIN_DOWNLOAD_PACKAGES.add(package_name);
+
+        Intent pluginIntent = new Intent(context, DownloadPluginService.class);
     	pluginIntent.putExtra("package_name", package_name);
     	pluginIntent.putExtra("is_update", is_update);
 		context.startService(pluginIntent);
+    }
+
+    private static boolean is_queued(String package_name) {
+        for( String pkg : AWARE_PLUGIN_DOWNLOAD_PACKAGES ) {
+            if( pkg.equalsIgnoreCase(package_name) ) return true;
+        }
+        return false;
     }
     
     /**
@@ -818,7 +794,6 @@ public class Aware extends Service {
                 mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
                 mBuilder.setContentTitle("AWARE");
                 mBuilder.setContentText("The study has ended! Thanks!");
-                mBuilder.setDefaults(Notification.DEFAULT_ALL);
                 mBuilder.setAutoCancel(true);
 
                 NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -858,10 +833,6 @@ public class Aware extends Service {
             } while(active_plugins.moveToNext());
         }
         if( active_plugins != null && ! active_plugins.isClosed() ) active_plugins.close();
-
-        //Apply fresh state
-        Intent aware_apply = new Intent( Aware.ACTION_AWARE_REFRESH );
-        c.sendBroadcast(aware_apply);
     }
 
     /**
@@ -916,8 +887,7 @@ public class Aware extends Service {
     			mBuilder.setSmallIcon(R.drawable.ic_stat_aware_update);
     			mBuilder.setContentTitle("AWARE update");
     			mBuilder.setContentText("New: " + whats_new + "\nVersion: " + version + "\nTap to install...");
-                mBuilder.setDefaults(Notification.DEFAULT_ALL);
-    			mBuilder.setAutoCancel(true);
+                mBuilder.setAutoCancel(true);
     			
     			Intent updateIntent = new Intent(getApplicationContext(), UpdateFrameworkService.class);
     			updateIntent.putExtra("filename", filename);
@@ -1115,52 +1085,7 @@ public class Aware extends Service {
         	return 0;
         }
     }
-    
-    /**
-     * Background service to download missing plugins
-     * @author denzilferreira
-     *
-     */
-    public static class DownloadPluginService extends IntentService {
-    	public DownloadPluginService() {
-    		super("Download Plugin service");
-    	}
-    	
-    	@Override
-    	protected void onHandleIntent(Intent intent) {
-    		String package_name = intent.getStringExtra("package_name");
-    		boolean is_update = intent.getBooleanExtra("is_update", false);
-    		
-    		HttpResponse response = new Https(awareContext).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
-    		if( response != null && response.getStatusLine().getStatusCode() == 200 ) {
-    			try {
-    				JSONObject json_package = new JSONObject(Https.undoGZIP(response));
-    				
-        			//Create the folder where all the databases will be stored on external storage
-    		        File folders = new File(Environment.getExternalStorageDirectory()+"/AWARE/plugins/");
-    		        folders.mkdirs();
-    		        
-    		        String package_url = "http://plugins.awareframework.com/" + json_package.getString("package_path").replace("/uploads/", "") + json_package.getString("package_name");
-    				DownloadManager.Request request = new DownloadManager.Request(Uri.parse(package_url));
-    		    	if( ! is_update ) {
-    		    		request.setDescription("Downloading " + json_package.getString("title") );
-    		    	} else {
-    		    		request.setDescription("Updating " + json_package.getString("title") );
-    		    	}
-    		    	request.setTitle("AWARE");
-    		    	request.setDestinationInExternalPublicDir("/", "AWARE/plugins/" + json_package.getString("package_name"));
-    		    	
-    		    	DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-    		    	AWARE_PLUGIN_DOWNLOAD_IDS.add(manager.enqueue(request));
-        		} catch (ParseException e) {
-    				e.printStackTrace();
-    			} catch (JSONException e) {
-    				e.printStackTrace();
-    			}
-    		}
-    	}
-    }
-    
+
     /**
      * Background service to download latest version of AWARE
      * @author denzilferreira
@@ -1181,7 +1106,7 @@ public class Aware extends Service {
 			String url = "http://www.awareframework.com/" + filename;
 			
 			DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
-			request.setDescription("Downloading newest AWARE... please wait...");
+			request.setDescription("Updating AWARE...");
 			request.setTitle("AWARE Update");
 			request.setDestinationInExternalPublicDir("/", "AWARE/releases/"+filename);
 			DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
@@ -1243,8 +1168,9 @@ public class Aware extends Service {
             }
             
             if( intent.getAction().equals(DownloadManager.ACTION_DOWNLOAD_COMPLETE) ) {
+
             	DownloadManager manager = (DownloadManager) context.getSystemService(DOWNLOAD_SERVICE);
-            	long downloaded_id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
+            	long downloaded_id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
             	
             	if( downloaded_id == AWARE_FRAMEWORK_DOWNLOAD_ID ) {
             		if( Aware.DEBUG ) Log.d(Aware.TAG, "AWARE framework update received...");
@@ -1262,19 +1188,21 @@ public class Aware extends Service {
             			}
             		}
             		if( data != null && ! data.isClosed() ) data.close();
-            	} 
-            	
+
+                    return;
+            	}
+
             	if( AWARE_PLUGIN_DOWNLOAD_IDS.size() > 0 ) {
             		for( int i = 0; i < AWARE_PLUGIN_DOWNLOAD_IDS.size(); i++ ) {
                 	    long queue = AWARE_PLUGIN_DOWNLOAD_IDS.get(i);
-                	    if( downloaded_id == queue ) {
-                	        Cursor cur = manager.query(new Query().setFilterById(queue));
+                	    if( queue == downloaded_id ) {
+                            Cursor cur = manager.query(new Query().setFilterById(queue));
                             if( cur != null && cur.moveToFirst() ) {
                                 if( cur.getInt(cur.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL ) {
                                     String filePath = cur.getString(cur.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
-                                    
+
                                     if( Aware.DEBUG ) Log.d(Aware.TAG, "Plugin to install: " + filePath);
-                                    
+
                                     File mFile = new File( Uri.parse(filePath).getPath() );
                                     Intent promptInstall = new Intent(Intent.ACTION_VIEW);
                                     promptInstall.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -1283,10 +1211,11 @@ public class Aware extends Service {
                                 }
                             }
                             if( cur != null && ! cur.isClosed() ) cur.close();
+                            AWARE_PLUGIN_DOWNLOAD_IDS.remove(downloaded_id);//dequeue
                 	    }
                 	}
-                	AWARE_PLUGIN_DOWNLOAD_IDS.remove(downloaded_id); //dequeue
             	}
+                if( AWARE_PLUGIN_DOWNLOAD_IDS.size() == 0 ) AWARE_PLUGIN_DOWNLOAD_PACKAGES.clear();
             }
         }
     }

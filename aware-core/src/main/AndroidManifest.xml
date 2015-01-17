@@ -269,7 +269,7 @@
         </service>
         <service android:name="com.aware.Aware_Preferences$StudyConfig" android:exported="true"/>
         <service android:name="com.aware.Aware$UpdateFrameworkService" android:exported="true" android:enabled="@bool/display_aware"/>
-        <service android:name="com.aware.Aware$DownloadPluginService" android:exported="true"/>
+        <service android:name="com.aware.utils.DownloadPluginService" android:exported="true"/>
 
         <service android:name="com.aware.Wear_Sync" android:exported="true" android:enabled="@bool/display_aware"/>
         <service android:name="com.aware.Wear_Service" android:exported="true" android:enabled="@bool/display_aware">

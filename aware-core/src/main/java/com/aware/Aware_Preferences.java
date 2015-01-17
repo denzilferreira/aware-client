@@ -2073,7 +2073,7 @@ public class Aware_Preferences extends Aware_Activity {
     protected void onResume() {
     	super.onResume();
 
-        if( Aware.getSetting( getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") || Aware.getSetting( getApplicationContext(), Aware_Preferences.STATUS_KEYBOARD).equals("true") && ! Applications.isAccessibilityServiceActive(getApplicationContext()) ) {
+        if( ( Aware.getSetting( getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") || Aware.getSetting( getApplicationContext(), Aware_Preferences.STATUS_KEYBOARD).equals("true") ) && ! Applications.isAccessibilityServiceActive(getApplicationContext()) ) {
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_accessibility);
             mBuilder.setContentTitle("AWARE configuration");
@@ -2147,7 +2147,7 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         //Set the plugins' settings now
-        ArrayList<String> active_plugins = new ArrayList<String>();
+        ArrayList<String> active_plugins = new ArrayList<>();
         for( int i=0; i < plugins.length(); i++ ) {
             try{
                 JSONObject plugin_config = plugins.getJSONObject(i);
@@ -2173,6 +2173,17 @@ public class Aware_Preferences extends Aware_Activity {
         for( String package_name : active_plugins ) {
             Aware.startPlugin(context, package_name);
         }
+
+        //Only needed if we are scanning the URL with the client
+        if( context.getPackageName().equals("com.aware") ) {
+            Intent preferences = new Intent(context, Aware_Preferences.class);
+            preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            context.startActivity(preferences);
+        }
+
+        //Send data to server
+        Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
+        context.sendBroadcast(sync);
     }
 
     /**
@@ -2193,20 +2204,18 @@ public class Aware_Preferences extends Aware_Activity {
     	protected void onHandleIntent(Intent intent) {
 			String study_url = intent.getStringExtra(EXTRA_JOIN_STUDY);
 			
-			if( Aware.DEBUG ) Log.d(Aware.TAG, "Scanned: " + study_url);
+			if( Aware.DEBUG ) Log.d(Aware.TAG, "Joining: " + study_url);
 			
 			if( study_url.startsWith("https://api.awareframework.com/") ) {
 
 				//Request study settings
-				ArrayList<NameValuePair> data = new ArrayList<NameValuePair>();
+				ArrayList<NameValuePair> data = new ArrayList<>();
 				data.add(new BasicNameValuePair(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID)));
 				HttpResponse answer = new Https(getApplicationContext()).dataPOST(study_url, data, true);
 				try {
                     String json_str = Https.undoGZIP(answer);
 
-                    Log.d(Aware.TAG, "Read:" + json_str);
-
-					JSONArray configs_study = new JSONArray(json_str);
+                    JSONArray configs_study = new JSONArray(json_str);
 					if( configs_study.getJSONObject(0).has("message") ) {
                         Toast.makeText(getApplicationContext(), "This study is not available.", Toast.LENGTH_LONG).show();
                         return;
@@ -2216,30 +2225,15 @@ public class Aware_Preferences extends Aware_Activity {
                     mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
                     mBuilder.setContentTitle("AWARE");
                     mBuilder.setContentText("Thanks for joining!");
-                    mBuilder.setDefaults(Notification.DEFAULT_ALL);
                     mBuilder.setAutoCancel(true);
 
                     NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                    notManager.notify(new Random(System.currentTimeMillis()).nextInt(), mBuilder.build());
+                    notManager.notify(33, mBuilder.build());
 
 					if( Aware.DEBUG ) Log.d(Aware.TAG, "Study configs: " + configs_study.toString(5));
 					
 					//Apply new configurations in AWARE Client
 					applySettings( getApplicationContext(), configs_study );
-					
-					Intent apply_settings = new Intent(Aware.ACTION_AWARE_REFRESH);
-					sendBroadcast(apply_settings);
-
-                    //Only needed if we are scanning the URL with the client
-                    if( getApplicationContext().getPackageName().equals("com.aware") ) {
-                        Intent preferences = new Intent(getApplicationContext(), Aware_Preferences.class);
-                        preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(preferences);
-                    }
-					
-					//Send data to server
-					Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
-					sendBroadcast(sync);
 
 				} catch (ParseException e) {
 					e.printStackTrace();

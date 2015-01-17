@@ -345,6 +345,9 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 			if( DEBUG ) Log.d(TAG,"Still connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
 			return;
 		}
+
+        //Fixes plugins crashing when installing/updating AWARE
+        if( Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_PORT).length() == 0 ) return;
 		
 		TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
 	    
