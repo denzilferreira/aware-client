@@ -114,6 +114,9 @@ public class Aware_Activity extends ActionBarActivity {
             	Intent study_config = new Intent(this, StudyConfig.class);
                 study_config.putExtra("study_url", data.getStringExtra("study_url"));
                 startService(study_config);
+
+                Toast.makeText(this, "Please wait for further instructions...", Toast.LENGTH_LONG).show();
+                finish();
             }
         }
     }

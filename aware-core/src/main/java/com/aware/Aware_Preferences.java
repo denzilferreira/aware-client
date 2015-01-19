@@ -58,7 +58,6 @@ import java.util.UUID;
  */
 public class Aware_Preferences extends Aware_Activity {
 
-    private static final int DIALOG_ERROR_ACCESSIBILITY = 1;
     private static final int DIALOG_ERROR_MISSING_PARAMETERS = 2;
     private static final int DIALOG_ERROR_MISSING_SENSOR = 3;
 
@@ -479,19 +478,6 @@ public class Aware_Preferences extends Aware_Activity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         
         switch(id) {
-            case DIALOG_ERROR_ACCESSIBILITY:
-                builder.setMessage("Please activate AWARE on the Accessibility Services!");
-                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
-                        accessibilitySettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT );
-                        startActivity(accessibilitySettings);
-                    }
-                });
-                dialog = builder.create();
-            break;
             case DIALOG_ERROR_MISSING_PARAMETERS:
                 builder.setMessage("Some parameters are missing...");
                 builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -529,7 +515,7 @@ public class Aware_Preferences extends Aware_Activity {
         /**
          * AWARE services UI components
          */
-        private void servicesOptions() {
+        public void servicesOptions() {
             esm();
             accelerometer();
             applications();
@@ -757,9 +743,7 @@ public class Aware_Preferences extends Aware_Activity {
                         framework.startApplications();
                         return true;
                     }
-                    if (! Applications.isAccessibilityServiceActive(sContext) ) {
-                        sPreferences.showDialog(Aware_Preferences.DIALOG_ERROR_ACCESSIBILITY);
-                    }
+                    Applications.isAccessibilityServiceActive(sContext);
                     Aware.setSetting(sContext, Aware_Preferences.STATUS_NOTIFICATIONS, false);
                     notifications.setChecked(false);
                     return false;
@@ -777,9 +761,7 @@ public class Aware_Preferences extends Aware_Activity {
                         framework.startKeyboard();
                         return true;
                     }
-                    if (! Applications.isAccessibilityServiceActive(sContext) ) {
-                        sPreferences.showDialog(Aware_Preferences.DIALOG_ERROR_ACCESSIBILITY);
-                    }
+                    Applications.isAccessibilityServiceActive(sContext);
                     Aware.setSetting(sContext, Aware_Preferences.STATUS_KEYBOARD, false);
                     keyboard.setChecked(false);
                     framework.stopKeyboard();
@@ -797,9 +779,7 @@ public class Aware_Preferences extends Aware_Activity {
                         framework.startApplications();
                         return true;
                     }
-                    if (! Applications.isAccessibilityServiceActive(sContext) ) {
-                        sPreferences.showDialog(Aware_Preferences.DIALOG_ERROR_ACCESSIBILITY);
-                    }
+                    Applications.isAccessibilityServiceActive(sContext);
                     Aware.setSetting(sContext, Aware_Preferences.STATUS_CRASHES, false);
                     crashes.setChecked(false);
                     return false;
@@ -807,7 +787,6 @@ public class Aware_Preferences extends Aware_Activity {
             });
             final CheckBoxPreference applications = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_APPLICATIONS);
             if( Aware.getSetting(sContext, Aware_Preferences.STATUS_APPLICATIONS).equals("true") && ! Applications.isAccessibilityServiceActive(sContext) ) {
-                sPreferences.showDialog(Aware_Preferences.DIALOG_ERROR_ACCESSIBILITY);
                 Aware.setSetting(sContext, Aware_Preferences.STATUS_APPLICATIONS, false );
                 framework.stopApplications();
             }
@@ -821,9 +800,7 @@ public class Aware_Preferences extends Aware_Activity {
                         framework.startApplications();
                         return true;
                     }else {
-                        if( ! Applications.isAccessibilityServiceActive(sContext) ) {
-                            sPreferences.showDialog(Aware_Preferences.DIALOG_ERROR_ACCESSIBILITY);
-                        }
+                        Applications.isAccessibilityServiceActive(sContext);
 
                         Aware.setSetting(sContext, Aware_Preferences.STATUS_APPLICATIONS, false);
                         applications.setChecked(false);
@@ -1728,7 +1705,7 @@ public class Aware_Preferences extends Aware_Activity {
         /**
          * Logging module settings UI components
          */
-        private void logging() {
+        public void logging() {
             webservices();
             mqtt();
             external();
@@ -1967,7 +1944,7 @@ public class Aware_Preferences extends Aware_Activity {
          * - AWARE updates
          * - Device ID
          */
-        private void developerOptions() {
+        public void developerOptions() {
             final CheckBoxPreference debug_flag = (CheckBoxPreference) findPreference(Aware_Preferences.DEBUG_FLAG);
             debug_flag.setChecked(Aware.getSetting(sContext,Aware_Preferences.DEBUG_FLAG).equals("true"));
             debug_flag.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -2094,18 +2071,6 @@ public class Aware_Preferences extends Aware_Activity {
             new Async_StudyData().execute(Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
         }
     }
-    
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if( requestCode == REQUEST_JOIN_STUDY ) {
-            if( resultCode == RESULT_OK ) {
-            	Intent study_config = new Intent(this, StudyConfig.class);
-                study_config.putExtra("study_url", data.getStringExtra("study_url"));
-                startService(study_config);
-            }
-        }
-    }
 
     /**
      * Sets first all the settings to the client.
@@ -2115,8 +2080,13 @@ public class Aware_Preferences extends Aware_Activity {
      * @param configs
      */
     protected static void applySettings( Context context, JSONArray configs ) {
+
+        boolean is_developer = Aware.getSetting(context, Aware_Preferences.DEBUG_FLAG).equals("true");
+
         //First reset the client to default settings...
         Aware.reset(context);
+
+        if( is_developer ) Aware.setSetting(context, Aware_Preferences.DEBUG_FLAG, true);
 
         //Now apply the new settings
         JSONArray plugins = new JSONArray();
@@ -2172,13 +2142,6 @@ public class Aware_Preferences extends Aware_Activity {
         //Now start plugins
         for( String package_name : active_plugins ) {
             Aware.startPlugin(context, package_name);
-        }
-
-        //Only needed if we are scanning the URL with the client
-        if( context.getPackageName().equals("com.aware") ) {
-            Intent preferences = new Intent(context, Aware_Preferences.class);
-            preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            context.startActivity(preferences);
         }
 
         //Send data to server

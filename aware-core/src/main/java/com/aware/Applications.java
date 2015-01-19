@@ -312,23 +312,9 @@ public class Applications extends AccessibilityService {
             alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+1000, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS)) * 1000, repeatingIntent);
         }
 
-        if( ! isAccessibilityServiceActive( getApplicationContext() ) ) {
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
-            mBuilder.setSmallIcon(R.drawable.ic_stat_aware_accessibility);
-            mBuilder.setContentTitle("AWARE configuration");
-            mBuilder.setContentText(getResources().getString(R.string.aware_activate_accessibility));
-            mBuilder.setAutoCancel(true);
-
-            Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
-            accessibilitySettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
-            PendingIntent clickIntent = PendingIntent.getActivity(getApplicationContext(), 0, accessibilitySettings, PendingIntent.FLAG_UPDATE_CURRENT);
-            mBuilder.setContentIntent(clickIntent);
-            NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            notManager.notify(Applications.ACCESSIBILITY_NOTIFICATION_ID, mBuilder.build());
-        }
+        isAccessibilityServiceActive( getApplicationContext() );
     	
-    	return super.onStartCommand(intent, flags, startId);
+    	return START_STICKY;
     }
     
     @Override
@@ -354,6 +340,20 @@ public class Applications extends AccessibilityService {
                 return true;
             }
         }
+
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c);
+        mBuilder.setSmallIcon(R.drawable.ic_stat_aware_accessibility);
+        mBuilder.setContentTitle("AWARE configuration");
+        mBuilder.setContentText(c.getResources().getString(R.string.aware_activate_accessibility));
+        mBuilder.setAutoCancel(true);
+
+        Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
+        accessibilitySettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        PendingIntent clickIntent = PendingIntent.getActivity(c, 0, accessibilitySettings, PendingIntent.FLAG_UPDATE_CURRENT);
+        mBuilder.setContentIntent(clickIntent);
+        NotificationManager notManager = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+        notManager.notify(Applications.ACCESSIBILITY_NOTIFICATION_ID, mBuilder.build());
         return false;
     }
 
