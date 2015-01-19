@@ -187,7 +187,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
         if( topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/configuration") ||  topic.equals(Aware.getSetting(mContext, "study_id") + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/configuration") ) {
             JSONArray configs = new JSONArray(message.toString());
-            Aware_Preferences.applySettings(mContext, configs);
+            Aware_Preferences.tweakSettings(mContext, configs);
 
             Intent apply_settings = new Intent(Aware.ACTION_AWARE_REFRESH);
             mContext.sendBroadcast(apply_settings);

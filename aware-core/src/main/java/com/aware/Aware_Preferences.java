@@ -2073,6 +2073,22 @@ public class Aware_Preferences extends Aware_Activity {
     }
 
     /**
+     * Allows the dashboard to modify unitary settings for tweaking a configuration for devices.
+     * @param c
+     * @param configs
+     */
+    protected static void tweakSettings( Context c, JSONArray configs ) {
+        for( int i = 0; i< configs.length(); i++ ) {
+            try{
+                JSONObject setting = configs.getJSONObject(i);
+                Aware.setSetting( c, setting.getString("setting"), setting.get("value") );
+            } catch (JSONException e ){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
      * Sets first all the settings to the client.
      * If there are plugins, apply the same settings to them.
      * This allows us to add plugins to studies from the dashboard.
