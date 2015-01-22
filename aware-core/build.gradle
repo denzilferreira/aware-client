@@ -17,7 +17,7 @@ android {
     compileSdkVersion 21
     buildToolsVersion "21.1.2"
     defaultPublishConfig "phoneRelease"
-    publishNonDefault true
+    publishNonDefault true //set to false for Maven Central
     defaultConfig {
         //Comment applicationId out for library
         applicationId "com.aware"
@@ -54,7 +54,7 @@ dependencies {
     wearCompile 'com.google.android.gms:play-services-wearable:6.5.87'
     wearCompile 'com.google.android.support:wearable:1.0.0'
     //Comment out for library
-    phoneWearApp project(path: ':aware-wear', configuration: 'wearRelease') //this is a symbolic link to :aware-core
+//    phoneWearApp project(path: ':aware-wear', configuration: 'wearRelease') //this is a symbolic link to :aware-core
 }
 
 //Update AWARE's library in Maven Central

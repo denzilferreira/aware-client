@@ -28,8 +28,7 @@ public class ESM_Queue extends FragmentActivity {
     
     private static String TAG = "AWARE::ESM Queue";
     private final ESM_QueueManager queue_manager = new ESM_QueueManager();
-    
-    private static FragmentManager fragmentManager;
+
     private static PowerManager powerManager;
     private static Vibrator vibrator;
     private static ESM_Queue queue;
@@ -48,8 +47,7 @@ public class ESM_Queue extends FragmentActivity {
         
         powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        fragmentManager = getSupportFragmentManager();
-		
+
         IntentFilter filter = new IntentFilter();
         filter.addAction(ESM.ACTION_AWARE_ESM_ANSWERED);
         filter.addAction(ESM.ACTION_AWARE_ESM_DISMISSED);
@@ -60,6 +58,7 @@ public class ESM_Queue extends FragmentActivity {
         sendBroadcast(queue_started);
         
         if( getQueueSize(getApplicationContext()) > 0 ) {
+            FragmentManager fragmentManager = getSupportFragmentManager();
             DialogFragment esm = new ESM_UI();
             esm.show(fragmentManager, TAG);
             if( ! powerManager.isScreenOn() ) {
@@ -68,13 +67,14 @@ public class ESM_Queue extends FragmentActivity {
         }
     }
     
-    public static class ESM_QueueManager extends BroadcastReceiver {
+    public class ESM_QueueManager extends BroadcastReceiver {
     	@Override
     	public void onReceive(Context context, Intent intent) {
     		if( intent.getAction().equals(ESM.ACTION_AWARE_ESM_ANSWERED) || intent.getAction().equals(ESM.ACTION_AWARE_ESM_DISMISSED) || intent.getAction().equals(ESM.ACTION_AWARE_ESM_EXPIRED) ) {
     			if( getQueueSize(context) > 0 ) {
-    				DialogFragment esm = new ESM_UI();
-    	            esm.show(fragmentManager, TAG);
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    DialogFragment esm = new ESM_UI();
+                    esm.show(fragmentManager, TAG);
     			} 
     			if( getQueueSize(context) == 0 ) {
     				if(Aware.DEBUG) Log.d(TAG,"ESM Queue is done!");
