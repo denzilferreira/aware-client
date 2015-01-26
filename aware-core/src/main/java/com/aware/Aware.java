@@ -9,6 +9,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.app.UiModeManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentValues;
@@ -20,6 +21,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.SQLException;
@@ -35,6 +37,7 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.widget.CardView;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,6 +54,8 @@ import com.aware.utils.Aware_Plugin;
 import com.aware.utils.DownloadPluginService;
 import com.aware.utils.Https;
 import com.aware.utils.WebserviceHelper;
+import com.google.android.gms.deviceconnection.features.DeviceFeature;
+import com.google.android.gms.wearable.Wearable;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -356,15 +361,27 @@ public class Aware extends Service {
         if( awareContextDevice != null && ! awareContextDevice.isClosed()) awareContextDevice.close();
     }
 
-    //TODO: check if there is a better way to detect a watch... for now we are looking for a W on the release name (W, W.1, W.2...)
+    /**
+     * Identifies if the device is a watch or a phone.
+     * @param c
+     * @return boolean
+     */
     public static boolean is_watch(Context c) {
-        boolean is_watch = false;
-        Cursor device = c.getContentResolver().query(Aware_Provider.Aware_Device.CONTENT_URI, null, null, null, "1 LIMIT 1");
-        if( device != null && device.moveToFirst() ) {
-            is_watch = device.getString(device.getColumnIndex(Aware_Device.RELEASE)).contains("W");
+        UiModeManager uiManager = (UiModeManager) c.getSystemService(Context.UI_MODE_SERVICE);
+        if( uiManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_WATCH ) {
+            if( DEBUG ) Log.d(TAG, "This is a watch!");
+            return true;
         }
-        if( device != null && ! device.isClosed() ) device.close();
-        return is_watch;
+        if ( DEBUG ) Log.d(TAG,"This is a phone!");
+        return false;
+
+//        boolean is_watch = false;
+//        Cursor device = c.getContentResolver().query(Aware_Provider.Aware_Device.CONTENT_URI, null, null, null, "1 LIMIT 1");
+//        if( device != null && device.moveToFirst() ) {
+//            is_watch = device.getString(device.getColumnIndex(Aware_Device.RELEASE)).contains("W");
+//        }
+//        if( device != null && ! device.isClosed() ) device.close();
+//        return is_watch;
     }
     
     @Override

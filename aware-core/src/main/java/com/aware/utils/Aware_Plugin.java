@@ -93,7 +93,7 @@ public class Aware_Plugin extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true")?true:false;
+        DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
         if(DEBUG) Log.d(TAG, TAG + " plugin active...");
         return START_STICKY;
     }

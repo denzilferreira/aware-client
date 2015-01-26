@@ -29,6 +29,7 @@ import android.widget.TextView;
 import com.aware.Aware;
 import com.aware.R;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
+import com.aware.utils.Aware_Plugin;
 import com.aware.utils.Https;
 
 import org.apache.http.HttpResponse;
@@ -199,7 +200,9 @@ public class Plugins_Manager extends Aware_Activity {
 			e.printStackTrace();
 		} catch (KeyManagementException e) {
 			e.printStackTrace();
-		}
+		} catch (NullPointerException e) {
+            e.printStackTrace();
+        }
 		return null;
 	}
     
@@ -399,7 +402,7 @@ public class Plugins_Manager extends Aware_Activity {
         private boolean is_installed(String package_name) {
             List<PackageInfo> installed = getPackageManager().getInstalledPackages(0);
             for(PackageInfo p : installed) {
-                if( p.packageName.toString().equals(package_name) ) return true;
+                if( p.packageName.equals(package_name) ) return true;
             }
             return false;
         }
@@ -426,6 +429,9 @@ public class Plugins_Manager extends Aware_Activity {
                                 //Lets check if it is updated
                                 if( plugin.getInt("version") > version ) {
                                     ContentValues data = new ContentValues();
+                                    data.put(Aware_Plugins.PLUGIN_DESCRIPTION, plugin.getString("desc"));
+                                    data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
+                                    data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
                                     data.put(Aware_Plugins.PLUGIN_ICON, cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()));
                                     data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_UPDATED);
                                     getContentResolver().update(Aware_Plugins.CONTENT_URI, data, Aware_Plugins._ID + "=" + is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins._ID)), null);
