@@ -50,6 +50,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -223,16 +224,45 @@ public class Plugins_Manager extends Aware_Activity {
 		}
 		return true;
 	}
+
+    /**
+     * Checks if a plugin is installed on the device
+     * @param context
+     * @param package_name
+     * @return
+     */
+    public static boolean isInstalled( Context context, String package_name ) {
+        PackageManager pkgManager = context.getPackageManager();
+        List<PackageInfo> packages = pkgManager.getInstalledPackages(PackageManager.GET_META_DATA);
+        for( PackageInfo pkg : packages) {
+            if( pkg.packageName.equals(package_name) ) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns the currently installed plugin's version
+     * @param context
+     * @param package_name
+     * @return
+     */
+    public static int getVersion( Context context, String package_name ) {
+        try {
+            PackageInfo pkgInfo = context.getPackageManager().getPackageInfo(package_name, PackageManager.GET_META_DATA);
+            return pkgInfo.versionCode;
+        } catch (NameNotFoundException e) {
+            if( Aware.DEBUG ) Log.d( Aware.TAG, e.getMessage());
+        }
+        return 0;
+    }
 	
 	private void drawUI() {
 		//Clear previous states
 		store_grid.removeAllViews();
-		
+
 		//Build UI
 		Cursor installed_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, Aware_Plugins.PLUGIN_NAME + " ASC");
-        if(Aware.DEBUG ) Log.d(Aware.TAG,"Plugins:" + DatabaseUtils.dumpCursorToString(installed_plugins));
-
-    	if( installed_plugins != null && installed_plugins.moveToFirst()) {
+        if( installed_plugins != null && installed_plugins.moveToFirst()) {
             do{
     			final String package_name = installed_plugins.getString(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
     			final String name = installed_plugins.getString(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_NAME));
@@ -399,10 +429,14 @@ public class Plugins_Manager extends Aware_Activity {
     		}
     	}
 
-        private boolean is_installed(String package_name) {
-            List<PackageInfo> installed = getPackageManager().getInstalledPackages(0);
-            for(PackageInfo p : installed) {
-                if( p.packageName.equals(package_name) ) return true;
+        private boolean is_onRepo(JSONArray server_packages, String package_name) {
+            for(int i = 0; i < server_packages.length(); i++) {
+                try {
+                    JSONObject plugin = server_packages.getJSONObject(i);
+                    if( plugin.getString("package").equals(package_name) ) return true;
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
             return false;
         }
@@ -414,13 +448,32 @@ public class Plugins_Manager extends Aware_Activity {
 			if( response != null && response.getStatusLine().getStatusCode() == 200 ) {
 				try {
 					JSONArray plugins = new JSONArray(Https.undoGZIP(response));
+
+                    //Clean-up
+                    Cursor all_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, Aware_Plugins.PLUGIN_NAME + " ASC");
+                    String to_clean = "";
+                    if( all_plugins != null && all_plugins.moveToFirst() ) {
+                        do {
+                            String package_name = all_plugins.getString(all_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+                            if( ! Plugins_Manager.isInstalled(getApplicationContext(), package_name) && ! is_onRepo(plugins, package_name)) {
+                                to_clean += package_name + ",";
+                            }
+                        }while(all_plugins.moveToNext());
+                    }
+                    if( all_plugins != null && ! all_plugins.isClosed()) all_plugins.close();
+
+                    if( to_clean.length() > 0 ) {
+                        to_clean = to_clean.substring(0,to_clean.length()-1);
+                        getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " in (" + to_clean + ")", null);
+                    }
+
 					for( int i=0; i< plugins.length(); i++ ) {
 						JSONObject plugin = plugins.getJSONObject(i);
 
                         boolean new_data = false;
                         Cursor is_cached = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + plugin.getString("package") + "'", null, null );
 						if( is_cached != null && is_cached.moveToFirst() ) {
-							if( ! is_installed(plugin.getString("package")) ) {
+							if( ! Plugins_Manager.isInstalled(getApplicationContext(), plugin.getString("package")) ) {
                                 //We used to have it installed, now we don't, remove from database
                                 getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + plugin.getString("package") + "'", null);
                                 new_data = true;

@@ -20,6 +20,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
@@ -27,12 +28,17 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.NotificationCompat;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.aware.providers.Aware_Provider;
 import com.aware.ui.Aware_Activity;
+import com.aware.ui.Plugins_Manager;
 import com.aware.utils.Https;
 import com.github.machinarius.preferencefragment.PreferenceFragment;
 
@@ -47,7 +53,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -470,7 +475,7 @@ public class Aware_Preferences extends Aware_Activity {
     private static final Aware framework = Aware.getService();
     private static SensorManager mSensorMgr;
     private static Context sContext;
-    private static Activity sPreferences;
+    private static ActionBarActivity sPreferences;
 
     @Override
     protected Dialog onCreateDialog(int id) {
@@ -503,6 +508,7 @@ public class Aware_Preferences extends Aware_Activity {
     }
 
     public static class SettingsFragment extends PreferenceFragment {
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -510,6 +516,13 @@ public class Aware_Preferences extends Aware_Activity {
             developerOptions();
             servicesOptions();
             logging();
+        }
+
+        @Override
+        public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
+//            toolbar.setTitle(preference.getTitle());
+//            sPreferences.setSupportActionBar(toolbar);
+            return super.onPreferenceTreeClick(preferenceScreen, preference);
         }
 
         /**
@@ -2155,14 +2168,59 @@ public class Aware_Preferences extends Aware_Activity {
             }
         }
 
-        //Now start plugins
-        for( String package_name : active_plugins ) {
-            Aware.startPlugin(context, package_name);
-        }
+        //Now check plugins
+        new CheckPlugins(context).execute(active_plugins);
+
+//        for( String package_name : active_plugins ) {
+//            Aware.startPlugin(context, package_name);
+//        }
 
         //Send data to server
         Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
         context.sendBroadcast(sync);
+    }
+
+    public static class CheckPlugins extends AsyncTask<ArrayList<String>, Void, Void> {
+        private Context context;
+        public CheckPlugins(Context c) {
+            context = c;
+        }
+
+        @Override
+        protected Void doInBackground(ArrayList<String>... params) {
+            for( String package_name : params[0] ) {
+                JSONObject json_package = null;
+                HttpResponse http_request = new Https(context).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
+                if( http_request != null && http_request.getStatusLine().getStatusCode() == 200 ) {
+                    try {
+                        String json_string = Https.undoGZIP(http_request);
+                        if( ! json_string.equals("[]") ) {
+                            json_package = new JSONObject(json_string);
+                        }
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if( json_package != null ) {
+                    if( ! Plugins_Manager.isInstalled(context, package_name) ) {
+                        Aware.downloadPlugin(context, package_name, false);
+                    } else {
+                        try {
+                            if( json_package.getInt("version") > Plugins_Manager.getVersion(context, package_name) ) {
+                                Aware.downloadPlugin(context, package_name, true);
+                            } else {
+                                Aware.startPlugin(context, package_name);
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+            return null;
+        }
     }
 
     /**

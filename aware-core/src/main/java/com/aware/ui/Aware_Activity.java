@@ -126,10 +126,13 @@ public class Aware_Activity extends ActionBarActivity {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.aware_menu, menu);
 
-        //Most watches don't have a camera
         if( Aware.is_watch(this) ) {
            MenuItem qrcode = menu.findItem(R.id.aware_qrcode);
            qrcode.setVisible(false);
+
+           //There is no webview in watches.
+           MenuItem team = menu.findItem(R.id.aware_about);
+           team.setVisible(false);
         }
         return super.onCreateOptionsMenu(menu);
     }
