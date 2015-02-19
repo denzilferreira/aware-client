@@ -28,12 +28,15 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.aware.providers.Aware_Provider;
@@ -520,8 +523,7 @@ public class Aware_Preferences extends Aware_Activity {
 
         @Override
         public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
-//            toolbar.setTitle(preference.getTitle());
-//            sPreferences.setSupportActionBar(toolbar);
+            //TODO: Find out how to add toolbar to sub-preferences views
             return super.onPreferenceTreeClick(preferenceScreen, preference);
         }
 
@@ -2170,10 +2172,6 @@ public class Aware_Preferences extends Aware_Activity {
 
         //Now check plugins
         new CheckPlugins(context).execute(active_plugins);
-
-//        for( String package_name : active_plugins ) {
-//            Aware.startPlugin(context, package_name);
-//        }
 
         //Send data to server
         Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);

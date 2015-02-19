@@ -145,6 +145,8 @@ public class Applications extends AccessibilityService {
                 appInfo = packageManager.getApplicationInfo(event.getPackageName().toString(), PackageManager.GET_ACTIVITIES);
             } catch( final NameNotFoundException e ) {
                 appInfo = null;
+            } catch( NullPointerException e ) {
+                appInfo = null;
             }
 
             PackageInfo pkgInfo;
@@ -152,12 +154,14 @@ public class Applications extends AccessibilityService {
                 pkgInfo = packageManager.getPackageInfo(event.getPackageName().toString(), PackageManager.GET_META_DATA);
             } catch (NameNotFoundException e ) {
                 pkgInfo = null;
+            } catch (NullPointerException e ) {
+                pkgInfo = null;
             }
 
             String appName = "";
             try {
                 if( appInfo != null ) {
-                    appName = (String) packageManager.getApplicationLabel(appInfo);
+                    appName = packageManager.getApplicationLabel(appInfo).toString();
                 }
             } catch (Resources.NotFoundException e ) {
                 appName = "";

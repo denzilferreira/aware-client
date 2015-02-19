@@ -14,6 +14,8 @@
     <style name="Aware.Toolbar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
         <item name="android:background">#33B5E5</item>
         <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:textColorSecondary">#FFFFFF</item>
         <item name="android:navigationIcon">?attr/homeAsUpIndicator</item>
         <item name="navigationIcon">?attr/homeAsUpIndicator</item>
     </style>

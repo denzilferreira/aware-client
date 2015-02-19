@@ -18,6 +18,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -97,7 +98,11 @@ public class Wear_Service extends WearableListenerService {
 
         @Override
         protected Void doInBackground(ContentValues[]... data) {
-            getContentResolver().bulkInsert( content_uri, data[0] );
+            try{
+                getContentResolver().bulkInsert( content_uri, data[0] );
+            }catch (android.database.SQLException e ) {
+                //something went wrong
+            }
             return null;
         }
     }

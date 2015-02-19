@@ -21,8 +21,8 @@ android {
     defaultConfig {
         //Comment applicationId out for library
         applicationId "com.aware"
-        versionCode 358
-        versionName "3.2.7"
+        versionCode 359
+        versionName "3.2.8"
         targetSdkVersion 21
         signingConfig signingConfigs.debug
     }
@@ -58,4 +58,4 @@ dependencies {
 }
 
 //Update AWARE's library in Maven Central
-apply from: 'maven-publish.gradle'
+//apply from: 'maven-publish.gradle'

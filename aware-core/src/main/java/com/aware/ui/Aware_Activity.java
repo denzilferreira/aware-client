@@ -207,12 +207,8 @@ public class Aware_Activity extends ActionBarActivity {
 	            			break;
 		            	case 3: //Join study
 		            		//TODO: make ui for listing available studies
-//                            if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) {
-//                                new Async_StudyData().execute(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
-//                            } else {
-                                Intent join_study = new Intent(getApplicationContext(), CameraStudy.class);
-                                startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY, animations);
-//                            }
+                            Intent join_study = new Intent(getApplicationContext(), CameraStudy.class);
+                            startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY, animations);
 		            		break;
 	            	}
 	            	navigationDrawer.closeDrawer(navigationList);

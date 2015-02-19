@@ -369,19 +369,9 @@ public class Aware extends Service {
     public static boolean is_watch(Context c) {
         UiModeManager uiManager = (UiModeManager) c.getSystemService(Context.UI_MODE_SERVICE);
         if( uiManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_WATCH ) {
-            if( DEBUG ) Log.d(TAG, "This is a watch!");
             return true;
         }
-        if ( DEBUG ) Log.d(TAG,"This is a phone!");
         return false;
-
-//        boolean is_watch = false;
-//        Cursor device = c.getContentResolver().query(Aware_Provider.Aware_Device.CONTENT_URI, null, null, null, "1 LIMIT 1");
-//        if( device != null && device.moveToFirst() ) {
-//            is_watch = device.getString(device.getColumnIndex(Aware_Device.RELEASE)).contains("W");
-//        }
-//        if( device != null && ! device.isClosed() ) device.close();
-//        return is_watch;
     }
     
     @Override
@@ -395,15 +385,21 @@ public class Aware extends Service {
             //Plugins need to be able to start services too, as requested in their settings
             startAllServices();
 
-            //The official client takes care of keeping the plugins running
+            //The official client takes care of keeping the plugins running and updated
             if( getPackageName().equals("com.aware") ) {
+                ArrayList<String> active_plugins = new ArrayList<>();
                 Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
                 if( enabled_plugins != null && enabled_plugins.moveToFirst() ) {
                     do {
-                        startPlugin(getApplicationContext(), enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME)));
+                        String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+                        active_plugins.add(package_name);
+                        startPlugin(getApplicationContext(), package_name);
                     }while(enabled_plugins.moveToNext());
                 }
                 if( enabled_plugins != null && ! enabled_plugins.isClosed() ) enabled_plugins.close();
+
+                //Check if there are updates on the plugins
+                new CheckPlugins().execute(active_plugins);
 
 	            if( Aware.getSetting(getApplicationContext(), Aware_Preferences.AWARE_AUTO_UPDATE).equals("true") ) {
 	            	if( aware_preferences.getLong(PREF_LAST_UPDATE, 0) == 0 || (aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 0 && System.currentTimeMillis()-aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 6*60*60*1000) ) { //check every 6h
@@ -852,6 +848,62 @@ public class Aware extends Service {
         if( active_plugins != null && ! active_plugins.isClosed() ) active_plugins.close();
     }
 
+    private class CheckPlugins extends AsyncTask<ArrayList<String>, Void, Boolean> {
+
+        private ArrayList<String> updated = new ArrayList<>();
+
+        @Override
+        protected Boolean doInBackground(ArrayList<String>... params) {
+            for( String package_name : params[0] ) {
+                JSONObject json_package = null;
+                HttpResponse http_request = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
+                if( http_request != null && http_request.getStatusLine().getStatusCode() == 200 ) {
+                    try {
+                        String json_string = Https.undoGZIP(http_request);
+                        if( ! json_string.equals("[]") ) {
+                            json_package = new JSONObject(json_string);
+                        }
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if( json_package != null ) {
+                    try {
+                        if( json_package.getInt("version") > Plugins_Manager.getVersion(getApplicationContext(), package_name) ) {
+                            updated.add(package_name);
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            if( updated.size() > 0 ) return true;
+            return false;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean updates) {
+            super.onPostExecute(updates);
+            if( updates ) {
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
+                mBuilder.setSmallIcon(R.drawable.ic_stat_aware_plugin_dependency);
+                mBuilder.setContentTitle("AWARE Update");
+                mBuilder.setContentText("Found " + updated.size() + " updated plugin(s). Install?");
+                mBuilder.setAutoCancel(true);
+
+                Intent updateIntent = new Intent(getApplicationContext(), UpdatePlugins.class);
+                updateIntent.putExtra("updated", updated);
+
+                PendingIntent clickIntent = PendingIntent.getService(getApplicationContext(), 0, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                mBuilder.setContentIntent(clickIntent);
+                NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                notManager.notify(updated.size(), mBuilder.build());
+            }
+        }
+    }
+
     /**
      * Client: check if there is an update to the client.
      */
@@ -902,8 +954,8 @@ public class Aware extends Service {
     		if( result ) {
     			NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
     			mBuilder.setSmallIcon(R.drawable.ic_stat_aware_update);
-    			mBuilder.setContentTitle("AWARE update");
-    			mBuilder.setContentText("New: " + whats_new + "\nVersion: " + version + "\nTap to install...");
+    			mBuilder.setContentTitle("AWARE Update");
+    			mBuilder.setContentText("Version: " + version + ". Install?");
                 mBuilder.setAutoCancel(true);
     			
     			Intent updateIntent = new Intent(getApplicationContext(), UpdateFrameworkService.class);
@@ -1100,6 +1152,18 @@ public class Aware extends Service {
     			if( Aware.DEBUG ) Log.d( Aware.TAG, e.getMessage());
     		}
         	return 0;
+        }
+    }
+
+    public static class UpdatePlugins extends IntentService {
+        public UpdatePlugins() {super("Update Plugins service");}
+
+        @Override
+        protected void onHandleIntent(Intent intent) {
+            ArrayList<String> packages = intent.getStringArrayListExtra("updated");
+            for( String package_name : packages ) {
+                Aware.downloadPlugin(getApplicationContext(), package_name, true);
+            }
         }
     }
 
