@@ -10,8 +10,8 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceActivity;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
@@ -39,72 +39,12 @@ import org.apache.http.ParseException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Aware_Activity extends ActionBarActivity {
+public class Aware_Activity extends PreferenceActivity {
 	
 	private DrawerLayout navigationDrawer;
 	private ListView navigationList;
 	private ActionBarDrawerToggle navigationToggle;
-	public static Toolbar toolbar;
-
-    @Override
-    public void setContentView(int layoutResID) {
-        ViewGroup contentView = (ViewGroup) LayoutInflater.from(this).inflate(layoutResID, (ViewGroup) getWindow().getDecorView().getRootView(), false);
-        toolbar = (Toolbar) contentView.findViewById(R.id.aware_toolbar);
-        toolbar.setTitle(getTitle());
-        setSupportActionBar(toolbar);
-
-        navigationDrawer = (DrawerLayout) contentView.findViewById(R.id.aware_ui_main);
-        navigationList = (ListView) contentView.findViewById(R.id.aware_navigation);
-
-        navigationToggle = new ActionBarDrawerToggle( Aware_Activity.this, navigationDrawer, toolbar, R.string.drawer_open, R.string.drawer_close );
-        navigationDrawer.setDrawerListener(navigationToggle);
-
-        String[] options = {"Stream", "Sensors", "Plugins", "Studies"};
-        NavigationAdapter nav_adapter = new NavigationAdapter( getApplicationContext(), options);
-        navigationList.setAdapter(nav_adapter);
-        navigationList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                LinearLayout item_container = (LinearLayout) view.findViewById(R.id.nav_container);
-                item_container.setBackgroundColor(Color.DKGRAY);
-
-                for( int i=0; i< navigationList.getChildCount(); i++ ) {
-                    if( i != position ) {
-                        LinearLayout other = (LinearLayout) navigationList.getChildAt(i);
-                        LinearLayout other_item = (LinearLayout) other.findViewById(R.id.nav_container);
-                        other_item.setBackgroundColor(Color.TRANSPARENT);
-                    }
-                }
-
-                Bundle animations = ActivityOptions.makeCustomAnimation(Aware_Activity.this, R.anim.anim_slide_in_left, R.anim.anim_slide_out_left).toBundle();
-                switch( position ) {
-                    case 0: //Stream
-                        Intent stream_ui = new Intent( Aware_Activity.this, Stream_UI.class);
-                        startActivity(stream_ui, animations);
-                        break;
-                    case 1: //Sensors
-                        Intent sensors_ui = new Intent( Aware_Activity.this, Aware_Preferences.class );
-                        startActivity(sensors_ui, animations);
-                        break;
-                    case 2: //Plugins
-                        Intent plugin_manager = new Intent( Aware_Activity.this, Plugins_Manager.class );
-                        startActivity(plugin_manager, animations);
-                        break;
-                    case 3: //Studies
-                        if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) {
-                            new Async_StudyData().execute(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
-                        } else {
-                            Intent join_study = new Intent( Aware_Activity.this, CameraStudy.class );
-                            startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY, animations);
-                        }
-                        break;
-                }
-                navigationDrawer.closeDrawer(navigationList);
-            }
-        });
-        getWindow().setContentView(contentView);
-    }
+	private Toolbar toolbar;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -140,13 +80,69 @@ public class Aware_Activity extends ActionBarActivity {
 	@Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        navigationToggle.syncState();
+
+        toolbar = (Toolbar) findViewById(R.id.aware_toolbar);
+        toolbar.setTitle(this.getTitle());
+
+        navigationDrawer = (DrawerLayout) findViewById(R.id.aware_ui_main);
+        navigationList = (ListView) findViewById(R.id.aware_navigation);
+
+        navigationToggle = new ActionBarDrawerToggle( Aware_Activity.this, navigationDrawer, toolbar, R.string.drawer_open, R.string.drawer_close );
+        navigationDrawer.setDrawerListener(navigationToggle);
+
+        String[] options = {"Stream", "Sensors", "Plugins", "Studies"};
+        NavigationAdapter nav_adapter = new NavigationAdapter( getApplicationContext(), options);
+        navigationList.setAdapter(nav_adapter);
+        navigationList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                LinearLayout item_container = (LinearLayout) view.findViewById(R.id.nav_container);
+                item_container.setBackgroundColor(Color.DKGRAY);
+
+                for (int i = 0; i < navigationList.getChildCount(); i++) {
+                    if (i != position) {
+                        LinearLayout other = (LinearLayout) navigationList.getChildAt(i);
+                        LinearLayout other_item = (LinearLayout) other.findViewById(R.id.nav_container);
+                        other_item.setBackgroundColor(Color.TRANSPARENT);
+                    }
+                }
+
+                Bundle animations = ActivityOptions.makeCustomAnimation(Aware_Activity.this, R.anim.anim_slide_in_left, R.anim.anim_slide_out_left).toBundle();
+                switch (position) {
+                    case 0: //Stream
+                        Intent stream_ui = new Intent(Aware_Activity.this, Stream_UI.class);
+                        startActivity(stream_ui, animations);
+                        break;
+                    case 1: //Sensors
+                        Intent sensors_ui = new Intent(Aware_Activity.this, Aware_Preferences.class);
+                        startActivity(sensors_ui, animations);
+                        break;
+                    case 2: //Plugins
+                        Intent plugin_manager = new Intent(Aware_Activity.this, Plugins_Manager.class);
+                        startActivity(plugin_manager, animations);
+                        break;
+                    case 3: //Studies
+                        if (Aware.getSetting(getApplicationContext(), "study_id").length() > 0) {
+                            new Async_StudyData().execute(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
+                        } else {
+                            Intent join_study = new Intent(Aware_Activity.this, CameraStudy.class);
+                            startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY, animations);
+                        }
+                        break;
+                }
+                navigationDrawer.closeDrawer(navigationList);
+            }
+        });
+
+        if( navigationToggle != null ) navigationToggle.syncState();
     }
     
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        navigationToggle.onConfigurationChanged(newConfig);
+
+        if( navigationToggle != null ) navigationToggle.onConfigurationChanged(newConfig);
     }
 
     @Override
@@ -166,7 +162,7 @@ public class Aware_Activity extends ActionBarActivity {
             default: return super.onOptionsItemSelected(item);
         }
     }
-    
+
     /**
      * Navigation adapter
      * @author denzil

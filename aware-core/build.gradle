@@ -21,8 +21,8 @@ android {
     defaultConfig {
         //Comment applicationId out for library
         applicationId "com.aware"
-        versionCode 359
-        versionName "3.2.8"
+        versionCode 360
+        versionName "3.2.9"
         targetSdkVersion 21
         signingConfig signingConfigs.debug
     }
@@ -47,7 +47,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:21.0.3'
     compile 'com.android.support:gridlayout-v7:21.0.2'
     compile 'com.android.support:cardview-v7:21.0.2'
-    compile 'com.github.machinarius:preferencefragment:0.1.1'
+
     phoneCompile 'com.android.support:support-v4:21.0.3'
     phoneCompile 'com.google.android.gms:play-services:6.5.87'
     wearCompile 'com.android.support:support-v13:21.0.2'

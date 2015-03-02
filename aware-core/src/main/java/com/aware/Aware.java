@@ -792,7 +792,11 @@ public class Aware extends Service {
                 try {
                     String json_str = Https.undoGZIP(response);
                     JSONArray j_array = new JSONArray(json_str);
-                    return j_array.getJSONObject(0).has("message");
+                    JSONObject io = j_array.getJSONObject(0);
+                    if( io.has("message") ) {
+                        if( io.getString("message").equals("This study is not ongoing anymore.") ) return true;
+                    }
+                    return false;
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -849,9 +853,7 @@ public class Aware extends Service {
     }
 
     private class CheckPlugins extends AsyncTask<ArrayList<String>, Void, Boolean> {
-
         private ArrayList<String> updated = new ArrayList<>();
-
         @Override
         protected Boolean doInBackground(ArrayList<String>... params) {
             for( String package_name : params[0] ) {
@@ -862,20 +864,15 @@ public class Aware extends Service {
                         String json_string = Https.undoGZIP(http_request);
                         if( ! json_string.equals("[]") ) {
                             json_package = new JSONObject(json_string);
+                            try {
+                                if( json_package.getInt("version") > Plugins_Manager.getVersion(getApplicationContext(), package_name) ) {
+                                    updated.add(package_name);
+                                }
+                            } catch (JSONException e) {
+                            }
                         }
                     } catch (ParseException e) {
-                        e.printStackTrace();
                     } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if( json_package != null ) {
-                    try {
-                        if( json_package.getInt("version") > Plugins_Manager.getVersion(getApplicationContext(), package_name) ) {
-                            updated.add(package_name);
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
                     }
                 }
             }

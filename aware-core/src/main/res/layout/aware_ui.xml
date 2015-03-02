@@ -4,26 +4,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/aware_toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="start|center_vertical"
-        android:minHeight="?attr/actionBarSize"
-        android:theme="@style/Aware.Toolbar">
-    </android.support.v7.widget.Toolbar>
+    <include android:id="@+id/aware_toolbar" layout="@layout/aware_toolbar"/>
 
     <android.support.v4.widget.DrawerLayout
         android:id="@+id/aware_ui_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <fragment
-            android:id="@+id/settings_list"
-            android:tag="settings_list"
-            android:name="com.aware.Aware_Preferences$SettingsFragment"
+        <ListView
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="fill_parent" android:id="@android:id/list"
+            />
 
         <ListView
             android:id="@+id/aware_navigation"
