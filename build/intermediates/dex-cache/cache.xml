@@ -30,13 +30,6 @@
         <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-e5e8617fdef1361240293cb47eec4e34eef30a60.jar" />
     </item>
     <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.github.machinarius/preferencefragment/0.1.1/classes.jar"
-        jumboMode="false"
-        revision="21.1.2"
-        sha1="648463e00c6883d01b6c11a6781776203334b6fc">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-d86557b09c6efa174b02d12e3f05ddb3942f2e2e.jar" />
-    </item>
-    <item
         jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/cardview-v7/21.0.2/classes.jar"
         jumboMode="false"
         revision="21.1.2"

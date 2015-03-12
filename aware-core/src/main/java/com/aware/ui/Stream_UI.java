@@ -41,15 +41,8 @@ public class Stream_UI extends Aware_Activity {
     public static final String ACTION_AWARE_STREAM_CLOSED = "ACTION_AWARE_STREAM_CLOSED";
 	
 	private static LinearLayout stream_container;
-
-    private Handler refreshHandler = new Handler();
-    private final Runnable refresher = new Runnable() {
-        @Override
-        public void run() {
-            loadStream();
-            refreshHandler.postDelayed(refresher, 1000);
-        }
-    };
+    private static Handler refreshHandler = null;
+    private static Runnable refresher = null;
 	
 	@Override
 	protected void onCreate(Bundle arg0) {
@@ -57,7 +50,15 @@ public class Stream_UI extends Aware_Activity {
 
         setContentView(R.layout.stream_ui);
 
-		stream_container = (LinearLayout) findViewById(R.id.stream_container);
+		IntentFilter filter = new IntentFilter(ACTION_AWARE_UPDATE_STREAM);
+		registerReceiver(stream_updater, filter);
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+
+        stream_container = (LinearLayout) findViewById(R.id.stream_container);
         ImageButton add_to_stream = (ImageButton) findViewById(R.id.change_stream);
         add_to_stream.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,14 +68,15 @@ public class Stream_UI extends Aware_Activity {
             }
         });
 
-		IntentFilter filter = new IntentFilter(ACTION_AWARE_UPDATE_STREAM);
-		registerReceiver(stream_updater, filter);
-	}
-	
-	@Override
-	protected void onResume() {
-		super.onResume();
-		loadStream();
+        refreshHandler = new Handler();
+        refresher = new Runnable() {
+            @Override
+            public void run() {
+                loadStream();
+                refreshHandler.postDelayed(refresher, 1000);
+            }
+        };
+
         refreshHandler.post(refresher);
         Intent is_visible = new Intent(ACTION_AWARE_STREAM_OPEN);
         sendBroadcast(is_visible);
@@ -82,11 +84,12 @@ public class Stream_UI extends Aware_Activity {
 	
 	private void loadStream() {
 		stream_container.removeAllViews();
+        stream_container.invalidate();
 
         Cursor get_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, Aware_Plugins.PLUGIN_NAME + " DESC");
 		if( get_plugins != null && get_plugins.moveToFirst() ) {
 			do {
-				View card = Aware.getContextCard( this, get_plugins.getString( get_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME)) );
+				View card = Aware.getContextCard( getApplicationContext(), get_plugins.getString( get_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME)) );
 				if( card != null ) {
 					stream_container.addView(card);
 				}

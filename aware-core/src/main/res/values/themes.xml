@@ -12,6 +12,9 @@
     </style>
 
     <style name="Aware.Toolbar" parent="@style/Widget.AppCompat.Toolbar">
+        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:padding">0dp</item>
+        <item name="android:layout_margin">0dp</item>
         <item name="android:background">#33B5E5</item>
         <item name="android:textColor">#FFFFFF</item>
         <item name="android:textColorPrimary">#FFFFFF</item>

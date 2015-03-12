@@ -18,11 +18,13 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -270,7 +272,12 @@ public class Plugins_Manager extends Aware_Activity {
     			final String developer = installed_plugins.getString(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_AUTHOR));
     			final String version = installed_plugins.getString(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_VERSION));
     			final int status = installed_plugins.getInt(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_STATUS));
-    			
+
+                CardView card = new CardView(this);
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams( LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT );
+                params.setMargins( 10,10,10,10 );
+                card.setLayoutParams(params);
+
     			final View pkg_view = inflater.inflate(R.layout.plugins_store_pkg_list_item, null, false);
 
     			try {
@@ -405,7 +412,8 @@ public class Plugins_Manager extends Aware_Activity {
                             });
     						break;
     				}
-    				store_grid.addView(pkg_view);
+                    card.addView(pkg_view);
+    				store_grid.addView(card);
     			} catch (NameNotFoundException e) {
     				e.printStackTrace();
     			}
@@ -464,7 +472,7 @@ public class Plugins_Manager extends Aware_Activity {
 
                     if( to_clean.length() > 0 ) {
                         to_clean = to_clean.substring(0,to_clean.length()-1);
-                        getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " in (" + to_clean + ")", null);
+                        getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " in ('" + to_clean + "')", null);
                     }
 
 					for( int i=0; i< plugins.length(); i++ ) {

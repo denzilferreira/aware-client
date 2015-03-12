@@ -676,6 +676,7 @@ public class Aware extends Service {
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
         global_settings.add(Aware_Preferences.WEBSERVICE_SERVER);
+        global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
         global_settings.add(Aware_Preferences.STATUS_MQTT);
         global_settings.add(Aware_Preferences.MQTT_SERVER);
         global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
@@ -716,6 +717,7 @@ public class Aware extends Service {
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
         global_settings.add(Aware_Preferences.WEBSERVICE_SERVER);
+        global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
         global_settings.add(Aware_Preferences.STATUS_MQTT);
         global_settings.add(Aware_Preferences.MQTT_SERVER);
         global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);

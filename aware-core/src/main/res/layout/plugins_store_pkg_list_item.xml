@@ -1,23 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/pkg_frame"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_gravity="left" >
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:layout_weight="1"
+    android:layout_gravity="left">
 
     <LinearLayout
         android:id="@+id/pkg_main"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:animateLayoutChanges="true"
         android:background="@android:color/white"
-        android:orientation="vertical" >
+        android:orientation="vertical"
+        android:textAlignment="textStart"
+        android:weightSum="1"
+        android:gravity="center_vertical|center_horizontal">
 
         <ImageView
             android:id="@+id/pkg_icon"
             android:layout_width="77dp"
             android:layout_height="77dp"
-            android:layout_gravity="center_horizontal"
+            android:layout_gravity="center"
             android:adjustViewBounds="true"
             android:maxHeight="77dp"
             android:maxWidth="77dp"
@@ -29,23 +33,16 @@
             android:id="@+id/pkg_title"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:lines="2"
             android:maxLines="3"
-            android:paddingBottom="5dp"
-            android:paddingLeft="5dp"
-            android:paddingRight="5dp"
             android:text="plugin title"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textSize="9sp" />
+            android:textSize="9sp"
+            android:textAlignment="textStart"
+            android:textColor="#33B5E5"
+            android:textStyle="bold"
+            android:padding="2dp" />
 
-        <LinearLayout
-            android:id="@+id/pkg_shadow"
-            android:layout_width="fill_parent"
-            android:layout_height="2dp"
-            android:background="@color/card_shadow"
-            android:orientation="vertical" >
-        </LinearLayout>
     </LinearLayout>
 
     <ImageView
