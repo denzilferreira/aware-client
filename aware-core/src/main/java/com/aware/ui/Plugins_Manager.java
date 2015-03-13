@@ -13,25 +13,22 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.GridLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.CursorAdapter;
+import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.aware.Aware;
 import com.aware.R;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
-import com.aware.utils.Aware_Plugin;
 import com.aware.utils.Https;
 
 import org.apache.http.HttpResponse;
@@ -52,7 +49,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -84,11 +80,9 @@ public class Plugins_Manager extends Aware_Activity {
 	public static final int PLUGIN_NOT_INSTALLED = 3;
 	
 	private static LayoutInflater inflater;
-	private static GridLayout store_grid;
-	private static ProgressBar loading_plugins;
-	
-	private static boolean is_refreshing = false;
-	
+	private static GridView store_grid;
+	private static PluginAdapter pluginAdapter;
+
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,9 +90,12 @@ public class Plugins_Manager extends Aware_Activity {
         setContentView(R.layout.plugins_store_ui);
 
     	inflater = getLayoutInflater();
-    	store_grid = (GridLayout) findViewById(R.id.plugins_store_grid);
-    	loading_plugins = (ProgressBar) findViewById(R.id.loading_plugins);
-    	
+    	store_grid = (GridView) findViewById(R.id.plugins_store_grid);
+
+        Cursor installed_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, Aware_Plugins.PLUGIN_NAME + " ASC");
+        pluginAdapter = new PluginAdapter(getApplicationContext(), installed_plugins, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        store_grid.setAdapter(pluginAdapter);
+
     	IntentFilter filter = new IntentFilter();
     	filter.addAction(Aware.ACTION_AWARE_PLUGIN_MANAGER_REFRESH);
     	registerReceiver(plugins_listener, filter);
@@ -110,12 +107,187 @@ public class Plugins_Manager extends Aware_Activity {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			if( intent.getAction().equals(Aware.ACTION_AWARE_PLUGIN_MANAGER_REFRESH) ) {
-				if( ! is_refreshing ) {
-					new Async_PluginUpdater().execute();
-				}
+				updateGrid();
 			}
 		}
 	}
+
+    private void updateGrid() {
+        Cursor installed_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, Aware_Plugins.PLUGIN_NAME + " ASC");
+        pluginAdapter = new PluginAdapter(getApplicationContext(), installed_plugins, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        store_grid.setAdapter(pluginAdapter);
+        pluginAdapter.notifyDataSetChanged();
+        store_grid.invalidateViews();
+    }
+
+    public class PluginAdapter extends CursorAdapter {
+        private LayoutInflater inflater;
+
+        public PluginAdapter(Context context, Cursor c, int flags) {
+            super(context, c, flags);
+            inflater = LayoutInflater.from(context);
+        }
+
+        @Override
+        public View newView(Context context, Cursor cursor, ViewGroup parent) {
+            View pkg_view = inflater.inflate(R.layout.plugins_store_pkg_list_item, parent, false);
+            return pkg_view;
+        }
+
+        @Override
+        public void bindView(final View pkg_view, Context context, Cursor cursor) {
+            final String package_name = cursor.getString(cursor.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+            final String name = cursor.getString(cursor.getColumnIndex(Aware_Plugins.PLUGIN_NAME));
+            final String description = cursor.getString(cursor.getColumnIndex(Aware_Plugins.PLUGIN_DESCRIPTION));
+            final String developer = cursor.getString(cursor.getColumnIndex(Aware_Plugins.PLUGIN_AUTHOR));
+            final String version = cursor.getString(cursor.getColumnIndex(Aware_Plugins.PLUGIN_VERSION));
+            final int status = cursor.getInt(cursor.getColumnIndex(Aware_Plugins.PLUGIN_STATUS));
+            final byte[] icon = cursor.getBlob(cursor.getColumnIndex(Aware_Plugins.PLUGIN_ICON));
+
+            ImageView pkg_icon = (ImageView) pkg_view.findViewById(R.id.pkg_icon);
+            final TextView pkg_title = (TextView) pkg_view.findViewById(R.id.pkg_title);
+            ImageView pkg_state = (ImageView) pkg_view.findViewById(R.id.pkg_state);
+
+            try {
+                if (status != PLUGIN_NOT_INSTALLED) {
+                    ApplicationInfo appInfo = context.getPackageManager().getApplicationInfo(package_name, PackageManager.GET_META_DATA);
+                    pkg_icon.setImageDrawable(appInfo.loadIcon(getPackageManager()));
+                } else {
+                    if (icon != null && icon.length > 0) pkg_icon.setImageBitmap(BitmapFactory.decodeByteArray(icon, 0, icon.length));
+                }
+
+                pkg_title.setText(name);
+
+                switch (status) {
+                    case PLUGIN_DISABLED:
+                        pkg_state.setVisibility(View.INVISIBLE);
+                        pkg_view.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                AlertDialog.Builder builder = getPluginInfoDialog(name, version, description, developer);
+                                if (isClassAvailable(package_name, "Settings")) {
+                                    builder.setNegativeButton("Settings", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                            Intent open_settings = new Intent();
+                                            open_settings.setClassName(package_name, package_name + ".Settings");
+                                            startActivity(open_settings);
+                                        }
+                                    });
+                                }
+                                builder.setPositiveButton("Activate", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                        Aware.startPlugin(getApplicationContext(), package_name);
+                                        updateGrid();
+                                    }
+                                });
+                                builder.create().show();
+                            }
+                        });
+                        break;
+                    case PLUGIN_ACTIVE:
+                        pkg_state.setImageResource(R.drawable.ic_pkg_active);
+                        pkg_view.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                AlertDialog.Builder builder = getPluginInfoDialog(name, version, description, developer);
+                                if (isClassAvailable(package_name, "Settings")) {
+                                    builder.setNegativeButton("Settings", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                            Intent open_settings = new Intent();
+                                            open_settings.setClassName(package_name, package_name + ".Settings");
+                                            startActivity(open_settings);
+                                        }
+                                    });
+                                }
+                                builder.setPositiveButton("Deactivate", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                        Aware.stopPlugin(getApplicationContext(), package_name);
+                                        updateGrid();
+                                    }
+                                });
+                                builder.create().show();
+                            }
+                        });
+                        break;
+                    case PLUGIN_UPDATED:
+                        pkg_state.setImageResource(R.drawable.ic_pkg_updated);
+                        pkg_view.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                AlertDialog.Builder builder = getPluginInfoDialog(name, version, description, developer);
+                                if (isClassAvailable(package_name, "Settings")) {
+                                    builder.setNegativeButton("Settings", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                            Intent open_settings = new Intent();
+                                            open_settings.setClassName(package_name, package_name + ".Settings");
+                                            startActivity(open_settings);
+                                        }
+                                    });
+                                }
+                                builder.setNeutralButton("Deactivate", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                        Aware.stopPlugin(getApplicationContext(), package_name);
+                                        updateGrid();
+                                    }
+                                });
+                                builder.setPositiveButton("Update", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                        pkg_view.setAlpha(0.5f);
+                                        pkg_title.setText("Updating...");
+                                        pkg_view.setOnClickListener(null);
+                                        Aware.downloadPlugin(getApplicationContext(), package_name, true);
+                                    }
+                                });
+                                builder.create().show();
+                            }
+                        });
+                        break;
+                    case PLUGIN_NOT_INSTALLED:
+                        pkg_state.setImageResource(R.drawable.ic_pkg_download);
+                        pkg_view.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                AlertDialog.Builder builder = getPluginInfoDialog(name, version, description, developer);
+                                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                    }
+                                });
+                                builder.setPositiveButton("Install", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                        pkg_view.setAlpha(0.5f);
+                                        pkg_title.setText("Downloading...");
+                                        pkg_view.setOnClickListener(null);
+                                        Aware.downloadPlugin(getApplicationContext(), package_name, false);
+                                    }
+                                });
+                                builder.create().show();
+                            }
+                        });
+                        break;
+                }
+            } catch (NameNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 	
 	private AlertDialog.Builder getPluginInfoDialog( String name, String version, String description, String developer ) {
 		AlertDialog.Builder builder = new AlertDialog.Builder( Plugins_Manager.this );
@@ -137,10 +309,7 @@ public class Plugins_Manager extends Aware_Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-        drawUI();
-		if( ! is_refreshing ) {
-			new Async_PluginUpdater().execute();
-		}
+        new Async_PluginUpdater().execute();
 	}
     
     @Override
@@ -258,184 +427,14 @@ public class Plugins_Manager extends Aware_Activity {
         return 0;
     }
 	
-	private void drawUI() {
-		//Clear previous states
-		store_grid.removeAllViews();
-
-		//Build UI
-		Cursor installed_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, Aware_Plugins.PLUGIN_NAME + " ASC");
-        if( installed_plugins != null && installed_plugins.moveToFirst()) {
-            do{
-    			final String package_name = installed_plugins.getString(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-    			final String name = installed_plugins.getString(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_NAME));
-    			final String description = installed_plugins.getString(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_DESCRIPTION));
-    			final String developer = installed_plugins.getString(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_AUTHOR));
-    			final String version = installed_plugins.getString(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_VERSION));
-    			final int status = installed_plugins.getInt(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_STATUS));
-
-                CardView card = new CardView(this);
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams( LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT );
-                params.setMargins( 10,10,10,10 );
-                card.setLayoutParams(params);
-
-    			final View pkg_view = inflater.inflate(R.layout.plugins_store_pkg_list_item, null, false);
-
-    			try {
-    				ImageView pkg_icon = (ImageView) pkg_view.findViewById(R.id.pkg_icon);
-    				if( status != PLUGIN_NOT_INSTALLED ) {
-    					ApplicationInfo appInfo = getPackageManager().getApplicationInfo(package_name, PackageManager.GET_META_DATA);
-    					pkg_icon.setImageDrawable(appInfo.loadIcon(getPackageManager()));
-    				} else {
-    					byte[] img = installed_plugins.getBlob(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_ICON));
-                        if( img != null && img.length > 0 ) pkg_icon.setImageBitmap(BitmapFactory.decodeByteArray(img, 0, img.length));
-    				}
-    				
-    				TextView pkg_title = (TextView) pkg_view.findViewById(R.id.pkg_title);
-    				pkg_title.setText(installed_plugins.getString(installed_plugins.getColumnIndex(Aware_Plugins.PLUGIN_NAME)));
-    				
-    				ImageView pkg_state = (ImageView) pkg_view.findViewById(R.id.pkg_state);
-    				
-    				switch(status) {
-    					case PLUGIN_DISABLED:
-    						pkg_state.setVisibility(View.INVISIBLE);
-    						pkg_view.setOnClickListener( new View.OnClickListener() {
-    							@Override
-    							public void onClick(View v) {
-    								AlertDialog.Builder builder = getPluginInfoDialog(name, version, description, developer);
-    								if( isClassAvailable(package_name, "Settings") ) {
-        								builder.setNegativeButton("Settings", new DialogInterface.OnClickListener() {
-    										@Override
-    										public void onClick(DialogInterface dialog, int which) {
-    											dialog.dismiss();
-    											Intent open_settings = new Intent();
-    		    								open_settings.setClassName(package_name, package_name + ".Settings");
-    		    								startActivity(open_settings);
-    										}
-    									});
-    								}
-    								builder.setPositiveButton("Activate", new DialogInterface.OnClickListener() {
-    									@Override
-    									public void onClick(DialogInterface dialog, int which) {
-    										dialog.dismiss();
-    										Aware.startPlugin(getApplicationContext(), package_name);
-    										drawUI();
-    									}
-    								});
-    								builder.create().show();
-    							}});
-    						break;
-    					case PLUGIN_ACTIVE:
-    						pkg_state.setImageResource(R.drawable.ic_pkg_active);
-    						pkg_view.setOnClickListener(new View.OnClickListener() {
-    							@Override
-    							public void onClick(View v) {
-    								AlertDialog.Builder builder = getPluginInfoDialog(name, version, description, developer);
-    								if( isClassAvailable(package_name,"Settings") ) {
-        								builder.setNegativeButton("Settings", new DialogInterface.OnClickListener() {
-    										@Override
-    										public void onClick(DialogInterface dialog, int which) {
-    											dialog.dismiss();
-    											Intent open_settings = new Intent();
-    		    								open_settings.setClassName(package_name, package_name + ".Settings");
-    		    								startActivity(open_settings);
-    										}
-    									});
-    								}
-    								builder.setPositiveButton("Deactivate", new DialogInterface.OnClickListener() {
-    									@Override
-    									public void onClick(DialogInterface dialog, int which) {
-    										dialog.dismiss();
-    										Aware.stopPlugin(getApplicationContext(), package_name);
-    										drawUI();
-    									}
-    								});
-    								builder.create().show();
-    							}});
-    						break;
-    					case PLUGIN_UPDATED:
-    						pkg_state.setImageResource(R.drawable.ic_pkg_updated);
-    						pkg_view.setOnClickListener(new View.OnClickListener(){
-    							@Override
-    							public void onClick(View v) {
-    								AlertDialog.Builder builder = getPluginInfoDialog( name, version, description, developer );
-    								if( isClassAvailable(package_name, "Settings") ) {
-	    								builder.setNegativeButton("Settings", new DialogInterface.OnClickListener() {
-											@Override
-											public void onClick(DialogInterface dialog, int which) {
-												dialog.dismiss();
-												Intent open_settings = new Intent();
-			    								open_settings.setClassName(package_name, package_name + ".Settings");
-			    								startActivity(open_settings);
-											}
-										});
-    								}
-    								builder.setNeutralButton("Deactivate", new DialogInterface.OnClickListener() {
-										@Override
-										public void onClick(DialogInterface dialog, int which) {
-											dialog.dismiss();
-											Aware.stopPlugin(getApplicationContext(), package_name);
-											drawUI();
-										}
-									});
-    								builder.setPositiveButton("Update", new DialogInterface.OnClickListener() {
-										@Override
-										public void onClick(DialogInterface dialog, int which) {
-											dialog.dismiss();
-											Aware.downloadPlugin( getApplicationContext(), package_name, true );
-										}
-									});
-    								builder.create().show();
-    							}
-                            });
-    						break;
-    					case PLUGIN_NOT_INSTALLED:
-    						pkg_state.setImageResource(R.drawable.ic_pkg_download);
-    						pkg_view.setOnClickListener(new View.OnClickListener(){
-    							@Override
-    							public void onClick(View v) {
-    								AlertDialog.Builder builder = getPluginInfoDialog( name, version, description, developer );
-    								builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-    									@Override
-    									public void onClick(DialogInterface dialog, int which) {
-    										dialog.dismiss();
-    									}
-    								});
-    								builder.setPositiveButton("Install", new DialogInterface.OnClickListener() {
-    									@Override
-    									public void onClick(DialogInterface dialog, int which) {
-    										dialog.dismiss();
-    										Aware.downloadPlugin( getApplicationContext(), package_name, false);
-    									}
-    								});
-    								builder.create().show();
-    							}
-                            });
-    						break;
-    				}
-                    card.addView(pkg_view);
-    				store_grid.addView(card);
-    			} catch (NameNotFoundException e) {
-    				e.printStackTrace();
-    			}
-    		} while(installed_plugins.moveToNext());
-    	}
-    	if( installed_plugins != null && ! installed_plugins.isClosed() ) installed_plugins.close();
-	}
-	
     /**
      * Checks for changes on the server side and updates database.
      * If changes were detected, result is true and a refresh of UI is requested.
      * @author denzil
      */
-    public class Async_PluginUpdater extends AsyncTask<Void, View, Void> {
-		@Override
-    	protected void onPreExecute() {
-    		super.onPreExecute();
-    		if( loading_plugins != null ) {
-    			is_refreshing = true;
-        		loading_plugins.setVisibility(View.VISIBLE);
-    		}
-    	}
+    public class Async_PluginUpdater extends AsyncTask<Void, View, Boolean> {
+
+        private boolean needsRefresh = false;
 
         private boolean is_onRepo(JSONArray server_packages, String package_name) {
             for(int i = 0; i < server_packages.length(); i++) {
@@ -449,8 +448,14 @@ public class Plugins_Manager extends Aware_Activity {
             return false;
         }
 
-    	@Override
-		protected Void doInBackground(Void... params) {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            needsRefresh = false;
+        }
+
+        @Override
+		protected Boolean doInBackground(Void... params) {
     		//Check for updates on the server side
     		HttpResponse response = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/plugins/get_plugins" + (( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) ? "/" + Aware.getSetting(getApplicationContext(), "study_id") : ""), true );
 			if( response != null && response.getStatusLine().getStatusCode() == 200 ) {
@@ -473,6 +478,7 @@ public class Plugins_Manager extends Aware_Activity {
                     if( to_clean.length() > 0 ) {
                         to_clean = to_clean.substring(0,to_clean.length()-1);
                         getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " in ('" + to_clean + "')", null);
+                        needsRefresh = true;
                     }
 
 					for( int i=0; i< plugins.length(); i++ ) {
@@ -485,6 +491,7 @@ public class Plugins_Manager extends Aware_Activity {
                                 //We used to have it installed, now we don't, remove from database
                                 getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + plugin.getString("package") + "'", null);
                                 new_data = true;
+                                needsRefresh = true;
                             } else {
                                 int version = is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins.PLUGIN_VERSION));
                                 //Lets check if it is updated
@@ -496,6 +503,7 @@ public class Plugins_Manager extends Aware_Activity {
                                     data.put(Aware_Plugins.PLUGIN_ICON, cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()));
                                     data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_UPDATED);
                                     getContentResolver().update(Aware_Plugins.CONTENT_URI, data, Aware_Plugins._ID + "=" + is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins._ID)), null);
+                                    needsRefresh = true;
                                 }
                             }
 						} else {
@@ -514,6 +522,7 @@ public class Plugins_Manager extends Aware_Activity {
                             data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_NOT_INSTALLED);
                             data.put(Aware_Plugins.PLUGIN_ICON, cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()));
                             getContentResolver().insert(Aware_Plugins.CONTENT_URI, data);
+                            needsRefresh = true;
                         }
 					}
 				} catch (ParseException e) {
@@ -522,17 +531,13 @@ public class Plugins_Manager extends Aware_Activity {
 					e.printStackTrace();
 				}
 			}
-			return null;
+			return needsRefresh;
 		}
     	
 		@Override
-		protected void onPostExecute(Void result) {
-			super.onPostExecute(result);
-			if( loading_plugins != null ) {
-				loading_plugins.setVisibility(View.GONE);
-				is_refreshing = false;
-				drawUI();
-			}
+		protected void onPostExecute(Boolean refresh) {
+			super.onPostExecute(refresh);
+            if( refresh ) updateGrid();
 		}
     }
 }

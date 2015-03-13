@@ -12,7 +12,6 @@
         android:layout_height="match_parent" >
 
         <ScrollView
-            xmlns:grid="http://schemas.android.com/apk/res-auto"
             android:id="@+id/plugins_store_scroller"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -24,26 +23,20 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical" >
 
-                <ProgressBar
-                    android:id="@+id/loading_plugins"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:indeterminate="true"
-                    android:padding="0dp"
-                    android:layout_margin="0dp"/>
-
-                <android.support.v7.widget.GridLayout
+                <GridView
                     android:id="@+id/plugins_store_grid"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@color/grey_background"
-                    android:padding="10dp"
-                    android:layout_gravity="center_horizontal|center_vertical"
-                    grid:alignmentMode="alignBounds"
-                    grid:columnCount="4"
-                    grid:orientation="horizontal"
-                    grid:useDefaultMargins="false" />
+                    android:columnWidth="80dp"
+                    android:padding="5dp"
+                    android:numColumns="auto_fit"
+                    android:verticalSpacing="5dp"
+                    android:horizontalSpacing="5dp"
+                    android:stretchMode="columnWidth"
+                    android:gravity="center"
+                    android:animateLayoutChanges="true"
+                    />
             </LinearLayout>
         </ScrollView>
 

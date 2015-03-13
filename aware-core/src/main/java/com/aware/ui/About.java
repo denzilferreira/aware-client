@@ -6,9 +6,6 @@ import android.webkit.WebView;
 
 import com.aware.R;
 
-/**
- * Created by denzil on 04/12/14.
- */
 public class About extends Aware_Activity {
 
     @Override

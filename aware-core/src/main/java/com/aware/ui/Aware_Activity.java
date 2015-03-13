@@ -15,8 +15,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -60,22 +58,6 @@ public class Aware_Activity extends PreferenceActivity {
             }
         }
     }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.aware_menu, menu);
-
-        if( Aware.is_watch(this) ) {
-           MenuItem qrcode = menu.findItem(R.id.aware_qrcode);
-           qrcode.setVisible(false);
-
-           //There is no webview in watches.
-           MenuItem team = menu.findItem(R.id.aware_about);
-           team.setVisible(false);
-        }
-        return super.onCreateOptionsMenu(menu);
-    }
 	
 	@Override
     protected void onPostCreate(Bundle savedInstanceState) {
@@ -83,6 +65,21 @@ public class Aware_Activity extends PreferenceActivity {
 
         toolbar = (Toolbar) findViewById(R.id.aware_toolbar);
         toolbar.setTitle(this.getTitle());
+        toolbar.inflateMenu(R.menu.aware_menu);
+        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem menuItem) {
+                if( menuItem.getTitle().toString().equals("QRCode")) {
+                    Intent join_study = new Intent(Aware_Activity.this, CameraStudy.class);
+                    startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
+                }
+                if( menuItem.getTitle().toString().equals("Team")) {
+                    Intent about_us = new Intent(Aware_Activity.this, About.class);
+                    startActivity(about_us);
+                }
+                return true;
+            }
+        });
 
         navigationDrawer = (DrawerLayout) findViewById(R.id.aware_ui_main);
         navigationList = (ListView) findViewById(R.id.aware_navigation);
@@ -145,28 +142,9 @@ public class Aware_Activity extends PreferenceActivity {
         if( navigationToggle != null ) navigationToggle.onConfigurationChanged(newConfig);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if( item != null && item.getTitle() != null ){
-            if( item.getTitle().equals(getString(R.string.aware_qrcode)) ) {
-                Intent join_study = new Intent(Aware_Activity.this, CameraStudy.class);
-                startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
-            }
-            if( item.getTitle().equals(getString(R.string.aware_team)) ) {
-                Intent about_us = new Intent(Aware_Activity.this, About.class);
-                startActivity(about_us);
-            }
-        }
-        switch (item.getItemId()) {
-            case android.R.id.home: onBackPressed(); return true;
-            default: return super.onOptionsItemSelected(item);
-        }
-    }
-
     /**
      * Navigation adapter
      * @author denzil
-     *
      */
     public class NavigationAdapter extends ArrayAdapter<String> {
         private final String[] items;
