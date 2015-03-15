@@ -1,7 +1,7 @@
 
 //Uncomment to choose how to treat the project. Use it as a library for AWARE-applications or plugins
 apply plugin: 'com.android.application' //AWARE is an application
-//apply plugin: 'com.android.library' //AWARE is a library
+//apply plugin: 'com.android.library' //AWARE is a library: don't forget to comment the providers on manifest and set display_aware:false
 
 configurations {
     wear
@@ -21,8 +21,8 @@ android {
     defaultConfig {
         //Comment applicationId out for library
         applicationId "com.aware"
-        versionCode 360
-        versionName "3.2.9"
+        versionCode 361
+        versionName "3.3.0"
         targetSdkVersion 21
         signingConfig signingConfigs.debug
     }
