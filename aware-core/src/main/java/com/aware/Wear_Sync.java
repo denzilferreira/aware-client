@@ -8,14 +8,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.aware.providers.Accelerometer_Provider;
@@ -363,6 +366,12 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
      * @return
      */
     public static View getContextCard(Context context) {
+
+        CardView cardview = new CardView(context);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams( LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT );
+        params.setMargins( 0,0,0,10 );
+        cardview.setLayoutParams(params);
+
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View card = inflater.inflate(R.layout.card_android_wear, null);
 
@@ -394,7 +403,12 @@ public class Wear_Sync extends Aware_Sensor implements GoogleApiClient.Connectio
         } else {
             wear_last_sync.setText("N/A");
         }
-        return card;
+
+        card.setBackgroundColor(Color.WHITE);
+        card.setPadding(20, 20, 20, 20);
+        cardview.addView(card);
+
+        return cardview;
     }
 
     @Override

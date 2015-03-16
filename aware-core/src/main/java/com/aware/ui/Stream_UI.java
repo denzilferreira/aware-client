@@ -5,19 +5,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
-import android.graphics.Color;
+import android.database.MatrixCursor;
+import android.database.MergeCursor;
 import android.os.Bundle;
-import android.support.v7.widget.CardView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.LinearLayout.LayoutParams;
 import android.widget.ListView;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
+import com.aware.BuildConfig;
 import com.aware.R;
 import com.aware.Wear_Sync;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
@@ -31,18 +30,19 @@ public class Stream_UI extends Aware_Activity {
 	public static final String ACTION_AWARE_UPDATE_STREAM = "ACTION_AWARE_UPDATE_STREAM";
 
     /**
-     * Broadcast to let plugins know that the stream is visible to the user
+     * Broadcast to let cards know that the stream is visible to the user
      */
     public static final String ACTION_AWARE_STREAM_OPEN = "ACTION_AWARE_STREAM_OPEN";
 
     /**
-     * Broadcast to let plugins know that the stream is not visible to the user
+     * Broadcast to let cards know that the stream is not visible to the user
      */
     public static final String ACTION_AWARE_STREAM_CLOSED = "ACTION_AWARE_STREAM_CLOSED";
 	
 	private static ListView stream_container;
-    private static LinearLayout core_container;
     private static CardAdapter card_adapter;
+    private static MatrixCursor core_cards;
+    private static Cursor cards;
 
 	@Override
 	protected void onCreate(Bundle arg0) {
@@ -51,12 +51,6 @@ public class Stream_UI extends Aware_Activity {
         setContentView(R.layout.stream_ui);
 
         stream_container = (ListView) findViewById(R.id.stream_container);
-        core_container = (LinearLayout) findViewById(R.id.core_cards);
-        updateCore();
-
-        Cursor plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, Aware_Plugins.PLUGIN_NAME + " ASC");
-        card_adapter = new CardAdapter(this, plugins, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
-        stream_container.setAdapter(card_adapter);
 
         ImageButton add_to_stream = (ImageButton) findViewById(R.id.change_stream);
         add_to_stream.setOnClickListener(new View.OnClickListener() {
@@ -67,7 +61,7 @@ public class Stream_UI extends Aware_Activity {
             }
         });
 
-		IntentFilter filter = new IntentFilter(ACTION_AWARE_UPDATE_STREAM);
+		IntentFilter filter = new IntentFilter(Stream_UI.ACTION_AWARE_UPDATE_STREAM);
 		registerReceiver(stream_updater, filter);
 	}
 
@@ -79,7 +73,12 @@ public class Stream_UI extends Aware_Activity {
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
             String package_name = cursor.getString( cursor.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-            View card = Aware.getContextCard( getApplicationContext(), package_name );
+            View card;
+            if( ! cursor.getString(cursor.getColumnIndex(Aware_Plugins.PLUGIN_AUTHOR)).equals("AWARE") ) {
+                card = Aware.getContextCard(getApplicationContext(), package_name);
+            } else {
+                card = getCoreCard(cursor.getString(cursor.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME)));
+            }
             card.setTag( package_name );
             return card;
         }
@@ -87,35 +86,59 @@ public class Stream_UI extends Aware_Activity {
         @Override
         public void bindView(View card, Context context, Cursor cursor) {
             String package_name = cursor.getString( cursor.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-            card = Aware.getContextCard( getApplicationContext(), package_name );
-            card.setTag(package_name);
+            if( ! cursor.getString(cursor.getColumnIndex(Aware_Plugins.PLUGIN_AUTHOR)).equals("AWARE") ) {
+                card = Aware.getContextCard(getApplicationContext(), package_name);
+            } else {
+                card = getCoreCard(cursor.getString(cursor.getColumnIndex(Aware_Plugins.PLUGIN_NAME)));
+            }
         }
     }
 
-    private View buildCard(View content) {
-        CardView card = new CardView(this);
-        LayoutParams params = new LayoutParams( LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT );
-        params.setMargins( 0,0,0,10 );
-        card.setLayoutParams(params);
-
-        content.setBackgroundColor(Color.WHITE);
-        content.setPadding(20, 20, 20, 20);
-        card.addView(content);
-        return card;
+    /**
+     * Given a core class name, return the associated context card
+     * @param className
+     * @return View
+     */
+    private View getCoreCard( String className ) {
+        if( className.equals(Wear_Sync.class.getName()) ) {
+            return Wear_Sync.getContextCard(getApplicationContext());
+        }
+        return null;
     }
 
     private void updateCore() {
+        core_cards = new MatrixCursor(new String[]{
+                Aware_Plugins.PLUGIN_ID,
+                Aware_Plugins.PLUGIN_PACKAGE_NAME,
+                Aware_Plugins.PLUGIN_NAME,
+                Aware_Plugins.PLUGIN_VERSION,
+                Aware_Plugins.PLUGIN_STATUS,
+                Aware_Plugins.PLUGIN_AUTHOR,
+                Aware_Plugins.PLUGIN_ICON,
+                Aware_Plugins.PLUGIN_DESCRIPTION
+        });
+
         //Aware-core cards
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_ANDROID_WEAR).equals("true") ) {
-            core_container.addView(buildCard(Wear_Sync.getContextCard(getApplicationContext())), 0);
+            Object[] wear_card = new Object[] {
+                    Aware_Preferences.STATUS_ANDROID_WEAR.hashCode(),
+                    Wear_Sync.class.getName(),
+                    "Android Wear",
+                    BuildConfig.VERSION_CODE,
+                    Aware_Plugin.STATUS_PLUGIN_ON,
+                    "AWARE",
+                    null,
+                    "Android Wear synching"
+            };
+            core_cards.addRow(wear_card);
+            cards = new MergeCursor(new Cursor[]{ core_cards, cards });
         }
     }
 
     private void updateCards() {
+        cards = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, Aware_Plugins.PLUGIN_NAME + " ASC");
         updateCore();
-
-        Cursor plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, Aware_Plugins.PLUGIN_NAME + " ASC");
-        card_adapter = new CardAdapter(this, plugins, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        card_adapter = new CardAdapter(this, cards, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         stream_container.setAdapter(card_adapter);
     }
 	
@@ -124,6 +147,7 @@ public class Stream_UI extends Aware_Activity {
 		super.onResume();
         Intent is_visible = new Intent(ACTION_AWARE_STREAM_OPEN);
         sendBroadcast(is_visible);
+        updateCards();
 	}
 
     @Override

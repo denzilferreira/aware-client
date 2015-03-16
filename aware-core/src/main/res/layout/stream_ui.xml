@@ -18,27 +18,15 @@
             android:layout_margin="0dp"
             android:background="@color/grey_background"
             >
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:id="@+id/core_cards"
-                        android:orientation="vertical"
-                        android:paddingLeft="10dp"
-                        android:paddingRight="10dp"
-                        android:background="@color/grey_background"
-                        >
-                        <ListView
-                            android:id="@+id/stream_container"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@color/grey_background"
-                            android:orientation="vertical"
-                            android:dividerHeight="0dp"
-                            android:divider="@null"
-                            android:layout_below="@+id/core_cards"
-                            android:paddingTop="10dp" />
-                    </LinearLayout>
+            <ListView
+                android:id="@+id/stream_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/grey_background"
+                android:orientation="vertical"
+                android:dividerHeight="0dp"
+                android:divider="@null"
+                android:padding="10dp" />
             <ImageButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -49,7 +37,7 @@
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentRight="true"
                 android:tint="@android:color/white"
-                android:elevation="5dp"
+                android:elevation="2dp"
                 android:background="@drawable/circle"
                 android:scaleType="fitXY"
                 android:padding="12dp"
