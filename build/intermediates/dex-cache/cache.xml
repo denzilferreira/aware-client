@@ -121,13 +121,6 @@
         <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-f0131676facd3ee66924bf59e24d95decff453b3.jar" />
     </item>
     <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services/6.5.87/classes.jar"
-        jumboMode="false"
-        revision="21.1.2"
-        sha1="dd9247ea0fabe8ee479638c4b4a23e93752be256">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-4d53972a13216fc5076c09a52d071045f36e98b9.jar" />
-    </item>
-    <item
         jar="/Users/denzil/Android/aware-client/aware-core/libs/zbar.jar"
         jumboMode="false"
         revision="21.1.2"
