@@ -24,7 +24,7 @@
                 android:layout_height="match_parent"
                 android:background="@color/grey_background"
                 android:orientation="vertical"
-                android:dividerHeight="0dp"
+                android:dividerHeight="10dp"
                 android:divider="@null"
                 android:padding="10dp" />
             <ImageButton

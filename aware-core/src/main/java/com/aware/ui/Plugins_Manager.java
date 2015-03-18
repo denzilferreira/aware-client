@@ -116,8 +116,6 @@ public class Plugins_Manager extends Aware_Activity {
         Cursor installed_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, Aware_Plugins.PLUGIN_NAME + " ASC");
         pluginAdapter = new PluginAdapter(getApplicationContext(), installed_plugins, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         store_grid.setAdapter(pluginAdapter);
-        pluginAdapter.notifyDataSetChanged();
-        store_grid.invalidateViews();
     }
 
     public class PluginAdapter extends CursorAdapter {
@@ -468,7 +466,7 @@ public class Plugins_Manager extends Aware_Activity {
                     if( all_plugins != null && all_plugins.moveToFirst() ) {
                         do {
                             String package_name = all_plugins.getString(all_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-                            if( ! Plugins_Manager.isInstalled(getApplicationContext(), package_name) && ! is_onRepo(plugins, package_name)) {
+                            if( ! Plugins_Manager.isInstalled(getApplicationContext(), package_name) && ! is_onRepo(plugins, package_name) ) {
                                 to_clean += package_name + ",";
                             }
                         }while(all_plugins.moveToNext());

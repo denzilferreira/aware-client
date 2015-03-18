@@ -463,7 +463,6 @@ public class Aware extends Service {
      * @param package_name
      */
     public static void stopPlugin(Context context, String package_name ) {
-
         //Check if plugin is bundled within an application/plugin
         try {
             Class.forName(package_name + ".Plugin");
@@ -486,9 +485,15 @@ public class Aware extends Service {
     		
     		ContentValues rowData = new ContentValues();
             rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
-            context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);            
+            context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+
     	}
     	if( cached != null && ! cached.isClosed() ) cached.close();
+
+        //FIX: terminate bundled AWARE service within a plugin
+        Intent core = new Intent();
+        core.setClassName(package_name, package_name + "com.aware.Aware");
+        context.stopService(core);
     }
     
     /**
@@ -615,7 +620,7 @@ public class Aware extends Service {
 				//Set card look-n-feel
 				ui.setBackgroundColor(Color.WHITE);
 				ui.setPadding(20, 20, 20, 20);
-				card.addView(ui);
+                card.addView(ui);
 
 				return card;
 			} else {
@@ -995,7 +1000,7 @@ public class Aware extends Service {
                     if(Aware.DEBUG) Log.d(TAG, packageName + " is updating!");
                     
                     ContentValues rowData = new ContentValues();
-                    rowData.put(Aware_Plugins.PLUGIN_VERSION, getVersion(packageName));
+                    rowData.put(Aware_Plugins.PLUGIN_VERSION, Plugins_Manager.getVersion(context, packageName));
                     
                     Cursor current_status = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, new String[]{Aware_Plugins.PLUGIN_STATUS}, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null, null);
                     if( current_status != null && current_status.moveToFirst() ) {
@@ -1017,9 +1022,6 @@ public class Aware extends Service {
                     //Refresh stream UI if visible
                     context.sendBroadcast(new Intent(Stream_UI.ACTION_AWARE_UPDATE_STREAM));
 
-                    //Apply fresh state
-                    Intent aware_apply = new Intent( Aware.ACTION_AWARE_REFRESH );
-                    context.sendBroadcast(aware_apply);
                     return;
                 }
                 
@@ -1043,10 +1045,6 @@ public class Aware extends Service {
                 context.getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
                 if( Aware.DEBUG ) Log.d(TAG,"AWARE plugin removed:" + packageName);
 
-                //Apply fresh state
-                Intent aware_apply = new Intent( Aware.ACTION_AWARE_REFRESH );
-                context.sendBroadcast(aware_apply);
-                
                 //Refresh stream UI if visible
                 context.sendBroadcast(new Intent(Stream_UI.ACTION_AWARE_UPDATE_STREAM));
                 
@@ -1054,16 +1052,6 @@ public class Aware extends Service {
                 context.sendBroadcast(new Intent(ACTION_AWARE_PLUGIN_MANAGER_REFRESH));
             }
     	}
-    	
-    	private int getVersion( String package_name ) {
-        	try {
-    			PackageInfo pkgInfo = mPkgManager.getPackageInfo(package_name, PackageManager.GET_META_DATA);
-    			return pkgInfo.versionCode;
-    		} catch (NameNotFoundException e) {
-    			if( Aware.DEBUG ) Log.d( Aware.TAG, e.getMessage());
-    		}
-        	return 0;
-        }
     }
     
     /**
@@ -1113,7 +1101,7 @@ public class Aware extends Service {
 			ContentValues rowData = new ContentValues();
             rowData.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, app.packageName);
             rowData.put(Aware_Plugins.PLUGIN_NAME, app.loadLabel(awareContext.getPackageManager()).toString());
-            rowData.put(Aware_Plugins.PLUGIN_VERSION, getVersion(app.packageName));
+            rowData.put(Aware_Plugins.PLUGIN_VERSION, Plugins_Manager.getVersion(awareContext, app.packageName));
             rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
             if( json_package != null ) {
             	try {
@@ -1142,16 +1130,6 @@ public class Aware extends Service {
             Intent aware = new Intent(Aware.ACTION_AWARE_REFRESH);
             awareContext.sendBroadcast(aware);
 		}
-		
-		private int getVersion( String package_name ) {
-        	try {
-    			PackageInfo pkgInfo = awareContext.getPackageManager().getPackageInfo(package_name, PackageManager.GET_META_DATA);
-    			return pkgInfo.versionCode;
-    		} catch (NameNotFoundException e) {
-    			if( Aware.DEBUG ) Log.d( Aware.TAG, e.getMessage());
-    		}
-        	return 0;
-        }
     }
 
     public static class UpdatePlugins extends IntentService {
