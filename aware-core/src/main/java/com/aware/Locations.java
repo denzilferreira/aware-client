@@ -171,14 +171,16 @@ public class Locations extends Aware_Sensor implements LocationListener {
 	 * @param lastLocation  The last location fix, to which you want to compare the new one
 	 */
 	private boolean isBetterLocation(Location newLocation, Location lastLocation) {
-	    if( newLocation != null && lastLocation == null) {
+        if( newLocation == null && lastLocation == null ) return false;
+
+        if( newLocation != null && lastLocation == null) {
 	        return true;
 	    }
 	    
 	    if( lastLocation != null && newLocation == null ) {
 	        return false;
 	    }
-	    
+
 	    long timeDelta = newLocation.getTime() - lastLocation.getTime();
 	    boolean isSignificantlyNewer = timeDelta > 1000 * EXPIRATION_TIME;
 	    boolean isSignificantlyOlder = timeDelta < -( 1000 * EXPIRATION_TIME );

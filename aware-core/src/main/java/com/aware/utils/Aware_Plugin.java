@@ -66,7 +66,7 @@ public class Aware_Plugin extends Service {
         super.onCreate();
 
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true")?true:false;
+        DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
         
         if( DEBUG ) Log.d(TAG, TAG + " plugin created!");
         
@@ -83,7 +83,7 @@ public class Aware_Plugin extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        
+
         //Unregister Context Broadcaster
         unregisterReceiver(contextBroadcaster);
 

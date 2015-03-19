@@ -20,7 +20,7 @@ android {
     publishNonDefault true //set to false for Maven Central, otherwise set to true
     defaultConfig {
         //Comment applicationId out for library
-//        applicationId "com.aware"
+        applicationId "com.aware"
         versionCode 364
         versionName "3.3.3"
         targetSdkVersion 22

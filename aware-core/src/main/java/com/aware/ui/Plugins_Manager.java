@@ -81,7 +81,6 @@ public class Plugins_Manager extends Aware_Activity {
 	
 	private static LayoutInflater inflater;
 	private static GridView store_grid;
-	private static PluginAdapter pluginAdapter;
 
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +92,7 @@ public class Plugins_Manager extends Aware_Activity {
     	store_grid = (GridView) findViewById(R.id.plugins_store_grid);
 
         Cursor installed_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, Aware_Plugins.PLUGIN_NAME + " ASC");
-        pluginAdapter = new PluginAdapter(getApplicationContext(), installed_plugins, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        PluginAdapter pluginAdapter = new PluginAdapter(getApplicationContext(), installed_plugins, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         store_grid.setAdapter(pluginAdapter);
 
     	IntentFilter filter = new IntentFilter();
@@ -114,22 +113,19 @@ public class Plugins_Manager extends Aware_Activity {
 
     private void updateGrid() {
         Cursor installed_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, Aware_Plugins.PLUGIN_NAME + " ASC");
-        pluginAdapter = new PluginAdapter(getApplicationContext(), installed_plugins, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        PluginAdapter pluginAdapter = new PluginAdapter(getApplicationContext(), installed_plugins, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         store_grid.setAdapter(pluginAdapter);
     }
 
     public class PluginAdapter extends CursorAdapter {
-        private LayoutInflater inflater;
-
         public PluginAdapter(Context context, Cursor c, int flags) {
             super(context, c, flags);
-            inflater = LayoutInflater.from(context);
         }
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            View pkg_view = inflater.inflate(R.layout.plugins_store_pkg_list_item, parent, false);
-            return pkg_view;
+            LayoutInflater inflater = LayoutInflater.from(context);
+            return inflater.inflate(R.layout.plugins_store_pkg_list_item, parent, false);
         }
 
         @Override
@@ -141,10 +137,9 @@ public class Plugins_Manager extends Aware_Activity {
             final String version = cursor.getString(cursor.getColumnIndex(Aware_Plugins.PLUGIN_VERSION));
             final int status = cursor.getInt(cursor.getColumnIndex(Aware_Plugins.PLUGIN_STATUS));
             final byte[] icon = cursor.getBlob(cursor.getColumnIndex(Aware_Plugins.PLUGIN_ICON));
-
-            ImageView pkg_icon = (ImageView) pkg_view.findViewById(R.id.pkg_icon);
+            final ImageView pkg_icon = (ImageView) pkg_view.findViewById(R.id.pkg_icon);
             final TextView pkg_title = (TextView) pkg_view.findViewById(R.id.pkg_title);
-            ImageView pkg_state = (ImageView) pkg_view.findViewById(R.id.pkg_state);
+            final ImageView pkg_state = (ImageView) pkg_view.findViewById(R.id.pkg_state);
 
             try {
                 if (status != PLUGIN_NOT_INSTALLED) {
@@ -281,6 +276,7 @@ public class Plugins_Manager extends Aware_Activity {
                         });
                         break;
                 }
+                pkg_view.refreshDrawableState();
             } catch (NameNotFoundException e) {
                 e.printStackTrace();
             }
@@ -307,15 +303,16 @@ public class Plugins_Manager extends Aware_Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+        updateGrid();
         new Async_PluginUpdater().execute();
 	}
-    
+
     @Override
     protected void onDestroy() {
     	super.onDestroy();
-    	unregisterReceiver(plugins_listener);
+        unregisterReceiver(plugins_listener);
     }
-    
+
     /**
 	 * Downloads and compresses image for optimized icon caching
 	 * @param image_url

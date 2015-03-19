@@ -72,14 +72,14 @@ public class Stream_UI extends Aware_Activity {
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            String package_name = cursor.getString( cursor.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+            String package_name = cursor.getString( cursor.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME) );
             View card;
             if( ! cursor.getString(cursor.getColumnIndex(Aware_Plugins.PLUGIN_AUTHOR)).equals("AWARE") ) {
                 card = Aware.getContextCard(getApplicationContext(), package_name);
             } else {
                 card = getCoreCard(cursor.getString(cursor.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME)));
             }
-            card.setTag( package_name );
+            if( card == null ) card = new View(context);
             return card;
         }
 

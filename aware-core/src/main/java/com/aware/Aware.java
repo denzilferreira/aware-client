@@ -398,12 +398,15 @@ public class Aware extends Service {
                 }
                 if( enabled_plugins != null && ! enabled_plugins.isClosed() ) enabled_plugins.close();
 
-                //Check if there are updates on the plugins
-                new CheckPlugins().execute(active_plugins);
-
-	            if( Aware.getSetting(getApplicationContext(), Aware_Preferences.AWARE_AUTO_UPDATE).equals("true") ) {
+                if( Aware.getSetting(getApplicationContext(), Aware_Preferences.AWARE_AUTO_UPDATE).equals("true") ) {
 	            	if( aware_preferences.getLong(PREF_LAST_UPDATE, 0) == 0 || (aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 0 && System.currentTimeMillis()-aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 6*60*60*1000) ) { //check every 6h
+
+                        //Check if there are updates on the plugins
+                        new CheckPlugins().execute(active_plugins);
+
+                        //Check if there are updated on the client
 	            		new Update_Check().execute();
+
 	            		SharedPreferences.Editor editor = aware_preferences.edit();
 	            		editor.putLong(PREF_LAST_UPDATE, System.currentTimeMillis());
 	            		editor.commit();
@@ -471,6 +474,11 @@ public class Aware extends Service {
             boolean result = context.stopService(bundled);
             if( result ) {
                 if( Aware.DEBUG ) Log.d(TAG, "Bundled " + package_name + ".Plugin stopped...");
+
+                ContentValues rowData = new ContentValues();
+                rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
+                context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+
                 return;
             }
         } catch (ClassNotFoundException e ) {}
@@ -490,9 +498,9 @@ public class Aware extends Service {
     	}
     	if( cached != null && ! cached.isClosed() ) cached.close();
 
-        //FIX: terminate bundled AWARE service within a plugin
+        //FIXED: terminate bundled AWARE service within a plugin
         Intent core = new Intent();
-        core.setClassName(package_name, package_name + "com.aware.Aware");
+        core.setClassName(package_name, "com.aware.Aware");
         context.stopService(core);
     }
     
@@ -514,6 +522,11 @@ public class Aware extends Service {
             ComponentName result = context.startService(bundled);
             if( result != null ) {
                 if( Aware.DEBUG ) Log.d(TAG, "Bundled " + package_name + ".Plugin started...");
+
+                ContentValues rowData = new ContentValues();
+                rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
+                context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+
                 return;
             }
         } catch (ClassNotFoundException e ) {}
