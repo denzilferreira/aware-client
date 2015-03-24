@@ -609,7 +609,7 @@
                 android:title="AWARE Server Webservice" />
 
             <CheckBoxPreference
-                android:defaultValue="true"
+                android:defaultValue="false"
                 android:key="webservice_wifi_only"
                 android:persistent="true"
                 android:summary="Upload data to webservices only when connected to Wi-Fi"

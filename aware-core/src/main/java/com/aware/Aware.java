@@ -27,7 +27,10 @@ import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Build;
@@ -257,6 +260,7 @@ public class Aware extends Service {
         filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
         filter.addAction(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
         filter.addAction(Aware.ACTION_QUIT_STUDY);
+        filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
         awareContext.registerReceiver(aware_BR, filter);
 
         Intent synchronise = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
@@ -1191,6 +1195,7 @@ public class Aware extends Service {
      * - ACTION_AWARE_CLEAR_DATA = clears local device's AWARE modules databases.
      * - ACTION_AWARE_REFRESH - apply changes to the configuration.
      * - {@link DownloadManager#ACTION_DOWNLOAD_COMPLETE} - when AWARE framework update has been downloaded.
+     * - {}@link WifiManager#WIFI_STATE_CHANGED_ACTION} - when Wi-Fi is available to sync
      * @author denzil
      *
      */
@@ -1210,6 +1215,21 @@ public class Aware extends Service {
         		webserviceHelper.putExtra( WebserviceHelper.EXTRA_FIELDS, TABLES_FIELDS[0] );
         		webserviceHelper.putExtra( WebserviceHelper.EXTRA_CONTENT_URI, CONTEXT_URIS[0].toString() );
         		context.startService(webserviceHelper);
+            }
+
+            //Monitor if the user just connected to Wi-Fi and the client is supposed to sync the data to a study when he does
+            if( intent.getAction().equals(WifiManager.WIFI_STATE_CHANGED_ACTION) ) {
+                int wifi_state = intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE, WifiManager.WIFI_STATE_UNKNOWN);
+                if( wifi_state == WifiManager.WIFI_STATE_ENABLED ) {
+                    if( Aware.getSetting(context, Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true") && Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true") ) {
+                        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(CONNECTIVITY_SERVICE);
+                        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+                        if( activeNetwork != null && activeNetwork.isConnectedOrConnecting() && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI ) {
+                            if(Aware.DEBUG) Log.d(Aware.TAG, "Internet is available, let's sync!");
+                            context.sendBroadcast(new Intent(Aware.ACTION_AWARE_SYNC_DATA));
+                        }
+                    }
+                }
             }
         	
             if( intent.getAction().equals(Aware.ACTION_AWARE_CLEAR_DATA) ) {

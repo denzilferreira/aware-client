@@ -81,6 +81,13 @@ public class Aware_Activity extends PreferenceActivity {
             }
         });
 
+        if( Aware.is_watch(this) ) {
+            MenuItem qrcode = (MenuItem) toolbar.findViewById(R.id.aware_qrcode);
+            qrcode.setVisible(false);
+            MenuItem team = (MenuItem) toolbar.findViewById(R.id.about_us);
+            team.setVisible(false);
+        }
+
         navigationDrawer = (DrawerLayout) findViewById(R.id.aware_ui_main);
         navigationList = (ListView) findViewById(R.id.aware_navigation);
 
