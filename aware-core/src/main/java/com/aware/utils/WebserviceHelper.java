@@ -152,7 +152,7 @@ public class WebserviceHelper extends IntentService {
                         int batch_total = (Math.round(context_data.getCount()/batch_size) > 0 ? Math.round(context_data.getCount()/batch_size) : 1 );
                         int batch_count = 0;
 
-                        if(DEBUG) Log.d(Aware.TAG, "Syncing " + context_data.getCount() + " from " + DATABASE_TABLE + " in " + batch_total + " batches");
+                        if( DEBUG ) Log.d(Aware.TAG, "Syncing " + context_data.getCount() + " from " + DATABASE_TABLE + " in " + batch_total + " batches");
 						long start = System.currentTimeMillis();
 
 						do {
@@ -182,7 +182,7 @@ public class WebserviceHelper extends IntentService {
 							
 							if( context_data_entries.length() == batch_size ) {
                                 batch_count++;
-                                Log.d(Aware.TAG, "Sync batch "+ batch_count + "/" + batch_total);
+                                if( DEBUG ) Log.d(Aware.TAG, "Sync batch "+ batch_count + "/" + batch_total);
 
                                 request = new ArrayList<NameValuePair>();
 								request.add(new BasicNameValuePair(Aware_Preferences.DEVICE_ID, DEVICE_ID));
@@ -195,7 +195,6 @@ public class WebserviceHelper extends IntentService {
 						} while ( context_data.moveToNext() );
 						
 						if( context_data_entries.length() > 0 ) {
-
                             batch_count++;
                             if( DEBUG ) Log.d(Aware.TAG, "Sync batch "+ batch_count + "/" + batch_total);
 

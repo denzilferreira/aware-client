@@ -5,7 +5,6 @@ import android.app.AlarmManager;
 import android.app.DownloadManager;
 import android.app.DownloadManager.Query;
 import android.app.IntentService;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -23,7 +22,6 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
@@ -40,11 +38,8 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.widget.CardView;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 
 import com.aware.providers.Aware_Provider;
@@ -57,8 +52,6 @@ import com.aware.utils.Aware_Plugin;
 import com.aware.utils.DownloadPluginService;
 import com.aware.utils.Https;
 import com.aware.utils.WebserviceHelper;
-import com.google.android.gms.deviceconnection.features.DeviceFeature;
-import com.google.android.gms.wearable.Wearable;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -402,12 +395,13 @@ public class Aware extends Service {
                 }
                 if( enabled_plugins != null && ! enabled_plugins.isClosed() ) enabled_plugins.close();
 
+                //Check if there are updates on the plugins
+                if( active_plugins.size() > 0 ) {
+                    new CheckPlugins().execute(active_plugins);
+                }
+
                 if( Aware.getSetting(getApplicationContext(), Aware_Preferences.AWARE_AUTO_UPDATE).equals("true") ) {
 	            	if( aware_preferences.getLong(PREF_LAST_UPDATE, 0) == 0 || (aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 0 && System.currentTimeMillis()-aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 6*60*60*1000) ) { //check every 6h
-
-                        //Check if there are updates on the plugins
-                        new CheckPlugins().execute(active_plugins);
-
                         //Check if there are updated on the client
 	            		new Update_Check().execute();
 
@@ -881,23 +875,20 @@ public class Aware extends Service {
         @Override
         protected Boolean doInBackground(ArrayList<String>... params) {
             for( String package_name : params[0] ) {
-                JSONObject json_package = null;
                 HttpResponse http_request = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
                 if( http_request != null && http_request.getStatusLine().getStatusCode() == 200 ) {
                     try {
                         String json_string = Https.undoGZIP(http_request);
                         if( ! json_string.equals("[]") ) {
-                            json_package = new JSONObject(json_string);
                             try {
+                                JSONObject json_package = new JSONObject(json_string);
                                 if( json_package.getInt("version") > Plugins_Manager.getVersion(getApplicationContext(), package_name) ) {
                                     updated.add(package_name);
                                 }
                             } catch (JSONException e) {
                             }
                         }
-                    } catch (ParseException e) {
-                    } catch (JSONException e) {
-                    }
+                    } catch (ParseException e) {}
                 }
             }
             if( updated.size() > 0 ) return true;

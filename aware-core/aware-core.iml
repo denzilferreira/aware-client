@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module external.linked.project.path="$MODULE_DIR$" external.root.project.path="$MODULE_DIR$/.." external.system.id="GRADLE" external.system.module.group="aware-client" external.system.module.version="unspecified" type="JAVA_MODULE" version="4">
+<module external.linked.project.id=":aware-core" external.linked.project.path="$MODULE_DIR$" external.root.project.path="$MODULE_DIR$/.." external.system.id="GRADLE" external.system.module.group="aware-client" external.system.module.version="unspecified" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="android-gradle" name="Android-Gradle">
       <configuration>
@@ -98,13 +98,31 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 22 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="cardview-v7-22.0.0" level="project" />
-    <orderEntry type="library" exported="" name="support-v4-22.0.0" level="project" />
-    <orderEntry type="library" exported="" name="play-services-6.5.87" level="project" />
+    <orderEntry type="library" exported="" name="play-services-plus-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-base-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-panorama-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-location-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-safetynet-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-appindexing-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-7.0.0" level="project" />
     <orderEntry type="library" exported="" name="support-annotations-22.0.0" level="project" />
-    <orderEntry type="library" exported="" name="appcompat-v7-22.0.0" level="project" />
-    <orderEntry type="library" exported="" name="mqtt-client-0.4.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-gcm-7.0.0" level="project" />
     <orderEntry type="library" exported="" name="zbar" level="project" />
+    <orderEntry type="library" exported="" name="play-services-wearable-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-wallet-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-cast-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="support-v4-22.0.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-maps-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-fitness-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-identity-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-ads-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="appcompat-v7-22.0.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-appstate-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-drive-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-analytics-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-games-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="cardview-v7-22.0.0" level="project" />
+    <orderEntry type="library" exported="" name="play-services-nearby-7.0.0" level="project" />
+    <orderEntry type="library" exported="" name="mqtt-client-0.4.0" level="project" />
   </component>
 </module>
-
