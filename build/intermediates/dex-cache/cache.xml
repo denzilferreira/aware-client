@@ -2,102 +2,74 @@
 <items version="2" >
 
     <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-location/7.0.0/classes.jar"
-        jumboMode="false"
-        revision="22.0.0"
-        sha1="73ccb92b70112f2e463e415ef8d7275de7da6516">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-ac40924e19ebe609b2876011a63bbfe6bfe805bb.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/support-v4/22.0.0/libs/internal_impl-22.0.0.jar"
-        jumboMode="false"
-        revision="22.0.0"
-        sha1="b5b92f469d515a13d778900f6d50c03d12f35504">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/internal_impl-22.0.0-b623931251f2e0b0eb33716813c8af395f8088cb.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/support-v13/22.0.0/classes.jar"
-        jumboMode="false"
-        revision="22.0.0"
-        sha1="7f9cca1caa023a880b00c382bcc5c90245ae4895">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-c9cf82627f5ebe70f7ad20cd53b566b0307d285b.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/cardview-v7/22.0.0/classes.jar"
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/cardview-v7/22.0.0/classes.jar"
         jumboMode="false"
         revision="22.0.0"
         sha1="11842de6a309c447b3a3d60d73ad637a87c58994">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-8f96a9299de64677ae0ce9b985a734753e23056b.jar" />
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-66be50e93766b1d654bd0a3d5c9c14f57c9f75d6.jar" />
     </item>
     <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-maps/7.0.0/classes.jar"
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-identity/7.0.0/classes.jar"
         jumboMode="false"
         revision="22.0.0"
-        sha1="17f8750d5c0749e44dd7c54aa390d9c937803825">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-9824851fce0f07fc7d76fb7943fee7b8c7a9cbaf.jar" />
+        sha1="fb04b12526b0073c7fb1ebb70c5842d82ee95596">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-a6cc94302c9d219891a55bfd364d0066722aff3b.jar" />
     </item>
     <item
-        jar="/Users/denzil/sdk/extras/android/m2repository/com/android/support/support-annotations/22.0.0/support-annotations-22.0.0.jar"
-        jumboMode="false"
-        revision="22.0.0"
-        sha1="685d0b2c590447e85284ed84712cb363ba04eff8">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/support-annotations-22.0.0-ba2202581f4adddc09d97fe195ea6ee7696b3675.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-base/7.0.0/classes.jar"
-        jumboMode="false"
-        revision="22.0.0"
-        sha1="4c93d99d454c975536bbe3b42283eee847f03ea3">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-e564d88c5ce787fe10bc511554cb5f587e7b8418.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-appindexing/7.0.0/classes.jar"
-        jumboMode="false"
-        revision="22.0.0"
-        sha1="a08d65794b844d8e7540bf9a33859bf3b2482d7f">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-99cabed72c59c91cb65a9290e9421f6e71809cce.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-analytics/7.0.0/classes.jar"
-        jumboMode="false"
-        revision="22.0.0"
-        sha1="29fd6d3794b71491c2789708cd8d03c71feb8954">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-88b3d0fab7e6dcbada51ffd78e9b52b06db92f57.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-wearable/6.5.87/classes.jar"
-        jumboMode="false"
-        revision="21.1.2"
-        sha1="6384c6cd674a22610b932d9464aa6938d067f285">
-        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-9d7721c94e04b0e7dcd7297ed8ea8a729ec3b00c.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-wearable/7.0.0/classes.jar"
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-wearable/7.0.0/classes.jar"
         jumboMode="false"
         revision="22.0.0"
         sha1="3033cc3a2c68dff3e5b646d6d084bdbdf7d00b25">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-4e490ef2e0a90052b3f2404342b18666ac684a0a.jar" />
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-b39da198a43214af6a84dea54a3badd45e8c2190.jar" />
     </item>
     <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/recyclerview-v7/21.0.0/classes.jar"
+        jar="/Users/denzil/Library/Android/sdk/extras/android/m2repository/com/android/support/support-annotations/22.0.0/support-annotations-22.0.0.jar"
         jumboMode="false"
         revision="22.0.0"
-        sha1="efeda77c808750cb670ee9c48d8a1835d89dbcb2">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-06bbcf3abd0748c5ca15ba68eae0788869b3d400.jar" />
+        sha1="685d0b2c590447e85284ed84712cb363ba04eff8">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/support-annotations-22.0.0-d403a7e9bf74d373b833fb2f34dbce47731ca32a.jar" />
     </item>
     <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-wallet/7.0.0/classes.jar"
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-games/7.0.0/classes.jar"
         jumboMode="false"
         revision="22.0.0"
-        sha1="a96b762bde4139de855735f175ec4d17dca55a6d">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-e0fdd00c4bab94d3c340758cfc4bc52a32c46312.jar" />
+        sha1="055783146ba9654a725442563be78cad303aad1f">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-c98d586f2b6eb30e82d96a139d8f1f8c36d3bc4a.jar" />
     </item>
     <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-cast/7.0.0/classes.jar"
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-nearby/7.0.0/classes.jar"
         jumboMode="false"
         revision="22.0.0"
-        sha1="4cd0b093824b3228fffc21ea369b98d0b1db6566">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-bc9016dea1dc0f675008e43a8aa2aad541782cc6.jar" />
+        sha1="ef5f051e7308febe289dc93c67c5f32785b4260a">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-6b50d0e7c1f9adea3c032f056d802076b5907422.jar" />
+    </item>
+    <item
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/libs/zbar.jar"
+        jumboMode="false"
+        revision="22.0.0"
+        sha1="0a7b88ba1496a0b4af76069ad40dacd3897149e0">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/zbar-92502170aee68d73f662d133966c0db817e51c87.jar" />
+    </item>
+    <item
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-analytics/7.0.0/classes.jar"
+        jumboMode="false"
+        revision="22.0.0"
+        sha1="29fd6d3794b71491c2789708cd8d03c71feb8954">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-feac6cf41e4512ebbc5c7d1289eb3a421b50bbdc.jar" />
+    </item>
+    <item
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-fitness/7.0.0/classes.jar"
+        jumboMode="false"
+        revision="22.0.0"
+        sha1="3c0b099f9de16b265ecd6122fcb603e7d0d29f90">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-a4a248ef3d040676869aed08b39b5868fb8f23d1.jar" />
+    </item>
+    <item
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-base/7.0.0/classes.jar"
+        jumboMode="false"
+        revision="22.0.0"
+        sha1="4c93d99d454c975536bbe3b42283eee847f03ea3">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-615b1279d4b362a56c86c2014e5d4216e10515fd.jar" />
     </item>
     <item
         jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/libs/zbar.jar"
@@ -107,109 +79,109 @@
         <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/zbar-92502170aee68d73f662d133966c0db817e51c87.jar" />
     </item>
     <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-panorama/7.0.0/classes.jar"
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-location/7.0.0/classes.jar"
         jumboMode="false"
         revision="22.0.0"
-        sha1="1c5a76debf0c2857ccad422c4a80ed785982f8df">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-fb1fd8f8f28924002bb239b093601f28e91d1518.jar" />
+        sha1="73ccb92b70112f2e463e415ef8d7275de7da6516">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-c4127e188ba5c2650b880580e63eb5ae38d46c93.jar" />
     </item>
     <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-games/7.0.0/classes.jar"
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-maps/7.0.0/classes.jar"
         jumboMode="false"
         revision="22.0.0"
-        sha1="055783146ba9654a725442563be78cad303aad1f">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-12e83a7d15fea03a1dbea6f64066081b2f368342.jar" />
+        sha1="17f8750d5c0749e44dd7c54aa390d9c937803825">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-e8cd96bdb50aed82fbdd303da25ff7f9ce5521ff.jar" />
     </item>
     <item
-        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-base/6.5.87/classes.jar"
-        jumboMode="false"
-        revision="21.1.2"
-        sha1="95482e7c792a7c0d5a9d5461e97726bd54fe9549">
-        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-b3ba97d8b2c3812afe7e8077ed2a1aae73676268.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.support/wearable/1.1.0/classes.jar"
-        jumboMode="false"
-        revision="22.0.0"
-        sha1="27f19641b81b1078e653d2f0e5d1ed44d158a785">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-d7fcfb4ae495696052a1a4123b86f0d849840a28.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-fitness/7.0.0/classes.jar"
-        jumboMode="false"
-        revision="22.0.0"
-        sha1="3c0b099f9de16b265ecd6122fcb603e7d0d29f90">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-ceeee6a8a64da5f6855b52c1df5417002d86bedc.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/libs/zbar.jar"
-        jumboMode="false"
-        revision="22.0.0"
-        sha1="0a7b88ba1496a0b4af76069ad40dacd3897149e0">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/zbar-7a072685dd84a96cfd5de237bd2410cced64651d.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-gcm/7.0.0/classes.jar"
-        jumboMode="false"
-        revision="22.0.0"
-        sha1="9224bc4c54ba95147c7eabd874573763c07cb6be">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-386d655667e071e3ef744268c6cee8f357da808d.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/support-v4/22.0.0/classes.jar"
-        jumboMode="false"
-        revision="22.0.0"
-        sha1="4e86306289ace4aa0cfec44a05ed2b410d36989d">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-4df90c18edfbff585054c1f213244b898ce32c61.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/libs/mqtt-client-0.4.0.jar"
-        jumboMode="false"
-        revision="21.1.2"
-        sha1="02315d1759d01e52495e040e6e538aaa2e91c7f6">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/mqtt-client-0.4.0-ad631f33978f8edde2af694b3cad83f74095b9f8.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-ads/7.0.0/classes.jar"
-        jumboMode="false"
-        revision="22.0.0"
-        sha1="e3d791b42eaa90416cd0b2d2e608092794a3baa4">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-0a9c88143ad5fcb67f35d3e85813bc1a5471dce6.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/appcompat-v7/22.0.0/classes.jar"
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/appcompat-v7/22.0.0/classes.jar"
         jumboMode="false"
         revision="22.0.0"
         sha1="d84409890828e07d344a3b9b1da545dba9897b51">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/classes-a783d947e1781b3b6eaed1232b4b106ee9e9b1d3.jar" />
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-cf9d1fb2000d7c0046e1384f202c5f1f92a55dde.jar" />
     </item>
     <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-drive/7.0.0/classes.jar"
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/support-v4/22.0.0/classes.jar"
+        jumboMode="false"
+        revision="22.0.0"
+        sha1="4e86306289ace4aa0cfec44a05ed2b410d36989d">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-3d1ea47504f9f4357e730478e5a74684076af7e8.jar" />
+    </item>
+    <item
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/libs/mqtt-client-0.4.0.jar"
+        jumboMode="false"
+        revision="22.0.0"
+        sha1="02315d1759d01e52495e040e6e538aaa2e91c7f6">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/mqtt-client-0.4.0-59e67ec2fa2a5e69d0e9ab661b7b82c7fab6a47b.jar" />
+    </item>
+    <item
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-drive/7.0.0/classes.jar"
         jumboMode="false"
         revision="22.0.0"
         sha1="41b3870cbe5fa546d8095b5b89d42cb69f3dd175">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-1ec4b4211df84ebdeb697ca55347670250211b5b.jar" />
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-7c819d1b24c4d0a8c459750d980a162011b5862c.jar" />
     </item>
     <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-appstate/7.0.0/classes.jar"
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-panorama/7.0.0/classes.jar"
+        jumboMode="false"
+        revision="22.0.0"
+        sha1="1c5a76debf0c2857ccad422c4a80ed785982f8df">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-63b57ad4e4c6e283b9c846f8fb31dde3dda59888.jar" />
+    </item>
+    <item
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-safetynet/7.0.0/classes.jar"
+        jumboMode="false"
+        revision="22.0.0"
+        sha1="c976518693e89ad44fbfccfc654941eaec198d08">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-48c2318030d8ef7fc1b74cabd00599d0f402826c.jar" />
+    </item>
+    <item
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-plus/7.0.0/classes.jar"
+        jumboMode="false"
+        revision="22.0.0"
+        sha1="0e8228b4bc69c6a2c8d7c18498a77e53417d2574">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-85edc7d13f7ec1c66ebee2588c85e7d1c93eacfb.jar" />
+    </item>
+    <item
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-appstate/7.0.0/classes.jar"
         jumboMode="false"
         revision="22.0.0"
         sha1="7ff613bf78ab057293892fdbd4169eda899c89b9">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-0cf1f85323ea13344cad1a5796ae23817feefaf1.jar" />
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-71589f3a96de57ed643d51ac1b7302a677cb7321.jar" />
     </item>
     <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-identity/7.0.0/classes.jar"
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-ads/7.0.0/classes.jar"
         jumboMode="false"
         revision="22.0.0"
-        sha1="fb04b12526b0073c7fb1ebb70c5842d82ee95596">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-869b86adbad7cac6b3e5952ecf426e1f2804e028.jar" />
+        sha1="e3d791b42eaa90416cd0b2d2e608092794a3baa4">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-01ebb5001793c02dd65543020d839b916f0a37d8.jar" />
     </item>
     <item
-        jar="/Users/denzil/Android/aware-client/aware-core/libs/zbar.jar"
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-appindexing/7.0.0/classes.jar"
         jumboMode="false"
-        revision="21.1.2"
-        sha1="0a7b88ba1496a0b4af76069ad40dacd3897149e0">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/zbar-7a072685dd84a96cfd5de237bd2410cced64651d.jar" />
+        revision="22.0.0"
+        sha1="a08d65794b844d8e7540bf9a33859bf3b2482d7f">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-41910fffbe12b098bfe2c1cd0aa827be19fd632d.jar" />
+    </item>
+    <item
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-gcm/7.0.0/classes.jar"
+        jumboMode="false"
+        revision="22.0.0"
+        sha1="9224bc4c54ba95147c7eabd874573763c07cb6be">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-eb8e1afa984b8f71c31671ecf5419c332c093ece.jar" />
+    </item>
+    <item
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-cast/7.0.0/classes.jar"
+        jumboMode="false"
+        revision="22.0.0"
+        sha1="4cd0b093824b3228fffc21ea369b98d0b1db6566">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-66d711c779b6f379076f1a0d94918bad1a20a157.jar" />
+    </item>
+    <item
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-wallet/7.0.0/classes.jar"
+        jumboMode="false"
+        revision="22.0.0"
+        sha1="a96b762bde4139de855735f175ec4d17dca55a6d">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-7108a50cde74bea9d289198879db7e93a657fc6f.jar" />
     </item>
     <item
         jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/libs/mqtt-client-0.4.0.jar"
@@ -219,46 +191,11 @@
         <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/mqtt-client-0.4.0-59e67ec2fa2a5e69d0e9ab661b7b82c7fab6a47b.jar" />
     </item>
     <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-nearby/7.0.0/classes.jar"
+        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/support-v4/22.0.0/libs/internal_impl-22.0.0.jar"
         jumboMode="false"
         revision="22.0.0"
-        sha1="ef5f051e7308febe289dc93c67c5f32785b4260a">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-e73ee52123e52b31e06268d617b32bf61187e494.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.android.support/support-v13/22.0.0/libs/internal_impl-22.0.0.jar"
-        jumboMode="false"
-        revision="22.0.0"
-        sha1="def3eff2b7b4774d96ae15b07b3fc0111edbfe24">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/internal_impl-22.0.0-35d37d456b7c47668f82e016ac63f800b7ff4c1d.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-plus/7.0.0/classes.jar"
-        jumboMode="false"
-        revision="22.0.0"
-        sha1="0e8228b4bc69c6a2c8d7c18498a77e53417d2574">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-f4fb57ae08f752a10591f4fa54a45475d2accfa9.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services/6.5.87/classes.jar"
-        jumboMode="false"
-        revision="21.1.2"
-        sha1="dd9247ea0fabe8ee479638c4b4a23e93752be256">
-        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-e0b870557ac045c41e1c5405548ed36f461ebd3b.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/build/intermediates/exploded-aar/com.google.android.gms/play-services-safetynet/7.0.0/classes.jar"
-        jumboMode="false"
-        revision="22.0.0"
-        sha1="c976518693e89ad44fbfccfc654941eaec198d08">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/classes-55ffd086a789f049f6a86d7fe7b418c354fa4ff6.jar" />
-    </item>
-    <item
-        jar="/Users/denzil/Android/aware-client/aware-core/libs/mqtt-client-0.4.0.jar"
-        jumboMode="false"
-        revision="22.0.0"
-        sha1="02315d1759d01e52495e040e6e538aaa2e91c7f6">
-        <dex dex="/Users/denzil/Android/aware-client/aware-core/build/intermediates/pre-dexed/wear/release/mqtt-client-0.4.0-ad631f33978f8edde2af694b3cad83f74095b9f8.jar" />
+        sha1="b5b92f469d515a13d778900f6d50c03d12f35504">
+        <dex dex="/Users/denzil/BTSync/Programming/aware-client/aware-core/build/intermediates/pre-dexed/phone/release/internal_impl-22.0.0-750da033e14f9c3ee0d8fecf345426e645cce5a8.jar" />
     </item>
 
 </items>
