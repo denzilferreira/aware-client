@@ -111,7 +111,9 @@ public class WebserviceHelper extends IntentService {
     				} catch( IllegalStateException e ) {
     				    Log.d(Aware.TAG,"Unable to connect to webservices...");
     				}
-    				
+
+                    if( DEBUG ) Log.d(Aware.TAG, "Server answer: " + data);
+
     				//If in a study, get from joined date onwards
     				String study_condition = "";
 					if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 && Aware.getSetting(getApplicationContext(), "study_start").length() > 0 ) {
