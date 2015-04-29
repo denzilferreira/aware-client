@@ -149,7 +149,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
     @Override
     public void connectionLost(Throwable throwable) {
-        if( Aware.DEBUG ) Log.d(TAG,"MQTT: Connection lost to server... AWARE will reconnect in 5 minutes");
+        if( Aware.DEBUG ) Log.d(TAG,"MQTT: Connection lost to server... AWARE will reconnect...");
+        initializeMQTT();
     }
 
     @Override
@@ -272,8 +273,12 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                             }catch( SQLException e ) {
                                 if(Aware.DEBUG) Log.d(TAG,e.getMessage());
                             }
+                        } else {
+                            if( Aware.DEBUG ) Log.w( TAG, "Already subscribed: " + topic );
+                            if( ! subscriptions.isClosed() ) subscriptions.close();
                         }
-                        subscriptions.close();
+                    } else {
+                        if( Aware.DEBUG ) Log.w( TAG, "Failed to subscribe: " + topic );
                     }
                 }
             }
@@ -289,6 +294,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                         }catch( SQLException e) {
                             if( Aware.DEBUG ) Log.w(TAG, e.getMessage());
                         }
+                    } else {
+                        if( Aware.DEBUG ) Log.w( TAG, "Failed to unsubscribe: " + topic );
                     }
                 }
             }
@@ -322,7 +329,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
 		if( MQTT_CLIENT != null && MQTT_CLIENT.isConnected() ) {
             try {
-            	MQTT_MESSAGES_PERSISTENCE.close();
+                MQTT_MESSAGES_PERSISTENCE.close();
             	MQTT_CLIENT.disconnect();
                 if( Aware.DEBUG ) Log.e(TAG,"Disconnected by demand successfully from the server...");
             } catch (MqttException e) {
@@ -365,11 +372,12 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
     	
         try {
         	if( MQTT_MESSAGES_PERSISTENCE != null ) {
-        		MQTT_MESSAGES_PERSISTENCE.close(); //close previous opened connection to persistence
-        	} else {
-        		MQTT_MESSAGES_PERSISTENCE = new MqttDefaultFilePersistence(Environment.getExternalStorageDirectory()+"/AWARE/");
-        		MQTT_MESSAGES_PERSISTENCE.open( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID), MQTT_URL );
-        	}        	
+                MQTT_MESSAGES_PERSISTENCE.close(); //close previous opened connection to persistence
+        	}
+
+            MQTT_MESSAGES_PERSISTENCE = new MqttDefaultFilePersistence(Environment.getExternalStorageDirectory()+"/AWARE/");
+            MQTT_MESSAGES_PERSISTENCE.open( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID), MQTT_URL );
+
         } catch ( MqttException e ) {
         	//It's OK because we use the same client ID for all instances of the client.
         }

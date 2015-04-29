@@ -12,13 +12,13 @@
         <option name="SELECTED_TEST_ARTIFACT" value="_android_test_" />
         <option name="ASSEMBLE_TASK_NAME" value="assemblePhoneDebug" />
         <option name="COMPILE_JAVA_TASK_NAME" value="compilePhoneDebugSources" />
-        <option name="ASSEMBLE_TEST_TASK_NAME" value="assemblePhoneDebugTest" />
         <option name="SOURCE_GEN_TASK_NAME" value="generatePhoneDebugSources" />
+        <option name="ASSEMBLE_TEST_TASK_NAME" value="assemblePhoneDebugTest" />
+        <option name="COMPILE_JAVA_TEST_TASK_NAME" value="compilePhoneDebugTestSources" />
         <option name="TEST_SOURCE_GEN_TASK_NAME" value="generatePhoneDebugTestSources" />
         <option name="ALLOW_USER_CONFIGURATION" value="false" />
         <option name="MANIFEST_FILE_RELATIVE_PATH" value="/src/main/AndroidManifest.xml" />
         <option name="RES_FOLDER_RELATIVE_PATH" value="/src/main/res" />
-        <option name="RES_FOLDERS_RELATIVE_PATH" value="file://$MODULE_DIR$/src/main/res" />
         <option name="ASSETS_FOLDER_RELATIVE_PATH" value="/src/main/assets" />
       </configuration>
     </facet>
@@ -102,6 +102,7 @@
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/rs" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/symbols" />
       <excludeFolder url="file://$MODULE_DIR$/build/outputs" />
+      <excludeFolder url="file://$MODULE_DIR$/build/poms" />
       <excludeFolder url="file://$MODULE_DIR$/build/tmp" />
     </content>
     <orderEntry type="jdk" jdkName="Android API 22 Platform" jdkType="Android SDK" />
@@ -134,4 +135,3 @@
     <orderEntry type="library" exported="" name="mqtt-client-0.4.0" level="project" />
   </component>
 </module>
-

@@ -2,13 +2,18 @@
 package com.aware.utils;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
+import android.text.TextUtils;
 import android.util.Log;
 
 /**
@@ -56,14 +61,61 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     	if(DEBUG) Log.w(TAG, "Upgrading database: " + db.getPath());
-    	
-    	for (int i=0; i < database_tables.length;i++)
-        {
-            db.execSQL("DROP TABLE IF EXISTS "+database_tables[i]);
-        }
-    	onCreate(db);
+
+		db.beginTransaction();
+			for (int i=0; i < database_tables.length;i++)
+			{
+				db.execSQL("CREATE TABLE IF NOT EXISTS "+database_tables[i] +" ("+table_fields[i]+");");
+
+				List<String> columns = getColumns(db, database_tables[i]);
+				db.execSQL("ALTER TABLE "+database_tables[i] +" RENAME TO temp_"+database_tables[i]+";");
+				db.execSQL("CREATE TABLE " + database_tables[i] + " (" + table_fields[i] + ");");
+				columns.retainAll(getColumns(db, database_tables[i]));
+
+				String cols = TextUtils.join(",", columns);
+				//restore old data back
+				db.execSQL(String.format("INSERT INTO %s (%s) SELECT %s from temp_%s", database_tables[i], cols, cols, database_tables[i]));
+				db.execSQL("DROP TABLE temp_"+database_tables[i]+";");
+			}
+		db.setTransactionSuccessful();
+    	db.setVersion(newVersion);
+
+//	Old code that would just drop the table and call onCreate(db)
+// for (int i=0; i < database_tables.length;i++)
+//        {
+//            db.execSQL("DROP TABLE IF EXISTS "+database_tables[i]);
+//        }
+//		onCreate(db);
     }
-    
+
+	public static String join(List<String> list, String delim) {
+		StringBuilder buf = new StringBuilder();
+		int num = list.size();
+		for (int i = 0; i < num; i++) {
+			if (i != 0)
+				buf.append(delim);
+			buf.append((String) list.get(i));
+		}
+		return buf.toString();
+	}
+
+	public static List<String> getColumns(SQLiteDatabase db, String tableName) {
+		List<String> ar = null;
+		Cursor c = null;
+		try {
+			c = db.rawQuery("SELECT * FROM " + tableName + " LIMIT 1", null);
+			if (c != null) {
+				ar = new ArrayList<>(Arrays.asList(c.getColumnNames()));
+			}
+		} catch (Exception e) {
+			Log.v(tableName, e.getMessage(), e);
+			e.printStackTrace();
+		} finally {
+			if (c != null) c.close();
+		}
+		return ar;
+	}
+
     @Override
     public SQLiteDatabase getWritableDatabase() {
     	if( database != null ) {
