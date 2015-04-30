@@ -13,6 +13,8 @@ import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.internal.view.menu.ActionMenuItem;
+import android.support.v7.internal.view.menu.ActionMenuItemView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -82,10 +84,10 @@ public class Aware_Activity extends PreferenceActivity {
         });
 
         if( Aware.is_watch(this) ) {
-            MenuItem qrcode = (MenuItem) toolbar.findViewById(R.id.aware_qrcode);
-            qrcode.setVisible(false);
-            MenuItem team = (MenuItem) toolbar.findViewById(R.id.about_us);
-            team.setVisible(false);
+            ActionMenuItemView qrcode = (ActionMenuItemView) toolbar.findViewById(R.id.aware_qrcode);
+            qrcode.setVisibility(View.GONE);
+            ActionMenuItemView team = (ActionMenuItemView) toolbar.findViewById(R.id.about_us);
+            team.setVisibility(View.GONE);
         }
 
         navigationDrawer = (DrawerLayout) findViewById(R.id.aware_ui_main);
