@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.MatrixCursor;
-import android.database.MergeCursor;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,10 +14,7 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 
 import com.aware.Aware;
-import com.aware.Aware_Preferences;
-import com.aware.BuildConfig;
 import com.aware.R;
-import com.aware.Wear_Sync;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.utils.Aware_Plugin;
 
@@ -100,9 +96,9 @@ public class Stream_UI extends Aware_Activity {
      * @return View
      */
     private View getCoreCard( String className ) {
-        if( className.equals(Wear_Sync.class.getName()) ) {
-            return Wear_Sync.getContextCard(getApplicationContext());
-        }
+//        if( className.equals(Wear_Sync.class.getName()) ) {
+//            return Wear_Sync.getContextCard(getApplicationContext());
+//        }
         return null;
     }
 
@@ -119,20 +115,20 @@ public class Stream_UI extends Aware_Activity {
         });
 
         //Aware-core cards
-        if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_ANDROID_WEAR).equals("true") ) {
-            Object[] wear_card = new Object[] {
-                    Aware_Preferences.STATUS_ANDROID_WEAR.hashCode(),
-                    Wear_Sync.class.getName(),
-                    "Android Wear",
-                    BuildConfig.VERSION_CODE,
-                    Aware_Plugin.STATUS_PLUGIN_ON,
-                    "AWARE",
-                    null,
-                    "Android Wear synching"
-            };
-            core_cards.addRow(wear_card);
-            cards = new MergeCursor(new Cursor[]{ core_cards, cards });
-        }
+//        if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_ANDROID_WEAR).equals("true") ) {
+//            Object[] wear_card = new Object[] {
+//                    Aware_Preferences.STATUS_ANDROID_WEAR.hashCode(),
+//                    Wear_Sync.class.getName(),
+//                    "Android Wear",
+//                    BuildConfig.VERSION_CODE,
+//                    Aware_Plugin.STATUS_PLUGIN_ON,
+//                    "AWARE",
+//                    null,
+//                    "Android Wear synching"
+//            };
+//            core_cards.addRow(wear_card);
+//            cards = new MergeCursor(new Cursor[]{ core_cards, cards });
+//        }
     }
 
     private void updateCards() {

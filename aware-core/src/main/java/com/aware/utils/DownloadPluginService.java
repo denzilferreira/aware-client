@@ -34,7 +34,11 @@ public class DownloadPluginService extends IntentService {
         HttpResponse response = new Https(this).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
         if( response != null && response.getStatusLine().getStatusCode() == 200 ) {
             try {
-                JSONObject json_package = new JSONObject(Https.undoGZIP(response));
+                String input = Https.undoGZIP(response);
+
+                if(input.trim().equalsIgnoreCase("[]")) return;
+
+                JSONObject json_package = new JSONObject(input);
 
                 //Create the folder where all the databases will be stored on external storage
                 File folders = new File(Environment.getExternalStorageDirectory()+"/AWARE/plugins/");

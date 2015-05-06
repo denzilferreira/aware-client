@@ -460,7 +460,7 @@ public class Aware_Preferences extends Aware_Activity {
     /**
      * Activate/deactivate Android Wear data synching
      */
-    public static final String STATUS_ANDROID_WEAR = "status_android_wear";
+//    public static final String STATUS_ANDROID_WEAR = "status_android_wear";
 
     /**
      * Activate/deactivate keyboard logging
@@ -1739,28 +1739,28 @@ public class Aware_Preferences extends Aware_Activity {
     public void logging() {
         webservices();
         mqtt();
-        external();
+//        external();
     }
 
     /**
      * External sensors settings UI
      */
-    private void external() {
-        final CheckBoxPreference android_wear = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_ANDROID_WEAR);
-        android_wear.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_ANDROID_WEAR).equals("true"));
-        android_wear.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener(){
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_ANDROID_WEAR, android_wear.isChecked());
-                if( android_wear.isChecked() ) {
-                    framework.startAndroidWear();
-                } else {
-                    framework.stopAndroidWear();
-                }
-                return true;
-            }
-        });
-    }
+//    private void external() {
+//        final CheckBoxPreference android_wear = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_ANDROID_WEAR);
+//        android_wear.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_ANDROID_WEAR).equals("true"));
+//        android_wear.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener(){
+//            @Override
+//            public boolean onPreferenceClick(Preference preference) {
+//                Aware.setSetting(sContext, Aware_Preferences.STATUS_ANDROID_WEAR, android_wear.isChecked());
+//                if( android_wear.isChecked() ) {
+//                    framework.startAndroidWear();
+//                } else {
+//                    framework.stopAndroidWear();
+//                }
+//                return true;
+//            }
+//        });
+//    }
 
     /**
      * Webservices module settings UI

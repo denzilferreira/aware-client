@@ -11,35 +11,40 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" >
 
-        <ScrollView
-            android:id="@+id/plugins_store_scroller"
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/refresh_plugins"
+            android:layout_height="wrap_content"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fillViewport="true" >
-
-            <LinearLayout
-                android:id="@+id/store_container"
+            >
+            <ScrollView
+                android:id="@+id/plugins_store_scroller"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical" >
+                android:fillViewport="true" >
 
-                <GridView
-                    android:id="@+id/plugins_store_grid"
+                <LinearLayout
+                    android:id="@+id/store_container"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="@color/grey_background"
-                    android:columnWidth="80dp"
-                    android:padding="5dp"
-                    android:numColumns="auto_fit"
-                    android:verticalSpacing="5dp"
-                    android:horizontalSpacing="5dp"
-                    android:stretchMode="columnWidth"
-                    android:gravity="center"
-                    android:animateLayoutChanges="true"
-                    />
-            </LinearLayout>
-        </ScrollView>
+                    android:orientation="vertical" >
 
+                    <GridView
+                        android:id="@+id/plugins_store_grid"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@color/grey_background"
+                        android:columnWidth="80dp"
+                        android:padding="5dp"
+                        android:numColumns="auto_fit"
+                        android:verticalSpacing="5dp"
+                        android:horizontalSpacing="5dp"
+                        android:stretchMode="columnWidth"
+                        android:gravity="center"
+                        android:animateLayoutChanges="true"
+                        />
+                </LinearLayout>
+            </ScrollView>
+        </android.support.v4.widget.SwipeRefreshLayout>
         <ListView
             android:id="@+id/aware_navigation"
             android:layout_width="240dp"
@@ -49,7 +54,6 @@
             android:choiceMode="singleChoice"
             android:divider="@android:color/transparent"
             android:dividerHeight="0dp" />
-
     </android.support.v4.widget.DrawerLayout>
     <ListView
         android:layout_width="fill_parent"

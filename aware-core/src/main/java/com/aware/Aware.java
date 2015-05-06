@@ -549,7 +549,7 @@ public class Aware extends Service {
     	}
         if( cached != null && ! cached.isClosed() ) cached.close();
 
-        if( Aware.DEBUG ) Log.d(Aware.TAG, "Not installed, attempting to download from the repository...");
+        if( Aware.DEBUG ) Log.d(Aware.TAG, package_name + " is not installed, attempting to download from the repository...");
 
         //Ok, not bundled or installed, request the missing plugin from the server
         downloadPlugin(context, package_name, false);
@@ -1012,10 +1012,6 @@ public class Aware extends Service {
                     
                     Cursor current_status = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, new String[]{Aware_Plugins.PLUGIN_STATUS}, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null, null);
                     if( current_status != null && current_status.moveToFirst() ) {
-                        if( current_status.getInt(current_status.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == Aware_Plugin.STATUS_PLUGIN_ON ) {
-                            Intent aware = new Intent(Aware.ACTION_AWARE_REFRESH);
-                            context.sendBroadcast(aware);
-                        } 
                         if( current_status.getInt(current_status.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == Plugins_Manager.PLUGIN_NOT_INSTALLED || current_status.getInt(current_status.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == Plugins_Manager.PLUGIN_UPDATED ) {
                         	rowData.put(Aware_Plugins.PLUGIN_STATUS, Plugins_Manager.PLUGIN_ACTIVE);
                         }
@@ -1029,7 +1025,6 @@ public class Aware extends Service {
                     
                     //Refresh stream UI if visible
                     context.sendBroadcast(new Intent(Stream_UI.ACTION_AWARE_UPDATE_STREAM));
-
                     return;
                 }
                 
@@ -1081,7 +1076,7 @@ public class Aware extends Service {
             if( http_request != null && http_request.getStatusLine().getStatusCode() == 200 ) {
             	try {
             		String json_string = Https.undoGZIP(http_request);
-            		if( ! json_string.equals("[]") ) {
+            		if( ! json_string.trim().equalsIgnoreCase("[]") ) {
             			json_package = new JSONObject(json_string);
                         icon = Plugins_Manager.cacheImage("http://api.awareframework.com" + json_package.getString("iconpath"), awareContext);
             		}
@@ -1428,9 +1423,9 @@ public class Aware extends Service {
             startESM();
         }else stopESM();
 
-        if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_ANDROID_WEAR).equals("true") ) {
-            startAndroidWear();
-        }else stopAndroidWear();
+//        if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_ANDROID_WEAR).equals("true") ) {
+//            startAndroidWear();
+//        }else stopAndroidWear();
 
         if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_KEYBOARD).equals("true") ) {
             startKeyboard();
@@ -1466,7 +1461,7 @@ public class Aware extends Service {
         stopTemperature();
         stopESM();
         stopInstallations();
-        stopAndroidWear();
+//        stopAndroidWear();
         stopKeyboard();
     }
 
@@ -1485,20 +1480,20 @@ public class Aware extends Service {
         if( keyboard != null ) awareContext.stopService(keyboard);
     }
 
-    /**
-     * Start Android Wear module
-     */
-    protected void startAndroidWear() {
-        if( androidWearSrv == null ) androidWearSrv = new Intent(awareContext, Wear_Sync.class);
-        awareContext.startService(androidWearSrv);
-    }
-
-    /**
-     * Stop Android Wear module
-     */
-    protected void stopAndroidWear() {
-        if( androidWearSrv != null ) awareContext.stopService(androidWearSrv);
-    }
+//    /**
+//     * Start Android Wear module
+//     */
+//    protected void startAndroidWear() {
+//        if( androidWearSrv == null ) androidWearSrv = new Intent(awareContext, Wear_Sync.class);
+//        awareContext.startService(androidWearSrv);
+//    }
+//
+//    /**
+//     * Stop Android Wear module
+//     */
+//    protected void stopAndroidWear() {
+//        if( androidWearSrv != null ) awareContext.stopService(androidWearSrv);
+//    }
 
     /**
      * Start Applications module

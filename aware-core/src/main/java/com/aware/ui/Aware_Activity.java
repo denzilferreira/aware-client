@@ -17,6 +17,7 @@ import android.support.v7.internal.view.menu.ActionMenuItem;
 import android.support.v7.internal.view.menu.ActionMenuItemView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -60,8 +61,8 @@ public class Aware_Activity extends PreferenceActivity {
             }
         }
     }
-	
-	@Override
+
+    @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
@@ -71,11 +72,11 @@ public class Aware_Activity extends PreferenceActivity {
         toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem menuItem) {
-                if( menuItem.getTitle().toString().equals("QRCode")) {
+                if (menuItem.getTitle().toString().equals("QRCode")) {
                     Intent join_study = new Intent(Aware_Activity.this, CameraStudy.class);
                     startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
                 }
-                if( menuItem.getTitle().toString().equals("Team")) {
+                if (menuItem.getTitle().toString().equals("Team")) {
                     Intent about_us = new Intent(Aware_Activity.this, About.class);
                     startActivity(about_us);
                 }
@@ -84,10 +85,11 @@ public class Aware_Activity extends PreferenceActivity {
         });
 
         if( Aware.is_watch(this) ) {
-            ActionMenuItemView qrcode = (ActionMenuItemView) toolbar.findViewById(R.id.aware_qrcode);
-            qrcode.setVisibility(View.GONE);
-            ActionMenuItemView team = (ActionMenuItemView) toolbar.findViewById(R.id.about_us);
-            team.setVisibility(View.GONE);
+            Menu menu = toolbar.getMenu();
+            for( int i=0; i< menu.size(); i++ ) {
+                MenuItem item = menu.getItem(i);
+                item.setVisible(false);
+            }
         }
 
         navigationDrawer = (DrawerLayout) findViewById(R.id.aware_ui_main);

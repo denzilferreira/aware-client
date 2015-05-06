@@ -17,6 +17,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -81,6 +83,7 @@ public class Plugins_Manager extends Aware_Activity {
 	
 	private static LayoutInflater inflater;
 	private static GridView store_grid;
+    private static SwipeRefreshLayout swipeToRefresh;
 
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,13 +94,48 @@ public class Plugins_Manager extends Aware_Activity {
     	inflater = getLayoutInflater();
     	store_grid = (GridView) findViewById(R.id.plugins_store_grid);
 
-        Cursor installed_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, Aware_Plugins.PLUGIN_NAME + " ASC");
-        PluginAdapter pluginAdapter = new PluginAdapter(getApplicationContext(), installed_plugins, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
-        store_grid.setAdapter(pluginAdapter);
+        swipeToRefresh = (SwipeRefreshLayout) findViewById(R.id.refresh_plugins);
+        swipeToRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                updateGrid();
+                new Async_PluginUpdater().execute();
+            }
+        });
+
+        bootRefresh();
 
     	IntentFilter filter = new IntentFilter();
     	filter.addAction(Aware.ACTION_AWARE_PLUGIN_MANAGER_REFRESH);
     	registerReceiver(plugins_listener, filter);
+
+        //Check if we need to do some clean-up. If the plugin has been installed before, check if it still is installed.
+        Cursor all_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "!=" + PLUGIN_NOT_INSTALLED, null, Aware_Plugins.PLUGIN_NAME + " ASC");
+        String to_clean = "";
+        if( all_plugins != null && all_plugins.moveToFirst() ) {
+            do {
+                String package_name = all_plugins.getString(all_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+                if( ! Plugins_Manager.isInstalled(getApplicationContext(), package_name) ) {
+                    to_clean += "'"+package_name + "',";
+                    if(Aware.DEBUG) Log.d(Aware.TAG, "Not installed anymore, clean-up: " + package_name);
+                }
+            }while(all_plugins.moveToNext());
+        }
+        if( all_plugins != null && ! all_plugins.isClosed()) all_plugins.close();
+
+        if( to_clean.length() > 0 ) {
+            to_clean = to_clean.substring(0,to_clean.length()-1);
+            getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " in (" + to_clean + ")", null);
+        }
+    }
+
+    private void bootRefresh() {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                swipeToRefresh.setRefreshing(true);
+            }
+        }, 500);
     }
 	
 	//Monitors for external changes in plugin's states and refresh the UI
@@ -106,6 +144,8 @@ public class Plugins_Manager extends Aware_Activity {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			if( intent.getAction().equals(Aware.ACTION_AWARE_PLUGIN_MANAGER_REFRESH) ) {
+                updateGrid();
+                //Check if we have updated information from the repository
                 new Async_PluginUpdater().execute();
 			}
 		}
@@ -142,7 +182,7 @@ public class Plugins_Manager extends Aware_Activity {
             final ImageView pkg_state = (ImageView) pkg_view.findViewById(R.id.pkg_state);
 
             try {
-                if (status != PLUGIN_NOT_INSTALLED) {
+                if ( status != PLUGIN_NOT_INSTALLED ) {
                     ApplicationInfo appInfo = context.getPackageManager().getApplicationInfo(package_name, PackageManager.GET_META_DATA);
                     pkg_icon.setImageDrawable(appInfo.loadIcon(getPackageManager()));
                 } else {
@@ -303,7 +343,7 @@ public class Plugins_Manager extends Aware_Activity {
 	@Override
 	protected void onResume() {
         super.onResume();
-        updateGrid();
+        new Async_PluginUpdater().execute();
 	}
 
     @Override
@@ -430,18 +470,6 @@ public class Plugins_Manager extends Aware_Activity {
 
         private boolean needsRefresh = false;
 
-//        private boolean is_onRepo(JSONArray server_packages, String package_name) {
-//            for(int i = 0; i < server_packages.length(); i++) {
-//                try {
-//                    JSONObject plugin = server_packages.getJSONObject(i);
-//                    if( plugin.getString("package").equals(package_name) ) return true;
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//            return false;
-//        }
-
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -500,27 +528,6 @@ public class Plugins_Manager extends Aware_Activity {
                             needsRefresh = true;
                         }
 					}
-
-//                    //Check if we need to do some clean-up
-//                    Cursor all_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, Aware_Plugins.PLUGIN_NAME + " ASC");
-//                    String to_clean = "";
-//                    if( all_plugins != null && all_plugins.moveToFirst() ) {
-//                        do {
-//                            String package_name = all_plugins.getString(all_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-//                            if( ! Plugins_Manager.isInstalled(getApplicationContext(), package_name) && ! is_onRepo( plugins, package_name ) ) {
-//                                to_clean += package_name + ",";
-//                                if(Aware.DEBUG) Log.d(Aware.TAG, "Not installed or in-repo, clean-up: " + package_name);
-//                            }
-//                        }while(all_plugins.moveToNext());
-//                    }
-//                    if( all_plugins != null && ! all_plugins.isClosed()) all_plugins.close();
-//
-//                    if( to_clean.length() > 0 ) {
-//                        to_clean = to_clean.substring(0,to_clean.length()-1);
-//                        getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " in ('" + to_clean + "')", null);
-//                        needsRefresh = true;
-//                    }
-
 				} catch (ParseException e) {
 					e.printStackTrace();
 				} catch (JSONException e) {
@@ -533,6 +540,9 @@ public class Plugins_Manager extends Aware_Activity {
 		@Override
 		protected void onPostExecute(Boolean refresh) {
 			super.onPostExecute(refresh);
+            if( swipeToRefresh != null ) {
+                swipeToRefresh.setRefreshing(false);
+            }
             if( refresh ) updateGrid();
 		}
     }

@@ -520,20 +520,20 @@
                 android:title="Wi-Fi scanning update frequency" />
         </PreferenceScreen>
     </PreferenceCategory>
-    <PreferenceCategory
-        android:key="wearables"
-        android:summary="Wearables, sensors"
-        android:title="External sensors">
-        <PreferenceScreen
-            android:key="external_android_wear"
-            android:title="Android Wear">
-            <CheckBoxPreference
-                android:defaultValue="false"
-                android:key="status_android_wear"
-                android:persistent="true"
-                android:title="Active"/>
-        </PreferenceScreen>
-    </PreferenceCategory>
+    <!--<PreferenceCategory-->
+        <!--android:key="wearables"-->
+        <!--android:summary="Wearables, sensors"-->
+        <!--android:title="External sensors">-->
+        <!--<PreferenceScreen-->
+            <!--android:key="external_android_wear"-->
+            <!--android:title="Android Wear">-->
+            <!--<CheckBoxPreference-->
+                <!--android:defaultValue="false"-->
+                <!--android:key="status_android_wear"-->
+                <!--android:persistent="true"-->
+                <!--android:title="Active"/>-->
+        <!--</PreferenceScreen>-->
+    <!--</PreferenceCategory>-->
     <PreferenceCategory
         android:key="data_exchange"
         android:summary="Webservices, MQTT"
