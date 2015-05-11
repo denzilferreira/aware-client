@@ -132,6 +132,13 @@
             android:theme="@android:style/Theme.DeviceDefault.Dialog">
         </activity>
 
+        <service android:name="com.aware.utils.WearHttpClient" android:exported="true" android:enabled="@bool/display_aware" />
+        <service android:name="com.aware.utils.WearHttpClient$WearListener" android:exported="true" android:enabled="@bool/display_aware">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.BIND_LISTENER"/>
+            </intent-filter>
+        </service>
+
         <service android:name="com.aware.Keyboard" android:exported="true" />
         <service
             android:name="com.aware.Aware"

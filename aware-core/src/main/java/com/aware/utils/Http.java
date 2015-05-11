@@ -1,6 +1,7 @@
 
 package com.aware.utils;
 
+import android.content.Intent;
 import android.util.Log;
 
 import com.aware.Aware;

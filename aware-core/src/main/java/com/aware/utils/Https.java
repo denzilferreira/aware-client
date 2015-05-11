@@ -1,15 +1,21 @@
 package com.aware.utils;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.util.Log;
 
 import com.aware.Aware;
 import com.aware.R;
 
 import org.apache.http.Header;
+import org.apache.http.HeaderIterator;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.ProtocolVersion;
+import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
@@ -23,6 +29,9 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.w3c.dom.NameList;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -45,6 +54,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.zip.GZIPInputStream;
 
 import javax.net.ssl.HostnameVerifier;
@@ -66,8 +76,11 @@ public class Https extends DefaultHttpClient {
 		HostnameVerifier hostVerifier = new BrowserCompatHostnameVerifier();
 		sScheme = new Scheme("https", new AwareSSLSocketFactory(sslCtx, (X509HostnameVerifier) hostVerifier), 443);
 		getConnectionManager().getSchemeRegistry().register(sScheme);
+
+		Intent startWearClient = new Intent(c, WearHttpClient.class);
+		c.startService(startWearClient);
 	}
-	
+
 	private SSLContext createSSLContext() {
 		try {
 			//Load local trusted keystore
@@ -175,6 +188,27 @@ public class Https extends DefaultHttpClient {
 	 * @return HttpResponse with server response. Use EntityUtils on response's getEntity().getContent() to extract values or object. If gzipped, use Https.undoGZIP on the response.
 	 */
 	public HttpResponse dataPOST(String url, ArrayList<NameValuePair> data, boolean is_gzipped) {
+
+		if( Aware.is_watch(sContext) ) {
+
+			JSONObject data_json = new JSONObject();
+			for(NameValuePair valuePair : data ) {
+				try {
+					data_json.put(valuePair.getName(),valuePair.getValue());
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+
+			Intent phoneRequest = new Intent(WearHttpClient.ACTION_AWARE_ANDROID_WEAR_HTTP_POST);
+			phoneRequest.putExtra(WearHttpClient.EXTRA_URL, url);
+			phoneRequest.putExtra(WearHttpClient.EXTRA_DATA, data_json.toString());
+			phoneRequest.putExtra(WearHttpClient.EXTRA_GZIP, is_gzipped);
+			sContext.sendBroadcast(phoneRequest);
+
+			return null; //TODO get answer from request
+		}
+
 		try{
 			HttpPost httpPost = new HttpPost(url);
 			httpPost.setEntity(new UrlEncodedFormEntity(data));
@@ -259,6 +293,16 @@ public class Https extends DefaultHttpClient {
 	 * @return HttpEntity with the content of the reply. Use EntityUtils to get content.
 	 */
 	public HttpResponse dataGET(String url, boolean is_gzipped) {
+
+		if( Aware.is_watch(sContext) ) {
+			Intent phoneRequest = new Intent(WearHttpClient.ACTION_AWARE_ANDROID_WEAR_HTTP_GET);
+			phoneRequest.putExtra(WearHttpClient.EXTRA_URL, url);
+			phoneRequest.putExtra(WearHttpClient.EXTRA_GZIP, is_gzipped);
+			sContext.sendBroadcast(phoneRequest);
+
+			return null; //TODO: Get answer from request
+		}
+
 		try {
 			HttpGet httpGet = new HttpGet(url);
             if( is_gzipped ) httpGet.addHeader("Accept-Encoding", "gzip"); //send data compressed
