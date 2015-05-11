@@ -149,8 +149,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
     @Override
     public void connectionLost(Throwable throwable) {
-        if( Aware.DEBUG ) Log.d(TAG,"MQTT: Connection lost to server... AWARE will reconnect...");
-        initializeMQTT();
+        if( Aware.DEBUG ) Log.d(TAG,"MQTT: Connection lost to server... AWARE will reconnect in 5 minutes...");
     }
 
     @Override
@@ -383,7 +382,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         }
         
         MqttConnectOptions MQTT_OPTIONS = new MqttConnectOptions();
-        MQTT_OPTIONS.setCleanSession(false); //false to resume any pending messages
+        MQTT_OPTIONS.setCleanSession( false ); //false to resume any pending messages
         MQTT_OPTIONS.setConnectionTimeout( Integer.parseInt(MQTT_KEEPALIVE) + 10 ); //add 10 seconds to keep alive as connection timeout
         MQTT_OPTIONS.setKeepAliveInterval( Integer.parseInt(MQTT_KEEPALIVE) );
         if( MQTT_USERNAME.length() > 0 ) MQTT_OPTIONS.setUserName( MQTT_USERNAME );
