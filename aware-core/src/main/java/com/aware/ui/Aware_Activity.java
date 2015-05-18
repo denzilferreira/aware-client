@@ -34,6 +34,7 @@ import com.aware.Aware_Preferences;
 import com.aware.Aware_Preferences.StudyConfig;
 import com.aware.R;
 import com.aware.utils.Https;
+import com.aware.utils.WearClient;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
@@ -57,6 +58,12 @@ public class Aware_Activity extends PreferenceActivity {
                 startService(study_config);
 
                 Toast.makeText(this, "Please wait for further instructions...", Toast.LENGTH_LONG).show();
+
+                //Join study also on the watch
+                Intent wearStudy = new Intent(WearClient.ACTION_AWARE_ANDROID_WEAR_JOIN_STUDY);
+                wearStudy.putExtra(WearClient.EXTRA_STUDY, data.getStringExtra("study_url"));
+                sendBroadcast(wearStudy);
+
                 finish();
             }
         }

@@ -33,9 +33,7 @@ public class WebserviceHelper extends IntentService {
 	public static final String EXTRA_FIELDS = "fields";
 	public static final String EXTRA_CONTENT_URI = "uri";
 
-    private static final int batch_size = 10000;
-
-	public WebserviceHelper() {
+    public WebserviceHelper() {
 		super(Aware.TAG + " Webservice Sync");
 	}
 
@@ -49,6 +47,11 @@ public class WebserviceHelper extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 
+        int batch_size = 10000; //default for phones
+		if( Aware.is_watch(getApplicationContext()) ) {
+            batch_size = 100; //default for watch (we have a limit of 100KB of data packet size (Message API)
+        }
+
 		String WEBSERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
 		String DEVICE_ID = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
 		boolean DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
@@ -60,14 +63,16 @@ public class WebserviceHelper extends IntentService {
 		if( WEBSERVER.length() == 0 ) return;
 		
 		if( intent.getAction().equals(ACTION_AWARE_WEBSERVICE_SYNC_TABLE) ) {
-			
-			//Check if we should do this only over Wi-Fi
-			boolean wifi_only = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true");
-			if( wifi_only ) {
-				ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-				NetworkInfo active_network = cm.getActiveNetworkInfo();
-				if( active_network != null && active_network.getType() != ConnectivityManager.TYPE_WIFI ) {
-					return;
+
+			if( ! Aware.is_watch(getApplicationContext()) ) { //watch doesn't care about Wi-Fi or not.
+				//Check if we should do this only over Wi-Fi
+				boolean wifi_only = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true");
+				if( wifi_only ) {
+					ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+					NetworkInfo active_network = cm.getActiveNetworkInfo();
+					if( active_network != null && active_network.getType() != ConnectivityManager.TYPE_WIFI ) {
+						return;
+					}
 				}
 			}
 

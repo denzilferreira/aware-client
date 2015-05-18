@@ -51,6 +51,7 @@ import com.aware.ui.Stream_UI;
 import com.aware.utils.Aware_Plugin;
 import com.aware.utils.DownloadPluginService;
 import com.aware.utils.Https;
+import com.aware.utils.WearClient;
 import com.aware.utils.WebserviceHelper;
 
 import org.apache.http.HttpResponse;
@@ -303,6 +304,10 @@ public class Aware extends Service {
 
         //Only the official client will do this.
         if ( getPackageName().equals("com.aware") ) {
+
+            Intent startWearClient = new Intent(this, WearClient.class);
+            startService(startWearClient);
+
             awareStatusMonitor = new Intent(getApplicationContext(), Aware.class);
             repeatingIntent = PendingIntent.getService(getApplicationContext(), 0, awareStatusMonitor, 0);
             alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000, aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000, repeatingIntent);
@@ -1281,10 +1286,12 @@ public class Aware extends Service {
                                     if( Aware.DEBUG ) Log.d(Aware.TAG, "Plugin to install: " + filePath);
 
                                     File mFile = new File( Uri.parse(filePath).getPath() );
-                                    Intent promptInstall = new Intent(Intent.ACTION_VIEW);
-                                    promptInstall.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    promptInstall.setDataAndType(Uri.fromFile(mFile), "application/vnd.android.package-archive");
-                                    context.startActivity(promptInstall);
+                                    if( ! Aware.is_watch(context) ) {
+                                        Intent promptInstall = new Intent(Intent.ACTION_VIEW);
+                                        promptInstall.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                        promptInstall.setDataAndType(Uri.fromFile(mFile), "application/vnd.android.package-archive");
+                                        context.startActivity(promptInstall);
+                                    }
                                 }
                             }
                             if( cur != null && ! cur.isClosed() ) cur.close();
@@ -1423,10 +1430,6 @@ public class Aware extends Service {
             startESM();
         }else stopESM();
 
-//        if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_ANDROID_WEAR).equals("true") ) {
-//            startAndroidWear();
-//        }else stopAndroidWear();
-
         if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_KEYBOARD).equals("true") ) {
             startKeyboard();
         }else stopKeyboard();
@@ -1461,7 +1464,6 @@ public class Aware extends Service {
         stopTemperature();
         stopESM();
         stopInstallations();
-//        stopAndroidWear();
         stopKeyboard();
     }
 
@@ -1479,21 +1481,6 @@ public class Aware extends Service {
     protected void stopKeyboard() {
         if( keyboard != null ) awareContext.stopService(keyboard);
     }
-
-//    /**
-//     * Start Android Wear module
-//     */
-//    protected void startAndroidWear() {
-//        if( androidWearSrv == null ) androidWearSrv = new Intent(awareContext, Wear_Sync.class);
-//        awareContext.startService(androidWearSrv);
-//    }
-//
-//    /**
-//     * Stop Android Wear module
-//     */
-//    protected void stopAndroidWear() {
-//        if( androidWearSrv != null ) awareContext.stopService(androidWearSrv);
-//    }
 
     /**
      * Start Applications module

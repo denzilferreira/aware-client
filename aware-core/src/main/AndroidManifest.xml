@@ -46,6 +46,7 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/Theme.Aware">
+
         <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
 
         <activity
@@ -132,12 +133,20 @@
             android:theme="@android:style/Theme.DeviceDefault.Dialog">
         </activity>
 
-        <service android:name="com.aware.utils.WearHttpClient" android:exported="true" android:enabled="@bool/display_aware" />
-        <service android:name="com.aware.utils.WearHttpClient$WearListener" android:exported="true" android:enabled="@bool/display_aware">
+        <service android:name="com.aware.utils.WearClient" android:exported="true" android:enabled="@bool/display_aware">
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.BIND_LISTENER"/>
             </intent-filter>
         </service>
+        <receiver android:name="com.aware.utils.WearClient$AndroidWearHTTPClient" android:exported="true">
+            <intent-filter>
+                <action android:name="ACTION_AWARE_ANDROID_WEAR_HTTP_GET"/>
+                <action android:name="ACTION_AWARE_ANDROID_WEAR_HTTP_POST"/>
+                <action android:name="ACTION_AWARE_ANDROID_WEAR_INSTALL_PLUGIN"/>
+                <action android:name="ACTION_AWARE_ANDROID_WEAR_JOIN_STUDY"/>
+                <action android:name="ACTION_AWARE_ANDROID_WEAR_QUIT_STUDY"/>
+            </intent-filter>
+        </receiver>
 
         <service android:name="com.aware.Keyboard" android:exported="true" />
         <service

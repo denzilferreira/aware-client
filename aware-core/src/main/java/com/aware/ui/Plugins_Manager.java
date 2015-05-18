@@ -27,11 +27,13 @@ import android.widget.CursorAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.aware.Aware;
 import com.aware.R;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.utils.Https;
+import com.aware.utils.WearClient;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
@@ -111,12 +113,13 @@ public class Plugins_Manager extends Aware_Activity {
     }
 
     private void bootRefresh() {
-        new Handler().postDelayed(new Runnable() {
+        new Handler().post(new Runnable() {
             @Override
             public void run() {
                 swipeToRefresh.setRefreshing(true);
+                new Async_PluginUpdater().execute();
             }
-        }, 500);
+        });
     }
 	
 	//Monitors for external changes in plugin's states and refresh the UI
@@ -288,7 +291,17 @@ public class Plugins_Manager extends Aware_Activity {
                                         pkg_view.setAlpha(0.5f);
                                         pkg_title.setText("Downloading...");
                                         pkg_view.setOnClickListener(null);
-                                        Aware.downloadPlugin(getApplicationContext(), package_name, false);
+
+                                        if( ! Aware.is_watch(getApplicationContext()) ) {
+                                            Aware.downloadPlugin(getApplicationContext(), package_name, false);
+                                        } else {
+                                            //Ask phone to install plugin. If there is a wearable version bundled, it's installed on the watch too.
+                                            Intent requestPhone = new Intent(WearClient.ACTION_AWARE_ANDROID_WEAR_INSTALL_PLUGIN);
+                                            requestPhone.putExtra(WearClient.EXTRA_PACKAGE_NAME, package_name);
+                                            sendBroadcast(requestPhone);
+
+                                            Toast.makeText(getApplicationContext(), "Check your phone, please.", Toast.LENGTH_LONG).show();
+                                        }
                                     }
                                 });
                                 builder.create().show();
@@ -470,11 +483,13 @@ public class Plugins_Manager extends Aware_Activity {
                         boolean new_data = false;
                         Cursor is_cached = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + plugin.getString("package") + "'", null, null );
 						if( is_cached != null && is_cached.moveToFirst() ) {
+
 							if( ! Plugins_Manager.isInstalled(getApplicationContext(), plugin.getString("package")) ) {
                                 //We used to have it installed, now we don't, remove from database
                                 getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + plugin.getString("package") + "'", null);
                                 new_data = true;
                                 needsRefresh = true;
+
                             } else {
                                 int version = is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins.PLUGIN_VERSION));
                                 //Lets check if it is updated
@@ -483,7 +498,7 @@ public class Plugins_Manager extends Aware_Activity {
                                     data.put(Aware_Plugins.PLUGIN_DESCRIPTION, plugin.getString("desc"));
                                     data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
                                     data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
-                                    data.put(Aware_Plugins.PLUGIN_ICON, cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()));
+                                    data.put(Aware_Plugins.PLUGIN_ICON, ! Aware.is_watch(getApplicationContext())?cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()):null);
                                     data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_UPDATED);
                                     getContentResolver().update(Aware_Plugins.CONTENT_URI, data, Aware_Plugins._ID + "=" + is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins._ID)), null);
                                     needsRefresh = true;
@@ -503,7 +518,7 @@ public class Plugins_Manager extends Aware_Activity {
                             data.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, plugin.getString("package"));
                             data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
                             data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_NOT_INSTALLED);
-                            data.put(Aware_Plugins.PLUGIN_ICON, cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()));
+                            data.put(Aware_Plugins.PLUGIN_ICON, ! Aware.is_watch(getApplicationContext())?cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()):null);
                             getContentResolver().insert(Aware_Plugins.CONTENT_URI, data);
                             needsRefresh = true;
                         }
