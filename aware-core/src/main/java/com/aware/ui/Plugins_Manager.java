@@ -288,10 +288,9 @@ public class Plugins_Manager extends Aware_Activity {
                                     public void onClick(DialogInterface dialog, int which) {
                                         dialog.dismiss();
                                         pkg_view.setAlpha(0.5f);
-                                        pkg_view.setOnClickListener(null); //disable click
 
                                         if( ! Aware.is_watch(getApplicationContext()) ) {
-                                            Toast.makeText(getApplicationContext(), "Downloading...", Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(getApplicationContext(), "Downloading... please wait", Toast.LENGTH_SHORT).show();
                                             Aware.downloadPlugin(getApplicationContext(), package_name, false);
 
                                         } else {

@@ -305,8 +305,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		
-		TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
+
+        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
         mContext = getApplicationContext();
         
 		DATABASE_TABLES = Mqtt_Provider.DATABASE_TABLES;
@@ -318,6 +318,13 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         filter.addAction(Mqtt.ACTION_AWARE_MQTT_TOPIC_UNSUBSCRIBE);
         filter.addAction(Mqtt.ACTION_AWARE_MQTT_MSG_PUBLISH);
         registerReceiver(mqttReceiver, filter);
+
+        if( Aware.is_watch(this) ) {
+            Log.d(TAG,"This is an Android Wear device, we can't connect to MQTT. Disabling it!");
+            Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, false);
+            stopSelf();
+            return;
+        }
     }
 
 	@Override

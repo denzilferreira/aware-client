@@ -54,6 +54,8 @@ public class Http {
      * @return HttpEntity with the content of the reply. Use EntityUtils to get content.
      */
     public synchronized HttpResponse dataGET(String url, boolean is_gzipped) {
+        if( url.length() == 0 ) return null;
+
         if( Aware.is_watch(sContext) ) {
 
             if( Aware.DEBUG ) Log.d(TAG, "Waiting for phone's HTTP GET request...\n" + "URL:" + url );
@@ -109,7 +111,9 @@ public class Http {
 	 * @return HttpEntity with server response. Use EntityUtils to extract values or object
 	 */
 	public synchronized HttpResponse dataPOST(String url, ArrayList<NameValuePair> data, boolean is_gzipped) {
-		if( Aware.is_watch(sContext) ) {
+        if( url.length() == 0 ) return null;
+
+        if( Aware.is_watch(sContext) ) {
 			JSONObject data_json = new JSONObject();
 			for(NameValuePair valuePair : data ) {
 				try {
