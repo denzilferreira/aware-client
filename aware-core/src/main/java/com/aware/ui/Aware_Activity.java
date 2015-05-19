@@ -35,6 +35,7 @@ import com.aware.Aware_Preferences.StudyConfig;
 import com.aware.R;
 import com.aware.utils.Https;
 import com.aware.utils.WearClient;
+import com.aware.utils.WearProxy;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
@@ -318,6 +319,11 @@ public class Aware_Activity extends PreferenceActivity {
                         Intent preferences = new Intent(getApplicationContext(), Aware_Preferences.class);
                         preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(preferences);
+
+                        if( ! Aware.is_watch(getApplicationContext()) ) { //let the watch know we are quitting the study
+                            Intent quit = new Intent(WearClient.ACTION_AWARE_ANDROID_WEAR_QUIT_STUDY);
+                            sendBroadcast(quit);
+                        }
                     }
                 });
                 builder.setCancelable(false);
@@ -345,6 +351,11 @@ public class Aware_Activity extends PreferenceActivity {
                         Intent preferences = new Intent(getApplicationContext(), Aware_Preferences.class);
                         preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(preferences);
+
+                        if( ! Aware.is_watch(getApplicationContext()) ) { //let the watch know we are quitting the study
+                            Intent quit = new Intent(WearClient.ACTION_AWARE_ANDROID_WEAR_QUIT_STUDY);
+                            sendBroadcast(quit);
+                        }
                     }
                 });
                 builder.setTitle("Study information");

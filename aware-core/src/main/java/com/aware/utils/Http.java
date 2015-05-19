@@ -65,7 +65,7 @@ public class Http {
 
             long time = System.currentTimeMillis();
             while( WearProxy.wearResponse == null ){
-                //Wait
+                if( WearProxy.wearResponse != null ) break;
             }
 
             if( Aware.DEBUG ) {
@@ -129,7 +129,7 @@ public class Http {
 
             long time = System.currentTimeMillis();
             while( WearProxy.wearResponse == null ){
-                //wait
+                if( WearProxy.wearResponse != null ) break;
             }
 
             if( Aware.DEBUG ) {

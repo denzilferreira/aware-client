@@ -171,7 +171,7 @@ public class Https extends DefaultHttpClient {
      * @param is_gzipped
 	 * @return HttpResponse with server response. Use EntityUtils on response's getEntity().getContent() to extract values or object. If gzipped, use Https.undoGZIP on the response.
 	 */
-	public HttpResponse dataPOST(String url, ArrayList<NameValuePair> data, boolean is_gzipped) {
+	public synchronized HttpResponse dataPOST(String url, ArrayList<NameValuePair> data, boolean is_gzipped) {
 		if( Aware.is_watch(sContext) ) {
 
             JSONObject data_json = new JSONObject();
@@ -242,7 +242,7 @@ public class Https extends DefaultHttpClient {
      * @param url
      * @return HttpEntity with the content of the reply. Use EntityUtils to get content.
      */
-    public HttpResponse dataGET(String url, boolean is_gzipped) {
+    public synchronized HttpResponse dataGET(String url, boolean is_gzipped) {
         if( Aware.is_watch(sContext) ) {
 
             if( Aware.DEBUG ) Log.d(TAG, "Waiting for phone's HTTPS GET request...\n" + "URL:" + url );

@@ -31,7 +31,7 @@ import java.util.Iterator;
  */
 public class WearProxy extends WearableListenerService {
 
-    public static HttpResponse wearResponse;
+    public volatile static HttpResponse wearResponse;
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
