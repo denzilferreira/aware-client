@@ -57,7 +57,7 @@ public class Aware_Activity extends PreferenceActivity {
                 study_config.putExtra("study_url", data.getStringExtra("study_url"));
                 startService(study_config);
 
-                Toast.makeText(this, "Please wait for further instructions...", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Joining study...", Toast.LENGTH_LONG).show();
 
                 //Join study also on the watch
                 Intent wearStudy = new Intent(WearClient.ACTION_AWARE_ANDROID_WEAR_JOIN_STUDY);

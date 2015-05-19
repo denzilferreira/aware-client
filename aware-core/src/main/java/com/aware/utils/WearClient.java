@@ -4,45 +4,26 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
 import com.aware.Aware;
-import com.aware.Aware_Preferences;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.wearable.MessageApi;
-import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
-import com.google.android.gms.wearable.WearableListenerService;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseFactory;
-import org.apache.http.HttpStatus;
-import org.apache.http.HttpVersion;
-import org.apache.http.NameValuePair;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.DefaultHttpResponseFactory;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.message.BasicStatusLine;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * Created by denzil on 11/05/15.
  */
-public class WearClient extends Service implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, MessageApi.MessageListener {
+public class WearClient extends Service implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
     /**
      * Ask phone to do a HTTP(S) POST
      */
@@ -96,9 +77,7 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
     public static GoogleApiClient googleClient;
     public static Node peer;
 
-    private static String TAG = "AWARE::Android Wear Proxy";
-
-    public volatile static HttpResponse wearResponse;
+    public static String TAG = "AWARE::Android Wear Proxy";
 
     @Override
     public void onCreate() {
@@ -115,8 +94,9 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
             @Override
             public void onResult(NodeApi.GetConnectedNodesResult result) {
                 if (result.getNodes().size() > 0) {
-                    for( int i = 0; i<result.getNodes().size(); i++ ) {
-                        if( ! result.getNodes().get(i).getDisplayName().equals("cloud") ) {
+                    //TODO: Android Wear now allows multiple wearables. We connect to only one, not the "cloud" device.
+                    for (int i = 0; i < result.getNodes().size(); i++) {
+                        if (!result.getNodes().get(i).getDisplayName().equals("cloud")) {
                             peer = result.getNodes().get(i);
                             Log.d(TAG, "Connected to " + peer.getDisplayName());
                             break;
@@ -133,115 +113,6 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
         return super.onStartCommand(intent, flags, startId);
     }
 
-    @Override
-    public void onMessageReceived(MessageEvent messageEvent) {
-        if( Aware.is_watch(getApplicationContext()) ) {
-
-            if( Aware.DEBUG ) Log.d(TAG, "Message received from phone!");
-
-                if( messageEvent.getPath().equals("/join/study") ) {
-                    String webserver = new String(messageEvent.getData());
-
-                    if(Aware.DEBUG) Log.d(TAG, "Joining study: " + webserver);
-
-                    if( webserver.length() > 0 && ! Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals(webserver) ) { //different study, join study!
-                        Intent study_config = new Intent(getApplicationContext(), Aware_Preferences.StudyConfig.class);
-                        study_config.putExtra("study_url", new String(messageEvent.getData()));
-                        startService(study_config);
-                    }
-                }
-                if( messageEvent.getPath().equals("/quit/study")) {
-
-                    if(Aware.DEBUG) Log.d(TAG, "Quitting study... Resetting watch");
-
-                    Aware.reset(getApplicationContext());
-                    Intent preferences = new Intent(getApplicationContext(), Aware_Preferences.class);
-                    preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(preferences);
-                }
-
-            if( messageEvent.getPath().equals("/https/get") ) {
-                HttpResponseFactory factory = new DefaultHttpResponseFactory();
-                HttpResponse response = factory.newHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, HttpStatus.SC_OK, null), null);
-                response.setHeader("Content-Encoding", "gzip");
-                response.setStatusCode(200);
-                response.setEntity(new ByteArrayEntity(messageEvent.getData()));
-
-                wearResponse = response;
-
-                if( Aware.DEBUG ) {
-                    HttpResponse tmp = response;
-                    Log.d(TAG, "Entity content:" + Https.undoGZIP(tmp));
-                }
-            }
-
-            if( messageEvent.getPath().equals("/https/post") ) {
-                HttpResponseFactory factory = new DefaultHttpResponseFactory();
-                HttpResponse response = factory.newHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, HttpStatus.SC_OK, null), null);
-                response.setHeader("Content-Encoding", "gzip");
-                response.setStatusCode(200);
-                response.setEntity(new ByteArrayEntity(messageEvent.getData()));
-
-                wearResponse = response;
-
-                if( Aware.DEBUG ) {
-                    HttpResponse tmp = response;
-                    Log.d(TAG, "Entity content:" + Https.undoGZIP(tmp));
-                }
-            }
-
-        } else {
-
-            if( Aware.DEBUG ) Log.d(TAG, "Message received from watch!");
-
-            //Fetch plugin
-            if( messageEvent.getPath().equals("/install/plugin") ) {
-                //If the plugin is not installed, it will ask to install on the phone
-                Aware.downloadPlugin(getApplicationContext(), new String(messageEvent.getData()), false);
-            }
-
-            //Fetch page from online
-            if( messageEvent.getPath().equals("/https/get") ) {
-                try {
-
-                    JSONObject request = new JSONObject(new String(messageEvent.getData()));
-                    HttpResponse output = new Https(getApplicationContext()).dataGET(request.getString(WearClient.EXTRA_URL), request.getBoolean(WearClient.EXTRA_GZIP));
-
-                    Wearable.MessageApi.sendMessage(googleClient, peer.getId(), "https/get", EntityUtils.toByteArray(output.getEntity()));
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            if( messageEvent.getPath().equals("/https/post") ) {
-                try {
-                    ArrayList<NameValuePair> data = new ArrayList<>();
-
-                    JSONObject request = new JSONObject(new String(messageEvent.getData()));
-                    JSONObject data_json = new JSONObject(request.getString(WearClient.EXTRA_DATA));
-
-                    Iterator<String> iterator = data_json.keys();
-                    while( iterator.hasNext() ) {
-                        String key = iterator.next();
-                        String value = data_json.getString(key);
-                        data.add(new BasicNameValuePair(key, value));
-                    }
-                    HttpResponse output = new Https(getApplicationContext()).dataPOST(request.getString(WearClient.EXTRA_URL), data, request.getBoolean(WearClient.EXTRA_GZIP));
-
-                    Wearable.MessageApi.sendMessage(googleClient, peer.getId(), "https/post", EntityUtils.toByteArray(output.getEntity()));
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
     public static class AndroidWearHTTPClient extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -256,7 +127,7 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
                     JSONObject data = new JSONObject();
                     try {
                         data.put(EXTRA_URL, intent.getStringExtra(EXTRA_URL));
-                        data.put(EXTRA_GZIP, intent.getBooleanExtra(EXTRA_GZIP, true));
+                        data.put(EXTRA_GZIP, intent.getBooleanExtra(EXTRA_GZIP, true)); //by default, all requests are gzipped for bandwith savings
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -271,7 +142,7 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
                     JSONObject data = new JSONObject();
                     try {
                         data.put(EXTRA_URL, intent.getStringExtra(EXTRA_URL));
-                        data.put(EXTRA_GZIP, intent.getBooleanExtra(EXTRA_GZIP, true));
+                        data.put(EXTRA_GZIP, intent.getBooleanExtra(EXTRA_GZIP, true)); //by default, all requests are gzipped for bandwith savings
                         data.put(EXTRA_DATA, intent.getStringExtra(EXTRA_DATA));
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -281,19 +152,21 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
                 }
             }
 
-            //Watch is asking to download a plugin
+            //Watch is asking to download a plugin. This makes the phone install the plugin on itself. If there is a wear package, it also gets installed on the watch
             if( intent.getAction().equals(ACTION_AWARE_ANDROID_WEAR_INSTALL_PLUGIN) ) {
                 if( Aware.is_watch(context) ) {
                     Wearable.MessageApi.sendMessage(googleClient, peer.getId(), "/install/plugin", intent.getStringExtra(EXTRA_PACKAGE_NAME).getBytes());
                 }
             }
 
+            //Phone is asking watch to join a study
             if( intent.getAction().equals(ACTION_AWARE_ANDROID_WEAR_JOIN_STUDY) ) {
                 if( ! Aware.is_watch(context) ) {
                     Wearable.MessageApi.sendMessage(googleClient, peer.getId(), "/join/study", intent.getStringExtra(EXTRA_STUDY).getBytes());
                 }
             }
 
+            //Phone is asking watch to quit a study
             if( intent.getAction().equals(ACTION_AWARE_ANDROID_WEAR_QUIT_STUDY) ) {
                 if( ! Aware.is_watch(context) ) {
                     Wearable.MessageApi.sendMessage(googleClient, peer.getId(), "/quit/study", null);
@@ -307,8 +180,6 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
         if( Aware.DEBUG ) {
             Log.d(TAG, "Connected to Google API!");
         }
-
-        Wearable.MessageApi.addListener(googleClient, this);
     }
 
     @Override
@@ -337,8 +208,6 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
         super.onDestroy();
 
         if( googleClient != null ) {
-            Wearable.MessageApi.removeListener(googleClient, this);
-
             if(Aware.DEBUG) Log.d(TAG, "Android Wear service terminated...");
             googleClient.disconnect();
         }

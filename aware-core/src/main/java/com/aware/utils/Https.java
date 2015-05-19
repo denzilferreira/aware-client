@@ -193,16 +193,16 @@ public class Https extends DefaultHttpClient {
 
             long time = System.currentTimeMillis();
 
-            while( WearClient.wearResponse == null ){
-                //Wait
+            while( WearProxy.wearResponse == null ){
+				if( WearProxy.wearResponse != null ) break;
             }
 
             if( Aware.DEBUG ) {
                 Log.d(TAG, "AndroidWear POST benchmark: " + (System.currentTimeMillis() - time)/1000 + " seconds");
             }
 
-            HttpResponse response = WearClient.wearResponse;
-            WearClient.wearResponse = null;
+            HttpResponse response = WearProxy.wearResponse;
+			WearProxy.wearResponse = null;
 
             return response;
 		}
@@ -253,15 +253,16 @@ public class Https extends DefaultHttpClient {
             sContext.sendBroadcast(phoneRequest);
 
             long time = System.currentTimeMillis();
-            while( WearClient.wearResponse == null ){
-                //Wait
+            while( WearProxy.wearResponse == null ){
+				if( WearProxy.wearResponse != null ) break;
             }
+
             if( Aware.DEBUG ) {
                 Log.d(TAG, "AndroidWear GET benchmark: " + (System.currentTimeMillis() - time)/1000 + " seconds");
             }
 
-            HttpResponse response = WearClient.wearResponse;
-            WearClient.wearResponse = null;
+            HttpResponse response = WearProxy.wearResponse;
+			WearProxy.wearResponse = null;
             return response;
         }
         try {

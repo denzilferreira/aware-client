@@ -100,7 +100,6 @@ public class Plugins_Manager extends Aware_Activity {
         swipeToRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                updateGrid();
                 new Async_PluginUpdater().execute();
             }
         });
@@ -117,7 +116,7 @@ public class Plugins_Manager extends Aware_Activity {
             @Override
             public void run() {
                 swipeToRefresh.setRefreshing(true);
-                new Async_PluginUpdater().execute();
+                updateGrid();
             }
         });
     }
@@ -289,18 +288,19 @@ public class Plugins_Manager extends Aware_Activity {
                                     public void onClick(DialogInterface dialog, int which) {
                                         dialog.dismiss();
                                         pkg_view.setAlpha(0.5f);
-                                        pkg_title.setText("Downloading...");
-                                        pkg_view.setOnClickListener(null);
+                                        pkg_view.setOnClickListener(null); //disable click
 
                                         if( ! Aware.is_watch(getApplicationContext()) ) {
+                                            Toast.makeText(getApplicationContext(), "Downloading...", Toast.LENGTH_SHORT).show();
                                             Aware.downloadPlugin(getApplicationContext(), package_name, false);
+
                                         } else {
                                             //Ask phone to install plugin. If there is a wearable version bundled, it's installed on the watch too.
                                             Intent requestPhone = new Intent(WearClient.ACTION_AWARE_ANDROID_WEAR_INSTALL_PLUGIN);
                                             requestPhone.putExtra(WearClient.EXTRA_PACKAGE_NAME, package_name);
                                             sendBroadcast(requestPhone);
 
-                                            Toast.makeText(getApplicationContext(), "Check your phone, please.", Toast.LENGTH_LONG).show();
+                                            Toast.makeText(getApplicationContext(), "Continue on phone...", Toast.LENGTH_LONG).show();
                                         }
                                     }
                                 });
@@ -485,12 +485,14 @@ public class Plugins_Manager extends Aware_Activity {
 						if( is_cached != null && is_cached.moveToFirst() ) {
 
 							if( ! Plugins_Manager.isInstalled(getApplicationContext(), plugin.getString("package")) ) {
-                                //We used to have it installed, now we don't, remove from database
+
+                                //We used to have it installed, now we don't, remove from database, add the new server-side package back
                                 getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + plugin.getString("package") + "'", null);
                                 new_data = true;
                                 needsRefresh = true;
 
                             } else {
+
                                 int version = is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins.PLUGIN_VERSION));
                                 //Lets check if it is updated
                                 if( plugin.getInt("version") > version ) {
@@ -531,24 +533,24 @@ public class Plugins_Manager extends Aware_Activity {
 			}
 
             //Check if we need to do some clean-up. If the plugin has been installed before, check if it still is installed.
-            Cursor all_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "!=" + PLUGIN_NOT_INSTALLED, null, Aware_Plugins.PLUGIN_NAME + " ASC");
-            String to_clean = "";
-            if( all_plugins != null && all_plugins.moveToFirst() ) {
-                do {
-                    String package_name = all_plugins.getString(all_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-                    if( ! Plugins_Manager.isInstalled(getApplicationContext(), package_name) ) {
-                        to_clean += "'"+package_name + "',";
-                        if(Aware.DEBUG) Log.d(Aware.TAG, "Not installed anymore, clean-up: " + package_name);
-                    }
-                }while(all_plugins.moveToNext());
-            }
-            if( all_plugins != null && ! all_plugins.isClosed()) all_plugins.close();
-
-            if( to_clean.length() > 0 ) {
-                to_clean = to_clean.substring(0,to_clean.length()-1);
-                getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " in (" + to_clean + ")", null);
-                needsRefresh = true;
-            }
+//            Cursor all_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "!=" + PLUGIN_NOT_INSTALLED, null, Aware_Plugins.PLUGIN_NAME + " ASC");
+//            String to_clean = "";
+//            if( all_plugins != null && all_plugins.moveToFirst() ) {
+//                do {
+//                    String package_name = all_plugins.getString(all_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+//                    if( ! Plugins_Manager.isInstalled(getApplicationContext(), package_name) ) {
+//                        to_clean += "'"+package_name + "',";
+//                        if(Aware.DEBUG) Log.d(Aware.TAG, "Not installed anymore, clean-up: " + package_name);
+//                    }
+//                }while(all_plugins.moveToNext());
+//            }
+//            if( all_plugins != null && ! all_plugins.isClosed()) all_plugins.close();
+//
+//            if( to_clean.length() > 0 ) {
+//                to_clean = to_clean.substring(0,to_clean.length()-1);
+//                getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " in (" + to_clean + ")", null);
+//                needsRefresh = true;
+//            }
 
 			return needsRefresh;
 		}

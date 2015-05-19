@@ -63,16 +63,19 @@ public class Http {
             phoneRequest.putExtra(WearClient.EXTRA_GZIP, is_gzipped);
             sContext.sendBroadcast(phoneRequest);
 
-            WearClient.wearResponse = null;
-
             long time = System.currentTimeMillis();
-            while( WearClient.wearResponse == null ){
+            while( WearProxy.wearResponse == null ){
                 //Wait
             }
 
             if( Aware.DEBUG ) {
                 Log.d(TAG, "AndroidWear GET benchmark: " + (System.currentTimeMillis() - time)/1000 + " seconds");
             }
+
+            HttpResponse response = WearProxy.wearResponse;
+            WearProxy.wearResponse = null;
+
+            return response;
         }
         try {
             HttpClient httpClient = new DefaultHttpClient();
@@ -105,7 +108,7 @@ public class Http {
      * @param is_gzipped
 	 * @return HttpEntity with server response. Use EntityUtils to extract values or object
 	 */
-	public HttpResponse dataPOST(String url, ArrayList<NameValuePair> data, boolean is_gzipped) {
+	public synchronized HttpResponse dataPOST(String url, ArrayList<NameValuePair> data, boolean is_gzipped) {
 		if( Aware.is_watch(sContext) ) {
 			JSONObject data_json = new JSONObject();
 			for(NameValuePair valuePair : data ) {
@@ -124,10 +127,8 @@ public class Http {
             phoneRequest.putExtra(WearClient.EXTRA_GZIP, is_gzipped);
             sContext.sendBroadcast(phoneRequest);
 
-            WearClient.wearResponse = null;
-
             long time = System.currentTimeMillis();
-            while( WearClient.wearResponse == null ){
+            while( WearProxy.wearResponse == null ){
                 //wait
             }
 
@@ -135,7 +136,10 @@ public class Http {
                 Log.d(TAG, "AndroidWear POST benchmark: " + (System.currentTimeMillis() - time)/1000 + " seconds");
             }
 
-            return WearClient.wearResponse;
+            HttpResponse response = WearProxy.wearResponse;
+            WearProxy.wearResponse = null;
+
+            return response;
 		}
 
 		try{
