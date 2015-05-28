@@ -299,7 +299,7 @@ public class Temperature_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = getContext().getPackageName() + ".provider.temperature";
+//	    AUTHORITY = getContext().getPackageName() + ".provider.temperature";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Temperature_Provider.AUTHORITY, DATABASE_TABLES[0],

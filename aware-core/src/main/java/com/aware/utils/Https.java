@@ -196,7 +196,10 @@ public class Https extends DefaultHttpClient {
             long time = System.currentTimeMillis();
 
             while( WearProxy.wearResponse == null ){
-				if( WearProxy.wearResponse != null ) break;
+				if( WearProxy.wearResponse != null || (System.currentTimeMillis()-time) > 60000 ) {
+                    if( System.currentTimeMillis() - time > 60000 ) Log.w(TAG,"HTTP request timeout...");
+                    break;
+                }
             }
 
             if( Aware.DEBUG ) {
@@ -258,7 +261,10 @@ public class Https extends DefaultHttpClient {
 
             long time = System.currentTimeMillis();
             while( WearProxy.wearResponse == null ){
-				if( WearProxy.wearResponse != null ) break;
+				if( WearProxy.wearResponse != null || (System.currentTimeMillis()-time) > 60000 ) {
+                    if( System.currentTimeMillis() - time > 60000 ) Log.w(TAG,"HTTP request timeout...");
+                    break;
+                }
             }
 
             if( Aware.DEBUG ) {

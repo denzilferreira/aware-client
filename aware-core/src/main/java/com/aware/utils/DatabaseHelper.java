@@ -16,6 +16,10 @@ import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /**
  * ContentProvider database helper<br/>
  * This class is responsible to make sure we have the most up-to-date database structures from plugins and sensors
@@ -88,15 +92,35 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 //		onCreate(db);
     }
 
-	public static String join(List<String> list, String delim) {
-		StringBuilder buf = new StringBuilder();
-		int num = list.size();
-		for (int i = 0; i < num; i++) {
-			if (i != 0)
-				buf.append(delim);
-			buf.append((String) list.get(i));
+	/**
+	 * Creates a String of a JSONArray representation of a database cursor result
+	 * @param crs
+	 * @return String
+	 */
+	public static String cursorToString(Cursor crs) {
+		JSONArray arr = new JSONArray();
+		crs.moveToFirst();
+		while (!crs.isAfterLast()) {
+			int nColumns = crs.getColumnCount();
+			JSONObject row = new JSONObject();
+			for (int i = 0 ; i < nColumns ; i++) {
+				String colName = crs.getColumnName(i);
+				if (colName != null) {
+					try {
+						switch (crs.getType(i)) {
+							case Cursor.FIELD_TYPE_BLOB   : row.put(colName, crs.getBlob(i).toString()); break;
+							case Cursor.FIELD_TYPE_FLOAT  : row.put(colName, crs.getDouble(i))         ; break;
+							case Cursor.FIELD_TYPE_INTEGER: row.put(colName, crs.getLong(i))           ; break;
+							case Cursor.FIELD_TYPE_NULL   : row.put(colName, null)                     ; break;
+							case Cursor.FIELD_TYPE_STRING : row.put(colName, crs.getString(i))         ; break;
+						}
+					} catch (JSONException e) {}
+				}
+			}
+			arr.put(row);
+			if (!crs.moveToNext()) break;
 		}
-		return buf.toString();
+		return arr.toString();
 	}
 
 	public static List<String> getColumns(SQLiteDatabase db, String tableName) {

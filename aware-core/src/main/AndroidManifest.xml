@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.aware">
 
     <!-- FOR PLUGINS/APPS COMMENT STARTS HERE -->
+
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -33,6 +34,7 @@
         android:label="Write to AWARE&apos;s Context data"
         android:protectionLevel="normal" >
     </permission>
+
     <!-- FOR PLUGINS/APPS COMMENT ENDS HERE, BUT CONTINUES AGAIN BELOW -->
 
     <uses-permission android:name="com.aware.READ_CONTEXT_DATA" />
@@ -48,6 +50,8 @@
         android:theme="@style/Theme.Aware">
 
         <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+
+        <!-- Activities -->
 
         <activity
             android:name="com.aware.Aware_Preferences"
@@ -133,21 +137,14 @@
             android:theme="@android:style/Theme.DeviceDefault.Dialog">
         </activity>
 
-        <service android:name="com.aware.utils.WearClient" android:exported="true"/>
-        <service android:name="com.aware.utils.WearProxy" android:exported="true">
+        <!-- Services -->
+
+        <service android:name="com.aware.utils.WearClient" android:exported="true" android:enabled="@bool/display_aware"/>
+        <service android:name="com.aware.utils.WearProxy" android:exported="true" android:enabled="@bool/display_aware">
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.BIND_LISTENER"/>
             </intent-filter>
         </service>
-        <receiver android:name="com.aware.utils.WearClient$AndroidWearHTTPClient" android:exported="true">
-            <intent-filter>
-                <action android:name="ACTION_AWARE_ANDROID_WEAR_HTTP_GET"/>
-                <action android:name="ACTION_AWARE_ANDROID_WEAR_HTTP_POST"/>
-                <action android:name="ACTION_AWARE_ANDROID_WEAR_INSTALL_PLUGIN"/>
-                <action android:name="ACTION_AWARE_ANDROID_WEAR_JOIN_STUDY"/>
-                <action android:name="ACTION_AWARE_ANDROID_WEAR_QUIT_STUDY"/>
-            </intent-filter>
-        </receiver>
 
         <service android:name="com.aware.Keyboard" android:exported="true" />
         <service
@@ -290,6 +287,18 @@
         <service android:name="com.aware.utils.DownloadPluginService" android:exported="true"/>
         <service android:name="com.aware.Aware$UpdatePlugins" android:exported="true" android:enabled="@bool/display_aware"/>
 
+        <!-- Receivers -->
+
+        <receiver android:name="com.aware.utils.WearClient$AndroidWearHTTPClient" android:exported="true" android:enabled="@bool/display_aware">
+            <intent-filter>
+                <action android:name="ACTION_AWARE_ANDROID_WEAR_HTTP_GET"/>
+                <action android:name="ACTION_AWARE_ANDROID_WEAR_HTTP_POST"/>
+                <action android:name="ACTION_AWARE_ANDROID_WEAR_INSTALL_PLUGIN"/>
+                <action android:name="ACTION_AWARE_ANDROID_WEAR_JOIN_STUDY"/>
+                <action android:name="ACTION_AWARE_ANDROID_WEAR_QUIT_STUDY"/>
+            </intent-filter>
+        </receiver>
+
         <receiver
             android:name="com.aware.Aware$Aware_Broadcaster"
             android:exported="true" >
@@ -317,6 +326,8 @@
                 <data android:scheme="file" />
             </intent-filter>
         </receiver>
+
+        <!-- Providers -->
 
         <!-- FOR PLUGINS/APPS COMMENT STARTS HERE -->
         <provider

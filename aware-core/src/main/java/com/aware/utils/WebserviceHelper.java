@@ -49,7 +49,7 @@ public class WebserviceHelper extends IntentService {
 
         int batch_size = 10000; //default for phones
 		if( Aware.is_watch(getApplicationContext()) ) {
-            batch_size = 100; //default for watch (we have a limit of 100KB of data packet size (Message API)
+            batch_size = 100; //default for watch (we have a limit of 100KB of data packet size (Message API restrictions)
         }
 
 		String WEBSERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);

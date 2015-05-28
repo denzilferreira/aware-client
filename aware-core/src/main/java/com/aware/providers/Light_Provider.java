@@ -295,7 +295,7 @@ public class Light_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = getContext().getPackageName() + ".provider.light";
+//	    AUTHORITY = getContext().getPackageName() + ".provider.light";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Light_Provider.AUTHORITY, DATABASE_TABLES[0],

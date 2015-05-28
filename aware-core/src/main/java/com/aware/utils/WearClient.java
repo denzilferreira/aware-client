@@ -93,15 +93,17 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
         nodes.setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {
             @Override
             public void onResult(NodeApi.GetConnectedNodesResult result) {
-                if (result.getNodes().size() > 0) {
+                if ( result.getNodes().size() > 0 ) {
                     //TODO: Android Wear now allows multiple wearables. We connect to only one, not the "cloud" device.
                     for (int i = 0; i < result.getNodes().size(); i++) {
-                        if (!result.getNodes().get(i).getDisplayName().equals("cloud")) {
+                        if ( ! result.getNodes().get(i).getDisplayName().equals("cloud") ) {
                             peer = result.getNodes().get(i);
                             Log.d(TAG, "Connected to " + peer.getDisplayName());
                             break;
                         }
                     }
+                } else {
+                    Log.e(TAG, "No Android Wear?");
                 }
             }
         });
@@ -119,6 +121,9 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
 
             if( Aware.DEBUG ) {
                 Log.d(TAG, "Received event... " + intent.getAction());
+                if( peer != null ) {
+                    Log.d(TAG, "Sending event to " + peer.getDisplayName());
+                }
             }
 
             //Watch is asking an HTTPS GET

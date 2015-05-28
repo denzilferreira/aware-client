@@ -161,7 +161,7 @@ public class Keyboard_Provider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        AUTHORITY = getContext().getPackageName() + ".provider.keyboard";
+//        AUTHORITY = getContext().getPackageName() + ".provider.keyboard";
 
         sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Keyboard_Provider.AUTHORITY,

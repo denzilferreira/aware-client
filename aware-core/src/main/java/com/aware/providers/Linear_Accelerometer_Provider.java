@@ -314,7 +314,7 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = getContext().getPackageName() + ".provider.accelerometer.linear";
+//	    AUTHORITY = getContext().getPackageName() + ".provider.accelerometer.linear";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Linear_Accelerometer_Provider.AUTHORITY,
