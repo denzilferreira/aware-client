@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
-
     <PreferenceCategory
         android:key="debug_flags"
         android:title="@string/aware_developer" >
@@ -46,10 +45,15 @@
         android:key="sensors"
         android:summary="AWARE default sensors"
         android:title="Sensors" >
+
         <PreferenceScreen
             android:key="accelerometer"
             android:summary="Acceleration, including the force of gravity (m/s^2) *"
-            android:title="Accelerometer" >
+            android:title="Accelerometer"
+            android:icon="@drawable/ic_action_accelerometer">
+
+            <com.aware.ui.Aware_Toolbar android:key="accelerometer" android:title="Accelerometer"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_accelerometer"
@@ -68,7 +72,11 @@
         <PreferenceScreen
             android:key="applications"
             android:summary="Application usage"
-            android:title="Applications" >
+            android:title="Applications"
+            android:icon="@drawable/ic_action_applications">
+
+            <com.aware.ui.Aware_Toolbar android:key="applications" android:title="Applications"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_applications"
@@ -116,7 +124,11 @@
         <PreferenceScreen
             android:key="barometer"
             android:summary="Atmospheric air pressure (mbar/hPa) *"
-            android:title="Barometer" >
+            android:title="Barometer"
+            android:icon="@drawable/ic_action_barometer">
+
+            <com.aware.ui.Aware_Toolbar android:key="barometer" android:title="Barometer"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_barometer"
@@ -135,7 +147,11 @@
         <PreferenceScreen
             android:key="battery"
             android:summary="Battery and power events"
-            android:title="Battery" >
+            android:title="Battery"
+            android:icon="@drawable/ic_action_battery">
+
+            <com.aware.ui.Aware_Toolbar android:key="battery" android:title="Battery"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_battery"
@@ -145,7 +161,11 @@
         <PreferenceScreen
             android:key="bluetooth"
             android:summary="Bluetooth sensing"
-            android:title="Bluetooth" >
+            android:title="Bluetooth"
+            android:icon="@drawable/ic_action_bluetooth">
+
+            <com.aware.ui.Aware_Toolbar android:key="bluetooth" android:title="Bluetooth"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_bluetooth"
@@ -164,7 +184,11 @@
         <PreferenceScreen
             android:key="communication"
             android:summary="Communication usage (calls/messages)"
-            android:title="Communication" >
+            android:title="Communication"
+            android:icon="@drawable/ic_action_communication">
+
+            <com.aware.ui.Aware_Toolbar android:key="communication" android:title="Communication"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_communication_events"
@@ -187,7 +211,11 @@
         <PreferenceScreen
             android:key="esm"
             android:summary="Mobile questionnaires"
-            android:title="Mobile ESM" >
+            android:title="Mobile ESM/EMA"
+            android:icon="@drawable/ic_action_esm">
+
+            <com.aware.ui.Aware_Toolbar android:key="esm" android:title="Mobile ESM/EMA"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_esm"
@@ -198,7 +226,11 @@
         <PreferenceScreen
             android:key="gravity"
             android:summary="Force of gravity as a 3D vector with direction and magnitude of gravity (m/s^2) *"
-            android:title="Gravity" >
+            android:title="Gravity"
+            android:icon="@drawable/ic_action_gravity">
+
+            <com.aware.ui.Aware_Toolbar android:key="gravity" android:title="Gravity"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_gravity"
@@ -218,7 +250,11 @@
         <PreferenceScreen
             android:key="gyroscope"
             android:summary="Rate of rotation of device (rad/s) *"
-            android:title="Gyroscope" >
+            android:title="Gyroscope"
+            android:icon="@drawable/ic_action_gyroscope">
+
+            <com.aware.ui.Aware_Toolbar android:key="gyroscope" android:title="Gyroscope"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_gyroscope"
@@ -238,7 +274,11 @@
         <PreferenceScreen
             android:key="locations"
             android:summary="User&apos;s estimated location by GPS and network triangulation"
-            android:title="Locations" >
+            android:title="Locations"
+            android:icon="@drawable/ic_action_locations">
+
+            <com.aware.ui.Aware_Toolbar android:key="locations" android:title="Locations"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_location_gps"
@@ -298,7 +338,11 @@
         <PreferenceScreen
             android:key="light"
             android:summary="Ambient light (lux) *"
-            android:title="Light" >
+            android:title="Light"
+            android:icon="@drawable/ic_action_light">
+
+            <com.aware.ui.Aware_Toolbar android:key="light" android:title="Light"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_light"
@@ -318,7 +362,11 @@
         <PreferenceScreen
             android:key="linear_accelerometer"
             android:summary="Acceleration, excluding the force of gravity (m/s^2) *"
-            android:title="Linear accelerometer" >
+            android:title="Linear accelerometer"
+            android:icon="@drawable/ic_action_linear_acceleration">
+
+            <com.aware.ui.Aware_Toolbar android:key="linear_accelerometer" android:title="Linear accelerometer"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_linear_accelerometer"
@@ -338,7 +386,11 @@
         <PreferenceScreen
             android:key="network"
             android:summary="Network usage and traffic"
-            android:title="Network" >
+            android:title="Network"
+            android:icon="@drawable/ic_action_network">
+
+            <com.aware.ui.Aware_Toolbar android:key="network" android:title="Network"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_network_events"
@@ -363,7 +415,11 @@
         <PreferenceScreen
             android:key="magnetometer"
             android:summary="Geomagnetic field strength around the device (µT) *"
-            android:title="Magnetometer" >
+            android:title="Magnetometer"
+            android:icon="@drawable/ic_action_magnetometer">
+
+            <com.aware.ui.Aware_Toolbar android:key="magnetometer" android:title="Magnetometer"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_magnetometer"
@@ -383,7 +439,11 @@
         <PreferenceScreen
             android:key="processor"
             android:summary="CPU workload for user, system and idle (%)"
-            android:title="Processor workload" >
+            android:title="Processor workload"
+            android:icon="@drawable/ic_action_processor">
+
+            <com.aware.ui.Aware_Toolbar android:key="processor" android:title="Processor workload"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_processor"
@@ -402,7 +462,11 @@
         <PreferenceScreen
             android:key="timezone"
             android:summary="Tracks user&apos;s current timezone"
-            android:title="Timezone" >
+            android:title="Timezone"
+            android:icon="@drawable/ic_action_timezone">
+
+            <com.aware.ui.Aware_Toolbar android:key="timezone" android:title="Timezone"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_timezone"
@@ -421,7 +485,11 @@
         <PreferenceScreen
             android:key="proximity"
             android:summary="Proximity sensor distance (cm or device-dependent metric for far and near) *"
-            android:title="Proximity" >
+            android:title="Proximity"
+            android:icon="@drawable/ic_action_proximity">
+
+            <com.aware.ui.Aware_Toolbar android:key="proximity" android:title="Proximity"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_proximity"
@@ -441,7 +509,11 @@
         <PreferenceScreen
             android:key="rotation"
             android:summary="Orientation of the device in all axis *"
-            android:title="Rotation" >
+            android:title="Rotation"
+            android:icon="@drawable/ic_action_rotation">
+
+            <com.aware.ui.Aware_Toolbar android:key="rotation" android:title="Rotation"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_rotation"
@@ -461,7 +533,11 @@
         <PreferenceScreen
             android:key="screen"
             android:summary="Screen events (on/off, locked/unlocked)"
-            android:title="Screen usage" >
+            android:title="Screen usage"
+            android:icon="@drawable/ic_action_screen">
+
+            <com.aware.ui.Aware_Toolbar android:key="screen" android:title="Screen usage"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_screen"
@@ -473,7 +549,11 @@
         <PreferenceScreen
             android:key="temperature"
             android:summary="Ambient air temperature (Celsius) *"
-            android:title="Temperature" >
+            android:title="Temperature"
+            android:icon="@drawable/ic_action_temperature">
+
+            <com.aware.ui.Aware_Toolbar android:key="temperature" android:title="Temperature"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_temperature"
@@ -493,7 +573,11 @@
         <PreferenceScreen
             android:key="telephony"
             android:summary="Mobile operator and specifications, cell tower and neighbor scanning"
-            android:title="Telephony" >
+            android:title="Telephony"
+            android:icon="@drawable/ic_action_telephony">
+
+            <com.aware.ui.Aware_Toolbar android:key="telephony" android:title="Telephony"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_telephony"
@@ -503,7 +587,11 @@
         <PreferenceScreen
             android:key="wifi"
             android:summary="Wi-Fi sensing"
-            android:title="Wi-Fi" >
+            android:title="Wi-Fi"
+            android:icon="@drawable/ic_action_wifi">
+
+            <com.aware.ui.Aware_Toolbar android:key="wifi" android:title="Wi-Fi"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_wifi"
@@ -527,7 +615,11 @@
         <PreferenceScreen
             android:key="mqtt"
             android:summary="Allows remove questionnaires, P2P context exchange"
-            android:title="AWARE MQTT Server" >
+            android:title="MQTT Server"
+            android:icon="@drawable/ic_action_mqtt">
+
+            <com.aware.ui.Aware_Toolbar android:key="mqtt" android:title="MQTT Server"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_mqtt"
@@ -538,7 +630,7 @@
                 android:key="mqtt_server"
                 android:persistent="true"
                 android:summary="URL/IP address"
-                android:title="AWARE Server MQTT server" />
+                android:title="MQTT server" />
             <EditTextPreference
                 android:defaultValue="1883"
                 android:inputType="number"
@@ -580,8 +672,12 @@
         </PreferenceScreen>
         <PreferenceScreen
             android:key="webservice"
-            android:summary="Join research studies, sync data"
-            android:title="AWARE Webservices Server" >
+            android:summary="Study and sync settings"
+            android:title="AWARE Study"
+            android:icon="@drawable/ic_action_study">
+
+            <com.aware.ui.Aware_Toolbar android:key="webservice" android:title="AWARE Study"/>
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_webservice"
@@ -591,14 +687,14 @@
             <EditTextPreference
                 android:key="webservice_server"
                 android:persistent="true"
-                android:summary="URL/IP address"
-                android:title="AWARE Server Webservice" />
+                android:summary="URL"
+                android:title="Study URL" />
 
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="webservice_wifi_only"
                 android:persistent="true"
-                android:summary="Upload data to webservices only when connected to Wi-Fi"
+                android:summary="Sync only on Wi-Fi"
                 android:title="Wi-Fi only" />
 
             <EditTextPreference
@@ -607,7 +703,7 @@
                 android:key="frequency_webservice"
                 android:persistent="true"
                 android:summary="30 minutes"
-                android:title="Upload frequency (in minutes, 0 to disable)." />
+                android:title="Sync every (in minutes, 0 to disable)." />
 
             <ListPreference
                 android:defaultValue="0"
@@ -615,8 +711,8 @@
                 android:entryValues="@array/clean_old_data_values"
                 android:key="frequency_clean_old_data"
                 android:persistent="true"
-                android:summary="How frequently to clean old data?"
-                android:title="Clean old data?" />
+                android:summary="Never"
+                android:title="Clean-up old data?" />
         </PreferenceScreen>
     </PreferenceCategory>
 

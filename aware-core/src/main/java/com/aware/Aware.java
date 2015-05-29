@@ -395,13 +395,15 @@ public class Aware extends Service {
                     do {
                         String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
                         active_plugins.add(package_name);
-                        startPlugin(getApplicationContext(), package_name);
                     }while(enabled_plugins.moveToNext());
                 }
                 if( enabled_plugins != null && ! enabled_plugins.isClosed() ) enabled_plugins.close();
 
                 //Check if there are updates on the plugins
                 if( active_plugins.size() > 0 ) {
+                    for(String package_name : active_plugins ) {
+                        startPlugin(getApplicationContext(), package_name);
+                    }
                     new CheckPlugins().execute(active_plugins);
                 }
 
@@ -503,7 +505,7 @@ public class Aware extends Service {
 
         //FIXED: terminate bundled AWARE service within a plugin
         Intent core = new Intent();
-        core.setClassName(package_name, "com.aware.Aware");
+        core.setClassName( context.getPackageName(), "com.aware.Aware" );
         context.stopService(core);
     }
     

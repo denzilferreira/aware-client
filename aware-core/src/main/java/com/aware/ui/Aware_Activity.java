@@ -11,7 +11,9 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.internal.view.menu.ActionMenuItem;
 import android.support.v7.internal.view.menu.ActionMenuItemView;
@@ -43,7 +45,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Aware_Activity extends PreferenceActivity {
-	
+
 	private DrawerLayout navigationDrawer;
 	private ListView navigationList;
 	private ActionBarDrawerToggle navigationToggle;
@@ -109,47 +111,6 @@ public class Aware_Activity extends PreferenceActivity {
         String[] options = {"Stream", "Sensors", "Plugins", "Studies"};
         NavigationAdapter nav_adapter = new NavigationAdapter( getApplicationContext(), options);
         navigationList.setAdapter(nav_adapter);
-        navigationList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                LinearLayout item_container = (LinearLayout) view.findViewById(R.id.nav_container);
-                item_container.setBackgroundColor(Color.DKGRAY);
-
-                for (int i = 0; i < navigationList.getChildCount(); i++) {
-                    if (i != position) {
-                        LinearLayout other = (LinearLayout) navigationList.getChildAt(i);
-                        LinearLayout other_item = (LinearLayout) other.findViewById(R.id.nav_container);
-                        other_item.setBackgroundColor(Color.TRANSPARENT);
-                    }
-                }
-
-                Bundle animations = ActivityOptions.makeCustomAnimation(Aware_Activity.this, R.anim.anim_slide_in_left, R.anim.anim_slide_out_left).toBundle();
-                switch (position) {
-                    case 0: //Stream
-                        Intent stream_ui = new Intent(Aware_Activity.this, Stream_UI.class);
-                        startActivity(stream_ui, animations);
-                        break;
-                    case 1: //Sensors
-                        Intent sensors_ui = new Intent(Aware_Activity.this, Aware_Preferences.class);
-                        startActivity(sensors_ui, animations);
-                        break;
-                    case 2: //Plugins
-                        Intent plugin_manager = new Intent(Aware_Activity.this, Plugins_Manager.class);
-                        startActivity(plugin_manager, animations);
-                        break;
-                    case 3: //Studies
-                        if (Aware.getSetting(getApplicationContext(), "study_id").length() > 0) {
-                            new Async_StudyData().execute(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
-                        } else {
-                            Intent join_study = new Intent(Aware_Activity.this, CameraStudy.class);
-                            startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY, animations);
-                        }
-                        break;
-                }
-                navigationDrawer.closeDrawer(navigationList);
-            }
-        });
 
         if( navigationToggle != null ) navigationToggle.syncState();
     }
@@ -180,28 +141,27 @@ public class Aware_Activity extends PreferenceActivity {
         @Override
         public View getView(final int position, View convertView, ViewGroup parent) {
             LinearLayout row = (LinearLayout) inflater.inflate(R.layout.aware_navigation_item, parent, false);
-            row.setFocusable(false);
+//            row.setFocusable(false);
             row.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					Bundle animations = ActivityOptions.makeCustomAnimation(Aware_Activity.this, R.anim.anim_slide_in_left, R.anim.anim_slide_out_left).toBundle();
 					switch( position ) {
 		            	case 0: //Stream
 		            		Intent stream_ui = new Intent( getApplicationContext(), Stream_UI.class);
-		            		startActivity(stream_ui, animations);
+		            		startActivity(stream_ui);
 		            		break;
 		            	case 1: //Sensors
 		            		Intent sensors_ui = new Intent( getApplicationContext(), Aware_Preferences.class );
-		            		startActivity(sensors_ui, animations);
+		            		startActivity(sensors_ui);
 		            		break;
 	            		case 2: //Plugins
 	            			Intent plugin_manager = new Intent( getApplicationContext(), Plugins_Manager.class );
-	            			startActivity(plugin_manager, animations);
+	            			startActivity(plugin_manager);
 	            			break;
 		            	case 3: //Join study
 		            		//TODO: make ui for listing available studies
                             Intent join_study = new Intent(getApplicationContext(), CameraStudy.class);
-                            startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY, animations);
+                            startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
 		            		break;
 	            	}
 	            	navigationDrawer.closeDrawer(navigationList);
@@ -213,27 +173,15 @@ public class Aware_Activity extends PreferenceActivity {
             switch( position ) {
                 case 0:
                     nav_icon.setImageResource(R.drawable.ic_action_aware_stream);
-                    if( context.getClass().getSimpleName().equals("Stream_UI") ) {
-                    	row.setBackgroundColor(Color.DKGRAY);
-                    }
                     break;
                 case 1:
                     nav_icon.setImageResource(R.drawable.ic_action_aware_sensors);
-                    if( context.getClass().getSimpleName().equals("Aware_Preferences")) {
-                    	row.setBackgroundColor(Color.DKGRAY);
-                    }
                     break;
                 case 2:
                     nav_icon.setImageResource(R.drawable.ic_action_aware_plugins);
-                    if( context.getClass().getSimpleName().equals("Plugins_Manager")) {
-                    	row.setBackgroundColor(Color.DKGRAY);
-                    }
                     break;
                 case 3:
                     nav_icon.setImageResource(R.drawable.ic_action_aware_studies);
-                    if( context.getClass().getSimpleName().equals("CameraStudy")) {
-                    	row.setBackgroundColor(Color.DKGRAY);
-                    }
                     break;
             }
             String item = items[position];

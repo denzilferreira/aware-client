@@ -33,6 +33,7 @@ public class TimeZone extends Aware_Sensor {
      * Broadcasted event: when there is new timezone information
      */
     public static final String ACTION_AWARE_TIMEZONE = "ACTION_AWARE_TIMEZONE";
+    public static final String EXTRA_DATA = "data";
     
     private static Handler mHandler = new Handler();
     private final Runnable mRunnable = new Runnable() {
@@ -56,6 +57,7 @@ public class TimeZone extends Aware_Sensor {
             }
             
             Intent newTimeZone = new Intent(ACTION_AWARE_TIMEZONE);
+            newTimeZone.putExtra(EXTRA_DATA, rowData);
             sendBroadcast(newTimeZone);
             
             TIMEZONE_UPDATE = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE));

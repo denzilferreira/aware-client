@@ -301,9 +301,11 @@ public class Applications extends AccessibilityService {
         	Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS, 30);
         }
         
-        //Boot-up AWARE framework
-        Intent aware = new Intent(this, Aware.class);
-        startService(aware);
+        //FIX: Only the client needs to boot-up AWARE framework background service.
+        if( getPackageName().equals("com.aware") ) {
+            Intent aware = new Intent(this, Aware.class);
+            startService(aware);
+        }
     }
     
     @Override
@@ -322,7 +324,7 @@ public class Applications extends AccessibilityService {
             alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+1000, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS)) * 1000, repeatingIntent);
         }
 
-        isAccessibilityServiceActive( getApplicationContext() );
+        isAccessibilityServiceActive(getApplicationContext());
     	
     	return START_STICKY;
     }

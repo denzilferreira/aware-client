@@ -530,27 +530,6 @@ public class Plugins_Manager extends Aware_Activity {
 					e.printStackTrace();
 				}
 			}
-
-            //Check if we need to do some clean-up. If the plugin has been installed before, check if it still is installed.
-//            Cursor all_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "!=" + PLUGIN_NOT_INSTALLED, null, Aware_Plugins.PLUGIN_NAME + " ASC");
-//            String to_clean = "";
-//            if( all_plugins != null && all_plugins.moveToFirst() ) {
-//                do {
-//                    String package_name = all_plugins.getString(all_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-//                    if( ! Plugins_Manager.isInstalled(getApplicationContext(), package_name) ) {
-//                        to_clean += "'"+package_name + "',";
-//                        if(Aware.DEBUG) Log.d(Aware.TAG, "Not installed anymore, clean-up: " + package_name);
-//                    }
-//                }while(all_plugins.moveToNext());
-//            }
-//            if( all_plugins != null && ! all_plugins.isClosed()) all_plugins.close();
-//
-//            if( to_clean.length() > 0 ) {
-//                to_clean = to_clean.substring(0,to_clean.length()-1);
-//                getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " in (" + to_clean + ")", null);
-//                needsRefresh = true;
-//            }
-
 			return needsRefresh;
 		}
     	

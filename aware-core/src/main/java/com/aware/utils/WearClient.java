@@ -88,25 +88,6 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
-
-        PendingResult<NodeApi.GetConnectedNodesResult> nodes = Wearable.NodeApi.getConnectedNodes(googleClient);
-        nodes.setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {
-            @Override
-            public void onResult(NodeApi.GetConnectedNodesResult result) {
-                if ( result.getNodes().size() > 0 ) {
-                    //TODO: Android Wear now allows multiple wearables. We connect to only one, not the "cloud" device.
-                    for (int i = 0; i < result.getNodes().size(); i++) {
-                        if ( ! result.getNodes().get(i).getDisplayName().equals("cloud") ) {
-                            peer = result.getNodes().get(i);
-                            Log.d(TAG, "Connected to " + peer.getDisplayName());
-                            break;
-                        }
-                    }
-                } else {
-                    Log.e(TAG, "No Android Wear?");
-                }
-            }
-        });
     }
 
     @Override
@@ -118,6 +99,8 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
     public static class AndroidWearHTTPClient extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+
+            if( peer == null ) return;
 
             if( Aware.DEBUG ) {
                 Log.d(TAG, "Received event... " + intent.getAction());
@@ -185,6 +168,19 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
         if( Aware.DEBUG ) {
             Log.d(TAG, "Connected to Google API!");
         }
+
+        PendingResult<NodeApi.GetConnectedNodesResult> nodes = Wearable.NodeApi.getConnectedNodes(googleClient);
+        nodes.setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {
+            @Override
+            public void onResult(NodeApi.GetConnectedNodesResult result) {
+                for( Node n : result.getNodes() ) {
+                    if( n.isNearby() ) {
+                        peer = n;
+                        Log.d(TAG, "Connected to " + peer.getDisplayName());
+                    }
+                }
+            }
+        });
     }
 
     @Override
