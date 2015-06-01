@@ -21,8 +21,8 @@ android {
     defaultConfig {
         //Comment applicationId out for library
         applicationId "com.aware"
-        versionCode 369
-        versionName "3.3.8"
+        versionCode 370
+        versionName "3.3.9"
         targetSdkVersion 22
         signingConfig signingConfigs.debug
     }

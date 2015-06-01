@@ -1,6 +1,7 @@
 package com.aware.ui;
 
 import android.content.Context;
+import android.content.Intent;
 import android.preference.Preference;
 import android.preference.PreferenceScreen;
 import android.support.v7.widget.Toolbar;
@@ -15,8 +16,14 @@ import com.aware.R;
  * Created by denzil on 29/05/15.
  */
 public class Aware_Toolbar extends Preference {
+
     public Aware_Toolbar(Context context, AttributeSet attrs) {
         super(context, attrs);
+    }
+
+    @Override
+    protected void onAttachedToActivity() {
+        super.onAttachedToActivity();
     }
 
     @Override
@@ -32,11 +39,17 @@ public class Aware_Toolbar extends Preference {
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 PreferenceScreen pref = (PreferenceScreen) getPreferenceManager().findPreference(getKey());
-                pref.getDialog().dismiss();
+                if (pref != null) {
+                    pref.getDialog().dismiss();
+                } else {
+                    Intent pluginsPage = new Intent(getContext(), Plugins_Manager.class);
+                    pluginsPage.setFlags(Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP);
+                    getContext().startActivity(pluginsPage);
+                }
             }
         });
-
         return layout;
     }
 }

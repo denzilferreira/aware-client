@@ -86,8 +86,7 @@
             <meta-data
                 android:name="com.android.systemui.action_assist_icon"
                 android:resource="@drawable/ic_launcher" />
-            <meta-data android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.aware.Aware_Preferences" />
+            <meta-data android:name="android.support.PARENT_ACTIVITY" android:value="com.aware.Aware_Preferences" />
         </activity>
         <activity
             android:name="com.aware.ui.CameraStudy"
@@ -98,8 +97,7 @@
             android:label="@string/aware_studies"
             android:parentActivityName="com.aware.Aware_Preferences"
             >
-            <meta-data android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.aware.Aware_Preferences" />
+            <meta-data android:name="android.support.PARENT_ACTIVITY" android:value="com.aware.Aware_Preferences" />
         </activity>
         <activity
             android:name="com.aware.ui.Plugins_Manager"
@@ -112,8 +110,7 @@
             android:theme="@style/Theme.Aware"
             android:parentActivityName="com.aware.Aware_Preferences"
             >
-            <meta-data android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.aware.Aware_Preferences" />
+            <meta-data android:name="android.support.PARENT_ACTIVITY" android:value="com.aware.Aware_Preferences" />
         </activity>
         <activity android:name="com.aware.ui.About"
             android:configChanges="keyboardHidden|orientation|screenSize"
@@ -124,6 +121,7 @@
             android:theme="@style/Theme.Aware"
             android:parentActivityName="com.aware.Aware_Preferences"
             >
+            <meta-data android:name="android.support.PARENT_ACTIVITY" android:value="com.aware.Aware_Preferences" />
         </activity>
         <activity
             android:name="com.aware.ui.ESM_Queue"
