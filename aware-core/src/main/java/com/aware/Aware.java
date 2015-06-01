@@ -488,25 +488,28 @@ public class Aware extends Service {
             }
         } catch (ClassNotFoundException e ) {}
 
+        ArrayList<String> stopping = new ArrayList<>();
         Cursor cached = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
     	if( cached != null && cached.moveToFirst() ) {
-    		//it's installed, stop it!
-    		Intent plugin = new Intent();
-    		plugin.setClassName(package_name, package_name + ".Plugin");
-    		context.stopService(plugin);
-    		if( Aware.DEBUG ) Log.d(TAG, package_name + " stopped...");
-    		
+    		stopping.add(package_name);
     		ContentValues rowData = new ContentValues();
             rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
             context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
-
     	}
     	if( cached != null && ! cached.isClosed() ) cached.close();
+
+        for( String p : stopping ) {
+            Intent plugin = new Intent();
+            plugin.setClassName( package_name, package_name + ".Plugin");
+            context.stopService(plugin);
+            if( Aware.DEBUG ) Log.d(TAG, package_name + " stopped...");
+        }
 
         //FIXED: terminate bundled AWARE service within a plugin
         Intent core = new Intent();
         core.setClassName( context.getPackageName(), "com.aware.Aware" );
         context.stopService(core);
+        core.setClassName( package_name, "com.aware.Aware" );
     }
     
     /**

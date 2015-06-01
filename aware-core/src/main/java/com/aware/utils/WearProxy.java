@@ -36,6 +36,8 @@ public class WearProxy extends WearableListenerService {
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
 
+        if( WearClient.peer == null ) return;
+
         if( Aware.is_watch(getApplicationContext()) ) {
 
             if( Aware.DEBUG ) Log.d(WearClient.TAG, "Message received from phone! Message:" + messageEvent.toString());
