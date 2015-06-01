@@ -138,8 +138,6 @@ public class Applications extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
 
-
-
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_NOTIFICATIONS).equals("true") && event.getEventType() == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED ) {
 
             //FIXED: Duplicated accessibility events. Because we have the accessibility service both in manifest as well as in service for compabitility with Honeycomb and Gingerbread...
@@ -351,21 +349,7 @@ public class Applications extends AccessibilityService {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
-        filter.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
-        registerReceiver(awareMonitor, filter);
-
-        if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS).length() == 0 ) {
-        	Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS, 30);
-        }
-        
-        //FIX: Only the client needs to boot-up AWARE framework background service.
-        if( getPackageName().equals("com.aware") ) {
-            Intent aware = new Intent(this, Aware.class);
-            startService(aware);
-        }
+        onServiceConnected();
     }
     
     @Override
@@ -418,6 +402,7 @@ public class Applications extends AccessibilityService {
         mBuilder.setContentTitle("AWARE configuration");
         mBuilder.setContentText(c.getResources().getString(R.string.aware_activate_accessibility));
         mBuilder.setAutoCancel(true);
+        mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
 
         Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
         accessibilitySettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);

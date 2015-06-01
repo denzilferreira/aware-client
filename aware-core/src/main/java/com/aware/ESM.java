@@ -325,6 +325,7 @@ public class ESM extends Aware_Sensor {
             mBuilder.setOnlyAlertOnce(true);
             mBuilder.setOngoing(true);
             mBuilder.setContentIntent(pending_ESM);
+            mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
             return mBuilder;
         }
     }
