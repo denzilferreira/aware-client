@@ -302,7 +302,7 @@ public class Magnetometer_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = BuildConfig.APPLICATION_ID + ".provider.magnetometer";
+	    AUTHORITY = getContext().getPackageName() + ".provider.magnetometer";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Magnetometer_Provider.AUTHORITY, DATABASE_TABLES[0],

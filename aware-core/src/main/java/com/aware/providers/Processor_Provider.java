@@ -170,7 +170,7 @@ public class Processor_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-		AUTHORITY = BuildConfig.APPLICATION_ID + ".provider.processor";
+		AUTHORITY = getContext().getPackageName() + ".provider.processor";
 		
 		sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Processor_Provider.AUTHORITY, DATABASE_TABLES[0],

@@ -163,7 +163,7 @@ public class Screen_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = BuildConfig.APPLICATION_ID + ".provider.screen";
+	    AUTHORITY = getContext().getPackageName() + ".provider.screen";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Screen_Provider.AUTHORITY, DATABASE_TABLES[0],

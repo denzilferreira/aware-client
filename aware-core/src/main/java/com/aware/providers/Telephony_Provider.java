@@ -388,7 +388,7 @@ public class Telephony_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = BuildConfig.APPLICATION_ID + ".provider.telephony";
+	    AUTHORITY = getContext().getPackageName() + ".provider.telephony";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Telephony_Provider.AUTHORITY, DATABASE_TABLES[0],

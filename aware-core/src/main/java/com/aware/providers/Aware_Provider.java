@@ -302,7 +302,7 @@ public class Aware_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-		AUTHORITY = BuildConfig.APPLICATION_ID + ".provider.aware";
+		AUTHORITY = getContext().getPackageName() + ".provider.aware";
 	    
         sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Aware_Provider.AUTHORITY, DATABASE_TABLES[0], DEVICE_INFO);

@@ -304,7 +304,7 @@ public class Rotation_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = BuildConfig.APPLICATION_ID + ".provider.rotation";
+	    AUTHORITY = getContext().getPackageName() + ".provider.rotation";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Rotation_Provider.AUTHORITY, DATABASE_TABLES[0],

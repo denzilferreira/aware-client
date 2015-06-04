@@ -230,7 +230,7 @@ public class Bluetooth_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = BuildConfig.APPLICATION_ID + ".provider.bluetooth";
+	    AUTHORITY = getContext().getPackageName() + ".provider.bluetooth";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Bluetooth_Provider.AUTHORITY, DATABASE_TABLES[0],

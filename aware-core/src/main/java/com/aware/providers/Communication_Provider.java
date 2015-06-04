@@ -228,7 +228,7 @@ public class Communication_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-	    AUTHORITY = BuildConfig.APPLICATION_ID + ".provider.communication";
+	    AUTHORITY = getContext().getPackageName() + ".provider.communication";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Communication_Provider.AUTHORITY,
