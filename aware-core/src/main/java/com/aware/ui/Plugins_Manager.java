@@ -70,14 +70,17 @@ public class Plugins_Manager extends Aware_Activity {
 	 * Plugin installed but disabled
 	 */
 	public static final int PLUGIN_DISABLED = 0;
+
 	/**
 	 * Plugin installed and active
 	 */
 	public static final int PLUGIN_ACTIVE = 1;
+
 	/**
 	 * Plugin installed but there is a new version on the server
 	 */
 	public static final int PLUGIN_UPDATED = 2;
+
 	/**
 	 * Plugin not installed but available on the server
 	 */
@@ -116,7 +119,7 @@ public class Plugins_Manager extends Aware_Activity {
             @Override
             public void run() {
                 swipeToRefresh.setRefreshing(true);
-                updateGrid();
+                new Async_PluginUpdater().execute();
             }
         });
     }
@@ -127,8 +130,8 @@ public class Plugins_Manager extends Aware_Activity {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			if( intent.getAction().equals(Aware.ACTION_AWARE_PLUGIN_MANAGER_REFRESH) ) {
-                //Check if we have updated information from the repository
-                new Async_PluginUpdater().execute();
+                //Update grid
+                updateGrid();
 			}
 		}
 	}
@@ -335,7 +338,7 @@ public class Plugins_Manager extends Aware_Activity {
 	@Override
 	protected void onResume() {
         super.onResume();
-        new Async_PluginUpdater().execute();
+        updateGrid();
 	}
 
     @Override

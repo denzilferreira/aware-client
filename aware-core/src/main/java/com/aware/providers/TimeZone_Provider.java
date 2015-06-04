@@ -1,8 +1,6 @@
 
 package com.aware.providers;
 
-import java.util.HashMap;
-
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -19,6 +17,8 @@ import android.util.Log;
 import com.aware.Aware;
 import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
+
+import java.util.HashMap;
 
 /**
  * AWARE TimeZone Content Provider Allows you to access recorded timezone changes from the database Database is located at the SDCard:
@@ -163,7 +163,7 @@ public class TimeZone_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-//	    AUTHORITY = getContext().getPackageName() + ".provider.timezone";
+	    AUTHORITY = BuildConfig.APPLICATION_ID + ".provider.timezone";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(TimeZone_Provider.AUTHORITY, DATABASE_TABLES[0],

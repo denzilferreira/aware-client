@@ -1,8 +1,6 @@
 
 package com.aware.providers;
 
-import java.util.HashMap;
-
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -20,6 +18,8 @@ import com.aware.Accelerometer;
 import com.aware.Aware;
 import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
+
+import java.util.HashMap;
 
 /**
  * AWARE Content Provider Allows you to access all the recorded readings on the
@@ -314,7 +314,7 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-//	    AUTHORITY = getContext().getPackageName() + ".provider.accelerometer.linear";
+	    AUTHORITY = BuildConfig.APPLICATION_ID + ".provider.accelerometer.linear";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Linear_Accelerometer_Provider.AUTHORITY,

@@ -1,8 +1,6 @@
 
 package com.aware.providers;
 
-import java.util.HashMap;
-
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -19,6 +17,8 @@ import android.util.Log;
 import com.aware.Aware;
 import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
+
+import java.util.HashMap;
 
 /**
  * ESM Content Provider Allows you to access all the recorded readings on the
@@ -185,7 +185,7 @@ public class ESM_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-//        AUTHORITY = getContext().getPackageName() + ".provider.esm";
+        AUTHORITY = BuildConfig.APPLICATION_ID + ".provider.esm";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(ESM_Provider.AUTHORITY, DATABASE_TABLES[0],

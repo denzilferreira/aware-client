@@ -83,16 +83,18 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
     public void onCreate() {
         super.onCreate();
 
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
         googleClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
-    }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
         googleClient.connect();
+
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -174,7 +176,7 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
             @Override
             public void onResult(NodeApi.GetConnectedNodesResult result) {
                 for( Node n : result.getNodes() ) {
-                    if( n.isNearby() ) {
+                    if( n.isNearby() && ! n.getDisplayName().equals("cloud") ) {
                         peer = n;
                         Log.d(TAG, "Connected to " + peer.getDisplayName());
                     }

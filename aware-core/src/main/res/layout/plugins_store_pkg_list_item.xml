@@ -38,9 +38,10 @@
                 android:text="plugin title"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textSize="9sp"
-                android:textColor="#33B5E5"
+                android:textColor="#FFF"
                 android:textStyle="bold"
-                android:padding="2dp" />
+                android:padding="2dp"
+                android:background="#33B5E5" />
 
         </LinearLayout>
 

@@ -15,6 +15,7 @@ import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
+import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
 import java.util.HashMap;
@@ -282,7 +283,7 @@ public class Battery_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-//	    AUTHORITY = getContext().getPackageName() + ".provider.battery";
+	    AUTHORITY = BuildConfig.APPLICATION_ID + ".provider.battery";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Battery_Provider.AUTHORITY, DATABASE_TABLES[0],

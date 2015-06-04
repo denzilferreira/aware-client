@@ -39,13 +39,12 @@ public class Aware_Toolbar extends Preference {
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 PreferenceScreen pref = (PreferenceScreen) getPreferenceManager().findPreference(getKey());
-                if (pref != null) {
+                if ( pref != null && pref.getDialog() != null ) { //for the client sub-preference pages
                     pref.getDialog().dismiss();
-                } else {
+                } else { //for plugins, we just call the plugins manager back up
                     Intent pluginsPage = new Intent(getContext(), Plugins_Manager.class);
-                    pluginsPage.setFlags(Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP);
+                    pluginsPage.setFlags(Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP); //restore previous activity that is on the stack
                     getContext().startActivity(pluginsPage);
                 }
             }

@@ -1,8 +1,6 @@
 
 package com.aware.providers;
 
-import java.util.HashMap;
-
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -19,6 +17,8 @@ import android.util.Log;
 import com.aware.Aware;
 import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
+
+import java.util.HashMap;
 
 /**
  * AWARE MQTT Content Provider Allows you to access all the recorded MQTT
@@ -215,7 +215,7 @@ public class Mqtt_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-//	    AUTHORITY = getContext().getPackageName() + ".provider.mqtt";
+	    AUTHORITY = BuildConfig.APPLICATION_ID + ".provider.mqtt";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Mqtt_Provider.AUTHORITY, DATABASE_TABLES[0], MQTT);

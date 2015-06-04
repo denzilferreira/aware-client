@@ -98,7 +98,10 @@ public class Applications extends AccessibilityService {
         } catch( final NameNotFoundException e ) {
             appInfo = null;
         }
-        String appName = ( appInfo != null ) ? (String) packageManager.getApplicationLabel(appInfo):"";
+        String appName = "";
+        if( appInfo != null && packageManager.getApplicationLabel(appInfo) != null ) {
+            appName = (String) packageManager.getApplicationLabel(appInfo);
+        }
     	return appName;
     }
 
@@ -137,6 +140,8 @@ public class Applications extends AccessibilityService {
      */
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+
+        if( event.getPackageName() == null ) return;
 
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_NOTIFICATIONS).equals("true") && event.getEventType() == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED ) {
 
@@ -182,26 +187,17 @@ public class Applications extends AccessibilityService {
             }
 
             PackageManager packageManager = getPackageManager();
-
             ApplicationInfo appInfo;
             try {
                 appInfo = packageManager.getApplicationInfo(event.getPackageName().toString(), PackageManager.GET_ACTIVITIES);
-            } catch( NameNotFoundException e ) {
-                appInfo = null;
-            } catch( NullPointerException e ) {
-                appInfo = null;
-            } catch( Resources.NotFoundException e ) {
+            } catch( NameNotFoundException | NullPointerException | Resources.NotFoundException e ) {
                 appInfo = null;
             }
 
             PackageInfo pkgInfo;
             try {
                 pkgInfo = packageManager.getPackageInfo(event.getPackageName().toString(), PackageManager.GET_META_DATA);
-            } catch (NameNotFoundException e ) {
-                pkgInfo = null;
-            } catch (NullPointerException e ) {
-                pkgInfo = null;
-            } catch (Resources.NotFoundException e ) {
+            } catch (NameNotFoundException | NullPointerException | Resources.NotFoundException e ) {
                 pkgInfo = null;
             }
 
@@ -210,9 +206,7 @@ public class Applications extends AccessibilityService {
                 if( appInfo != null ) {
                     appName = packageManager.getApplicationLabel(appInfo).toString();
                 }
-            } catch (Resources.NotFoundException e ) {
-                appName = "";
-            } catch (NullPointerException e ) {
+            } catch ( Resources.NotFoundException | NullPointerException e ) {
                 appName = "";
             }
 
@@ -221,14 +215,12 @@ public class Applications extends AccessibilityService {
             rowData.put(Applications_Foreground.DEVICE_ID, Aware.getSetting(getApplicationContext(),Aware_Preferences.DEVICE_ID));
             rowData.put(Applications_Foreground.PACKAGE_NAME, event.getPackageName().toString());
             rowData.put(Applications_Foreground.APPLICATION_NAME, appName);
-            rowData.put(Applications_Foreground.IS_SYSTEM_APP, ( pkgInfo != null ) ? isSystemPackage(pkgInfo) : false );
+            rowData.put(Applications_Foreground.IS_SYSTEM_APP, pkgInfo != null && isSystemPackage(pkgInfo) );
             
             if( Aware.DEBUG ) Log.d(Aware.TAG, "FOREGROUND: " + rowData.toString());
 
             try{
                 getContentResolver().insert(Applications_Foreground.CONTENT_URI, rowData);
-            }catch( SQLiteException e ) {
-                if(Aware.DEBUG) Log.d(TAG,e.getMessage());
             }catch( SQLException e ) {
                 if(Aware.DEBUG) Log.d(TAG,e.getMessage());
             }
@@ -255,11 +247,11 @@ public class Applications extends AccessibilityService {
 		            		crashData.put(Applications_Crashes.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
 		            		crashData.put(Applications_Crashes.PACKAGE_NAME, error.processName);
 		            		crashData.put(Applications_Crashes.APPLICATION_NAME, appName);
-		            		crashData.put(Applications_Crashes.APPLICATION_VERSION, pkgInfo.versionCode);
+		            		crashData.put(Applications_Crashes.APPLICATION_VERSION, ( pkgInfo != null) ? pkgInfo.versionCode : -1); //some prepackages don't have version codes...
 		            		crashData.put(Applications_Crashes.ERROR_SHORT, error.shortMsg);
 		            		crashData.put(Applications_Crashes.ERROR_LONG, error.longMsg);
 		            		crashData.put(Applications_Crashes.ERROR_CONDITION, error.condition);
-		            		crashData.put(Applications_Crashes.IS_SYSTEM_APP, isSystemPackage(pkgInfo));
+		            		crashData.put(Applications_Crashes.IS_SYSTEM_APP, pkgInfo != null && isSystemPackage(pkgInfo) );
 		            		
 		            		getContentResolver().insert(Applications_Crashes.CONTENT_URI, crashData);
 		            		

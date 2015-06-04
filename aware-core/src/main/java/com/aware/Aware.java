@@ -404,13 +404,18 @@ public class Aware extends Service {
                     for(String package_name : active_plugins ) {
                         startPlugin(getApplicationContext(), package_name);
                     }
-                    new CheckPlugins().execute(active_plugins);
+                    if( ! Aware.is_watch(this) ) {
+                        new CheckPlugins().execute(active_plugins);
+                    }
                 }
 
                 if( Aware.getSetting(getApplicationContext(), Aware_Preferences.AWARE_AUTO_UPDATE).equals("true") ) {
 	            	if( aware_preferences.getLong(PREF_LAST_UPDATE, 0) == 0 || (aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 0 && System.currentTimeMillis()-aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 6*60*60*1000) ) { //check every 6h
-                        //Check if there are updated on the client
-	            		new Update_Check().execute();
+
+                        //Check if there are updates to the client
+	            		if( ! Aware.is_watch(this) ) {
+                            new Update_Check().execute();
+                        }
 
 	            		SharedPreferences.Editor editor = aware_preferences.edit();
 	            		editor.putLong(PREF_LAST_UPDATE, System.currentTimeMillis());
@@ -703,13 +708,13 @@ public class Aware extends Service {
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
         global_settings.add(Aware_Preferences.WEBSERVICE_SERVER);
         global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
-        global_settings.add(Aware_Preferences.STATUS_MQTT);
-        global_settings.add(Aware_Preferences.MQTT_SERVER);
-        global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
-        global_settings.add(Aware_Preferences.MQTT_PORT);
-        global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
-        global_settings.add(Aware_Preferences.MQTT_USERNAME);
-        global_settings.add(Aware_Preferences.MQTT_PASSWORD);
+//        global_settings.add(Aware_Preferences.STATUS_MQTT);
+//        global_settings.add(Aware_Preferences.MQTT_SERVER);
+//        global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
+//        global_settings.add(Aware_Preferences.MQTT_PORT);
+//        global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
+//        global_settings.add(Aware_Preferences.MQTT_USERNAME);
+//        global_settings.add(Aware_Preferences.MQTT_PASSWORD);
     	
     	if( global_settings.contains(key) ) {
     		is_restricted_package = false;
@@ -744,13 +749,13 @@ public class Aware extends Service {
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
         global_settings.add(Aware_Preferences.WEBSERVICE_SERVER);
         global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
-        global_settings.add(Aware_Preferences.STATUS_MQTT);
-        global_settings.add(Aware_Preferences.MQTT_SERVER);
-        global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
-        global_settings.add(Aware_Preferences.MQTT_PORT);
-        global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
-        global_settings.add(Aware_Preferences.MQTT_USERNAME);
-        global_settings.add(Aware_Preferences.MQTT_PASSWORD);
+//        global_settings.add(Aware_Preferences.STATUS_MQTT);
+//        global_settings.add(Aware_Preferences.MQTT_SERVER);
+//        global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
+//        global_settings.add(Aware_Preferences.MQTT_PORT);
+//        global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
+//        global_settings.add(Aware_Preferences.MQTT_USERNAME);
+//        global_settings.add(Aware_Preferences.MQTT_PASSWORD);
 
     	if( global_settings.contains(key) ) {
     		is_restricted_package = false;
@@ -1022,8 +1027,8 @@ public class Aware extends Service {
                     
                     Cursor current_status = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, new String[]{Aware_Plugins.PLUGIN_STATUS}, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null, null);
                     if( current_status != null && current_status.moveToFirst() ) {
-                        if( current_status.getInt(current_status.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == Plugins_Manager.PLUGIN_NOT_INSTALLED || current_status.getInt(current_status.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == Plugins_Manager.PLUGIN_UPDATED ) {
-                        	rowData.put(Aware_Plugins.PLUGIN_STATUS, Plugins_Manager.PLUGIN_ACTIVE);
+                        if( current_status.getInt(current_status.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == Plugins_Manager.PLUGIN_UPDATED ) { //was updated, set to active now
+                        	rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
                         }
                     }
                     if( current_status != null && ! current_status.isClosed() ) current_status.close();
@@ -1035,6 +1040,10 @@ public class Aware extends Service {
                     
                     //Refresh stream UI if visible
                     context.sendBroadcast(new Intent(Stream_UI.ACTION_AWARE_UPDATE_STREAM));
+
+                    //Start plugin
+                    Aware.startPlugin(context, packageName);
+
                     return;
                 }
                 
@@ -1054,6 +1063,7 @@ public class Aware extends Service {
                     //this is an update, bail out.
                     return;
                 }
+
                 //Deleting
                 context.getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
                 if( Aware.DEBUG ) Log.d(TAG,"AWARE plugin removed:" + packageName);
@@ -1139,9 +1149,9 @@ public class Aware extends Service {
             
             //Refresh Plugin Manager UI if visible
             awareContext.sendBroadcast(new Intent(ACTION_AWARE_PLUGIN_MANAGER_REFRESH));
-            
-            Intent aware = new Intent(Aware.ACTION_AWARE_REFRESH);
-            awareContext.sendBroadcast(aware);
+
+            //Start plugin
+            Aware.startPlugin(awareContext, app.packageName);
 		}
     }
 

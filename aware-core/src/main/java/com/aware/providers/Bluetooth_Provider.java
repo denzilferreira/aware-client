@@ -15,6 +15,7 @@ import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
+import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
 import java.util.HashMap;
@@ -229,7 +230,7 @@ public class Bluetooth_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-//	    AUTHORITY = getContext().getPackageName() + ".provider.bluetooth";
+	    AUTHORITY = BuildConfig.APPLICATION_ID + ".provider.bluetooth";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Bluetooth_Provider.AUTHORITY, DATABASE_TABLES[0],

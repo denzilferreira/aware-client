@@ -31,6 +31,7 @@ import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.MqttTopic;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
+
 import org.json.JSONArray;
 
 /**
@@ -230,6 +231,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
      * @author df
      */
     public static class MQTTReceiver extends BroadcastReceiver {
+
         public void onReceive(Context context, Intent intent) {
             if(intent.getAction().equals(ACTION_AWARE_MQTT_MSG_PUBLISH)) {
                 String topic = intent.getStringExtra(EXTRA_TOPIC);
@@ -325,6 +327,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
             stopSelf();
             return;
         }
+
+        initializeMQTT();
     }
 
 	@Override
@@ -360,7 +364,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 		}
 
         //Fixes plugins crashing when installing/updating AWARE
-        if( Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_PORT).length() == 0 ) return;
+//        if( Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_PORT).length() == 0 ) return;
 		
 		TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
 	    
@@ -463,6 +467,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 		        selfSubscribe = new Intent(ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
 		        selfSubscribe.putExtra(EXTRA_TOPIC, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/configuration");
 		        mContext.sendBroadcast(selfSubscribe);
+
 	        } else {
 	        	if( Aware.DEBUG ) Log.d( TAG,"MQTT Client failed to connect... Parameters used: " + connection.toString() );
 	        }
@@ -477,10 +482,12 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	private static boolean publish(String topicName, byte[] payload) {
 	    if( MQTT_CLIENT != null && MQTT_CLIENT.isConnected() ) {
             MqttTopic topic = MQTT_CLIENT.getTopic(topicName);
-            MqttMessage message = new MqttMessage(payload);
-            message.setQos(Integer.parseInt(MQTT_QoS));
+            MqttMessage message = new MqttMessage();
+            message.setPayload(payload);
+            message.setQos( Integer.parseInt(MQTT_QoS) );
+            message.setRetained(true);
             try {
-                topic.publish(message);
+                topic.publish( message );
             } catch (MqttPersistenceException e) {
                 if(Aware.DEBUG) Log.e(TAG, e.getMessage());
                 return false;
@@ -499,7 +506,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	public static boolean subscribe(String topicName) {
 	    if( MQTT_CLIENT != null && MQTT_CLIENT.isConnected() ) {
             try {
-                MQTT_CLIENT.subscribe( topicName );
+                MQTT_CLIENT.subscribe( topicName, Integer.parseInt(MQTT_QoS) );
             } catch (MqttSecurityException e) {
                 if(Aware.DEBUG) Log.e(TAG, e.getMessage());
                 return false;

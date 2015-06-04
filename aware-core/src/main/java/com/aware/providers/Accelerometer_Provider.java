@@ -16,6 +16,7 @@ import android.util.Log;
 
 import com.aware.Accelerometer;
 import com.aware.Aware;
+import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
 import java.util.HashMap;
@@ -295,7 +296,7 @@ public class Accelerometer_Provider extends ContentProvider {
 
     @Override
 	public boolean onCreate() {
-//	    AUTHORITY = getContext().getPackageName() + ".provider.accelerometer";
+	    AUTHORITY = BuildConfig.APPLICATION_ID + ".provider.accelerometer";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Accelerometer_Provider.AUTHORITY,

@@ -16,6 +16,7 @@ import android.util.Log;
 
 import com.aware.Accelerometer;
 import com.aware.Aware;
+import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
 import java.util.HashMap;
@@ -303,7 +304,7 @@ public class Rotation_Provider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-//	    AUTHORITY = getContext().getPackageName() + ".provider.rotation";
+	    AUTHORITY = BuildConfig.APPLICATION_ID + ".provider.rotation";
 	    
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Rotation_Provider.AUTHORITY, DATABASE_TABLES[0],

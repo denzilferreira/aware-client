@@ -2,4 +2,5 @@
 <resources>
     <!-- False for AWARE plugins/applications -->
     <item name="display_aware" type="bool" format="boolean">true</item>
+    <item name="providers_active" type="bool" format="boolean">true</item>
 </resources>

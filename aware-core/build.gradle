@@ -21,8 +21,8 @@ android {
     defaultConfig {
         //Comment applicationId out for library
         applicationId "com.aware"
-        versionCode 370
-        versionName "3.3.9"
+        versionCode 372
+        versionName "3.4.1"
         targetSdkVersion 22
         signingConfig signingConfigs.debug
     }
@@ -51,10 +51,10 @@ dependencies {
     wearCompile 'com.android.support:support-v13:22.0.0'
     wearCompile 'com.google.android.gms:play-services-wearable:7.5.0'
     wearCompile 'com.google.android.support:wearable:1.1.0'
-
     //Comment out for library
     phoneWearApp project(path: ':aware-wear', configuration: 'wearRelease')
     //otherwise, create a symbolic link aware-wear to aware-core so you can compile the same package for Android Wear
+    compile files('libs/org.eclipse.paho.client.mqttv3-1.0.2.jar')
 }
 
 //Update AWARE's library in Maven Central
