@@ -55,8 +55,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
 		if(DEBUG) Log.w(TAG, "Database in use: " + db.getPath());
 		
-		for (int i=0; i < database_tables.length;i++)
-        {
+		for (int i=0; i < database_tables.length;i++) {
            db.execSQL("CREATE TABLE IF NOT EXISTS "+database_tables[i] +" ("+table_fields[i]+");");
         }
 		db.setVersion(new_version);
@@ -65,6 +64,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     	if(DEBUG) Log.w(TAG, "Upgrading database: " + db.getPath());
+
+		if( db.inTransaction() ) {
+			if( DEBUG ) Log.w(TAG, "Upgrade in progress...");
+			return;
+		}
 
 		db.beginTransaction();
 			for (int i=0; i < database_tables.length;i++)
@@ -83,13 +87,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			}
 		db.setTransactionSuccessful();
     	db.setVersion(newVersion);
-
-//	Old code that would just drop the table and call onCreate(db)
-// for (int i=0; i < database_tables.length;i++)
-//        {
-//            db.execSQL("DROP TABLE IF EXISTS "+database_tables[i]);
-//        }
-//		onCreate(db);
     }
 
 	/**

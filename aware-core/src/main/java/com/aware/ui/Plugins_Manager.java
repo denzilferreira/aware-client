@@ -463,16 +463,13 @@ public class Plugins_Manager extends Aware_Activity {
      */
     public class Async_PluginUpdater extends AsyncTask<Void, View, Boolean> {
 
-        private boolean needsRefresh = false;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            needsRefresh = false;
-        }
+        private boolean needsRefresh;
 
         @Override
 		protected Boolean doInBackground(Void... params) {
+
+            needsRefresh = false;
+
     		//Check for updates on the server side
     		HttpResponse response = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/plugins/get_plugins" + (( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) ? "/" + Aware.getSetting(getApplicationContext(), "study_id") : ""), true );
 			if( response != null && response.getStatusLine().getStatusCode() == 200 ) {
