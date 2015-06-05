@@ -175,6 +175,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         mqttMsg.putExtra(EXTRA_MESSAGE, message.toString());
         mContext.sendBroadcast(mqttMsg);
 
+        if( Aware.DEBUG ) Log.d(TAG,"MQTT: Message received: \n topic = "+topic+ "\n message = "+message.toString());
+
         if( topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/broadcasts") ||  topic.equals(Aware.getSetting(mContext, "study_id") + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/broadcasts") ) {
             Intent broadcast = new Intent(message.toString());
             mContext.sendBroadcast(broadcast);
@@ -189,12 +191,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         if( topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/configuration") ||  topic.equals(Aware.getSetting(mContext, "study_id") + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/configuration") ) {
             JSONArray configs = new JSONArray(message.toString());
             Aware_Preferences.tweakSettings(mContext, configs);
-
-            Intent apply_settings = new Intent(Aware.ACTION_AWARE_REFRESH);
-            mContext.sendBroadcast(apply_settings);
+            mContext.sendBroadcast(new Intent(Aware.ACTION_AWARE_REFRESH));
         }
-
-        if( Aware.DEBUG ) Log.d(TAG,"MQTT: Message received: \n topic = "+topic+ "\n message = "+message.toString());
     }
 
     @Override
@@ -363,9 +361,6 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 			return;
 		}
 
-        //Fixes plugins crashing when installing/updating AWARE
-//        if( Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_PORT).length() == 0 ) return;
-		
 		TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
 	    
 	    MQTT_SERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_SERVER );
@@ -384,7 +379,6 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         	if( MQTT_MESSAGES_PERSISTENCE != null ) {
                 MQTT_MESSAGES_PERSISTENCE.close(); //close previous opened connection to persistence
         	}
-
             MQTT_MESSAGES_PERSISTENCE = new MqttDefaultFilePersistence(Environment.getExternalStorageDirectory()+"/AWARE/");
             MQTT_MESSAGES_PERSISTENCE.open( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID), MQTT_URL );
 
@@ -402,11 +396,9 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
     	try {
     		MQTT_CLIENT = new MqttClient( MQTT_URL, String.valueOf(Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).hashCode()), MQTT_MESSAGES_PERSISTENCE );
     		MQTT_CLIENT.setCallback( this );
-    		
     		//Make connection in secondary thread
 			new MQTTAsync().execute( MQTT_OPTIONS );
-			
-		} catch (MqttException e) {
+		} catch ( MqttException e ) {
 			if( Aware.DEBUG) Log.e(TAG, "Failed: " + e.getMessage());
 		}
 	}
@@ -453,6 +445,10 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 			        studySubscribe = new Intent(ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
 			        studySubscribe.putExtra(EXTRA_TOPIC, Aware.getSetting(getApplicationContext(), "study_id") + "/" + Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/configuration");
 			        mContext.sendBroadcast(studySubscribe);
+
+                    studySubscribe = new Intent(ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
+                    studySubscribe.putExtra(EXTRA_TOPIC, Aware.getSetting(getApplicationContext(), "study_id") + "/" + Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/#");
+                    mContext.sendBroadcast(studySubscribe);
 		        }
 		        
 		        //Self-subscribes
@@ -467,6 +463,10 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 		        selfSubscribe = new Intent(ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
 		        selfSubscribe.putExtra(EXTRA_TOPIC, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/configuration");
 		        mContext.sendBroadcast(selfSubscribe);
+
+                selfSubscribe = new Intent(ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
+                selfSubscribe.putExtra(EXTRA_TOPIC, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/#");
+                mContext.sendBroadcast(selfSubscribe);
 
 	        } else {
 	        	if( Aware.DEBUG ) Log.d( TAG,"MQTT Client failed to connect... Parameters used: " + connection.toString() );

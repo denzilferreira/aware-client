@@ -707,6 +707,15 @@ public class Aware extends Service {
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
         global_settings.add(Aware_Preferences.WEBSERVICE_SERVER);
         global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
+        //allow plugin's to react to MQTT
+        global_settings.add(Aware_Preferences.STATUS_MQTT);
+        global_settings.add(Aware_Preferences.MQTT_USERNAME);
+        global_settings.add(Aware_Preferences.MQTT_PASSWORD);
+        global_settings.add(Aware_Preferences.MQTT_SERVER);
+        global_settings.add(Aware_Preferences.MQTT_PORT);
+        global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
+        global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
+        global_settings.add(Aware_Preferences.MQTT_QOS);
     	
     	if( global_settings.contains(key) ) {
     		is_restricted_package = false;
@@ -740,7 +749,16 @@ public class Aware extends Service {
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
         global_settings.add(Aware_Preferences.WEBSERVICE_SERVER);
-        global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
+        global_settings.add(Aware_Preferences.STATUS_APPLICATIONS); //allow plugins to get accessibility events
+        //allow plugin's to react to MQTT
+        global_settings.add(Aware_Preferences.STATUS_MQTT);
+        global_settings.add(Aware_Preferences.MQTT_USERNAME);
+        global_settings.add(Aware_Preferences.MQTT_PASSWORD);
+        global_settings.add(Aware_Preferences.MQTT_SERVER);
+        global_settings.add(Aware_Preferences.MQTT_PORT);
+        global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
+        global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
+        global_settings.add(Aware_Preferences.MQTT_QOS);
 
     	if( global_settings.contains(key) ) {
     		is_restricted_package = false;
