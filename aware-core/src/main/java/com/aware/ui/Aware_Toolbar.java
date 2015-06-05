@@ -1,9 +1,12 @@
 package com.aware.ui;
 
+import android.app.Application;
+import android.app.FragmentManager;
 import android.content.Context;
 import android.content.Intent;
 import android.preference.Preference;
 import android.preference.PreferenceScreen;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -22,11 +25,6 @@ public class Aware_Toolbar extends Preference {
     }
 
     @Override
-    protected void onAttachedToActivity() {
-        super.onAttachedToActivity();
-    }
-
-    @Override
     protected View onCreateView(ViewGroup parent) {
 
         parent.setPadding(0,0,0,0);
@@ -34,7 +32,7 @@ public class Aware_Toolbar extends Preference {
         LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View layout = inflater.inflate(R.layout.aware_toolbar, parent, false);
 
-        Toolbar toolbar = (Toolbar) layout.findViewById(R.id.aware_toolbar);
+        final Toolbar toolbar = (Toolbar) layout.findViewById(R.id.aware_toolbar);
         toolbar.setTitle(this.getTitle());
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -42,10 +40,8 @@ public class Aware_Toolbar extends Preference {
                 PreferenceScreen pref = (PreferenceScreen) getPreferenceManager().findPreference(getKey());
                 if ( pref != null && pref.getDialog() != null ) { //for the client sub-preference pages
                     pref.getDialog().dismiss();
-                } else { //for plugins, we just call the plugins manager back up
-                    Intent pluginsPage = new Intent(getContext(), Plugins_Manager.class);
-                    pluginsPage.setFlags(Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP); //restore previous activity that is on the stack
-                    getContext().startActivity(pluginsPage);
+                } else { //for plugins
+                    //To nothing... TODO: find a way to go back in the navigation
                 }
             }
         });
