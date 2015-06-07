@@ -141,16 +141,6 @@ public class Aware extends Service {
     public static final String ACTION_QUIT_STUDY = "ACTION_QUIT_STUDY";
 
     /**
-     * Used by Android Wear to know which sensor has been activated to sync with phone.
-     * Extras:
-     * extra_config_setting: the setting key
-     * extra_config_value: the setting value
-     */
-    public static final String ACTION_AWARE_CONFIG_CHANGED = "ACTION_AWARE_CONFIG_CHANGED";
-    public static final String EXTRA_CONFIG_SETTING = "extra_config_setting";
-    public static final String EXTRA_CONFIG_VALUE = "extra_config_value";
-    
-    /**
      * DownloadManager AWARE update ID, used to prompt user to install the update once finished downloading.
      */
     private static long AWARE_FRAMEWORK_DOWNLOAD_ID = 0;
@@ -729,6 +719,27 @@ public class Aware extends Service {
         if( qry != null && ! qry.isClosed() ) qry.close();
         return value;
     }
+
+    /**
+     * Retrieve setting value given a key of a plugin's settings
+     * @param context
+     * @param key
+     * @param package_name
+     * @return value
+     */
+    public static String getSetting( Context context, String key, String package_name ) {
+        if( package_name.equals("com.aware") ) {
+            return getSetting(context, key);
+        }
+
+        String value = "";
+        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+        if( qry != null && qry.moveToFirst() ) {
+            value = qry.getString(qry.getColumnIndex(Aware_Settings.SETTING_VALUE));
+        }
+        if( qry != null && ! qry.isClosed() ) qry.close();
+        return value;
+    }
     
     /**
      * Insert / Update settings of the framework
@@ -797,11 +808,51 @@ public class Aware extends Service {
             }
         }
         if( qry != null && ! qry.isClosed() ) qry.close();
+    }
 
-        Intent wearBroadcast = new Intent(ACTION_AWARE_CONFIG_CHANGED);
-        wearBroadcast.putExtra(EXTRA_CONFIG_SETTING, key);
-        wearBroadcast.putExtra(EXTRA_CONFIG_VALUE, value.toString());
-        context.sendBroadcast(wearBroadcast);
+    /**
+     * Insert / Update settings of a plugin
+     * @param key
+     * @param value
+     * @param package_name
+     */
+    public static void setSetting( Context context, String key, Object value, String package_name ) {
+
+        if( package_name.equals("com.aware") || key.equals(Aware_Preferences.DEVICE_ID) ) {
+            setSetting(context, key, value);
+            return;
+        }
+
+        ContentValues setting = new ContentValues();
+        setting.put(Aware_Settings.SETTING_KEY, key);
+        setting.put(Aware_Settings.SETTING_VALUE, value.toString());
+        setting.put(Aware_Settings.SETTING_PACKAGE_NAME, package_name);
+
+        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+        //update
+        if( qry != null && qry.moveToFirst() ) {
+            try {
+                if( ! qry.getString(qry.getColumnIndex(Aware_Settings.SETTING_VALUE)).equals(value.toString()) ) {
+                    context.getContentResolver().update(Aware_Settings.CONTENT_URI, setting, Aware_Settings.SETTING_ID + "=" + qry.getInt(qry.getColumnIndex(Aware_Settings.SETTING_ID)), null);
+                    if( Aware.DEBUG) Log.d(Aware.TAG,"Updated: "+key+"="+value + " in " + package_name);
+                }
+            }catch( SQLiteException e ) {
+                if(Aware.DEBUG) Log.d(TAG,e.getMessage());
+            }catch( SQLException e ) {
+                if(Aware.DEBUG) Log.d(TAG,e.getMessage());
+            }
+            //insert
+        } else {
+            try {
+                context.getContentResolver().insert(Aware_Settings.CONTENT_URI, setting);
+                if( Aware.DEBUG) Log.d(Aware.TAG,"Added: " + key + "=" + value + " in " + package_name);
+            }catch( SQLiteException e ) {
+                if(Aware.DEBUG) Log.d(TAG,e.getMessage());
+            }catch( SQLException e ) {
+                if(Aware.DEBUG) Log.d(TAG,e.getMessage());
+            }
+        }
+        if( qry != null && ! qry.isClosed() ) qry.close();
     }
     
     @Override
