@@ -82,19 +82,16 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
     @Override
     public void onCreate() {
         super.onCreate();
-
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
         googleClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
+    }
 
-        googleClient.connect();
-
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if( googleClient != null && ! googleClient.isConnected() ) googleClient.connect();
         return super.onStartCommand(intent, flags, startId);
     }
 

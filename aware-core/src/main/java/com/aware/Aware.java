@@ -187,6 +187,7 @@ public class Aware extends Service {
     private static Intent esmSrv = null;
     private static Intent installationsSrv = null;
     private static Intent keyboard = null;
+    private static Intent wearClient = null;
     
     private final String PREF_FREQUENCY_WATCHDOG = "frequency_watchdog";
     private final String PREF_LAST_UPDATE = "last_update";
@@ -294,8 +295,9 @@ public class Aware extends Service {
         //Only the official client will do this.
         if ( getPackageName().equals("com.aware") ) {
 
-            Intent startWearClient = new Intent(this, WearClient.class);
-            startService(startWearClient);
+            if( DEBUG ) Log.d(TAG, "Starting Android Wear HTTP proxy...");
+            wearClient = new Intent(this, WearClient.class);
+            startService(wearClient);
 
             awareStatusMonitor = new Intent(getApplicationContext(), Aware.class);
             repeatingIntent = PendingIntent.getService(getApplicationContext(), 0, awareStatusMonitor, 0);
@@ -578,7 +580,7 @@ public class Aware extends Service {
 
     private static boolean is_queued(String package_name) {
         for( String pkg : AWARE_PLUGIN_DOWNLOAD_PACKAGES ) {
-            if( pkg.equalsIgnoreCase(package_name) ) return true;
+            if( pkg.equalsIgnoreCase( package_name ) ) return true;
         }
         return false;
     }
@@ -1502,6 +1504,10 @@ public class Aware extends Service {
         if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_KEYBOARD).equals("true") ) {
             startKeyboard();
         }else stopKeyboard();
+
+        if( getPackageName().equals("com.aware") ) {
+            awareContext.startService(wearClient);
+        }
     }
     
     /**
@@ -1534,6 +1540,10 @@ public class Aware extends Service {
         stopESM();
         stopInstallations();
         stopKeyboard();
+
+        if( getPackageName().equals("com.aware") ) {
+            awareContext.stopService(wearClient);
+        }
     }
 
     /**
