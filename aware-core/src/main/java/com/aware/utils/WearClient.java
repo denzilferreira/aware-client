@@ -83,18 +83,16 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
     public void onCreate() {
         super.onCreate();
 
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
         googleClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
+    }
 
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
         googleClient.connect();
-
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -190,7 +188,7 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
         if( Aware.DEBUG ) {
             Log.d(TAG, "Connection suspended to Google API!");
         }
-        googleClient.connect();
+        googleClient.reconnect();
     }
 
     @Override
@@ -198,7 +196,7 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
         if( Aware.DEBUG ) {
             Log.d(TAG, "Connection failed to Google API!");
         }
-        googleClient.connect();
+        googleClient.reconnect();
     }
 
     @Override

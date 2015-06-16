@@ -1308,9 +1308,11 @@ public class Aware extends Service {
             if( intent.getAction().equals(Aware.ACTION_QUIT_STUDY) ) {
                 Aware.reset(context);
 
-                Intent preferences = new Intent(context, Aware_Preferences.class);
-                preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                context.startActivity(preferences);
+                if( context.getPackageName().equals("com.aware") ) {
+                    Intent preferences = new Intent(context, Aware_Preferences.class);
+                    preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    context.startActivity(preferences);
+                }
             }
 
             if( intent.getAction().equals(Aware.ACTION_AWARE_REFRESH)) {
