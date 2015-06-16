@@ -76,7 +76,6 @@ import java.util.UUID;
  *
  */
 public class Aware extends Service {
-
     /**
      * Debug flag (default = false).
      */

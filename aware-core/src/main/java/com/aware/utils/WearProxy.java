@@ -67,6 +67,7 @@ public class WearProxy extends WearableListenerService {
                 Aware.reset(getApplicationContext());
 
                 if( getPackageName().equals("com.aware") ) {
+
                     Intent preferences = new Intent(getApplicationContext(), Aware_Preferences.class);
                     preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(preferences);
