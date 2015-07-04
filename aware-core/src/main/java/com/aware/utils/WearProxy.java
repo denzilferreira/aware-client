@@ -50,9 +50,10 @@ public class WearProxy extends WearableListenerService {
 
                 if(Aware.DEBUG) Log.d(WearClient.TAG, "Joining study: " + webserver);
 
-                if( webserver.length() > 0 && ! Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals(webserver) ) { //different study, join study!
+                //Check if we are on different study, join study!
+                if( webserver.length() > 0 && ! Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals(webserver) ) {
                     Intent study_config = new Intent(getApplicationContext(), Aware_Preferences.StudyConfig.class);
-                    study_config.putExtra("study_url", new String(messageEvent.getData()));
+                    study_config.putExtra("study_url", webserver);
                     startService(study_config);
                 }
             }
@@ -61,13 +62,9 @@ public class WearProxy extends WearableListenerService {
              * Watch is asking to quit study
              */
             if( messageEvent.getPath().equals("/quit/study")) {
-
                 if(Aware.DEBUG) Log.d(WearClient.TAG, "Quitting study... Resetting watch");
-
                 Aware.reset(getApplicationContext());
-
                 if( getPackageName().equals("com.aware") ) {
-
                     Intent preferences = new Intent(getApplicationContext(), Aware_Preferences.class);
                     preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(preferences);
@@ -78,7 +75,6 @@ public class WearProxy extends WearableListenerService {
              * Watch got the HTTP GET/POST response from the phone
              */
             if( messageEvent.getPath().equals("/https/get") || messageEvent.getPath().equals("/https/post") ) {
-
                 HttpResponseFactory factory = new DefaultHttpResponseFactory();
                 HttpResponse response = factory.newHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, HttpStatus.SC_OK, null), null);
                 response.setHeader("Content-Encoding", "gzip");

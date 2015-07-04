@@ -2059,6 +2059,8 @@ public class Aware_Preferences extends Aware_Activity {
                 e.printStackTrace();
             }
         }
+        //Apply new settings
+        c.sendBroadcast(new Intent(Aware.ACTION_AWARE_REFRESH));
     }
 
     /**

@@ -220,8 +220,7 @@ public class Aware_Activity extends PreferenceActivity {
                     if( json_str.equals("[]") ) {
                         return null;
                     }
-                    JSONObject study_data = new JSONObject(json_str);
-                    return study_data;
+                    return new JSONObject(json_str);
                 } catch (ParseException e) {
                     e.printStackTrace();
                 } catch (JSONException e) {

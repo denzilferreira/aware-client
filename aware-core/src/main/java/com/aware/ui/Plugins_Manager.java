@@ -90,6 +90,8 @@ public class Plugins_Manager extends Aware_Activity {
 	private static GridView store_grid;
     private static SwipeRefreshLayout swipeToRefresh;
 
+    private Cursor installed_plugins;
+
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -137,7 +139,7 @@ public class Plugins_Manager extends Aware_Activity {
 	}
 
     private void updateGrid() {
-        Cursor installed_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, Aware_Plugins.PLUGIN_NAME + " ASC");
+        installed_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, Aware_Plugins.PLUGIN_NAME + " ASC");
         PluginAdapter pluginAdapter = new PluginAdapter(getApplicationContext(), installed_plugins, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         store_grid.setAdapter(pluginAdapter);
     }
@@ -342,8 +344,24 @@ public class Plugins_Manager extends Aware_Activity {
 	}
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        //Fixed: leak when leaving plugin manager
+        if( installed_plugins != null && ! installed_plugins.isClosed() ) installed_plugins.close();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        //Fixed: leak when leaving plugin manager
+        if( installed_plugins != null && ! installed_plugins.isClosed() ) installed_plugins.close();
+    }
+
+    @Override
     protected void onDestroy() {
     	super.onDestroy();
+        //Fixed: leak when leaving plugin manager
+        if( installed_plugins != null && ! installed_plugins.isClosed() ) installed_plugins.close();
         unregisterReceiver(plugins_listener);
     }
 

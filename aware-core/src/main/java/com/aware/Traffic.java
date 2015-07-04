@@ -163,9 +163,6 @@ public class Traffic extends Aware_Sensor {
  		
 		if( startTotalRxBytes == TrafficStats.UNSUPPORTED ) {
 			Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_NETWORK_TRAFFIC, false);
-			Intent apply = new Intent(Aware.ACTION_AWARE_REFRESH);
-			sendBroadcast(apply);
-		
 			if ( Aware.DEBUG ) Log.d(TAG, "Device doesn't support traffic statistics! Disabling sensor...");
 			stopSelf();
 		} else {

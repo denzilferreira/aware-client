@@ -308,6 +308,7 @@
                 <action android:name="ACTION_AWARE_REFRESH" />
             </intent-filter>
         </receiver>
+
         <receiver android:name="com.aware.Aware$PluginMonitor" android:exported="true" android:enabled="@bool/display_aware">
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_ADDED" />
@@ -315,6 +316,7 @@
                 <data android:scheme="package" />
             </intent-filter>
         </receiver>
+
         <receiver
             android:name="com.aware.Aware$Storage_Broadcaster"
             android:exported="true" android:enabled="@bool/display_aware">
