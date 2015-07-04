@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.text.format.DateUtils;
 import android.util.Log;
 
@@ -47,31 +48,38 @@ public class WebserviceHelper extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 
+		String WEBSERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
+		//Fixed: not using webservices
+		if( WEBSERVER.length() == 0 ) return;
+
         int batch_size = 10000; //default for phones
 		if( Aware.is_watch(getApplicationContext()) ) {
             batch_size = 100; //default for watch (we have a limit of 100KB of data packet size (Message API restrictions)
         }
 
-		String WEBSERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
 		String DEVICE_ID = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
 		boolean DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
 		String DATABASE_TABLE = intent.getStringExtra(EXTRA_TABLE);
 		String TABLES_FIELDS = intent.getStringExtra(EXTRA_FIELDS);
 		Uri CONTENT_URI = Uri.parse(intent.getStringExtra(EXTRA_CONTENT_URI));
 
-		//Fixed: not using webservices
-		if( WEBSERVER.length() == 0 ) return;
-		
+        WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        boolean wifi_only = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true");
+        boolean restore_network = false;
+
 		if( intent.getAction().equals(ACTION_AWARE_WEBSERVICE_SYNC_TABLE) ) {
 
 			if( ! Aware.is_watch(getApplicationContext()) ) { //watch doesn't care about Wi-Fi or not.
 				//Check if we should do this only over Wi-Fi
-				boolean wifi_only = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true");
 				if( wifi_only ) {
 					ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 					NetworkInfo active_network = cm.getActiveNetworkInfo();
+                    //if not connected to wifi
 					if( active_network != null && active_network.getType() != ConnectivityManager.TYPE_WIFI ) {
-						return;
+                        restore_network = true;
+                        //Enable Wi-Fi to sync, the request to sync will be issued automatically when there is WiFi internet access
+                        wifiManager.setWifiEnabled(true);
+                        return;
 					}
 				}
 			}
@@ -221,13 +229,16 @@ public class WebserviceHelper extends IntentService {
 					e.printStackTrace();
 				}
     		}
+
+            //disable the wifi since the user didn't have it on
+            if( wifi_only && restore_network ) {
+                wifiManager.setWifiEnabled(false);
+            }
 		}
 		
 		//Clear database table remotely
 		if( intent.getAction().equals(ACTION_AWARE_WEBSERVICE_CLEAR_TABLE) ) {
-
             if( Aware.DEBUG ) Log.d(Aware.TAG, "Clearing data..." + DATABASE_TABLE);
-
 			ArrayList<NameValuePair> request = new ArrayList<NameValuePair>();
     		request.add(new BasicNameValuePair(Aware_Preferences.DEVICE_ID, DEVICE_ID));
     		new Https(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);

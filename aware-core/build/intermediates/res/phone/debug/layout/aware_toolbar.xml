@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:layout_centerVertical="true"
+    android:id="@+id/aware_toolbar"
+    android:gravity="start|center_vertical"
+    android:minHeight="?attr/actionBarSize"
+    android:theme="@style/Aware.Toolbar"
+    android:popupTheme="@style/Theme.Aware" />
+<!-- From: file:/Users/denzil/AndroidStudioProjects/aware-client/aware-core/src/main/res/layout/aware_toolbar.xml -->

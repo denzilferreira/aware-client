@@ -698,6 +698,7 @@ public class Aware extends Service {
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
         global_settings.add(Aware_Preferences.WEBSERVICE_SERVER);
         global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
+
         //allow plugin's to react to MQTT
         global_settings.add(Aware_Preferences.STATUS_MQTT);
         global_settings.add(Aware_Preferences.MQTT_USERNAME);
@@ -729,10 +730,6 @@ public class Aware extends Service {
      * @return value
      */
     public static String getSetting( Context context, String key, String package_name ) {
-        if( package_name.equals("com.aware") ) {
-            return getSetting(context, key);
-        }
-
         String value = "";
         Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
         if( qry != null && qry.moveToFirst() ) {
@@ -776,8 +773,8 @@ public class Aware extends Service {
     		is_restricted_package = false;
     	}
 
-        //Only the client can set the Device ID
-        if( key.equals(Aware_Preferences.DEVICE_ID) && ! context.getPackageName().equals("com.aware") ) return;
+        //We already have a device ID, bail-out!
+        if( key.equals(Aware_Preferences.DEVICE_ID) && Aware.getSetting(context, Aware_Preferences.DEVICE_ID).length() > 0 ) return;
 
     	ContentValues setting = new ContentValues();
         setting.put(Aware_Settings.SETTING_KEY, key);

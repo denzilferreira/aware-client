@@ -27,7 +27,7 @@
                 android:maxWidth="77dp"
                 android:padding="5dp"
                 android:scaleType="fitXY"
-                android:src="@drawable/ic_launcher" />
+                android:src="@drawable/ic_launcher_aware" />
 
             <TextView
                 android:id="@+id/pkg_title"
