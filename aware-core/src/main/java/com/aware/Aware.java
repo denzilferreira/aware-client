@@ -38,9 +38,18 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.LinearLayoutCompat;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.GridLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
+import android.widget.RelativeLayout;
+import android.widget.TableLayout;
+import android.widget.TextView;
 
 import com.aware.providers.Aware_Provider;
 import com.aware.providers.Aware_Provider.Aware_Device;
@@ -275,13 +284,13 @@ public class Aware extends Service {
         Map<String,?> defaults = prefs.getAll();
         for(Map.Entry<String, ?> entry : defaults.entrySet()) {
             if( Aware.getSetting(getApplicationContext(), entry.getKey()).length() == 0 ) {
-                Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue());
+                Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue(), "com.aware"); //default AWARE settings
             }
         }
 
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0 ) {
             UUID uuid = UUID.randomUUID();
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString());
+            Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString(), "com.aware");
         }
 
         DEBUG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_FLAG).equals("true");
@@ -423,6 +432,10 @@ public class Aware extends Service {
                     }
                     alarmManager.cancel(webserviceUploadIntent);
                 } else if( frequency_webservice > 0 ) {
+
+                    //Checks if study is still active
+                    new Study_Check().execute();
+
                     //Fixed: set alarm only once if not set yet.
                     if( aware_preferences.getLong(PREF_LAST_SYNC, 0) == 0 || (aware_preferences.getLong(PREF_LAST_SYNC, 0) > 0 && System.currentTimeMillis() - aware_preferences.getLong(PREF_LAST_SYNC, 0) > frequency_webservice * 60 * 1000 ) ) {
                     	if( DEBUG ) {
@@ -434,9 +447,6 @@ public class Aware extends Service {
                     	alarmManager.setInexactRepeating(AlarmManager.RTC, aware_preferences.getLong(PREF_LAST_SYNC, 0), frequency_webservice * 60 * 1000, webserviceUploadIntent);
                     }
                 }
-
-                //Checks if study is still active
-                new Study_Check().execute();
             }
             
             if( ! Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).equals("0") ) {
@@ -597,7 +607,9 @@ public class Aware extends Service {
      * @return View for reuse (instance of LinearLayout)
      */
     public static View getContextCard( final Context context, final String package_name ) {
-    	
+
+        final int INFO_ID = 1;
+
     	if( ! isClassAvailable(context, package_name, "ContextCard") ) {
     		return null;
     	}
@@ -626,24 +638,31 @@ public class Aware extends Service {
 
             View ui = (View) m.invoke( fragment, packageContext );
 			if( ui != null ) {
-				//Check if plugin has settings. If it does, tapping the card shows the settings
-				if( isClassAvailable(context, package_name, "Settings") ) {
-					ui.setOnClickListener(new View.OnClickListener() {
-						@Override
-						public void onClick(View v) {
-							Intent open_settings = new Intent();
-							open_settings.setClassName(package_name, package_name + ".Settings");
-							open_settings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-							context.startActivity(open_settings);
-						}
-					});
-				}
-				
 				//Set card look-n-feel
 				ui.setBackgroundColor(Color.WHITE);
-				ui.setPadding(20, 20, 20, 20);
+                ui.setPadding(20, 20, 20, 20);
                 card.addView(ui);
 
+                //Check if plugin has settings. Add button if it does.
+                if( isClassAvailable(context, package_name, "Settings") ) {
+                    RelativeLayout info = new RelativeLayout(context);
+                    info.setGravity(android.view.Gravity.RIGHT);
+
+                    ImageView infoSettings = new ImageView(context);
+                    infoSettings.setBackgroundResource(R.drawable.ic_action_plugin_settings);
+                    infoSettings.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Intent open_settings = new Intent();
+                            open_settings.setClassName(package_name, package_name + ".Settings");
+                            open_settings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            context.startActivity(open_settings);
+                        }
+                    });
+
+                    info.addView(infoSettings);
+                    card.addView(info);
+                }
 				return card;
 			} else {
 				return null;
@@ -664,6 +683,16 @@ public class Aware extends Service {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static String getPluginName( Context c, String package_name ) {
+        String name = "";
+        Cursor plugin_name = c.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null, null);
+        if( plugin_name != null && plugin_name.moveToFirst() ) {
+            name = plugin_name.getString(plugin_name.getColumnIndex(Aware_Plugins.PLUGIN_NAME));
+        }
+        if( plugin_name != null && ! plugin_name.isClosed()) plugin_name.close();
+        return name;
     }
     
     /**
@@ -791,7 +820,6 @@ public class Aware extends Service {
             setting.put(Aware_Settings.SETTING_PACKAGE_NAME, context.getPackageName());
         }
 
-
         Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + (( is_global ) ? "'com.aware'" : "'" + context.getPackageName() + "'"), null, null);
         //update
         if( qry != null && qry.moveToFirst() ) {
@@ -827,10 +855,8 @@ public class Aware extends Service {
      */
     public static void setSetting( Context context, String key, Object value, String package_name ) {
 
-        if( package_name.equals("com.aware") || key.equals(Aware_Preferences.DEVICE_ID) ) {
-            setSetting(context, key, value);
-            return;
-        }
+        //We already have a device ID, bail-out!
+        if( key.equals(Aware_Preferences.DEVICE_ID) && Aware.getSetting(context, Aware_Preferences.DEVICE_ID).length() > 0 ) return;
 
         ContentValues setting = new ContentValues();
         setting.put(Aware_Settings.SETTING_KEY, key);
