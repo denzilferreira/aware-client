@@ -16,6 +16,7 @@ import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
@@ -28,6 +29,7 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RatingBar;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.aware.Aware;
@@ -104,19 +106,30 @@ public class ESM_UI extends DialogFragment {
         		case ESM.TYPE_ESM_QUICK_ANSWERS:
         			ui = inflater.inflate(R.layout.esm_quick, null);
         		break;
+				case ESM.TYPE_ESM_SCALE:
+					ui = inflater.inflate(R.layout.esm_scale, null);
+				break;
         	}
         	
         	final View layout = ui;
-        	builder.setView(layout);
+            builder.setView(layout);
         	current_dialog = builder.create();
         	sContext = current_dialog.getContext();
-        	
+
         	TextView esm_instructions = (TextView) layout.findViewById(R.id.esm_instructions);
-        	esm_instructions.setText(visible_esm.getString(visible_esm.getColumnIndex(ESM_Data.INSTRUCTIONS)));
+            if( esm_instructions != null ) {
+                esm_instructions.setText(visible_esm.getString(visible_esm.getColumnIndex(ESM_Data.INSTRUCTIONS)));
+            }
         	
         	switch(esm_type) {
         		case ESM.TYPE_ESM_TEXT:
         			final EditText feedback = (EditText) layout.findViewById(R.id.esm_feedback);
+                    feedback.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+                        }
+                    });
                 	Button cancel_text = (Button) layout.findViewById(R.id.esm_cancel);
                     cancel_text.setOnClickListener(new View.OnClickListener() {
 						@Override
@@ -130,11 +143,11 @@ public class ESM_UI extends DialogFragment {
                     submit_text.setOnClickListener(new View.OnClickListener() {
 						@Override
 						public void onClick(View v) {
-							
+
+                            if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+
 							inputManager.hideSoftInputFromWindow(feedback.getWindowToken(), 0);
-							
-							if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
-							
+
 							ContentValues rowData = new ContentValues();
 		                    rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
 							rowData.put(ESM_Data.ANSWER, feedback.getText().toString());
@@ -154,6 +167,12 @@ public class ESM_UI extends DialogFragment {
         		case ESM.TYPE_ESM_RADIO:
         			try {
 	        			final RadioGroup radioOptions = (RadioGroup) layout.findViewById(R.id.esm_radio);
+						radioOptions.setOnClickListener(new View.OnClickListener() {
+							@Override
+							public void onClick(View v) {
+								if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+							}
+						});
 	        			final JSONArray radios = new JSONArray(visible_esm.getString(visible_esm.getColumnIndex(ESM_Data.RADIOS)));
 					    
 	                    for(int i=0; i<radios.length(); i++) {
@@ -208,9 +227,9 @@ public class ESM_UI extends DialogFragment {
 	                    submit_radio.setOnClickListener(new View.OnClickListener() {
 							@Override
 							public void onClick(View v) {
-								
-								if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
-								
+
+                                if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+
 								ContentValues rowData = new ContentValues();
 			                    rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
 			                    
@@ -238,6 +257,12 @@ public class ESM_UI extends DialogFragment {
         		case ESM.TYPE_ESM_CHECKBOX:
         			try {
 	        			final LinearLayout checkboxes = (LinearLayout) layout.findViewById(R.id.esm_checkboxes);
+                        checkboxes.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+                            }
+                        });
 	        			final JSONArray checks = new JSONArray(visible_esm.getString(visible_esm.getColumnIndex(ESM_Data.CHECKBOXES)));
 					    
 	                    for(int i=0; i<checks.length(); i++) {
@@ -246,7 +271,7 @@ public class ESM_UI extends DialogFragment {
 	                        checked.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 	                            @Override
 	                            public void onCheckedChanged(final CompoundButton buttonView, boolean isChecked) {
-	                                if( isChecked ) {
+                                    if( isChecked ) {
 	                                    if( buttonView.getText().equals("Other") ) {
 	                                        checked.setOnClickListener(new View.OnClickListener() {
 	                                            @Override
@@ -304,10 +329,10 @@ public class ESM_UI extends DialogFragment {
 	                    submit_checkbox.setOnClickListener(new View.OnClickListener() {
 							@Override
 							public void onClick(View v) {
-								
-								if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
-								
-								ContentValues rowData = new ContentValues();
+
+                                if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+
+                                ContentValues rowData = new ContentValues();
 			                    rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
 			                
 			                    if( selected_options.size() > 0 ){
@@ -333,6 +358,12 @@ public class ESM_UI extends DialogFragment {
     			break;
         		case ESM.TYPE_ESM_LIKERT:
         			final RatingBar ratingBar = (RatingBar) layout.findViewById(R.id.esm_likert);
+                    ratingBar.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+                        }
+                    });
                     ratingBar.setMax(visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data.LIKERT_MAX)));
                     ratingBar.setStepSize((float) visible_esm.getDouble(visible_esm.getColumnIndex(ESM_Data.LIKERT_STEP)));
                     ratingBar.setNumStars(visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data.LIKERT_MAX)));
@@ -355,9 +386,10 @@ public class ESM_UI extends DialogFragment {
                     submit.setOnClickListener(new View.OnClickListener() {
 						@Override
 						public void onClick(View v) {
-							if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
-							
-							ContentValues rowData = new ContentValues();
+
+                            if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+
+                            ContentValues rowData = new ContentValues();
 		                    rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
 		                    rowData.put(ESM_Data.ANSWER, ratingBar.getRating());
                 	        rowData.put(ESM_Data.STATUS, ESM.STATUS_ANSWERED);
@@ -373,11 +405,86 @@ public class ESM_UI extends DialogFragment {
 						}
 					});
     			break;
+				case ESM.TYPE_ESM_SCALE:
+
+                    final double step_size = visible_esm.getDouble(visible_esm.getColumnIndex(ESM_Data.LIKERT_STEP));
+                    final TextView current_slider_value = (TextView) layout.findViewById(R.id.esm_slider_value);
+
+					final SeekBar seekBar = (SeekBar) layout.findViewById(R.id.esm_scale);
+                    seekBar.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+                        }
+                    });
+                    seekBar.setMax( (int) (visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data.LIKERT_MAX))/step_size) );
+                    seekBar.setProgress(-1);
+                    seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                        @Override
+                        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                            if( fromUser ) {
+                                current_slider_value.setText( "" + progress * step_size );
+                            }
+                        }
+
+                        @Override
+                        public void onStartTrackingTouch(SeekBar seekBar) {
+                            current_slider_value.setText( "" + seekBar.getProgress() * step_size );
+                        }
+
+                        @Override
+                        public void onStopTrackingTouch(SeekBar seekBar) {
+                            current_slider_value.setText( "" + seekBar.getProgress() * step_size );
+                        }
+                    });
+
+					TextView min_scale_label = (TextView) layout.findViewById(R.id.esm_min);
+					min_scale_label.setText(visible_esm.getString(visible_esm.getColumnIndex(ESM_Data.LIKERT_MIN_LABEL)));
+
+					TextView max_scale_label = (TextView) layout.findViewById(R.id.esm_max);
+					max_scale_label.setText(visible_esm.getString(visible_esm.getColumnIndex(ESM_Data.LIKERT_MAX_LABEL)));
+
+					Button scale_cancel = (Button) layout.findViewById(R.id.esm_cancel);
+					scale_cancel.setOnClickListener(new View.OnClickListener() {
+						@Override
+						public void onClick(View v) {
+							current_dialog.cancel();
+						}
+					});
+					Button scale_submit = (Button) layout.findViewById(R.id.esm_submit);
+					scale_submit.setText(visible_esm.getString(visible_esm.getColumnIndex(ESM_Data.SUBMIT)));
+                    scale_submit.setOnClickListener(new View.OnClickListener() {
+						@Override
+						public void onClick(View v) {
+
+                            if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+
+							ContentValues rowData = new ContentValues();
+							rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
+							rowData.put(ESM_Data.ANSWER, seekBar.getProgress() * step_size );
+							rowData.put(ESM_Data.STATUS, ESM.STATUS_ANSWERED);
+
+							sContext.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm_id, null);
+
+							Intent answer = new Intent(ESM.ACTION_AWARE_ESM_ANSWERED);
+							getActivity().sendBroadcast(answer);
+
+							if(Aware.DEBUG) Log.d(TAG,"Answer:" + rowData.toString());
+
+							current_dialog.dismiss();
+						}
+					});
+					break;
         		case ESM.TYPE_ESM_QUICK_ANSWERS:
 					try {
 						final JSONArray answers = new JSONArray(visible_esm.getString(visible_esm.getColumnIndex(ESM_Data.QUICK_ANSWERS)));
 					    final LinearLayout answersHolder = (LinearLayout) layout.findViewById(R.id.esm_answers);
-					    
+					    answersHolder.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+                            }
+                        });
 					    //If we have more than 3 possibilities, use a vertical layout for UX
                         if( answers.length() > 3 ) {
                         	answersHolder.setOrientation(LinearLayout.VERTICAL);
@@ -391,9 +498,9 @@ public class ESM_UI extends DialogFragment {
                             answer.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-                                	
+
                                 	if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
-                                	
+
                                     ContentValues rowData = new ContentValues();
                                     rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
                                     rowData.put(ESM_Data.STATUS, ESM.STATUS_ANSWERED);

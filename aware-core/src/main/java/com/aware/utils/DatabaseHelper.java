@@ -54,7 +54,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	@Override
     public void onCreate(SQLiteDatabase db) {
 		if(DEBUG) Log.w(TAG, "Database in use: " + db.getPath());
-		
 		for (int i=0; i < database_tables.length;i++) {
            db.execSQL("CREATE TABLE IF NOT EXISTS "+database_tables[i] +" ("+table_fields[i]+");");
         }
@@ -65,28 +64,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     	if(DEBUG) Log.w(TAG, "Upgrading database: " + db.getPath());
 
-		if( db.inTransaction() ) {
-			if( DEBUG ) Log.w(TAG, "Upgrade in progress...");
-			return;
+		for (int i=0; i < database_tables.length;i++) {
+			//Create a new table if doesn't exist
+			db.execSQL("CREATE TABLE IF NOT EXISTS " + database_tables[i] + " (" + table_fields[i] + ");");
+
+			//Modify existing tables if there are changes, while retaining old data. This also works for brand new tables, where nothing is changed.
+			List<String> columns = getColumns(db, database_tables[i]);
+			db.execSQL("ALTER TABLE " + database_tables[i] + " RENAME TO temp_" + database_tables[i] + ";");
+			db.execSQL("CREATE TABLE " + database_tables[i] + " (" + table_fields[i] + ");");
+			columns.retainAll(getColumns(db, database_tables[i]));
+
+			String cols = TextUtils.join(",", columns);
+
+			//restore old data back
+			db.execSQL(String.format("INSERT INTO %s (%s) SELECT %s from temp_%s;", database_tables[i], cols, cols, database_tables[i]));
+			db.execSQL("DROP TABLE temp_"+database_tables[i]+";");
 		}
-
-		db.beginTransaction();
-			for (int i=0; i < database_tables.length;i++)
-			{
-				db.execSQL("CREATE TABLE IF NOT EXISTS "+database_tables[i] +" ("+table_fields[i]+");");
-
-				List<String> columns = getColumns(db, database_tables[i]);
-				db.execSQL("ALTER TABLE "+database_tables[i] +" RENAME TO temp_"+database_tables[i]+";");
-				db.execSQL("CREATE TABLE " + database_tables[i] + " (" + table_fields[i] + ");");
-				columns.retainAll(getColumns(db, database_tables[i]));
-
-				String cols = TextUtils.join(",", columns);
-				//restore old data back
-				db.execSQL(String.format("INSERT INTO %s (%s) SELECT %s from temp_%s", database_tables[i], cols, cols, database_tables[i]));
-				db.execSQL("DROP TABLE temp_"+database_tables[i]+";");
-			}
-		db.setTransactionSuccessful();
-    	db.setVersion(newVersion);
     }
 
 	/**
@@ -153,21 +146,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     	try {
     	    SQLiteDatabase current_database = SQLiteDatabase.openDatabase(database_file.getPath(), null, SQLiteDatabase.CREATE_IF_NECESSARY);
     	    int current_version = current_database.getVersion();
-            
+
+            if( current_version == 1 ) {
+                onCreate(current_database);
+            }
             if( current_version != new_version ) {
                 current_database.beginTransaction();
-                try {
-                    if( current_version == 0 ) {
-                        onCreate(current_database);
-                    } else {
-                        onUpgrade(current_database, current_version, new_version);
-                    }
-                    current_database.setVersion(new_version);
-                    current_database.setTransactionSuccessful();
-                }finally {
-                    current_database.endTransaction();
-                }
+                onUpgrade(current_database, current_version, new_version);
+                current_database.setVersion(new_version);
+                current_database.setTransactionSuccessful();
+                current_database.endTransaction();
             }
+
             onOpen(current_database);
             database = current_database;
             return database;

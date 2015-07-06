@@ -8,6 +8,6 @@ public final class BuildConfig {
   public static final String APPLICATION_ID = "com.aware";
   public static final String BUILD_TYPE = "debug";
   public static final String FLAVOR = "phone";
-  public static final int VERSION_CODE = 379;
-  public static final String VERSION_NAME = "3.4.8";
+  public static final int VERSION_CODE = 380;
+  public static final String VERSION_NAME = "3.4.9";
 }

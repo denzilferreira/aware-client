@@ -133,6 +133,12 @@ public class ESM extends Aware_Sensor {
      * Example: [{'esm':{'esm_type':5,'esm_title':'ESM Quick Answer','esm_instructions':'One touch answer','esm_quick_answers':['Yes','No'],'esm_expiration_threashold':60,'esm_trigger':'esm trigger example'}}]
      */
     public static final int TYPE_ESM_QUICK_ANSWERS = 5;
+
+    /**
+     * ESM Dialog with a discrete likert scale
+     * Example: [{'esm':{'esm_type':6,'esm_title':'ESM Scale','esm_instructions':'User scaled value between 0 and maximum at X increments','esm_likert_max':5,'esm_likert_max_label':'5','esm_likert_min_label':'0','esm_likert_step':1,'esm_submit':'OK','esm_expiration_threashold':50,'esm_trigger':'esm trigger example'}}]
+     */
+    public static final int TYPE_ESM_SCALE = 6;
     
     /**
      * Required String extra for displaying an ESM. It should contain the JSON string that defines the ESM dialog.
@@ -142,6 +148,7 @@ public class ESM extends Aware_Sensor {
      * Checkbox: [{'esm':{'esm_type':3,'esm_title':'ESM Checkbox','esm_instructions':'The user can choose multiple options','esm_checkboxes':['One','Two','Other'],'esm_submit':'Next','esm_expiration_threashold':40,'esm_trigger':'esm trigger example'}}]
      * Likert: [{'esm':{'esm_type':4,'esm_title':'ESM Likert','esm_instructions':'User rating 1 to 5 or 7 at 1 step increments','esm_likert_max':5,'esm_likert_max_label':'Great','esm_likert_min_label':'Bad','esm_likert_step':1,'esm_submit':'OK','esm_expiration_threashold':50,'esm_trigger':'esm trigger example'}}]
      * Quick answer: [{'esm':{'esm_type':5,'esm_title':'ESM Quick Answer','esm_instructions':'One touch answer','esm_quick_answers':['Yes','No'],'esm_expiration_threashold':60,'esm_trigger':'esm trigger example'}}]
+     * Scale: [{'esm':{'esm_type':6,'esm_title':'ESM Scale','esm_instructions':'User scaled value between 0 and maximum at X increments','esm_likert_max':5,'esm_likert_max_label':'5','esm_likert_min_label':'0','esm_likert_step':1,'esm_submit':'OK','esm_expiration_threashold':50,'esm_trigger':'esm trigger example'}}]
      * </p>
      * Furthermore, you can chain several mixed ESM together as a JSON array: [{esm:{}},{esm:{}},...] 
      */

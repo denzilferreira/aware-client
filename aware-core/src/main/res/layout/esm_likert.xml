@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/esm_instructions"
         android:layout_centerHorizontal="true"
-        android:fitsSystemWindows="true" />
+    />
 
     <LinearLayout
         android:id="@+id/LinearLayout1"

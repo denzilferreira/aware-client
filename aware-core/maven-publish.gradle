@@ -1,7 +1,7 @@
 apply plugin: 'maven'
 apply plugin: 'signing'
 
-version = "3.4.8"
+version = "3.4.9"
 group = "com.awareframework"
 
 configurations {

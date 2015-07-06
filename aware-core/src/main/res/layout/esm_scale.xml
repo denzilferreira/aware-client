@@ -12,19 +12,22 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true" />
 
-    <RatingBar
-        android:id="@+id/esm_likert"
-        android:layout_width="wrap_content"
+    <SeekBar
+        android:id="@+id/esm_scale"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/esm_instructions"
         android:layout_centerHorizontal="true"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:max="10"
     />
 
     <LinearLayout
         android:id="@+id/LinearLayout1"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/esm_likert" >
+        android:layout_below="@+id/esm_scale" >
 
         <TextView
             android:id="@+id/esm_min"
@@ -32,6 +35,14 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="left"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+
+        <TextView
+            android:id="@+id/esm_slider_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
         <TextView
@@ -64,4 +75,4 @@
             android:text="Button" />
     </LinearLayout>
 
-</RelativeLayout><!-- From: file:/Users/denzil/AndroidStudioProjects/aware-client/aware-core/src/main/res/layout/esm_likert.xml -->
+</RelativeLayout>
