@@ -178,7 +178,7 @@ public class ESM_UI extends DialogFragment {
 	                    for(int i=0; i<radios.length(); i++) {
 	                        final RadioButton radioOption = new RadioButton(getActivity());
 	                        radioOption.setId(i);
-	                        radioOption.setText(radios.getString(i));
+	                        radioOption.setText(" " + radios.getString(i));
 	                        radioOptions.addView(radioOption);
 	                        
 	                        if( radios.getString(i).equals("Other") ) {
@@ -189,7 +189,7 @@ public class ESM_UI extends DialogFragment {
 	                                	editOther.setTitle("Can you be more specific, please?");
 	                                	editOther.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
 	                                	editOther.getWindow().setGravity(Gravity.TOP);
-                                        editOther.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+                                        editOther.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 	                                	
 	                                	LinearLayout editor = new LinearLayout(getActivity());
 	                                    editor.setOrientation(LinearLayout.VERTICAL);
@@ -267,7 +267,7 @@ public class ESM_UI extends DialogFragment {
 					    
 	                    for(int i=0; i<checks.length(); i++) {
 	                        final CheckBox checked = new CheckBox(getActivity());
-	                        checked.setText(checks.getString(i));
+	                        checked.setText(" " + checks.getString(i));
 	                        checked.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 	                            @Override
 	                            public void onCheckedChanged(final CompoundButton buttonView, boolean isChecked) {
@@ -280,7 +280,7 @@ public class ESM_UI extends DialogFragment {
 	        	                                	editOther.setTitle("Can you be more specific, please?");
 	        	                                	editOther.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
 	        	                                	editOther.getWindow().setGravity(Gravity.TOP);
-	        	                                	editOther.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+	        	                                	editOther.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 	        	                                	
 	                                            	LinearLayout editor = new LinearLayout(getActivity());
 	                                                editor.setOrientation(LinearLayout.VERTICAL);
@@ -492,7 +492,7 @@ public class ESM_UI extends DialogFragment {
                         
                         for(int i=0; i<answers.length(); i++) {
                             final Button answer = new Button(getActivity());
-                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT, 1.0f );
+                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, 1.0f );
                             answer.setLayoutParams(params);
                             answer.setText(answers.getString(i));
                             answer.setOnClickListener(new View.OnClickListener() {
