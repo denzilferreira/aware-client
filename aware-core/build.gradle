@@ -8,12 +8,6 @@ configurations {
 }
 
 android {
-    signingConfigs {
-        debug {
-        }
-        release{
-        }
-    }
     compileSdkVersion 22
     buildToolsVersion "22.0.1"
     defaultPublishConfig "phoneRelease"
@@ -21,10 +15,9 @@ android {
     defaultConfig {
         //Comment applicationId out for library
         applicationId "com.aware"
-        versionCode 380
-        versionName "3.4.9"
+        versionCode 381
+        versionName "3.5.0"
         targetSdkVersion 22
-        signingConfig signingConfigs.debug
     }
     buildTypes {
         release {

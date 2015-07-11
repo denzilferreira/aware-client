@@ -608,9 +608,7 @@ public class Aware extends Service {
      */
     public static View getContextCard( final Context context, final String package_name ) {
 
-        final int INFO_ID = 1;
-
-    	if( ! isClassAvailable(context, package_name, "ContextCard") ) {
+        if( ! isClassAvailable(context, package_name, "ContextCard") ) {
     		return null;
     	}
     	
@@ -646,10 +644,12 @@ public class Aware extends Service {
                 //Check if plugin has settings. Add button if it does.
                 if( isClassAvailable(context, package_name, "Settings") ) {
                     RelativeLayout info = new RelativeLayout(context);
-                    info.setGravity(android.view.Gravity.RIGHT);
+                    info.setGravity(android.view.Gravity.RIGHT | android.view.Gravity.BOTTOM);
 
                     ImageView infoSettings = new ImageView(context);
                     infoSettings.setBackgroundResource(R.drawable.ic_action_plugin_settings);
+                    infoSettings.setAdjustViewBounds(true);
+                    infoSettings.setMaxWidth(10);
                     infoSettings.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {

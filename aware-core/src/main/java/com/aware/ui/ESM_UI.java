@@ -1,10 +1,8 @@
 
 package com.aware.ui;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.KeyguardManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -16,7 +14,6 @@ import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
@@ -29,6 +26,7 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RatingBar;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -62,6 +60,8 @@ public class ESM_UI extends DialogFragment {
 	private static int esm_id = 0;
 	private static int esm_type = 0;
 	private static int expires_seconds = 0;
+
+    private static int selected_scale_progress = -1;
 	
 	//Checkbox ESM UI to store selected items
 	private static ArrayList<String> selected_options = new ArrayList<String>();
@@ -85,7 +85,7 @@ public class ESM_UI extends DialogFragment {
         	getActivity().getContentResolver().update(ESM_Data.CONTENT_URI, update_state, ESM_Data._ID +"="+ esm_id, null);
         	
         	esm_type = visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data.TYPE));
-        	expires_seconds = visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data.EXPIRATION_THREASHOLD));
+        	expires_seconds = visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data.EXPIRATION_THRESHOLD));
         	
         	builder.setTitle(visible_esm.getString(visible_esm.getColumnIndex(ESM_Data.TITLE)));
         	
@@ -181,12 +181,12 @@ public class ESM_UI extends DialogFragment {
 	                        radioOption.setText(" " + radios.getString(i));
 	                        radioOptions.addView(radioOption);
 	                        
-	                        if( radios.getString(i).equals("Other") ) {
+	                        if( radios.getString(i).equals( getResources().getString(R.string.aware_esm_other) ) ) {
 	                            radioOption.setOnClickListener(new View.OnClickListener() {
 	                                @Override
 	                                public void onClick(View v) {
 	                                    final Dialog editOther = new Dialog(getActivity());
-	                                	editOther.setTitle("Can you be more specific, please?");
+	                                	editOther.setTitle(getResources().getString(R.string.aware_esm_other_follow));
 	                                	editOther.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
 	                                	editOther.getWindow().setGravity(Gravity.TOP);
                                         editOther.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
@@ -272,12 +272,12 @@ public class ESM_UI extends DialogFragment {
 	                            @Override
 	                            public void onCheckedChanged(final CompoundButton buttonView, boolean isChecked) {
                                     if( isChecked ) {
-	                                    if( buttonView.getText().equals("Other") ) {
+	                                    if( buttonView.getText().equals(getResources().getString(R.string.aware_esm_other)) ) {
 	                                        checked.setOnClickListener(new View.OnClickListener() {
 	                                            @Override
 	                                            public void onClick(View v) {
 	                                            	final Dialog editOther = new Dialog(getActivity());
-	        	                                	editOther.setTitle("Can you be more specific, please?");
+	        	                                	editOther.setTitle(getResources().getString(R.string.aware_esm_other_follow));
 	        	                                	editOther.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
 	        	                                	editOther.getWindow().setGravity(Gravity.TOP);
 	        	                                	editOther.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
@@ -407,8 +407,15 @@ public class ESM_UI extends DialogFragment {
     			break;
 				case ESM.TYPE_ESM_SCALE:
 
-                    final double step_size = visible_esm.getDouble(visible_esm.getColumnIndex(ESM_Data.LIKERT_STEP));
+                    final int min_value = visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data.SCALE_MIN));
+                    final int max_value = visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data.SCALE_MAX));
+
+                    selected_scale_progress = visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data.SCALE_START));
+
+                    final int step_size = visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data.SCALE_STEP));
+
                     final TextView current_slider_value = (TextView) layout.findViewById(R.id.esm_slider_value);
+					current_slider_value.setText( "" + selected_scale_progress);
 
 					final SeekBar seekBar = (SeekBar) layout.findViewById(R.id.esm_scale);
                     seekBar.setOnClickListener(new View.OnClickListener() {
@@ -417,32 +424,57 @@ public class ESM_UI extends DialogFragment {
                             if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
                         }
                     });
-                    seekBar.setMax( (int) (visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data.LIKERT_MAX))/step_size) );
-                    seekBar.setProgress(-1);
+
+                    seekBar.incrementProgressBy(step_size);
+
+                    if( min_value >= 0 ) {
+                        seekBar.setProgress( selected_scale_progress );
+                        seekBar.setMax( max_value );
+                    } else {
+                        seekBar.setMax( max_value*2 );
+                        seekBar.setProgress( max_value ); //move handle to center value
+                    }
+                    current_slider_value.setText( "" + selected_scale_progress );
+
                     seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                         @Override
                         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                             if( fromUser ) {
-                                current_slider_value.setText( "" + progress * step_size );
+                                if( min_value < 0 ) {
+                                    progress -= max_value;
+                                }
+
+                                progress /= step_size;
+                                progress *= step_size;
+
+                                selected_scale_progress = progress;
+
+                                if( selected_scale_progress < min_value ) {
+                                    selected_scale_progress = min_value;
+                                } else if( selected_scale_progress > max_value ) {
+                                    selected_scale_progress = max_value;
+                                }
+
+                                current_slider_value.setText( "" + selected_scale_progress );
                             }
                         }
 
                         @Override
                         public void onStartTrackingTouch(SeekBar seekBar) {
-                            current_slider_value.setText( "" + seekBar.getProgress() * step_size );
+                            current_slider_value.setText( "" + selected_scale_progress );
                         }
 
                         @Override
                         public void onStopTrackingTouch(SeekBar seekBar) {
-                            current_slider_value.setText( "" + seekBar.getProgress() * step_size );
+                            current_slider_value.setText( "" + selected_scale_progress );
                         }
                     });
 
 					TextView min_scale_label = (TextView) layout.findViewById(R.id.esm_min);
-					min_scale_label.setText(visible_esm.getString(visible_esm.getColumnIndex(ESM_Data.LIKERT_MIN_LABEL)));
+					min_scale_label.setText(visible_esm.getString(visible_esm.getColumnIndex(ESM_Data.SCALE_MIN_LABEL)));
 
 					TextView max_scale_label = (TextView) layout.findViewById(R.id.esm_max);
-					max_scale_label.setText(visible_esm.getString(visible_esm.getColumnIndex(ESM_Data.LIKERT_MAX_LABEL)));
+					max_scale_label.setText(visible_esm.getString(visible_esm.getColumnIndex(ESM_Data.SCALE_MAX_LABEL)));
 
 					Button scale_cancel = (Button) layout.findViewById(R.id.esm_cancel);
 					scale_cancel.setOnClickListener(new View.OnClickListener() {
@@ -461,7 +493,7 @@ public class ESM_UI extends DialogFragment {
 
 							ContentValues rowData = new ContentValues();
 							rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
-							rowData.put(ESM_Data.ANSWER, seekBar.getProgress() * step_size );
+							rowData.put(ESM_Data.ANSWER, selected_scale_progress );
 							rowData.put(ESM_Data.STATUS, ESM.STATUS_ANSWERED);
 
 							sContext.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm_id, null);
@@ -534,7 +566,9 @@ public class ESM_UI extends DialogFragment {
         
         //Fixed: doesn't dismiss the dialog if touched outside or ghost touches
         current_dialog.setCanceledOnTouchOutside(false);
-        
+
+        //Make the dialog appear on top of already existing activities
+        current_dialog.getWindow().setType(LayoutParams.TYPE_SYSTEM_ALERT);
         return current_dialog;
 	}
 

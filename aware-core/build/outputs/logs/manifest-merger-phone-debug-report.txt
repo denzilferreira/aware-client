@@ -67,11 +67,11 @@ uses-permission#android.permission.KILL_BACKGROUND_PROCESSES
 ADDED from AndroidManifest.xml:17:5
 	android:name
 		ADDED from AndroidManifest.xml:17:22
-uses-permission#android.permission.VIBRATE
+uses-permission#android.permission.SYSTEM_ALERT_WINDOW
 ADDED from AndroidManifest.xml:18:5
 	android:name
 		ADDED from AndroidManifest.xml:18:22
-uses-permission#android.permission.SYSTEM_ALERT_WINDOW
+uses-permission#android.permission.VIBRATE
 ADDED from AndroidManifest.xml:19:5
 	android:name
 		ADDED from AndroidManifest.xml:19:22

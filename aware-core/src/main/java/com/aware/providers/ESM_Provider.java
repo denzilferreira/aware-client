@@ -15,10 +15,11 @@ import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
-import com.aware.BuildConfig;
+import com.aware.ESM;
 import com.aware.utils.DatabaseHelper;
 
 import java.util.HashMap;
+import java.util.Hashtable;
 
 /**
  * ESM Content Provider Allows you to access all the recorded readings on the
@@ -29,7 +30,7 @@ import java.util.HashMap;
  */
 public class ESM_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 2;
+	public static final int DATABASE_VERSION = 5;
 
 	/**
 	 * Authority of content provider
@@ -39,6 +40,9 @@ public class ESM_Provider extends ContentProvider {
 	// ContentProvider query paths
 	private static final int ESMS_QUEUE = 1;
 	private static final int ESMS_QUEUE_ID = 2;
+
+    //Used to notify AWARE of an update on column names (optional)
+    private HashMap<String, String> renamed_columns = new HashMap<>();
 
 	/**
 	 * ESM questions
@@ -69,32 +73,49 @@ public class ESM_Provider extends ContentProvider {
 		public static final String LIKERT_MIN_LABEL = "esm_likert_min_label";
 		public static final String LIKERT_STEP = "esm_likert_step";
 		public static final String QUICK_ANSWERS = "esm_quick_answers";
-		public static final String EXPIRATION_THREASHOLD = "esm_expiration_threashold";
+		public static final String EXPIRATION_THRESHOLD = "esm_expiration_threshold";
 		public static final String STATUS = "esm_status";
 		public static final String ANSWER_TIMESTAMP = "double_esm_user_answer_timestamp";
 		public static final String ANSWER = "esm_user_answer";
 		public static final String TRIGGER = "esm_trigger";
+		public static final String SCALE_MIN = "esm_scale_min";
+		public static final String SCALE_MAX = "esm_scale_max";
+        public static final String SCALE_START = "esm_scale_start";
+        public static final String SCALE_MAX_LABEL = "esm_scale_max_label";
+		public static final String SCALE_MIN_LABEL = "esm_scale_min_label";
+		public static final String SCALE_STEP = "esm_scale_step";
 	}
 
 	public static String DATABASE_NAME = Environment
 			.getExternalStorageDirectory() + "/AWARE/" + "esms.db";
 	public static final String[] DATABASE_TABLES = { "esms" };
-	public static final String[] TABLES_FIELDS = { ESM_Data._ID
-			+ " integer primary key autoincrement," + ESM_Data.TIMESTAMP
-			+ " real default 0," + ESM_Data.DEVICE_ID + " text default '',"
-			+ ESM_Data.TYPE + " integer default 0," + ESM_Data.TITLE
-			+ " text default ''," + ESM_Data.SUBMIT + " text default '',"
-			+ ESM_Data.INSTRUCTIONS + " text default ''," + ESM_Data.RADIOS
-			+ " text default ''," + ESM_Data.CHECKBOXES + " text default '',"
+	public static final String[] TABLES_FIELDS = {
+            ESM_Data._ID + " integer primary key autoincrement,"
+            + ESM_Data.TIMESTAMP + " real default 0,"
+            + ESM_Data.DEVICE_ID + " text default '',"
+			+ ESM_Data.TYPE + " integer default 0,"
+            + ESM_Data.TITLE + " text default '',"
+            + ESM_Data.SUBMIT + " text default '',"
+			+ ESM_Data.INSTRUCTIONS + " text default '',"
+            + ESM_Data.RADIOS + " text default '',"
+            + ESM_Data.CHECKBOXES + " text default '',"
 			+ ESM_Data.LIKERT_MAX + " integer default 0,"
 			+ ESM_Data.LIKERT_MAX_LABEL + " text default '',"
 			+ ESM_Data.LIKERT_MIN_LABEL + " text default '',"
 			+ ESM_Data.LIKERT_STEP + " real default 0,"
 			+ ESM_Data.QUICK_ANSWERS + " text default '',"
-			+ ESM_Data.EXPIRATION_THREASHOLD + " integer default 0,"
+			+ ESM_Data.EXPIRATION_THRESHOLD + " integer default 0,"
 			+ ESM_Data.STATUS + " integer default 0,"
-			+ ESM_Data.ANSWER_TIMESTAMP + " real default 0," + ESM_Data.ANSWER
-			+ " text default ''," + ESM_Data.TRIGGER + " text default ''" };
+			+ ESM_Data.ANSWER_TIMESTAMP + " real default 0,"
+            + ESM_Data.ANSWER + " text default '',"
+            + ESM_Data.TRIGGER + " text default '',"
+            + ESM_Data.SCALE_MIN + " integer default 0,"
+            + ESM_Data.SCALE_MAX + " integer default 0,"
+            + ESM_Data.SCALE_START + " integer default 0,"
+            + ESM_Data.SCALE_MAX_LABEL + " text default '',"
+            + ESM_Data.SCALE_MIN_LABEL + " text default '',"
+            + ESM_Data.SCALE_STEP + " integer default 0"
+    };
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> questionsMap = null;
@@ -104,6 +125,9 @@ public class ESM_Provider extends ContentProvider {
 	private boolean initializeDB() {
         if (databaseHelper == null) {
             databaseHelper = new DatabaseHelper( getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS );
+            //Renamed columns
+            renamed_columns.put("esm_expiration_threashold", "esm_expiration_threshold");
+            databaseHelper.setRenamedColumns(renamed_columns);
         }
         if( databaseHelper != null && ( database == null || ! database.isOpen() )) {
             database = databaseHelper.getWritableDatabase();
@@ -193,7 +217,7 @@ public class ESM_Provider extends ContentProvider {
         sUriMatcher.addURI(ESM_Provider.AUTHORITY, DATABASE_TABLES[0] + "/#",
                 ESMS_QUEUE_ID);
 
-        questionsMap = new HashMap<String, String>();
+        questionsMap = new HashMap<>();
         questionsMap.put(ESM_Data._ID, ESM_Data._ID);
         questionsMap.put(ESM_Data.TIMESTAMP, ESM_Data.TIMESTAMP);
         questionsMap.put(ESM_Data.DEVICE_ID, ESM_Data.DEVICE_ID);
@@ -208,13 +232,18 @@ public class ESM_Provider extends ContentProvider {
         questionsMap.put(ESM_Data.LIKERT_MIN_LABEL, ESM_Data.LIKERT_MIN_LABEL);
         questionsMap.put(ESM_Data.LIKERT_STEP, ESM_Data.LIKERT_STEP);
         questionsMap.put(ESM_Data.QUICK_ANSWERS, ESM_Data.QUICK_ANSWERS);
-        questionsMap.put(ESM_Data.EXPIRATION_THREASHOLD,
-                ESM_Data.EXPIRATION_THREASHOLD);
+        questionsMap.put(ESM_Data.EXPIRATION_THRESHOLD, ESM_Data.EXPIRATION_THRESHOLD);
         questionsMap.put(ESM_Data.STATUS, ESM_Data.STATUS);
         questionsMap.put(ESM_Data.ANSWER_TIMESTAMP, ESM_Data.ANSWER_TIMESTAMP);
         questionsMap.put(ESM_Data.ANSWER, ESM_Data.ANSWER);
         questionsMap.put(ESM_Data.TRIGGER, ESM_Data.TRIGGER);
-	    
+        questionsMap.put(ESM_Data.SCALE_MIN, ESM_Data.SCALE_MIN);
+        questionsMap.put(ESM_Data.SCALE_MAX, ESM_Data.SCALE_MAX);
+        questionsMap.put(ESM_Data.SCALE_START, ESM_Data.SCALE_START);
+        questionsMap.put(ESM_Data.SCALE_MAX_LABEL, ESM_Data.SCALE_MAX_LABEL);
+        questionsMap.put(ESM_Data.SCALE_MIN_LABEL, ESM_Data.SCALE_MIN_LABEL);
+        questionsMap.put(ESM_Data.SCALE_STEP, ESM_Data.SCALE_STEP);
+
 		return true;
 	}
 

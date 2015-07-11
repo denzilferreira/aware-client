@@ -4,7 +4,11 @@ package com.aware.utils;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Set;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -35,12 +39,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	private final String[] database_tables;
 	private final String[] table_fields;
 	private final int new_version;
+    private HashMap<String, String> renamed_columns = new HashMap<>();
 	
 	private SQLiteDatabase database = null;
 	
 	public DatabaseHelper(Context context, String database_name, CursorFactory cursor_factory, int database_version, String[] database_tables, String[] table_fields) {
         super(context, database_name, cursor_factory, database_version);
-        
+
         this.database_name = database_name;
         this.database_tables = database_tables;
         this.table_fields = table_fields;
@@ -49,6 +54,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         //Create the folder where all the databases will be stored on external storage
         File folders = new File(Environment.getExternalStorageDirectory()+"/AWARE/");
         folders.mkdirs();
+    }
+
+    public void setRenamedColumns( HashMap<String, String> renamed ) {
+        renamed_columns = renamed;
     }
 	
 	@Override
@@ -64,6 +73,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     	if(DEBUG) Log.w(TAG, "Upgrading database: " + db.getPath());
 
+		db.beginTransaction();
 		for (int i=0; i < database_tables.length;i++) {
 			//Create a new table if doesn't exist
 			db.execSQL("CREATE TABLE IF NOT EXISTS " + database_tables[i] + " (" + table_fields[i] + ");");
@@ -75,11 +85,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			columns.retainAll(getColumns(db, database_tables[i]));
 
 			String cols = TextUtils.join(",", columns);
+            String new_cols = cols;
 
-			//restore old data back
-			db.execSQL(String.format("INSERT INTO %s (%s) SELECT %s from temp_%s;", database_tables[i], cols, cols, database_tables[i]));
-			db.execSQL("DROP TABLE temp_"+database_tables[i]+";");
+            if( renamed_columns.size() > 0 ) {
+                for( String key : renamed_columns.keySet() ) {
+                    if( DEBUG ) Log.d(TAG, "Renaming: " + key + " -> " + renamed_columns.get(key));
+                    new_cols = new_cols.replace( key, renamed_columns.get(key) );
+                }
+            }
+
+            //restore old data back
+            if( DEBUG ) Log.d(TAG, String.format("INSERT INTO %s (%s) SELECT %s from temp_%s;", database_tables[i], new_cols, cols, database_tables[i]));
+
+            db.execSQL(String.format("INSERT INTO %s (%s) SELECT %s from temp_%s;", database_tables[i], new_cols, cols, database_tables[i]));
+            db.execSQL("DROP TABLE temp_" + database_tables[i] + ";");
 		}
+		db.setVersion(new_version);
+		db.setTransactionSuccessful();
+		db.endTransaction();
     }
 
 	/**
@@ -151,13 +174,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 onCreate(current_database);
             }
             if( current_version != new_version ) {
-                current_database.beginTransaction();
                 onUpgrade(current_database, current_version, new_version);
-                current_database.setVersion(new_version);
-                current_database.setTransactionSuccessful();
-                current_database.endTransaction();
             }
-
             onOpen(current_database);
             database = current_database;
             return database;

@@ -104,27 +104,27 @@ public class ESM extends Aware_Sensor {
     
     /**
      * ESM Dialog with free text 
-     * Example: [{'esm':{'esm_type':1,'esm_title':'ESM Freetext','esm_instructions':'The user can answer an open ended question.','esm_submit':'Next','esm_expiration_threashold':20,'esm_trigger':'esm trigger example'}}]
+     * Example: [{'esm':{'esm_type':1,'esm_title':'ESM Freetext','esm_instructions':'The user can answer an open ended question.','esm_submit':'Next','esm_expiration_threshold':20,'esm_trigger':'esm trigger example'}}]
      */
     public static final int TYPE_ESM_TEXT = 1;
     
     /**
      * ESM Dialog with radio buttons 
      * Note: 'Other' will allow free text input from the user
-     * Example: [{'esm':{'esm_type':2,'esm_title':'ESM Radio','esm_instructions':'The user can only choose one option','esm_radios':['Option one','Option two','Other'],'esm_submit':'Next','esm_expiration_threashold':30,'esm_trigger':'esm trigger example'}}]
+     * Example: [{'esm':{'esm_type':2,'esm_title':'ESM Radio','esm_instructions':'The user can only choose one option','esm_radios':['Option one','Option two','Other'],'esm_submit':'Next','esm_expiration_threshold':30,'esm_trigger':'esm trigger example'}}]
      */
     public static final int TYPE_ESM_RADIO = 2;
     
     /**
      * ESM Dialog with checkboxes 
      * Note: 'Other' will allow free text input from the user
-     * Example: [{'esm':{'esm_type':3,'esm_title':'ESM Checkbox','esm_instructions':'The user can choose multiple options','esm_checkboxes':['One','Two','Other'],'esm_submit':'Next','esm_expiration_threashold':40,'esm_trigger':'esm trigger example'}}]
+     * Example: [{'esm':{'esm_type':3,'esm_title':'ESM Checkbox','esm_instructions':'The user can choose multiple options','esm_checkboxes':['One','Two','Other'],'esm_submit':'Next','esm_expiration_threshold':40,'esm_trigger':'esm trigger example'}}]
      */
     public static final int TYPE_ESM_CHECKBOX = 3;
     
     /**
      * ESM Dialog with likert scale
-     * Example: [{'esm':{'esm_type':4,'esm_title':'ESM Likert','esm_instructions':'User rating 1 to 5 or 7 at 1 step increments','esm_likert_max':5,'esm_likert_max_label':'Great','esm_likert_min_label':'Bad','esm_likert_step':1,'esm_submit':'OK','esm_expiration_threashold':50,'esm_trigger':'esm trigger example'}}]
+     * Example: [{'esm':{'esm_type':4,'esm_title':'ESM Likert','esm_instructions':'User rating 1 to 5 or 7 at 1 step increments','esm_likert_max':5,'esm_likert_max_label':'Great','esm_likert_min_label':'Bad','esm_likert_step':1,'esm_submit':'OK','esm_expiration_threshold':50,'esm_trigger':'esm trigger example'}}]
      */
     public static final int TYPE_ESM_LIKERT = 4;
     
@@ -136,19 +136,19 @@ public class ESM extends Aware_Sensor {
 
     /**
      * ESM Dialog with a discrete likert scale
-     * Example: [{'esm':{'esm_type':6,'esm_title':'ESM Scale','esm_instructions':'User scaled value between 0 and maximum at X increments','esm_likert_max':5,'esm_likert_max_label':'5','esm_likert_min_label':'0','esm_likert_step':1,'esm_submit':'OK','esm_expiration_threashold':50,'esm_trigger':'esm trigger example'}}]
+     * Example: [{'esm':{'esm_type':6,'esm_title':'ESM Scale','esm_instructions':'User scaled value between minimum and maximum at X increments','esm_scale_min':0,'esm_scale_max':5,'esm_scale_start':3,'esm_scale_max_label':'5','esm_scale_min_label':'0','esm_scale_step':1,'esm_submit':'OK','esm_expiration_threshold':50,'esm_trigger':'esm trigger example'}}]
      */
     public static final int TYPE_ESM_SCALE = 6;
     
     /**
      * Required String extra for displaying an ESM. It should contain the JSON string that defines the ESM dialog.
      * Examples:<p>
-     * Free text: [{'esm':{'esm_type':1,'esm_title':'ESM Freetext','esm_instructions':'The user can answer an open ended question.','esm_submit':'Next','esm_expiration_threashold':20,'esm_trigger':'esm trigger example'}}]
-     * Radio: [{'esm':{'esm_type':2,'esm_title':'ESM Radio','esm_instructions':'The user can only choose one option','esm_radios':['Option one','Option two','Other'],'esm_submit':'Next','esm_expiration_threashold':30,'esm_trigger':'esm trigger example'}}]
-     * Checkbox: [{'esm':{'esm_type':3,'esm_title':'ESM Checkbox','esm_instructions':'The user can choose multiple options','esm_checkboxes':['One','Two','Other'],'esm_submit':'Next','esm_expiration_threashold':40,'esm_trigger':'esm trigger example'}}]
-     * Likert: [{'esm':{'esm_type':4,'esm_title':'ESM Likert','esm_instructions':'User rating 1 to 5 or 7 at 1 step increments','esm_likert_max':5,'esm_likert_max_label':'Great','esm_likert_min_label':'Bad','esm_likert_step':1,'esm_submit':'OK','esm_expiration_threashold':50,'esm_trigger':'esm trigger example'}}]
-     * Quick answer: [{'esm':{'esm_type':5,'esm_title':'ESM Quick Answer','esm_instructions':'One touch answer','esm_quick_answers':['Yes','No'],'esm_expiration_threashold':60,'esm_trigger':'esm trigger example'}}]
-     * Scale: [{'esm':{'esm_type':6,'esm_title':'ESM Scale','esm_instructions':'User scaled value between 0 and maximum at X increments','esm_likert_max':5,'esm_likert_max_label':'5','esm_likert_min_label':'0','esm_likert_step':1,'esm_submit':'OK','esm_expiration_threashold':50,'esm_trigger':'esm trigger example'}}]
+     * Free text: [{'esm':{'esm_type':1,'esm_title':'ESM Freetext','esm_instructions':'The user can answer an open ended question.','esm_submit':'Next','esm_expiration_threshold':20,'esm_trigger':'esm trigger example'}}]
+     * Radio: [{'esm':{'esm_type':2,'esm_title':'ESM Radio','esm_instructions':'The user can only choose one option','esm_radios':['Option one','Option two','Other'],'esm_submit':'Next','esm_expiration_threshold':30,'esm_trigger':'esm trigger example'}}]
+     * Checkbox: [{'esm':{'esm_type':3,'esm_title':'ESM Checkbox','esm_instructions':'The user can choose multiple options','esm_checkboxes':['One','Two','Other'],'esm_submit':'Next','esm_expiration_threshold':40,'esm_trigger':'esm trigger example'}}]
+     * Likert: [{'esm':{'esm_type':4,'esm_title':'ESM Likert','esm_instructions':'User rating 1 to 5 or 7 at 1 step increments','esm_likert_max':5,'esm_likert_max_label':'Great','esm_likert_min_label':'Bad','esm_likert_step':1,'esm_submit':'OK','esm_expiration_threshold':50,'esm_trigger':'esm trigger example'}}]
+     * Quick answer: [{'esm':{'esm_type':5,'esm_title':'ESM Quick Answer','esm_instructions':'One touch answer','esm_quick_answers':['Yes','No'],'esm_expiration_threshold':60,'esm_trigger':'esm trigger example'}}]
+     * Scale: [{'esm':{'esm_type':6,'esm_title':'ESM Scale','esm_instructions':'User scaled value between minimum and maximum at X increments','esm_scale_min':0,'esm_scale_max':5,'esm_scale_start':3,'esm_scale_max_label':'5','esm_scale_min_label':'0','esm_scale_step':1,'esm_submit':'OK','esm_expiration_threshold':50,'esm_trigger':'esm trigger example'}}]
      * </p>
      * Furthermore, you can chain several mixed ESM together as a JSON array: [{esm:{}},{esm:{}},...] 
      */
@@ -281,15 +281,20 @@ public class ESM extends Aware_Sensor {
                         rowData.put(ESM_Data.LIKERT_MIN_LABEL, esm.optString(ESM_Data.LIKERT_MIN_LABEL));
                         rowData.put(ESM_Data.LIKERT_STEP, esm.optDouble(ESM_Data.LIKERT_STEP,0));
                         rowData.put(ESM_Data.QUICK_ANSWERS, esm.optString(ESM_Data.QUICK_ANSWERS));
-                        rowData.put(ESM_Data.EXPIRATION_THREASHOLD, esm.optInt(ESM_Data.EXPIRATION_THREASHOLD));
-                        
+                        rowData.put(ESM_Data.EXPIRATION_THRESHOLD, esm.optInt(ESM_Data.EXPIRATION_THRESHOLD));
+                        rowData.put(ESM_Data.SCALE_MIN, esm.optInt(ESM_Data.SCALE_MIN));
+                        rowData.put(ESM_Data.SCALE_MAX, esm.optInt(ESM_Data.SCALE_MAX));
+                        rowData.put(ESM_Data.SCALE_START, esm.optInt(ESM_Data.SCALE_START));
+                        rowData.put(ESM_Data.SCALE_MAX_LABEL, esm.optString(ESM_Data.SCALE_MAX_LABEL));
+                        rowData.put(ESM_Data.SCALE_MIN_LABEL, esm.optString(ESM_Data.SCALE_MIN_LABEL));
+                        rowData.put(ESM_Data.SCALE_STEP, esm.optInt(ESM_Data.SCALE_STEP));
+
                         //TODO: scheduling of ESMs. depending if there is a schedule for it, this status is NEW or SCHEDULED
                         //If NEW, it is shown immediately, otherwise it is not.
-                        
                         rowData.put(ESM_Data.STATUS, ESM.STATUS_NEW);
                         rowData.put(ESM_Data.TRIGGER, esm.optString(ESM_Data.TRIGGER));
                         
-                        if( rowData.getAsInteger(ESM_Data.EXPIRATION_THREASHOLD) == 0 ) {
+                        if( rowData.getAsInteger(ESM_Data.EXPIRATION_THRESHOLD) == 0 ) {
                             is_persistent = true;
                         }
                         

@@ -9,19 +9,21 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true" />
+        android:layout_alignParentTop="true"
+        android:padding="10dp" />
 
     <ScrollView
         android:id="@+id/checkbox_container"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/esm_instructions" >
+        android:layout_below="@+id/esm_instructions"
+        android:padding="10dp" >
 
         <LinearLayout
             android:id="@+id/esm_checkboxes"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" >
+            android:orientation="vertical">
         </LinearLayout>
     </ScrollView>
 
@@ -29,19 +31,23 @@
         android:id="@+id/esm_buttons_controls"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/checkbox_container" >
+        android:layout_below="@+id/checkbox_container"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingBottom="10dp" >
 
         <Button
             android:id="@+id/esm_cancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="Cancel" />
 
         <Button
             android:id="@+id/esm_submit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_weight="2"
             android:gravity="center_vertical|center_horizontal"
             android:text="Button" />
     </LinearLayout>

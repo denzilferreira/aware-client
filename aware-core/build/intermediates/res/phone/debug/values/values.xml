@@ -328,6 +328,8 @@
     <string name="aware_description">AWARE is an Android\'s framework dedicated to infer, log and share mobile context information between mobile applications. Visit www.awareframework.com for details.</string>
     <string name="aware_developer">Developer</string>
     <string name="aware_device_id">AWARE Device ID</string>
+    <string name="aware_esm_other">Other</string>
+    <string name="aware_esm_other_follow">Can you be more specific, please?</string>
     <string name="aware_esm_questions">Mobile ESM waiting...</string>
     <string name="aware_plugins">AWARE Plugins</string>
     <string name="aware_qrcode">QRCode</string>
