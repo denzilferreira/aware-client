@@ -283,7 +283,7 @@ public class Aware extends Service {
 
         Map<String,?> defaults = prefs.getAll();
         for(Map.Entry<String, ?> entry : defaults.entrySet()) {
-            if( Aware.getSetting(getApplicationContext(), entry.getKey()).length() == 0 ) {
+            if( Aware.getSetting(getApplicationContext(), entry.getKey(), "com.aware").length() == 0 ) {
                 Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue(), "com.aware"); //default AWARE settings
             }
         }
@@ -749,7 +749,7 @@ public class Aware extends Service {
     	}
     	
     	String value = "";
-        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + (( is_global ) ? "'com.aware'" : "'" + context.getPackageName() + "'"), null, null);
+        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + (( is_global ) ? "'com.aware'" : "'" + context.getPackageName() + "'") + (( is_global ) ? " OR " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE ''":""), null, null);
         if( qry != null && qry.moveToFirst() ) {
             value = qry.getString(qry.getColumnIndex(Aware_Settings.SETTING_VALUE));
         }

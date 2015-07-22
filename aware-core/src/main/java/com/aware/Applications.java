@@ -61,10 +61,7 @@ public class Applications extends AccessibilityService {
     private static Intent updateApps = null;
     private static PendingIntent repeatingIntent = null;
     public static final int ACCESSIBILITY_NOTIFICATION_ID = 42;
-    private static AccessibilityEvent lastApplication = null;
-    private static AccessibilityEvent lastNotification = null;
-    private static AccessibilityEvent lastKeyboard = null;
-    
+
     /**
      * Broadcasted event: a new application is visible on the foreground
      */
@@ -106,34 +103,6 @@ public class Applications extends AccessibilityService {
     }
 
     /**
-     * Clones an AccessibilityEvent
-     */
-    private AccessibilityEvent clone(AccessibilityEvent event) {
-        AccessibilityEvent clone = AccessibilityEvent.obtain();
-
-        clone.setAddedCount(event.getAddedCount());
-        clone.setBeforeText(event.getBeforeText());
-        clone.setChecked(event.isChecked());
-        clone.setClassName(event.getClassName());
-        clone.setContentDescription(event.getContentDescription());
-        clone.setCurrentItemIndex(event.getCurrentItemIndex());
-        clone.setEventTime(event.getEventTime());
-        clone.setEventType(event.getEventType());
-        clone.setEnabled(event.isEnabled());
-        clone.setFromIndex(event.getFromIndex());
-        clone.setFullScreen(event.isFullScreen());
-        clone.setItemCount(event.getItemCount());
-        clone.setPackageName(event.getPackageName());
-        clone.setParcelableData(event.getParcelableData());
-        clone.setPassword(event.isPassword());
-        clone.setRemovedCount(event.getRemovedCount());
-        clone.getText().clear();
-        clone.getText().addAll(event.getText());
-
-        return clone;
-    }
-    
-    /**
      * Monitors for events of: 
      * {@link AccessibilityEvent#TYPE_WINDOW_STATE_CHANGED}
      * {@link AccessibilityEvent#TYPE_NOTIFICATION_STATE_CHANGED}
@@ -144,11 +113,6 @@ public class Applications extends AccessibilityService {
         if( event.getPackageName() == null ) return;
 
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_NOTIFICATIONS).equals("true") && event.getEventType() == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED ) {
-
-            //FIXED: Duplicated accessibility events. Because we have the accessibility service both in manifest as well as in service for compabitility with Honeycomb and Gingerbread...
-            if( lastNotification != null && ( lastNotification.getPackageName().toString().equalsIgnoreCase(event.getPackageName().toString()) || (lastNotification.getText().size()>0 && event.getText().size()>0 && lastNotification.getText().get(0).equals(event.getText().get(0))) )) {
-                return;
-            }
 
             Notification notificationDetails = (Notification) event.getParcelableData();
         	
@@ -170,7 +134,6 @@ public class Applications extends AccessibilityService {
             	Intent notification = new Intent(ACTION_AWARE_APPLICATIONS_NOTIFICATIONS);
             	sendBroadcast(notification);
         	}
-            lastNotification = clone(event);
         }
         
     	if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ) {
@@ -179,11 +142,6 @@ public class Applications extends AccessibilityService {
                 updateApps.setAction(ACTION_AWARE_APPLICATIONS_HISTORY);
                 repeatingIntent = PendingIntent.getService(getApplicationContext(), 0, updateApps, 0);
                 alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+1000, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS)) * 1000, repeatingIntent);
-            }
-
-            //FIXED: Duplicated accessibility events. This is caused by accessibility service definition in xml (Android >2.3) and in code (Android 2.3)
-            if( lastApplication != null && event.getPackageName() != null && event.getText().get(0) != null && (lastApplication.getPackageName().toString().equalsIgnoreCase(event.getPackageName().toString()) || (lastApplication.getText().size()>0 && event.getText().size()>0 && lastApplication.getText().get(0).equals(event.getText().get(0))) )) {
-                return;
             }
 
             PackageManager packageManager = getPackageManager();
@@ -224,8 +182,6 @@ public class Applications extends AccessibilityService {
             }catch( SQLException e ) {
                 if(Aware.DEBUG) Log.d(TAG,e.getMessage());
             }
-
-            lastApplication = clone(event);
 
             Intent newForeground = new Intent(ACTION_AWARE_APPLICATIONS_FOREGROUND);
             sendBroadcast(newForeground);
@@ -287,22 +243,12 @@ public class Applications extends AccessibilityService {
 
             Intent keyboard_data = new Intent( Keyboard.ACTION_AWARE_KEYBOARD );
             sendBroadcast(keyboard_data);
-
-            lastKeyboard = clone(event);
         }
     }
     
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
-
-        //Retro-compatibility with some devices that don't support XML defined Accessibility Services
-        AccessibilityServiceInfo info = new AccessibilityServiceInfo();
-        info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED | AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED | AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED;
-        info.feedbackType = AccessibilityServiceInfoCompat.FEEDBACK_ALL_MASK;
-        info.notificationTimeout = 50;
-        info.packageNames = null;
-        setServiceInfo(info);
 
         if( Aware.DEBUG ) Log.d("AWARE","Aware service connected to accessibility services...");
         
@@ -341,7 +287,41 @@ public class Applications extends AccessibilityService {
     @Override
     public void onCreate() {
         super.onCreate();
-        onServiceConnected();
+
+        boolean enabled = false;
+
+        AccessibilityManager accessibilityManager = (AccessibilityManager) getSystemService(ACCESSIBILITY_SERVICE);
+        List<AccessibilityServiceInfo> enabledServices = AccessibilityManagerCompat.getEnabledAccessibilityServiceList(accessibilityManager, AccessibilityEventCompat.TYPES_ALL_MASK);
+        if( ! enabledServices.isEmpty() ) {
+            for( AccessibilityServiceInfo service : enabledServices ) {
+                Log.d(Aware.TAG, service.toString());
+                if( service.getId().contains("com.aware") ) {
+                    enabled = true;
+                }
+            }
+        }
+
+        enabledServices = accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityEvent.TYPES_ALL_MASK);
+        if( ! enabledServices.isEmpty() ) {
+            for( AccessibilityServiceInfo service : enabledServices ) {
+                Log.d(Aware.TAG, service.toString());
+                if( service.getId().contains("com.aware") ) {
+                    enabled = true;
+                }
+            }
+        }
+
+        if( ! enabled ) {
+            //Retro-compatibility with some devices that don't support XML defined Accessibility Services
+            AccessibilityServiceInfo info = new AccessibilityServiceInfo();
+            info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED | AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED | AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED;
+            info.feedbackType = AccessibilityServiceInfoCompat.FEEDBACK_ALL_MASK;
+            info.notificationTimeout = 50;
+            info.packageNames = null;
+            setServiceInfo(info);
+
+            onServiceConnected();
+        }
     }
     
     @Override
@@ -380,12 +360,23 @@ public class Applications extends AccessibilityService {
      */
     public static boolean isAccessibilityServiceActive(Context c) {
         AccessibilityManager accessibilityManager = (AccessibilityManager) c.getSystemService(ACCESSIBILITY_SERVICE);
-        List<AccessibilityServiceInfo> runningServices = AccessibilityManagerCompat.getEnabledAccessibilityServiceList(accessibilityManager, AccessibilityEventCompat.TYPES_ALL_MASK);
-        for( AccessibilityServiceInfo service : runningServices ) {
-            Log.d(Aware.TAG, service.toString());
+        List<AccessibilityServiceInfo> enabledServices = AccessibilityManagerCompat.getEnabledAccessibilityServiceList(accessibilityManager, AccessibilityEventCompat.TYPES_ALL_MASK);
+        if( ! enabledServices.isEmpty() ) {
+            for( AccessibilityServiceInfo service : enabledServices ) {
+                Log.d(Aware.TAG, service.toString());
+                if( service.getId().contains("com.aware") ) {
+                    return true;
+                }
+            }
+        }
 
-            if( service.getId().contains("com.aware") ) {
-                return true;
+        enabledServices = accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityEvent.TYPES_ALL_MASK);
+        if( ! enabledServices.isEmpty() ) {
+            for( AccessibilityServiceInfo service : enabledServices ) {
+                Log.d(Aware.TAG, service.toString());
+                if( service.getId().contains("com.aware") ) {
+                    return true;
+                }
             }
         }
 
@@ -470,7 +461,7 @@ public class Applications extends AccessibilityService {
             if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS ).equals("true") && intent.getAction().equals(ACTION_AWARE_APPLICATIONS_HISTORY) ) {
                 
                 ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-                PackageManager packageManager = (PackageManager) getPackageManager();
+                PackageManager packageManager = getPackageManager();
                 List<RunningAppProcessInfo> runningApps = activityManager.getRunningAppProcesses();
                 
                 if(Aware.DEBUG) Log.d(TAG,"Running " + runningApps.size() + " applications");

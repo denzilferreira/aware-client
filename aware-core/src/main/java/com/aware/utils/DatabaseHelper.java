@@ -170,12 +170,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     	    SQLiteDatabase current_database = SQLiteDatabase.openDatabase(database_file.getPath(), null, SQLiteDatabase.CREATE_IF_NECESSARY);
     	    int current_version = current_database.getVersion();
 
-            if( current_version == 1 ) {
-                onCreate(current_database);
-            }
-            if( current_version != new_version ) {
-                onUpgrade(current_database, current_version, new_version);
-            }
+			if( current_version != new_version ) {
+				if( current_version == 0 ) {
+					onCreate(current_database);
+				} else {
+					onUpgrade(current_database, current_version, new_version);
+				}
+			}
             onOpen(current_database);
             database = current_database;
             return database;
