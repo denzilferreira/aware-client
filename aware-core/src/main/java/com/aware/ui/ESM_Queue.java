@@ -1,4 +1,3 @@
-
 package com.aware.ui;
 
 import android.content.BroadcastReceiver;
@@ -25,28 +24,26 @@ import com.aware.providers.ESM_Provider.ESM_Data;
  * @author denzilferreira
  */
 public class ESM_Queue extends FragmentActivity {
-    
+
     private static String TAG = "AWARE::ESM Queue";
     private final ESM_QueueManager queue_manager = new ESM_QueueManager();
 
     private static PowerManager powerManager;
     private static Vibrator vibrator;
     private static ESM_Queue queue;
-    
+
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
-       
+
         queue = this;
-        getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+        getWindow().setType(WindowManager.LayoutParams.TYPE_PRIORITY_PHONE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
-        
+
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        
+
         powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
@@ -55,10 +52,10 @@ public class ESM_Queue extends FragmentActivity {
         filter.addAction(ESM.ACTION_AWARE_ESM_DISMISSED);
         filter.addAction(ESM.ACTION_AWARE_ESM_EXPIRED);
         registerReceiver(queue_manager, filter);
-        
+
         Intent queue_started = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_STARTED);
         sendBroadcast(queue_started);
-        
+
         if( getQueueSize(getApplicationContext()) > 0 ) {
             FragmentManager fragmentManager = getSupportFragmentManager();
             DialogFragment esm = new ESM_UI();
@@ -68,32 +65,49 @@ public class ESM_Queue extends FragmentActivity {
             }
         }
     }
-    
+
     public class ESM_QueueManager extends BroadcastReceiver {
-    	@Override
-    	public void onReceive(Context context, Intent intent) {
-    		if( intent.getAction().equals(ESM.ACTION_AWARE_ESM_ANSWERED) || intent.getAction().equals(ESM.ACTION_AWARE_ESM_DISMISSED) || intent.getAction().equals(ESM.ACTION_AWARE_ESM_EXPIRED) ) {
-    			if( getQueueSize(context) > 0 ) {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if( intent.getAction().equals(ESM.ACTION_AWARE_ESM_ANSWERED) ) {
+                if( getQueueSize(context) > 0 || visibleUnanswered(context) ) {
                     FragmentManager fragmentManager = getSupportFragmentManager();
                     DialogFragment esm = new ESM_UI();
                     esm.show(fragmentManager, TAG);
-    			} 
-    			if( getQueueSize(context) == 0 ) {
-    				if(Aware.DEBUG) Log.d(TAG,"ESM Queue is done!");
-    	            Intent esm_done = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
-    	            context.sendBroadcast(esm_done);
-    	            queue.finish();
-    			}
-    		}
-    	}
+                }
+                if( getQueueSize(context) == 0 ) {
+                    if(Aware.DEBUG) Log.d(TAG,"ESM Queue is done!");
+                    Intent esm_done = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
+                    context.sendBroadcast(esm_done);
+                    queue.finish();
+                }
+            }
+            if ( intent.getAction().equals(ESM.ACTION_AWARE_ESM_DISMISSED) || intent.getAction().equals(ESM.ACTION_AWARE_ESM_EXPIRED ) ) {
+                if(Aware.DEBUG) Log.d(TAG,"Rest of ESM Queue is dismissed!");
+                Intent esm_done = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
+                context.sendBroadcast(esm_done);
+                queue.finish();
+            }
+        }
     }
-    
+
+    public boolean visibleUnanswered(Context context) {
+        boolean visible = false;
+        // Check if there is an ESM set as Visible but not answered for some reason. If so, request the FragmentManager to display the ESM again
+        Cursor esm = context.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " in (" + (ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE)+")", null, ESM_Data.TIMESTAMP + " ASC LIMIT 1");
+        if( esm != null && esm.moveToFirst() ) {
+            visible = true;
+        }
+        if( esm!= null && ! esm.isClosed()) esm.close();
+        return visible;
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(queue_manager);
     }
-    
+
     /**
      * Get amount of ESMs waiting on database
      * @return int count
@@ -106,5 +120,9 @@ public class ESM_Queue extends FragmentActivity {
         }
         if( onqueue != null && ! onqueue.isClosed() ) onqueue.close();
         return size;
+    }
+
+    public void clearQueue() {
+        finish();
     }
 }
