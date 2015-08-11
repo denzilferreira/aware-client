@@ -1,6 +1,7 @@
 package com.aware.ui;
 
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -31,6 +32,7 @@ public class ESM_Queue extends FragmentActivity {
     private static PowerManager powerManager;
     private static Vibrator vibrator;
     private static ESM_Queue queue;
+    private static DialogFragment esmDialog;
 
     @Override
     protected void onCreate(Bundle bundle) {
@@ -58,8 +60,8 @@ public class ESM_Queue extends FragmentActivity {
 
         if( getQueueSize(getApplicationContext()) > 0 ) {
             FragmentManager fragmentManager = getSupportFragmentManager();
-            DialogFragment esm = new ESM_UI();
-            esm.show(fragmentManager, TAG);
+            esmDialog = new ESM_UI();
+            esmDialog.show(fragmentManager, TAG);
             if( ! powerManager.isScreenOn() ) {
                 vibrator.vibrate(777);
             }
@@ -89,6 +91,25 @@ public class ESM_Queue extends FragmentActivity {
                 queue.finish();
             }
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        //Fixed: if ESM window is dismissed by HOME/Recent Apps buttons, dismiss the whole ESM Queue
+        Cursor esm = getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
+        if( esm != null && esm.moveToFirst() ) {
+            do {
+                ContentValues rowData = new ContentValues();
+                rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
+                rowData.put(ESM_Data.STATUS, ESM.STATUS_DISMISSED);
+                getContentResolver().update(ESM_Data.CONTENT_URI, rowData, null, null);
+            } while(esm.moveToNext());
+        }
+        if( esm != null && ! esm.isClosed()) esm.close();
+
+        if( Aware.DEBUG ) Log.d(TAG, "ESM Queue is done!");
     }
 
     public boolean visibleUnanswered(Context context) {
@@ -122,7 +143,7 @@ public class ESM_Queue extends FragmentActivity {
         return size;
     }
 
-    public void clearQueue() {
-        finish();
-    }
+//    public void clearQueue() {
+//        finish();
+//    }
 }

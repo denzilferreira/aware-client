@@ -31,6 +31,9 @@ import android.preference.PreferenceScreen;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.*;
+import android.view.Gravity;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.aware.providers.Aware_Provider;
@@ -538,6 +541,34 @@ public class Aware_Preferences extends Aware_Activity {
 
         addPreferencesFromResource(R.xml.aware_preferences);
         setContentView(R.layout.aware_ui);
+
+        if( ! prefs.contains("intro_done") ) {
+            final ViewGroup parent = (ViewGroup) findViewById(android.R.id.content);
+            final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+            LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+
+            final View help_qrcode = inflater.inflate(R.layout.help_qrcode, null);
+            final View help_menu = inflater.inflate(R.layout.help_menu, null);
+            parent.addView(help_qrcode, params);
+            help_qrcode.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    parent.removeView(help_qrcode);
+                    parent.addView(help_menu, params);
+                }
+            });
+
+            help_menu.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    parent.removeView(help_menu);
+                }
+            });
+
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putBoolean("intro_done", true);
+            editor.commit();
+        }
 
         developerOptions();
         servicesOptions();

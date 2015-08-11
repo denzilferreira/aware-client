@@ -383,10 +383,10 @@ public class Aware extends Service {
             
             if( Aware.DEBUG ) Log.d(TAG,"AWARE framework is active...");
 
-            //Plugins need to be able to start services too, as requested in their settings
+            //Boot AWARE services
             startAllServices();
 
-            //keeping the plugins running
+            //Get the active plugins
             ArrayList<String> active_plugins = new ArrayList<>();
             Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
             if( enabled_plugins != null && enabled_plugins.moveToFirst() ) {
@@ -396,11 +396,6 @@ public class Aware extends Service {
                 }while(enabled_plugins.moveToNext());
             }
             if( enabled_plugins != null && ! enabled_plugins.isClosed() ) enabled_plugins.close();
-            if( active_plugins.size() > 0 ) {
-                for(String package_name : active_plugins ) {
-                    startPlugin(getApplicationContext(), package_name);
-                }
-            }
 
             //The official client takes care of staying updated to avoid compromising studies
             if( getPackageName().equals("com.aware") ) {
@@ -453,6 +448,13 @@ public class Aware extends Service {
                 Intent dataCleaning = new Intent(ACTION_AWARE_SPACE_MAINTENANCE);
                 awareContext.sendBroadcast(dataCleaning);
             }
+
+            if( active_plugins.size() > 0 ) {
+                for(String package_name : active_plugins ) {
+                    startPlugin(getApplicationContext(), package_name);
+                }
+            }
+
         } else { //Turn off all enabled plugins and services
 
             stopAllServices();
@@ -1436,10 +1438,14 @@ public class Aware extends Service {
      * Start active services
      */
     protected void startAllServices() {
+        if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true") ) {
+            startESM();
+        }else stopESM();
+
         if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_APPLICATIONS).equals("true")) {
             startApplications();
         }else stopApplications();
-        
+
         if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_ACCELEROMETER).equals("true") ) {
             startAccelerometer();
         }else stopAccelerometer();
@@ -1534,10 +1540,6 @@ public class Aware extends Service {
         if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_TEMPERATURE).equals("true") ) {
             startTemperature();
         }else stopTemperature();
-        
-        if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true") ) {
-            startESM();
-        }else stopESM();
 
         if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_KEYBOARD).equals("true") ) {
             startKeyboard();

@@ -137,6 +137,9 @@ public class Applications extends AccessibilityService {
         }
         
     	if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ) {
+
+            PackageManager packageManager = getPackageManager();
+
             if( updateApps == null ) {
                 updateApps = new Intent(getApplicationContext(), BackgroundService.class);
                 updateApps.setAction(ACTION_AWARE_APPLICATIONS_HISTORY);
@@ -144,59 +147,69 @@ public class Applications extends AccessibilityService {
                 alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+1000, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS)) * 1000, repeatingIntent);
             }
 
-            PackageManager packageManager = getPackageManager();
-            ApplicationInfo appInfo;
-            try {
-                appInfo = packageManager.getApplicationInfo(event.getPackageName().toString(), PackageManager.GET_ACTIVITIES);
-            } catch( NameNotFoundException | NullPointerException | Resources.NotFoundException e ) {
-                appInfo = null;
-            }
-
-            PackageInfo pkgInfo;
-            try {
-                pkgInfo = packageManager.getPackageInfo(event.getPackageName().toString(), PackageManager.GET_META_DATA);
-            } catch (NameNotFoundException | NullPointerException | Resources.NotFoundException e ) {
-                pkgInfo = null;
-            }
-
-            String appName = "";
-            try {
-                if( appInfo != null ) {
-                    appName = packageManager.getApplicationLabel(appInfo).toString();
+            //Fixed: Window State Changed from the same application (showing keyboard within an app) should be ignored
+            boolean same_app = false;
+            Cursor last_foreground = getContentResolver().query(Applications_Foreground.CONTENT_URI, null, null, null, Applications_Foreground.TIMESTAMP + " DESC LIMIT 1");
+            if( last_foreground != null && last_foreground.moveToFirst() ) {
+                if( last_foreground.getString(last_foreground.getColumnIndex(Applications_Foreground.PACKAGE_NAME)).equals(event.getPackageName()) ) {
+                    same_app = true;
                 }
-            } catch ( Resources.NotFoundException | NullPointerException e ) {
-                appName = "";
+            }
+            if( last_foreground != null && ! last_foreground.isClosed() ) last_foreground.close();
+
+            if( ! same_app ) {
+                ApplicationInfo appInfo;
+                try {
+                    appInfo = packageManager.getApplicationInfo(event.getPackageName().toString(), PackageManager.GET_ACTIVITIES);
+                } catch( NameNotFoundException | NullPointerException | Resources.NotFoundException e ) {
+                    appInfo = null;
+                }
+
+                PackageInfo pkgInfo;
+                try {
+                    pkgInfo = packageManager.getPackageInfo(event.getPackageName().toString(), PackageManager.GET_META_DATA);
+                } catch (NameNotFoundException | NullPointerException | Resources.NotFoundException e ) {
+                    pkgInfo = null;
+                }
+
+                String appName = "";
+                try {
+                    if( appInfo != null ) {
+                        appName = packageManager.getApplicationLabel(appInfo).toString();
+                    }
+                } catch ( Resources.NotFoundException | NullPointerException e ) {
+                    appName = "";
+                }
+
+                ContentValues rowData = new ContentValues();
+                rowData.put(Applications_Foreground.TIMESTAMP, System.currentTimeMillis());
+                rowData.put(Applications_Foreground.DEVICE_ID, Aware.getSetting(getApplicationContext(),Aware_Preferences.DEVICE_ID));
+                rowData.put(Applications_Foreground.PACKAGE_NAME, event.getPackageName().toString());
+                rowData.put(Applications_Foreground.APPLICATION_NAME, appName);
+                rowData.put(Applications_Foreground.IS_SYSTEM_APP, pkgInfo != null && isSystemPackage(pkgInfo) );
+
+                if( Aware.DEBUG ) Log.d(Aware.TAG, "FOREGROUND: " + rowData.toString());
+
+                try{
+                    getContentResolver().insert(Applications_Foreground.CONTENT_URI, rowData);
+                }catch( SQLException e ) {
+                    if(Aware.DEBUG) Log.d(TAG,e.getMessage());
+                }
+
+                Intent newForeground = new Intent(ACTION_AWARE_APPLICATIONS_FOREGROUND);
+                sendBroadcast(newForeground);
             }
 
-            ContentValues rowData = new ContentValues();
-            rowData.put(Applications_Foreground.TIMESTAMP, System.currentTimeMillis());
-            rowData.put(Applications_Foreground.DEVICE_ID, Aware.getSetting(getApplicationContext(),Aware_Preferences.DEVICE_ID));
-            rowData.put(Applications_Foreground.PACKAGE_NAME, event.getPackageName().toString());
-            rowData.put(Applications_Foreground.APPLICATION_NAME, appName);
-            rowData.put(Applications_Foreground.IS_SYSTEM_APP, pkgInfo != null && isSystemPackage(pkgInfo) );
-            
-            if( Aware.DEBUG ) Log.d(Aware.TAG, "FOREGROUND: " + rowData.toString());
-
-            try{
-                getContentResolver().insert(Applications_Foreground.CONTENT_URI, rowData);
-            }catch( SQLException e ) {
-                if(Aware.DEBUG) Log.d(TAG,e.getMessage());
-            }
-
-            Intent newForeground = new Intent(ACTION_AWARE_APPLICATIONS_FOREGROUND);
-            sendBroadcast(newForeground);
-            
             if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_CRASHES).equals("true") ) {
             	//Check if there is a crashed application
 	            ActivityManager activityMng = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
 	            List<ProcessErrorStateInfo> errors = activityMng.getProcessesInErrorState();
 	            if(errors != null ) {
 	            	for(ProcessErrorStateInfo error : errors ) {
-	            		
 	            		try {
-							pkgInfo = packageManager.getPackageInfo(error.processName, PackageManager.GET_META_DATA);
-							appInfo = packageManager.getApplicationInfo(event.getPackageName().toString(), PackageManager.GET_ACTIVITIES);
-				            appName = ( appInfo != null ) ? (String) packageManager.getApplicationLabel(appInfo):"";
+							PackageInfo pkgInfo = packageManager.getPackageInfo(error.processName, PackageManager.GET_META_DATA);
+							ApplicationInfo appInfo = packageManager.getApplicationInfo(event.getPackageName().toString(), PackageManager.GET_ACTIVITIES);
+				            String appName = ( appInfo != null ) ? (String) packageManager.getApplicationLabel(appInfo):"";
 							
 							ContentValues crashData = new ContentValues();
 		            		crashData.put(Applications_Crashes.TIMESTAMP, System.currentTimeMillis());
@@ -538,7 +551,7 @@ public class Applications extends AccessibilityService {
                 try {
                     if(appsOpened != null && appsOpened.moveToFirst() ) {
                         do{
-                            if( exists(runningApps, appsOpened) == false ) {
+                            if( ! exists(runningApps, appsOpened) ) {
                                 ContentValues rowData = new ContentValues();
                                 rowData.put(Applications_History.END_TIMESTAMP, System.currentTimeMillis());
                                 try {
@@ -585,8 +598,7 @@ public class Applications extends AccessibilityService {
      * @param {@link PackageInfo} obj
      * @return boolean
      */
-    private static boolean isSystemPackage(PackageInfo pkgInfo) {
-        if( pkgInfo == null ) return false;
-        return ((pkgInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 1);
+    public static boolean isSystemPackage(PackageInfo pkgInfo) {
+        return pkgInfo != null && ((pkgInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 1);
     }
 }

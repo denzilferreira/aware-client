@@ -46,13 +46,10 @@ public class ESM_UI extends DialogFragment {
 
 	private static String TAG = "AWARE::ESM UI";
 
-	private static LayoutInflater inflater = null;
-	private static InputMethodManager inputManager = null;
-
-	private static ESMExpireMonitor expire_monitor = null;
-	private static AlertDialog.Builder builder = null;
-	private static Dialog current_dialog = null;
-	private static Context sContext = null;
+	private static InputMethodManager inputManager;
+	private static ESMExpireMonitor expire_monitor;
+	private static Dialog current_dialog;
+	private static Context sContext;
 
 	private static int esm_id = 0;
 	private static int esm_type = 0;
@@ -63,8 +60,8 @@ public class ESM_UI extends DialogFragment {
 
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
-		builder = new AlertDialog.Builder(getActivity());
-		inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+		LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		inputManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 
 		TAG = Aware.getSetting(getActivity().getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getActivity().getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
