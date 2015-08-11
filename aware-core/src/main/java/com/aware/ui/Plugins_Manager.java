@@ -292,19 +292,11 @@ public class Plugins_Manager extends Aware_Activity {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         dialog.dismiss();
-                                        pkg_view.setAlpha(0.5f);
-
                                         if( ! Aware.is_watch(getApplicationContext()) ) {
-                                            Toast.makeText(getApplicationContext(), "Downloading... please wait", Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(getApplicationContext(), "Downloading... please wait.", Toast.LENGTH_SHORT).show();
                                             Aware.downloadPlugin(getApplicationContext(), package_name, false);
-
                                         } else {
-                                            //Ask phone to install plugin. If there is a wearable version bundled, it's installed on the watch too.
-                                            Intent requestPhone = new Intent(WearClient.ACTION_AWARE_ANDROID_WEAR_INSTALL_PLUGIN);
-                                            requestPhone.putExtra(WearClient.EXTRA_PACKAGE_NAME, package_name);
-                                            sendBroadcast(requestPhone);
-
-                                            Toast.makeText(getApplicationContext(), "Continue on phone...", Toast.LENGTH_LONG).show();
+                                            Toast.makeText(getApplicationContext(), "Please, use the phone to install plugins.", Toast.LENGTH_LONG).show();
                                         }
                                     }
                                 });

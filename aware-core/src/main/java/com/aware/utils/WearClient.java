@@ -35,11 +35,6 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
     public static final String ACTION_AWARE_ANDROID_WEAR_HTTP_GET = "ACTION_AWARE_ANDROID_WEAR_HTTP_GET";
 
     /**
-     * Ask phone to install a plugin
-     */
-    public static final String ACTION_AWARE_ANDROID_WEAR_INSTALL_PLUGIN = "ACTION_AWARE_ANDROID_WEAR_INSTALL_PLUGIN";
-
-    /**
      * Ask watch to join a study
      */
     public static final String ACTION_AWARE_ANDROID_WEAR_JOIN_STUDY = "ACTION_AWARE_ANDROID_WEAR_JOIN_STUDY";
@@ -63,11 +58,6 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
      * Extra for HTTP(S) POST/GET if request is compressed
      */
     public static final String EXTRA_GZIP = "extra_gzip";
-
-    /**
-     * Extra for INSTALL PLUGIN requests
-     */
-    public static final String EXTRA_PACKAGE_NAME = "extra_package";
 
     /**
      * Extra for JOIN STUDY requests
@@ -137,13 +127,6 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
                     }
                     //Watch sends message to phone
                     Wearable.MessageApi.sendMessage(googleClient, peer.getId(), "/https/post", data.toString().getBytes());
-                }
-            }
-
-            //Watch is asking to download a plugin. This makes the phone install the plugin on itself. If there is a wear package, it also gets installed on the watch
-            if( intent.getAction().equals(ACTION_AWARE_ANDROID_WEAR_INSTALL_PLUGIN) ) {
-                if( Aware.is_watch(context) ) {
-                    Wearable.MessageApi.sendMessage(googleClient, peer.getId(), "/install/plugin", intent.getStringExtra(EXTRA_PACKAGE_NAME).getBytes());
                 }
             }
 

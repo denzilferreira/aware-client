@@ -158,12 +158,12 @@ public class ESM_UI extends DialogFragment {
 							radioOption.setText(radios.getString(i));
 							radioOptions.addView(radioOption);
 
-							if( radios.getString(i).equals("Other") ) {
+							if( radios.getString(i).equals(getResources().getString(R.string.aware_esm_other)) ) {
 								radioOption.setOnClickListener(new View.OnClickListener() {
 									@Override
 									public void onClick(View v) {
 										final Dialog editOther = new Dialog(getActivity());
-										editOther.setTitle("Can you be more specific, please?");
+										editOther.setTitle(getResources().getString(R.string.aware_esm_other_follow));
 										editOther.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
 										editOther.getWindow().setGravity(Gravity.TOP);
 										editOther.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
@@ -243,12 +243,12 @@ public class ESM_UI extends DialogFragment {
 								@Override
 								public void onCheckedChanged(final CompoundButton buttonView, boolean isChecked) {
 									if( isChecked ) {
-										if( buttonView.getText().equals("Other") ) {
+										if( buttonView.getText().equals(getResources().getString(R.string.aware_esm_other)) ) {
 											checked.setOnClickListener(new View.OnClickListener() {
 												@Override
 												public void onClick(View v) {
 													final Dialog editOther = new Dialog(getActivity());
-													editOther.setTitle("Can you be more specific, please?");
+													editOther.setTitle(getResources().getString(R.string.aware_esm_other_follow));
 													editOther.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
 													editOther.getWindow().setGravity(Gravity.TOP);
 													editOther.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
@@ -442,7 +442,7 @@ public class ESM_UI extends DialogFragment {
 		sContext.sendBroadcast(answer);
 
 		// Check if there are any ESMs left in the queue, if so: set ESM_Data.STATUS to 'dismissed' (note, this does not dismiss the actual ESM - this is handled in ESM_Queue.java).
-		Cursor esm = sContext.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " in (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
+		Cursor esm = sContext.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
 		if( esm != null && esm.moveToFirst() ) {
 			do {
 				rowData = new ContentValues();

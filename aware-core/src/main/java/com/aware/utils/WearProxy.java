@@ -91,16 +91,9 @@ public class WearProxy extends WearableListenerService {
 
             if( Aware.DEBUG ) Log.d(WearClient.TAG, "Message received from watch! Message:" + messageEvent.toString());
 
-            //Fetch plugin
-            if( messageEvent.getPath().equals("/install/plugin") ) {
-                //If the plugin is not installed, it will ask to install on the phone
-                Aware.downloadPlugin(getApplicationContext(), new String(messageEvent.getData()), false);
-            }
-
             //Fetch page and return it to watch as a GET
             if( messageEvent.getPath().equals("/https/get") ) {
                 try {
-
                     JSONObject request = new JSONObject(new String(messageEvent.getData()));
                     HttpResponse output = new Https(getApplicationContext()).dataGET(request.getString(WearClient.EXTRA_URL), request.getBoolean(WearClient.EXTRA_GZIP));
 

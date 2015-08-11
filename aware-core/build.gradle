@@ -15,8 +15,8 @@ android {
     defaultConfig {
         //Comment applicationId out for library
         applicationId "com.aware"
-        versionCode 382
-        versionName "3.5.1"
+        versionCode 384
+        versionName "3.5.3"
         targetSdkVersion 22
     }
     buildTypes {
@@ -37,12 +37,12 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile files('libs/org.eclipse.paho.client.mqttv3-1.0.2.jar')
-    compile 'com.android.support:appcompat-v7:22.2.0'
-    compile 'com.android.support:cardview-v7:22.2.0'
-    phoneCompile 'com.android.support:support-v4:22.2.0'
+    compile files('libs/mqtt-client-0.4.0.jar')
+    compile 'com.android.support:appcompat-v7:22.2.1'
+    compile 'com.android.support:cardview-v7:22.2.1'
+    phoneCompile 'com.android.support:support-v4:22.2.1'
     phoneCompile 'com.google.android.gms:play-services:7.5.0'
-    wearCompile 'com.android.support:support-v13:22.2.0'
+    wearCompile 'com.android.support:support-v13:22.2.1'
     wearCompile 'com.google.android.gms:play-services-wearable:7.5.0'
     wearCompile 'com.google.android.support:wearable:1.1.0'
 
