@@ -2,12 +2,10 @@ package com.aware.ui;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -48,34 +46,25 @@ public class ESM_UI extends DialogFragment {
 
 	private static String TAG = "AWARE::ESM UI";
 
-	private static LayoutInflater inflater = null;
-	private static InputMethodManager inputManager = null;
-
-	private static ESMExpireMonitor expire_monitor = null;
-	private static AlertDialog.Builder builder = null;
-	private static Dialog current_dialog = null;
-	private static Context sContext = null;
+	private static InputMethodManager inputManager;
+	private static ESMExpireMonitor expire_monitor;
+	private static Dialog current_dialog;
+	private static Context sContext;
 
 	private static int esm_id = 0;
 	private static int esm_type = 0;
 	private static int expires_seconds = 0;
-
-	private IntentFilter intentFilter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
-	private BroadcastReceiver receiver = new ScreenReceiver();
 
 	//Checkbox ESM UI to store selected items
 	private static ArrayList<String> selected_options = new ArrayList<String>();
 
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
-		builder = new AlertDialog.Builder(getActivity());
-		inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+		LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		inputManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 
 		TAG = Aware.getSetting(getActivity().getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getActivity().getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
-
-		// Listen to Screen Off event to dismiss ongoing ESM
-		getActivity().registerReceiver(receiver, intentFilter);
 
 		Cursor visible_esm = getActivity().getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + "=" + ESM.STATUS_NEW, null, ESM_Data.TIMESTAMP + " ASC LIMIT 1");
 		if( visible_esm != null && visible_esm.moveToFirst() ) {
@@ -166,12 +155,12 @@ public class ESM_UI extends DialogFragment {
 							radioOption.setText(radios.getString(i));
 							radioOptions.addView(radioOption);
 
-							if( radios.getString(i).equals("Other") ) {
+							if( radios.getString(i).equals(getResources().getString(R.string.aware_esm_other)) ) {
 								radioOption.setOnClickListener(new View.OnClickListener() {
 									@Override
 									public void onClick(View v) {
 										final Dialog editOther = new Dialog(getActivity());
-										editOther.setTitle("Can you be more specific, please?");
+										editOther.setTitle(getResources().getString(R.string.aware_esm_other_follow));
 										editOther.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
 										editOther.getWindow().setGravity(Gravity.TOP);
 										editOther.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
@@ -251,12 +240,12 @@ public class ESM_UI extends DialogFragment {
 								@Override
 								public void onCheckedChanged(final CompoundButton buttonView, boolean isChecked) {
 									if( isChecked ) {
-										if( buttonView.getText().equals("Other") ) {
+										if( buttonView.getText().equals(getResources().getString(R.string.aware_esm_other)) ) {
 											checked.setOnClickListener(new View.OnClickListener() {
 												@Override
 												public void onClick(View v) {
 													final Dialog editOther = new Dialog(getActivity());
-													editOther.setTitle("Can you be more specific, please?");
+													editOther.setTitle(getResources().getString(R.string.aware_esm_other_follow));
 													editOther.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
 													editOther.getWindow().setGravity(Gravity.TOP);
 													editOther.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
@@ -438,32 +427,9 @@ public class ESM_UI extends DialogFragment {
 	@Override
 	public void onCancel(DialogInterface dialog) {
 		super.onCancel(dialog);
+
 		if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
-		dismissESMs();
-	}
 
-	@Override
-	public void onDismiss(DialogInterface dialog) {
-		super.onDismiss(dialog);
-		if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
-	}
-
-	public class ScreenReceiver extends BroadcastReceiver {
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-				dismissESMs();
-			}
-		}
-	}
-
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
-		getActivity().unregisterReceiver(receiver);
-	}
-
-	private void dismissESMs() {
 		ContentValues rowData = new ContentValues();
 		rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
 		rowData.put(ESM_Data.STATUS, ESM.STATUS_DISMISSED);
@@ -473,7 +439,7 @@ public class ESM_UI extends DialogFragment {
 		sContext.sendBroadcast(answer);
 
 		// Check if there are any ESMs left in the queue, if so: set ESM_Data.STATUS to 'dismissed' (note, this does not dismiss the actual ESM - this is handled in ESM_Queue.java).
-		Cursor esm = sContext.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " in (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
+		Cursor esm = sContext.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
 		if( esm != null && esm.moveToFirst() ) {
 			do {
 				rowData = new ContentValues();
@@ -482,7 +448,13 @@ public class ESM_UI extends DialogFragment {
 				sContext.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, null, null);
 			} while(esm.moveToNext());
 		}
-		if(esm != null && ! esm.isClosed()) esm.close();
+		if( esm != null && ! esm.isClosed()) esm.close();
+	}
+
+	@Override
+	public void onDismiss(DialogInterface dialog) {
+		super.onDismiss(dialog);
+		if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
 	}
 
 	/**
