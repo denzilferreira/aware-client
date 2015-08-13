@@ -6,10 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 
-/**
- * Created by denzil on 16/12/14.
- * TODO: create a service that schedules intents with extras
- */
 public class Scheduler extends Service {
 
     private static AlarmManager scheduler;
@@ -18,6 +14,8 @@ public class Scheduler extends Service {
     public void onCreate() {
         super.onCreate();
         scheduler = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+
     }
 
     @Override
