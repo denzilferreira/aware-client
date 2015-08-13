@@ -2,10 +2,12 @@ package com.aware.ui;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -54,6 +56,9 @@ public class ESM_UI extends DialogFragment {
 	private static int esm_id = 0;
 	private static int esm_type = 0;
 	private static int expires_seconds = 0;
+
+	private IntentFilter intentFilter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
+	private BroadcastReceiver receiver = new ScreenReceiver();
 
 	//Checkbox ESM UI to store selected items
 	private static ArrayList<String> selected_options = new ArrayList<String>();
@@ -427,9 +432,32 @@ public class ESM_UI extends DialogFragment {
 	@Override
 	public void onCancel(DialogInterface dialog) {
 		super.onCancel(dialog);
-
 		if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+		dismissESMs();
+	}
 
+	@Override
+	public void onDismiss(DialogInterface dialog) {
+		super.onDismiss(dialog);
+		if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+	}
+
+	public class ScreenReceiver extends BroadcastReceiver {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+				dismissESMs();
+			}
+		}
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		getActivity().unregisterReceiver(receiver);
+	}
+
+	private void dismissESMs() {
 		ContentValues rowData = new ContentValues();
 		rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
 		rowData.put(ESM_Data.STATUS, ESM.STATUS_DISMISSED);
@@ -439,7 +467,7 @@ public class ESM_UI extends DialogFragment {
 		sContext.sendBroadcast(answer);
 
 		// Check if there are any ESMs left in the queue, if so: set ESM_Data.STATUS to 'dismissed' (note, this does not dismiss the actual ESM - this is handled in ESM_Queue.java).
-		Cursor esm = sContext.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
+		Cursor esm = sContext.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " in (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
 		if( esm != null && esm.moveToFirst() ) {
 			do {
 				rowData = new ContentValues();
@@ -449,12 +477,6 @@ public class ESM_UI extends DialogFragment {
 			} while(esm.moveToNext());
 		}
 		if( esm != null && ! esm.isClosed()) esm.close();
-	}
-
-	@Override
-	public void onDismiss(DialogInterface dialog) {
-		super.onDismiss(dialog);
-		if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
 	}
 
 	/**
