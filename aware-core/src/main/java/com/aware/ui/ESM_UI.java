@@ -71,6 +71,9 @@ public class ESM_UI extends DialogFragment {
 
 		TAG = Aware.getSetting(getActivity().getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getActivity().getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
 
+		//Fixed: register receiver to avoid errors in OnDestroy when no register is actually received.
+		getActivity().registerReceiver(receiver, intentFilter);
+
 		Cursor visible_esm = getActivity().getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + "=" + ESM.STATUS_NEW, null, ESM_Data.TIMESTAMP + " ASC LIMIT 1");
 		if( visible_esm != null && visible_esm.moveToFirst() ) {
 			esm_id = visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data._ID));
@@ -384,6 +387,8 @@ public class ESM_UI extends DialogFragment {
 						for(int i=0; i<answers.length(); i++) {
 							final Button answer = new Button(getActivity());
 							LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT, 1.0f );
+							//Fixed: buttons now of the same height regardless of content.
+							params.height = LayoutParams.MATCH_PARENT;
 							answer.setLayoutParams(params);
 							answer.setText(answers.getString(i));
 							answer.setOnClickListener(new View.OnClickListener() {

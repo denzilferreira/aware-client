@@ -142,8 +142,4 @@ public class ESM_Queue extends FragmentActivity {
         if( onqueue != null && ! onqueue.isClosed() ) onqueue.close();
         return size;
     }
-
-//    public void clearQueue() {
-//        finish();
-//    }
 }
