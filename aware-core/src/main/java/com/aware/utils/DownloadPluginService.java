@@ -9,8 +9,6 @@ import android.util.Log;
 
 import com.aware.Aware;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.ParseException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -31,14 +29,12 @@ public class DownloadPluginService extends IntentService {
 
         Log.d(Aware.TAG, "Trying to download: " + package_name);
 
-        HttpResponse response = new Https(this).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
-        if( response != null && response.getStatusLine().getStatusCode() == 200 ) {
+        String response = new Https(this).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
+        if( response != null ) {
             try {
-                String input = Https.undoGZIP(response);
+                if(response.trim().equalsIgnoreCase("[]")) return;
 
-                if(input.trim().equalsIgnoreCase("[]")) return;
-
-                JSONObject json_package = new JSONObject(input);
+                JSONObject json_package = new JSONObject(response);
 
                 //Create the folder where all the databases will be stored on external storage
                 File folders = new File(Environment.getExternalStorageDirectory()+"/AWARE/plugins/");
@@ -56,8 +52,6 @@ public class DownloadPluginService extends IntentService {
 
                 DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
                 Aware.AWARE_PLUGIN_DOWNLOAD_IDS.add(manager.enqueue(request));
-            } catch (ParseException e) {
-                e.printStackTrace();
             } catch (JSONException e) {
                 e.printStackTrace();
             }

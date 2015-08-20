@@ -9,21 +9,10 @@ import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseFactory;
-import org.apache.http.HttpStatus;
-import org.apache.http.HttpVersion;
-import org.apache.http.NameValuePair;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.DefaultHttpResponseFactory;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.message.BasicStatusLine;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.Iterator;
 
 /**
@@ -31,7 +20,7 @@ import java.util.Iterator;
  */
 public class WearProxy extends WearableListenerService {
 
-    public volatile static HttpResponse wearResponse;
+    public volatile static String wearResponse;
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
@@ -75,16 +64,11 @@ public class WearProxy extends WearableListenerService {
              * Watch got the HTTP GET/POST response from the phone
              */
             if( messageEvent.getPath().equals("/https/get") || messageEvent.getPath().equals("/https/post") ) {
-                HttpResponseFactory factory = new DefaultHttpResponseFactory();
-                HttpResponse response = factory.newHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, HttpStatus.SC_OK, null), null);
-                response.setHeader("Content-Encoding", "gzip");
-                response.setStatusCode(200);
-                response.setEntity(new ByteArrayEntity(messageEvent.getData()));
 
                 if( Aware.DEBUG ) {
-                    Log.d(WearClient.TAG, "Entity content:" + Https.undoGZIP(response));
+                    Log.d(WearClient.TAG, "Entity content:" + new String(messageEvent.getData()));
                 }
-                wearResponse = response;
+                wearResponse = new String(messageEvent.getData());
             }
 
         } else {
@@ -95,13 +79,11 @@ public class WearProxy extends WearableListenerService {
             if( messageEvent.getPath().equals("/https/get") ) {
                 try {
                     JSONObject request = new JSONObject(new String(messageEvent.getData()));
-                    HttpResponse output = new Https(getApplicationContext()).dataGET(request.getString(WearClient.EXTRA_URL), request.getBoolean(WearClient.EXTRA_GZIP));
+                    String output = new Https(getApplicationContext()).dataGET(request.getString(WearClient.EXTRA_URL), request.getBoolean(WearClient.EXTRA_GZIP));
 
-                    Wearable.MessageApi.sendMessage(WearClient.googleClient, WearClient.peer.getId(), "/https/get", EntityUtils.toByteArray(output.getEntity()));
+                    Wearable.MessageApi.sendMessage(WearClient.googleClient, WearClient.peer.getId(), "/https/get", output.getBytes());
 
                 } catch (JSONException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
@@ -109,7 +91,7 @@ public class WearProxy extends WearableListenerService {
             //Fetch page and return it to watch as a POST (can contain extra data)
             if( messageEvent.getPath().equals("/https/post") ) {
                 try {
-                    ArrayList<NameValuePair> data = new ArrayList<>();
+                    Hashtable<String, String> data = new Hashtable<>();
 
                     JSONObject request = new JSONObject(new String(messageEvent.getData()));
                     JSONObject data_json = new JSONObject(request.getString(WearClient.EXTRA_DATA));
@@ -118,15 +100,12 @@ public class WearProxy extends WearableListenerService {
                     while( iterator.hasNext() ) {
                         String key = iterator.next();
                         String value = data_json.getString(key);
-                        data.add(new BasicNameValuePair(key, value));
+                        data.put(key, value);
                     }
-                    HttpResponse output = new Https(getApplicationContext()).dataPOST(request.getString(WearClient.EXTRA_URL), data, request.getBoolean(WearClient.EXTRA_GZIP));
-
-                    Wearable.MessageApi.sendMessage(WearClient.googleClient, WearClient.peer.getId(), "/https/post", EntityUtils.toByteArray(output.getEntity()));
+                    String output = new Https(getApplicationContext()).dataPOST(request.getString(WearClient.EXTRA_URL), data, request.getBoolean(WearClient.EXTRA_GZIP));
+                    Wearable.MessageApi.sendMessage(WearClient.googleClient, WearClient.peer.getId(), "/https/post", output.getBytes());
 
                 } catch (JSONException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }

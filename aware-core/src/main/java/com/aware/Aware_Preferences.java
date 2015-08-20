@@ -29,10 +29,10 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.support.v4.app.NotificationCompat;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.*;
-import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -41,15 +41,12 @@ import com.aware.ui.Aware_Activity;
 import com.aware.ui.Plugins_Manager;
 import com.aware.utils.Https;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.ParseException;
-import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -2179,15 +2176,12 @@ public class Aware_Preferences extends Aware_Activity {
         protected Void doInBackground(ArrayList<String>... params) {
             for( String package_name : params[0] ) {
                 JSONObject json_package = null;
-                HttpResponse http_request = new Https(context).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
-                if( http_request != null && http_request.getStatusLine().getStatusCode() == 200 ) {
+                String http_request = new Https(context).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
+                if( http_request != null ) {
                     try {
-                        String json_string = Https.undoGZIP(http_request);
-                        if( ! json_string.equals("[]") ) {
-                            json_package = new JSONObject(json_string);
+                        if( ! http_request.equals("[]") ) {
+                            json_package = new JSONObject(http_request);
                         }
-                    } catch (ParseException e) {
-                        e.printStackTrace();
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -2235,13 +2229,11 @@ public class Aware_Preferences extends Aware_Activity {
 			if( study_url.startsWith("https://api.awareframework.com/") ) {
 
 				//Request study settings
-				ArrayList<NameValuePair> data = new ArrayList<>();
-				data.add(new BasicNameValuePair(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID)));
-				HttpResponse answer = new Https(getApplicationContext()).dataPOST(study_url, data, true);
+                Hashtable<String, String> data = new Hashtable<>();
+                data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+				String answer = new Https(getApplicationContext()).dataPOST(study_url, data, true);
 				try {
-                    String json_str = Https.undoGZIP(answer);
-
-                    JSONArray configs_study = new JSONArray(json_str);
+                    JSONArray configs_study = new JSONArray(answer);
 					if( configs_study.getJSONObject(0).has("message") ) {
                         Toast.makeText(getApplicationContext(), "This study is not available.", Toast.LENGTH_LONG).show();
                         return;
@@ -2261,8 +2253,6 @@ public class Aware_Preferences extends Aware_Activity {
 					//Apply new configurations in AWARE Client
 					applySettings( getApplicationContext(), configs_study );
 
-				} catch (ParseException e) {
-					e.printStackTrace();
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}

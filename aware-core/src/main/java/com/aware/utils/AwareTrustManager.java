@@ -22,7 +22,7 @@ public class AwareTrustManager implements X509TrustManager {
 	public AwareTrustManager( KeyStore localStore ) {
 		try {
 			TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-			tmf.init((KeyStore) null);
+			tmf.init((KeyStore) localStore);
 			
 			defaultTrust = findX509TrustManager(tmf);
 			if( defaultTrust == null ) {

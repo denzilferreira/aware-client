@@ -3,31 +3,31 @@ package com.aware.utils;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.util.Log;
 
 import com.aware.Aware;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.zip.GZIPInputStream;
+
+import javax.net.ssl.HttpsURLConnection;
 
 /**
  * HTML POST/GET client wrapper
@@ -51,9 +51,9 @@ public class Http {
     /**
      * Request a GET from an URL.
      * @param url
-     * @return HttpEntity with the content of the reply. Use EntityUtils to get content.
+     * @return String with the content of the reply
      */
-    public synchronized HttpResponse dataGET(String url, boolean is_gzipped) {
+    public synchronized String dataGET(String url, boolean is_gzipped) {
         if( url.length() == 0 ) return null;
 
         if( Aware.is_watch(sContext) ) {
@@ -77,29 +77,51 @@ public class Http {
                 Log.d(TAG, "AndroidWear GET benchmark: " + (System.currentTimeMillis() - time)/1000 + " seconds");
             }
 
-            HttpResponse response = WearProxy.wearResponse;
+            String response = WearProxy.wearResponse;
             WearProxy.wearResponse = null;
 
             return response;
         }
         try {
-            HttpClient httpClient = new DefaultHttpClient();
-            HttpGet httpGet = new HttpGet(url);
-            if( is_gzipped ) httpGet.addHeader("Accept-Encoding", "gzip"); //send data compressed
-            HttpResponse httpResponse = httpClient.execute(httpGet);
 
-            int statusCode = httpResponse.getStatusLine().getStatusCode();
-            if( statusCode != 200 ) {
-                if(Aware.DEBUG) {
-                    Log.d(TAG, "Status: "+ statusCode);
-                    Log.e(TAG,"URL:" + url);
-                    Log.e(TAG,EntityUtils.toString(httpResponse.getEntity()));
+            URL path = new URL(url);
+            HttpURLConnection path_connection = (HttpURLConnection) path.openConnection();
+            path_connection.setReadTimeout(10000);
+            path_connection.setConnectTimeout(10000);
+            path_connection.setRequestMethod("GET");
+            if( is_gzipped ) path_connection.setRequestProperty("accept-encoding","gzip");
+
+            path_connection.connect();
+
+            if( path_connection.getResponseCode() != HttpURLConnection.HTTP_OK ) {
+                if (Aware.DEBUG) {
+                    Log.d(TAG,"Request: GET, URL: " + url);
+                    Log.d(TAG, "Status: " + path_connection.getResponseCode() );
+                    Log.e(TAG, path_connection.getResponseMessage() );
                 }
+                return null;
             }
-            return httpResponse;
-        } catch (ClientProtocolException e) {
-            if(Aware.DEBUG) Log.e(TAG,e.getMessage());
-            return null;
+
+            InputStream stream = path_connection.getInputStream();
+            if("gzip".equals(path_connection.getContentEncoding())) {
+                stream = new GZIPInputStream(stream);
+            }
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(stream));
+
+            String page_content = "";
+            String line;
+            while( (line = br.readLine()) != null ) {
+                page_content+=line;
+            }
+
+            if (Aware.DEBUG) {
+                Log.i(TAG,"Request: GET, URL: " + url);
+                Log.i(TAG,"Answer:" + page_content );
+            }
+
+            return page_content;
+
         } catch (IOException e) {
             if(Aware.DEBUG) Log.e(TAG,e.getMessage());
             return null;
@@ -107,24 +129,27 @@ public class Http {
     }
 
 	/**
-	 * Make a POST to the URL, with the ArrayList<NameValuePair> data, using gzip compression
+	 * Make a POST to the URL, with the Hashtable<String, String> data, using gzip compression
 	 * @param url
 	 * @param data
      * @param is_gzipped
-	 * @return HttpEntity with server response. Use EntityUtils to extract values or object
+	 * @return String with server response. If GZipped, use Http.undoGZIP to recover data
 	 */
-	public synchronized HttpResponse dataPOST(String url, ArrayList<NameValuePair> data, boolean is_gzipped) {
+	public synchronized String dataPOST(String url, Hashtable<String, String> data, boolean is_gzipped) {
         if( url.length() == 0 ) return null;
 
         if( Aware.is_watch(sContext) ) {
 			JSONObject data_json = new JSONObject();
-			for(NameValuePair valuePair : data ) {
-				try {
-					data_json.put(valuePair.getName(),valuePair.getValue());
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-			}
+            Enumeration e = data.keys();
+
+            while(e.hasMoreElements()) {
+                String key = (String) e.nextElement();
+                try {
+                    data_json.put(key, data.get(key));
+                } catch (JSONException e1) {
+                    e1.printStackTrace();
+                }
+            }
 
 			if( Aware.DEBUG ) Log.d(TAG, "Waiting for phone's HTTP POST request...\n" + "URL:" + url + "\nData:" + data_json.toString());
 
@@ -146,32 +171,66 @@ public class Http {
                 Log.d(TAG, "AndroidWear POST benchmark: " + (System.currentTimeMillis() - time)/1000 + " seconds");
             }
 
-            HttpResponse response = WearProxy.wearResponse;
+            String response = WearProxy.wearResponse;
             WearProxy.wearResponse = null;
 
             return response;
 		}
 
 		try{
-			HttpClient httpClient = new DefaultHttpClient();
-			HttpPost httpPost = new HttpPost(url);
-            if( is_gzipped ) httpPost.addHeader("Accept-Encoding", "gzip"); //send data compressed
-			httpPost.setEntity(new UrlEncodedFormEntity(data));
-			HttpResponse httpResponse = httpClient.execute(httpPost);
-		
-			int statusCode = httpResponse.getStatusLine().getStatusCode();
-			if (statusCode != 200 ) {
-				if(Aware.DEBUG) {
-					Log.d(TAG, "Status: " + statusCode );
-					Log.e(TAG, "URL:" + url);
-					Log.e(TAG, EntityUtils.toString(httpResponse.getEntity()) );
-				}
-			}
-            return httpResponse;
+
+            URL path = new URL(url);
+            HttpsURLConnection path_connection = (HttpsURLConnection) path.openConnection();
+            path_connection.setReadTimeout(10000);
+            path_connection.setConnectTimeout(10000);
+            path_connection.setRequestMethod("POST");
+            if( is_gzipped ) path_connection.setRequestProperty("Accept-Encoding","gzip");
+
+            Uri.Builder builder = new Uri.Builder();
+            Enumeration e = data.keys();
+            while(e.hasMoreElements()) {
+                String key = (String) e.nextElement();
+                builder.appendQueryParameter(key, data.get(key));
+            }
+
+            OutputStream os = path_connection.getOutputStream();
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+            writer.write(builder.build().getEncodedQuery());
+            writer.flush();
+            writer.close();
+            os.close();
+
+            path_connection.connect();
+
+            if( path_connection.getResponseCode() != HttpURLConnection.HTTP_OK ) {
+                if (Aware.DEBUG) {
+                    Log.d(TAG,"Request: POST, URL: " + url + "\nData:" + builder.build().getEncodedQuery());
+                    Log.d(TAG, "Status: " + path_connection.getResponseCode() );
+                    Log.e(TAG, path_connection.getResponseMessage() );
+                }
+                return null;
+            }
+
+            InputStream stream = path_connection.getInputStream();
+            if("gzip".equals(path_connection.getContentEncoding())) {
+                stream = new GZIPInputStream(stream);
+            }
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(stream));
+
+            String page_content = "";
+            String line;
+            while( (line = br.readLine()) != null ) {
+                page_content+=line;
+            }
+
+            if (Aware.DEBUG) {
+                Log.d(TAG, "Request: POST, URL: " + url + "\nData:" + builder.build().getEncodedQuery());
+                Log.i(TAG,"Answer:" + page_content );
+            }
+
+            return page_content;
 		}catch (UnsupportedEncodingException e) {
-			Log.e(TAG,e.getMessage());
-			return null;
-		} catch (ClientProtocolException e) {
 			Log.e(TAG,e.getMessage());
 			return null;
 		} catch (IOException e) {
@@ -182,52 +241,4 @@ public class Http {
 			return null;
 		}
 	}
-
-    /**
-     * Given a gzipped server response, restore content
-     * @param response
-     * @return
-     */
-    public static String undoGZIP(HttpResponse response) {
-        String decoded = "";
-        HttpEntity gzipped = response.getEntity();
-        if( gzipped != null ) {
-            try {
-                InputStream in = gzipped.getContent();
-                Header contentEncode = response.getFirstHeader("Content-Encoding");
-                if( contentEncode != null && contentEncode.getValue().equalsIgnoreCase("gzip") ) {
-                    in = new GZIPInputStream(in);
-                    decoded = restore(in);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return decoded;
-    }
-    
-    /**
-     * Decodes an compressed stream
-     * @param is
-     * @return
-     */
-    private static String restore(InputStream is) {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        try {
-            while ((line = reader.readLine()) != null) {
-                sb.append(line + "\n");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                is.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return sb.toString();
-    }
 }

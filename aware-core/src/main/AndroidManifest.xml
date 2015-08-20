@@ -146,6 +146,8 @@
         </service>
 
         <service android:name="com.aware.Keyboard" android:exported="true" />
+        <service android:name="com.aware.utils.Scheduler" android:exported="true" />
+
         <service
             android:name="com.aware.Aware"
             android:exported="true" >

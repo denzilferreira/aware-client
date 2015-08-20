@@ -1,29 +1,22 @@
 package com.aware.ui;
 
-import android.app.ActivityOptions;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
-import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.internal.view.menu.ActionMenuItem;
-import android.support.v7.internal.view.menu.ActionMenuItemView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -37,10 +30,7 @@ import com.aware.Aware_Preferences.StudyConfig;
 import com.aware.R;
 import com.aware.utils.Https;
 import com.aware.utils.WearClient;
-import com.aware.utils.WearProxy;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.ParseException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -213,16 +203,13 @@ public class Aware_Activity extends PreferenceActivity {
 
             if( study_api_key.length() == 0 ) return null;
 
-            HttpResponse request = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/webservice/client_get_study_info/" + study_api_key, true);
-            if( request != null && request.getStatusLine().getStatusCode() == 200 ) {
+            String request = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/webservice/client_get_study_info/" + study_api_key, true);
+            if( request != null ) {
                 try {
-                    String json_str = Https.undoGZIP(request);
-                    if( json_str.equals("[]") ) {
+                    if( request.equals("[]") ) {
                         return null;
                     }
-                    return new JSONObject(json_str);
-                } catch (ParseException e) {
-                    e.printStackTrace();
+                    return new JSONObject(request);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

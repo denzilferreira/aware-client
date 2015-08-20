@@ -38,18 +38,11 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.widget.CardView;
-import android.support.v7.widget.LinearLayoutCompat;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.GridLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.RelativeLayout;
-import android.widget.TableLayout;
-import android.widget.TextView;
 
 import com.aware.providers.Aware_Provider;
 import com.aware.providers.Aware_Provider.Aware_Device;
@@ -63,10 +56,6 @@ import com.aware.utils.Https;
 import com.aware.utils.WearClient;
 import com.aware.utils.WebserviceHelper;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.ParseException;
-import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -75,6 +64,7 @@ import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
@@ -318,9 +308,9 @@ public class Aware extends Service {
 		@Override
 		protected Boolean doInBackground(Void... params) {
 			//Ping AWARE's server with awareContext device's information for framework's statistics log
-	        ArrayList<NameValuePair> device_ping = new ArrayList<NameValuePair>();
-	        device_ping.add(new BasicNameValuePair(Aware_Preferences.DEVICE_ID, Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID)));
-	        device_ping.add(new BasicNameValuePair("ping", String.valueOf(System.currentTimeMillis())));
+            Hashtable<String, String> device_ping = new Hashtable<>();
+            device_ping.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID));
+	        device_ping.put("ping", String.valueOf(System.currentTimeMillis()));
 	        new Https(awareContext).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
 	        return true;
 		}
@@ -909,13 +899,13 @@ public class Aware extends Service {
     private class Study_Check extends AsyncTask<Void, Void, Boolean> {
         @Override
         protected Boolean doInBackground(Void... voids) {
-            ArrayList<NameValuePair> data = new ArrayList<NameValuePair>();
-            data.add(new BasicNameValuePair(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID)));
-            HttpResponse response = new Https(getApplicationContext()).dataPOST(Aware.getSetting(getApplicationContext(),Aware_Preferences.WEBSERVICE_SERVER), data, true);
-            if( response != null && response.getStatusLine().getStatusCode() == 200) {
+
+            Hashtable<String, String> data = new Hashtable<>();
+            data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+            String response = new Https(getApplicationContext()).dataPOST(Aware.getSetting(getApplicationContext(),Aware_Preferences.WEBSERVICE_SERVER), data, true);
+            if( response != null ) {
                 try {
-                    String json_str = Https.undoGZIP(response);
-                    JSONArray j_array = new JSONArray(json_str);
+                    JSONArray j_array = new JSONArray(response);
                     JSONObject io = j_array.getJSONObject(0);
                     if( io.has("message") ) {
                         if( io.getString("message").equals("This study is not ongoing anymore.") ) return true;
@@ -987,24 +977,19 @@ public class Aware extends Service {
         @Override
         protected Boolean doInBackground(ArrayList<String>... params) {
             for( String package_name : params[0] ) {
-                HttpResponse http_request = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
-                if( http_request != null && http_request.getStatusLine().getStatusCode() == 200 ) {
-                    try {
-                        String json_string = Https.undoGZIP(http_request);
-                        if( ! json_string.equals("[]") ) {
-                            try {
-                                JSONObject json_package = new JSONObject(json_string);
-                                if( json_package.getInt("version") > Plugins_Manager.getVersion(getApplicationContext(), package_name) ) {
-                                    updated.add(package_name);
-                                }
-                            } catch (JSONException e) {
+                String http_request = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
+                if( http_request != null ) {
+                    if( ! http_request.equals("[]") ) {
+                        try {
+                            JSONObject json_package = new JSONObject(http_request);
+                            if( json_package.getInt("version") > Plugins_Manager.getVersion(getApplicationContext(), package_name) ) {
+                                updated.add(package_name);
                             }
-                        }
-                    } catch (ParseException e) {}
+                        } catch (JSONException e) {}
+                    }
                 }
             }
-            if( updated.size() > 0 ) return true;
-            return false;
+            return (updated.size() > 0);
         }
 
         @Override
@@ -1045,10 +1030,10 @@ public class Aware extends Service {
 				return false;
 			}
 			
-    		HttpResponse response = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/awaredev/framework_latest", true);
-	        if( response != null && response.getStatusLine().getStatusCode() == 200 ) {
+    		String response = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/awaredev/framework_latest", true);
+	        if( response != null ) {
 	        	try {
-					JSONArray data = new JSONArray(Https.undoGZIP(response));
+					JSONArray data = new JSONArray(response);
 					JSONObject latest_framework = data.getJSONObject(0);
 					
 					if( Aware.DEBUG ) Log.d(Aware.TAG, "Latest: " + latest_framework.toString());
@@ -1061,8 +1046,6 @@ public class Aware extends Service {
 						return true;
 					}
 					return false;
-				} catch (ParseException e) {
-					e.printStackTrace();
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
@@ -1188,16 +1171,13 @@ public class Aware extends Service {
     		app = params[0];
     		
     		JSONObject json_package = null;
-            HttpResponse http_request = new Https(awareContext).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + app.packageName, true);
-            if( http_request != null && http_request.getStatusLine().getStatusCode() == 200 ) {
+            String http_request = new Https(awareContext).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + app.packageName, true);
+            if( http_request != null ) {
             	try {
-            		String json_string = Https.undoGZIP(http_request);
-            		if( ! json_string.trim().equalsIgnoreCase("[]") ) {
-            			json_package = new JSONObject(json_string);
+            		if( ! http_request.trim().equalsIgnoreCase("[]") ) {
+            			json_package = new JSONObject(http_request);
                         icon = Plugins_Manager.cacheImage("http://api.awareframework.com" + json_package.getString("iconpath"), awareContext);
             		}
-				} catch (ParseException e) {
-					e.printStackTrace();
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
@@ -1438,6 +1418,10 @@ public class Aware extends Service {
      * Start active services
      */
     protected void startAllServices() {
+//        //Start Intent scheduler
+//        Intent scheduler = new Intent(awareContext, Scheduler.class);
+//        startService(scheduler);
+
         if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true") ) {
             startESM();
         }else stopESM();

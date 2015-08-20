@@ -2,186 +2,108 @@ package com.aware.utils;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.util.Log;
 
 import com.aware.Aware;
 import com.aware.R;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ConnectTimeoutException;
-import org.apache.http.conn.scheme.LayeredSocketFactory;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.ssl.BrowserCompatHostnameVerifier;
-import org.apache.http.conn.ssl.X509HostnameVerifier;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
+import java.security.cert.CertificateFactory;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.zip.GZIPInputStream;
 
-import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
+import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.TrustManagerFactory;
 
-public class Https extends DefaultHttpClient {
+public class Https {
 
 	private static final String TAG = "AWARE::HTTPS";
-	
-	private static Context sContext;
-	private static Scheme sScheme;
+
+    private static SSLContext sslContext;
+//    private static HostnameVerifier sslHostVerifier;
+    private static Context sContext;
 
 	public Https(Context c) {
 		sContext = c;
-		SSLContext sslCtx = createSSLContext();
-		HostnameVerifier hostVerifier = new BrowserCompatHostnameVerifier();
-		sScheme = new Scheme("https", new AwareSSLSocketFactory(sslCtx, (X509HostnameVerifier) hostVerifier), 443);
-		getConnectionManager().getSchemeRegistry().register(sScheme);
-	}
 
-	private SSLContext createSSLContext() {
-		try {
-			//Load local trusted keystore
-			KeyStore sKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-			InputStream inStream = sContext.getResources().openRawResource(R.raw.awareframework);
-			sKeyStore.load(inStream, "awareframework".toCharArray());
-			inStream.close();
-			
-			AwareTrustManager trustManager = new AwareTrustManager(sKeyStore);
-			TrustManager[] tms = new TrustManager[]{ trustManager };
-			
-			SSLContext context = SSLContext.getInstance("TLS");
-			context.init(null, tms, null);
-			return context;
-			
-		} catch (KeyStoreException e) {
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		} catch (CertificateException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (KeyManagementException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-	
-	public class AwareSSLSocketFactory implements LayeredSocketFactory {
-		private SSLSocketFactory socketFactory;
-		private X509HostnameVerifier hostnameVerifier;
-		
-		public AwareSSLSocketFactory(SSLContext sslCtx, X509HostnameVerifier hostVerifier) {
-			this.socketFactory = sslCtx.getSocketFactory();
-			this.hostnameVerifier = hostVerifier;
-		}
-		
-		@Override
-		public Socket connectSocket(Socket sock, String host, int port, InetAddress localAddress, int localPort, HttpParams params) throws IOException, UnknownHostException, ConnectTimeoutException {
-			if (host == null) {
-	            throw new IllegalArgumentException("Target host may not be null.");
-	        }
-	        if (params == null) {
-	            throw new IllegalArgumentException("Parameters may not be null.");
-	        }
+        Intent wearClient = new Intent(sContext, WearClient.class);
+        sContext.startService(wearClient);
 
-	        SSLSocket sslsock = (SSLSocket) ((sock != null) ? sock : createSocket());
-	        if ((localAddress != null) || (localPort > 0)) {
-	            if (localPort < 0) localPort = 0;
-	            InetSocketAddress isa = new InetSocketAddress(localAddress, localPort);
-	            sslsock.bind(isa);
-	        }
+        try {
+            //Load AWARE's SSL public certificate so we can talk with our server
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            InputStream caInput = new BufferedInputStream(sContext.getResources().openRawResource(R.raw.awareframework));
+            Certificate ca = cf.generateCertificate(caInput);
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keyStore.load(null, null); //initialize as empty keystore
+            keyStore.setCertificateEntry("ca", ca); //add our certificate to keystore
 
-	        int connTimeout = HttpConnectionParams.getConnectionTimeout(params);
-	        int soTimeout = HttpConnectionParams.getSoTimeout(params);
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            trustManagerFactory.init(keyStore); //add our keystore to the trusted keystores
 
-	        InetSocketAddress remoteAddress = new InetSocketAddress(host, port);
-	        sslsock.connect(remoteAddress, connTimeout);
-	        sslsock.setSoTimeout(soTimeout);
-	        try {
-	            hostnameVerifier.verify(host, sslsock);
-	        } catch (IOException iox) {
-	            try {
-	                sslsock.close();
-	            } catch (Exception x) {
-	            }
-	            throw iox;
-	        }
-	        return sslsock;
-		}
+            //Initialize a SSL connection context
+            sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
 
-		@Override
-		public Socket createSocket() throws IOException {
-			return socketFactory.createSocket();
-		}
+            //Fix for known-bug on <= JellyBean (4.x)
+            System.setProperty("http.keepAlive", "false");
 
-		@Override
-		public boolean isSecure(Socket sock) throws IllegalArgumentException {
-			if (sock == null) {
-	            throw new IllegalArgumentException("Socket may not be null.");
-	        }
-	        if (!(sock instanceof SSLSocket)) {
-	            throw new IllegalArgumentException("Socket not created by this factory.");
-	        }
-	        if (sock.isClosed()) {
-	            throw new IllegalArgumentException("Socket is closed.");
-	        }
-	        return true;
-		}
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-		@Override
-		public Socket createSocket(Socket socket, String host, int port, boolean autoClose) throws IOException, UnknownHostException {
-			SSLSocket sslSocket = (SSLSocket) socketFactory.createSocket(socket, host, port, autoClose);
-	        hostnameVerifier.verify(host, sslSocket);
-	        return sslSocket;
-		}
-	}
-	
 	/**
-	 * Make a POST to the URL, with the ArrayList<NameValuePair> data, using gzip
+	 * Make a POST to the URL, with the Hashtable<String, String> data, using gzip
 	 * @param url
 	 * @param data
      * @param is_gzipped
-	 * @return HttpResponse with server response. Use EntityUtils on response's getEntity().getContent() to extract values or object. If gzipped, use Https.undoGZIP on the response.
+	 * @return String with server response. If gzipped, use Https.undoGZIP on the response.
 	 */
-	public synchronized HttpResponse dataPOST(String url, ArrayList<NameValuePair> data, boolean is_gzipped) {
+	public synchronized String dataPOST(String url, Hashtable<String, String> data, boolean is_gzipped) {
         if( url.length() == 0 ) return null;
 
         if( Aware.is_watch(sContext) ) {
 
             JSONObject data_json = new JSONObject();
-			for(NameValuePair valuePair : data ) {
+
+			Enumeration e = data.keys();
+			while(e.hasMoreElements()) {
+				String key = (String) e.nextElement();
 				try {
-					data_json.put(valuePair.getName(),valuePair.getValue());
-				} catch (JSONException e) {
-					e.printStackTrace();
+					data_json.put(key, data.get(key));
+				} catch (JSONException e1) {
+					e1.printStackTrace();
 				}
 			}
 
@@ -206,38 +128,79 @@ public class Https extends DefaultHttpClient {
                 Log.d(TAG, "AndroidWear POST benchmark: " + (System.currentTimeMillis() - time)/1000 + " seconds");
             }
 
-            HttpResponse response = WearProxy.wearResponse;
+            String response = WearProxy.wearResponse;
 			WearProxy.wearResponse = null;
 
             return response;
 		}
 
 		try{
-			HttpPost httpPost = new HttpPost(url);
-			httpPost.setEntity(new UrlEncodedFormEntity(data));
-            if( is_gzipped ) httpPost.addHeader("Accept-Encoding", "gzip"); //send data compressed
-			HttpResponse httpResponse = this.execute(httpPost);
-			
-			int statusCode = httpResponse.getStatusLine().getStatusCode();
-			if (statusCode != 200 ) {
-				if(Aware.DEBUG) {
-					Log.d(TAG,"URL:" + url + "\nData:"+ data.toString());
-					Log.d(TAG, "Status: " + statusCode );
-					Log.e(TAG, EntityUtils.toString(httpResponse.getEntity()) );
-				}
+
+			URL path = new URL(url);
+
+			HttpsURLConnection path_connection = (HttpsURLConnection) path.openConnection();
+            path_connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            path_connection.setReadTimeout(10000);
+			path_connection.setConnectTimeout(10000);
+			path_connection.setRequestMethod("POST");
+			if( is_gzipped ) path_connection.setRequestProperty("accept-encoding","gzip");
+
+			Uri.Builder builder = new Uri.Builder();
+			Enumeration e = data.keys();
+			while(e.hasMoreElements()) {
+				String key = (String) e.nextElement();
+				builder.appendQueryParameter(key, data.get(key));
 			}
-			return httpResponse;
+
+			OutputStream os = path_connection.getOutputStream();
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+			writer.write(builder.build().getEncodedQuery());
+			writer.flush();
+			writer.close();
+			os.close();
+
+            if(Aware.DEBUG) {
+                print_https_cert(path_connection);
+            }
+
+			path_connection.connect();
+
+            if( path_connection.getResponseCode() != HttpsURLConnection.HTTP_OK ) {
+                if (Aware.DEBUG) {
+                    Log.d(TAG,"Request: POST, URL: " + url + "\nData:" + builder.build().getEncodedQuery());
+                    Log.d(TAG, "Status: " + path_connection.getResponseCode() );
+                    Log.e(TAG, path_connection.getResponseMessage() );
+                }
+                return null;
+            }
+
+            InputStream stream = path_connection.getInputStream();
+            if("gzip".equals(path_connection.getContentEncoding())) {
+                stream = new GZIPInputStream(stream);
+            }
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(stream));
+
+            String page_content = "";
+            String line;
+            while( (line = br.readLine()) != null ) {
+                page_content+=line;
+            }
+
+            if (Aware.DEBUG) {
+                Log.d(TAG, "Request: POST, URL: " + url + "\nData:" + builder.build().getEncodedQuery());
+                Log.i(TAG,"Answer:" + page_content );
+            }
+
+            return page_content;
 		}catch (UnsupportedEncodingException e) {
-			Log.e(TAG,e.getMessage());
-			return null;
-		} catch (ClientProtocolException e) {
-			Log.e(TAG,e.getMessage());
+			Log.e(TAG, e.getMessage());
 			return null;
 		} catch (IOException e) {
-			Log.e(TAG,e.getMessage());
+			Log.e(TAG, e.getMessage());
 			return null;
 		} catch (IllegalStateException e ) {
-			Log.e(TAG,e.getMessage());
+			Log.e(TAG, e.getMessage());
 			return null;
 		}
 	}
@@ -247,7 +210,7 @@ public class Https extends DefaultHttpClient {
      * @param url
      * @return HttpEntity with the content of the reply. Use EntityUtils to get content.
      */
-    public synchronized HttpResponse dataGET(String url, boolean is_gzipped) {
+    public synchronized String dataGET(String url, boolean is_gzipped) {
         if( url.length() == 0 ) return null;
 
         if( Aware.is_watch(sContext) ) {
@@ -271,78 +234,86 @@ public class Https extends DefaultHttpClient {
                 Log.d(TAG, "AndroidWear GET benchmark: " + (System.currentTimeMillis() - time)/1000 + " seconds");
             }
 
-            HttpResponse response = WearProxy.wearResponse;
+            String response = WearProxy.wearResponse;
 			WearProxy.wearResponse = null;
             return response;
         }
-        try {
-            HttpGet httpGet = new HttpGet(url);
-            if( is_gzipped ) httpGet.addHeader("Accept-Encoding", "gzip"); //send data compressed
-            HttpResponse httpResponse = this.execute(httpGet);
 
-            int statusCode = httpResponse.getStatusLine().getStatusCode();
-            if( statusCode != 200 ) {
-                if(Aware.DEBUG) {
-                    Log.d(TAG,"Status: "+ statusCode);
-                    Log.e(TAG,"URL:" + url);
-                    Log.e(TAG,EntityUtils.toString(httpResponse.getEntity()));
-                }
+        try {
+
+            URL path = new URL(url);
+            HttpsURLConnection path_connection = (HttpsURLConnection) path.openConnection();
+            path_connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            path_connection.setReadTimeout(10000);
+            path_connection.setConnectTimeout(10000);
+            path_connection.setRequestMethod("GET");
+            if( is_gzipped ) path_connection.setRequestProperty("accept-encoding","gzip");
+
+            if(Aware.DEBUG) {
+                print_https_cert(path_connection);
             }
-            return httpResponse;
-        } catch (ClientProtocolException e) {
-            if(Aware.DEBUG) Log.e(TAG,e.getMessage());
-            return null;
+
+            path_connection.connect();
+
+            if( path_connection.getResponseCode() != HttpsURLConnection.HTTP_OK ) {
+                if (Aware.DEBUG) {
+                    Log.d(TAG,"Request: GET, URL: " + url);
+                    Log.d(TAG, "Status: " + path_connection.getResponseCode() );
+                    Log.e(TAG, path_connection.getResponseMessage() );
+                }
+                return null;
+            }
+
+            InputStream stream = path_connection.getInputStream();
+            if("gzip".equals(path_connection.getContentEncoding())) {
+                stream = new GZIPInputStream(stream);
+            }
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(stream));
+
+            String page_content = "";
+            String line;
+            while( (line = br.readLine()) != null ) {
+                page_content+=line;
+            }
+
+            if (Aware.DEBUG) {
+                Log.i(TAG,"Request: GET, URL: " + url);
+                Log.i(TAG,"Answer:" + page_content );
+            }
+
+            return page_content;
+
         } catch (IOException e) {
             if(Aware.DEBUG) Log.e(TAG,e.getMessage());
             return null;
         }
     }
 
-    /**
-     * Given a gzipped server response, restore content
-     * @param response
-     * @return
-     */
-    public static String undoGZIP(HttpResponse response) {
-        String decoded = "";
-        HttpEntity gzipped = response.getEntity();
-        if( gzipped != null ) {
+    private void print_https_cert(HttpsURLConnection con){
+        if(con!=null){
             try {
-                InputStream in = gzipped.getContent();
-                Header contentEncode = response.getFirstHeader("Content-Encoding");
-                if( contentEncode != null && contentEncode.getValue().equalsIgnoreCase("gzip") ) {
-                    in = new GZIPInputStream(in);
-                    decoded = restore(in);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return decoded;
-    }
+                String output = "";
 
-    /**
-     * Decodes an compressed stream
-     * @param is
-     * @return
-     */
-    private static String restore(InputStream is) {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        try {
-            while ((line = reader.readLine()) != null) {
-                sb.append(line + "\n");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                is.close();
-            } catch (IOException e) {
+                output+="Response Code : " + con.getResponseCode() +"\n";
+                output+="Cipher Suite : " + con.getCipherSuite() + "\n";
+
+                Certificate[] certs = con.getServerCertificates();
+                for(Certificate cert : certs){
+                    output+=("Cert Type : " + cert.getType()) + "\n";
+                    output+=("Cert Hash Code : " + cert.hashCode()) + "\n";
+                    output+=("Cert Public Key Algorithm : " + cert.getPublicKey().getAlgorithm()) + "\n";
+                    output+=("Cert Public Key Format : " + cert.getPublicKey().getFormat()) + "\n\n";
+                }
+
+                Log.d(TAG, output);
+
+            } catch (SSLPeerUnverifiedException e) {
+                e.printStackTrace();
+            } catch (IOException e){
                 e.printStackTrace();
             }
         }
-        return sb.toString();
+
     }
 }

@@ -33,14 +33,12 @@ import com.aware.Aware;
 import com.aware.R;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.utils.Https;
-import com.aware.utils.WearClient;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.ParseException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,6 +54,7 @@ import java.security.cert.CertificateFactory;
 import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
@@ -336,6 +335,13 @@ public class Plugins_Manager extends Aware_Activity {
 	}
 
     @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        //Fixed: leak when leaving plugin manager
+        if( installed_plugins != null && ! installed_plugins.isClosed() ) installed_plugins.close();
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
         //Fixed: leak when leaving plugin manager
@@ -364,33 +370,29 @@ public class Plugins_Manager extends Aware_Activity {
 	 */
 	public static byte[] cacheImage( String image_url, Context sContext ) {
 		try {
-			CertificateFactory cf = CertificateFactory.getInstance("X.509");
-			InputStream caInput = sContext.getResources().openRawResource(R.raw.aware);
-			Certificate ca;
-			try {
-				ca = cf.generateCertificate(caInput);
-			} finally {
-				caInput.close();
-			}
-			
-			KeyStore sKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-			InputStream inStream = sContext.getResources().openRawResource(R.raw.awareframework);
-			sKeyStore.load(inStream, "awareframework".toCharArray());
-			inStream.close();
-			
-			sKeyStore.setCertificateEntry("ca", ca);
-			
-			String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
-			TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
-			tmf.init(sKeyStore);
-			
-			SSLContext context = SSLContext.getInstance("TLS");
-			context.init(null, tmf.getTrustManagers(), null);
-			
+
+            //Load AWARE's SSL public certificate so we can talk with our server
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            InputStream caInput = new BufferedInputStream(sContext.getResources().openRawResource(R.raw.awareframework));
+            Certificate ca = cf.generateCertificate(caInput);
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keyStore.load(null, null); //initialize as empty keystore
+            keyStore.setCertificateEntry("ca", ca); //add our certificate to keystore
+
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            trustManagerFactory.init(keyStore); //add our keystore to the trusted keystores
+
+            //Initialize a SSL connection context
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+
+            //Fix for known-bug on <= JellyBean (4.x)
+            System.setProperty("http.keepAlive", "false");
+
 			//Fetch image now that we recognise SSL
 			URL image_path = new URL(image_url.replace("http://", "https://")); //make sure we are fetching the images over https
 			HttpsURLConnection image_connection = (HttpsURLConnection) image_path.openConnection();
-			image_connection.setSSLSocketFactory(context.getSocketFactory());
+			image_connection.setSSLSocketFactory(sslContext.getSocketFactory());
 			
 			InputStream in_stream = image_connection.getInputStream();
 			Bitmap tmpBitmap = BitmapFactory.decodeStream(in_stream);
@@ -481,10 +483,10 @@ public class Plugins_Manager extends Aware_Activity {
             needsRefresh = false;
 
     		//Check for updates on the server side
-    		HttpResponse response = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/plugins/get_plugins" + (( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) ? "/" + Aware.getSetting(getApplicationContext(), "study_id") : ""), true );
-			if( response != null && response.getStatusLine().getStatusCode() == 200 ) {
+    		String response = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/plugins/get_plugins" + (( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) ? "/" + Aware.getSetting(getApplicationContext(), "study_id") : ""), true );
+			if( response != null ) {
 				try {
-					JSONArray plugins = new JSONArray(Https.undoGZIP(response));
+					JSONArray plugins = new JSONArray(response);
 
 					for( int i=0; i< plugins.length(); i++ ) {
 						JSONObject plugin = plugins.getJSONObject(i);
@@ -534,8 +536,6 @@ public class Plugins_Manager extends Aware_Activity {
                             needsRefresh = true;
                         }
 					}
-				} catch (ParseException e) {
-					e.printStackTrace();
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}

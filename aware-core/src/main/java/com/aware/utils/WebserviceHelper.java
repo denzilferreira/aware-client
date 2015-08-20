@@ -15,15 +15,11 @@ import android.util.Log;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.ParseException;
-import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
+import java.util.Hashtable;
 
 public class WebserviceHelper extends IntentService {
 	
@@ -64,16 +60,18 @@ public class WebserviceHelper extends IntentService {
 		Uri CONTENT_URI = Uri.parse(intent.getStringExtra(EXTRA_CONTENT_URI));
 
         WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        boolean wifi_only = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true");
+
+		boolean wifi_only = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true");
         boolean restore_network = false;
 
 		if( intent.getAction().equals(ACTION_AWARE_WEBSERVICE_SYNC_TABLE) ) {
 
-			if( ! Aware.is_watch(getApplicationContext()) ) { //watch doesn't care about Wi-Fi or not.
+            if( ! Aware.is_watch(getApplicationContext()) ) { //watch doesn't care about Wi-Fi or not.
 				//Check if we should do this only over Wi-Fi
 				if( wifi_only ) {
 					ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 					NetworkInfo active_network = cm.getActiveNetworkInfo();
+
                     //if not connected to wifi
 					if( active_network != null && active_network.getType() != ConnectivityManager.TYPE_WIFI ) {
                         restore_network = true;
@@ -87,22 +85,15 @@ public class WebserviceHelper extends IntentService {
             if( Aware.DEBUG ) Log.d(Aware.TAG, "Synching data..." + DATABASE_TABLE);
 
 			//Check first if we have database table remotely, otherwise create it!
-			ArrayList<NameValuePair> fields = new ArrayList<NameValuePair>();
-    		fields.add(new BasicNameValuePair(Aware_Preferences.DEVICE_ID, DEVICE_ID));
-    		fields.add(new BasicNameValuePair(EXTRA_FIELDS, TABLES_FIELDS));
+			Hashtable<String, String> fields = new Hashtable<>();
+			fields.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
+    		fields.put(EXTRA_FIELDS, TABLES_FIELDS);
 
     		//Create table if doesn't exist on the remote webservice server
-    		HttpResponse response = new Https(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
-    		if( response != null && response.getStatusLine().getStatusCode() == 200 ) {
-    		    if( DEBUG ) {
-                    HttpResponse copy = response;
-                    try {
-                        if( DEBUG ) Log.d(Aware.TAG, Https.undoGZIP(copy));
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
-                }
-    			
+    		String response = new Https(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
+    		if( response != null ) {
+    		    if( DEBUG ) Log.d(Aware.TAG, response);
+
     			String[] columnsStr = new String[]{};
     			Cursor columnsDB = getContentResolver().query(CONTENT_URI, null, null, null, null);
     			if( columnsDB != null && columnsDB.moveToFirst() ) {
@@ -111,16 +102,16 @@ public class WebserviceHelper extends IntentService {
     			if( columnsDB != null && ! columnsDB.isClosed() ) columnsDB.close();
     			
 				try {
-					ArrayList<NameValuePair> request = new ArrayList<NameValuePair>();
-    				request.add(new BasicNameValuePair(Aware_Preferences.DEVICE_ID, DEVICE_ID));
+					Hashtable<String, String> request = new Hashtable<>();
+					request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
     				
     				//check the latest entry in remote database
-    				HttpResponse latest = new Https(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
+    				String latest = new Https(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
     				if( latest == null ) return;
     				
     				String data = "[]";
     				try {
-    				    data = Https.undoGZIP(latest);
+    				    data = latest;
     				} catch( IllegalStateException e ) {
     				    Log.d(Aware.TAG,"Unable to connect to webservices...");
     				}
@@ -199,9 +190,9 @@ public class WebserviceHelper extends IntentService {
                                 batch_count++;
                                 if( DEBUG ) Log.d(Aware.TAG, "Sync batch "+ batch_count + "/" + batch_total);
 
-                                request = new ArrayList<NameValuePair>();
-								request.add(new BasicNameValuePair(Aware_Preferences.DEVICE_ID, DEVICE_ID));
-								request.add(new BasicNameValuePair("data", context_data_entries.toString()));
+                                request = new Hashtable<>();
+								request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
+								request.put("data", context_data_entries.toString());
 								new Https(getApplicationContext()).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
 								
 								context_data_entries = new JSONArray();
@@ -213,9 +204,9 @@ public class WebserviceHelper extends IntentService {
                             batch_count++;
                             if( DEBUG ) Log.d(Aware.TAG, "Sync batch "+ batch_count + "/" + batch_total);
 
-                            request = new ArrayList<NameValuePair>();
-							request.add(new BasicNameValuePair(Aware_Preferences.DEVICE_ID, DEVICE_ID));
-							request.add(new BasicNameValuePair("data", context_data_entries.toString()));
+                            request = new Hashtable<>();
+							request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
+							request.put("data", context_data_entries.toString());
 							new Https(getApplicationContext()).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
 						}
                         if( DEBUG ) Log.d(Aware.TAG, "Sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis()-start)/1000));
@@ -223,11 +214,10 @@ public class WebserviceHelper extends IntentService {
 					
 					if( context_data != null && ! context_data.isClosed() ) context_data.close();
 					
-				} catch (ParseException e) {
-					e.printStackTrace();
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
+
     		}
 
             //disable the wifi since the user didn't have it on
@@ -237,10 +227,10 @@ public class WebserviceHelper extends IntentService {
 		}
 		
 		//Clear database table remotely
-		if( intent.getAction().equals(ACTION_AWARE_WEBSERVICE_CLEAR_TABLE) ) {
-            if( Aware.DEBUG ) Log.d(Aware.TAG, "Clearing data..." + DATABASE_TABLE);
-			ArrayList<NameValuePair> request = new ArrayList<NameValuePair>();
-    		request.add(new BasicNameValuePair(Aware_Preferences.DEVICE_ID, DEVICE_ID));
+		if( intent.getAction().equals(ACTION_AWARE_WEBSERVICE_CLEAR_TABLE)) {
+            if (Aware.DEBUG) Log.d(Aware.TAG, "Clearing data..." + DATABASE_TABLE);
+			Hashtable<String, String> request = new Hashtable<>();
+			request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
     		new Https(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
 		}
 	}

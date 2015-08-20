@@ -8,16 +8,20 @@ configurations {
 }
 
 android {
-    compileSdkVersion 22
-    buildToolsVersion "22.0.1"
+    compileSdkVersion 23
+    buildToolsVersion "23"
     defaultPublishConfig "phoneRelease"
     publishNonDefault true //set to false for Maven Central, otherwise set to true
+
+    //Add support for Apache HTTP Client for API 23+
+//    useLibrary 'org.apache.http.legacy'
+
     defaultConfig {
         //Comment applicationId out for library
         applicationId "com.aware"
-        versionCode 385
-        versionName "3.5.4"
-        targetSdkVersion 22
+        versionCode 386
+        versionName "3.5.5"
+        targetSdkVersion 23
     }
     buildTypes {
         release {
@@ -38,12 +42,12 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile files('libs/mqtt-client-0.4.0.jar')
-    compile 'com.android.support:appcompat-v7:22.2.1'
-    compile 'com.android.support:cardview-v7:22.2.1'
-    phoneCompile 'com.android.support:support-v4:22.2.1'
-    phoneCompile 'com.google.android.gms:play-services:7.5.0'
-    wearCompile 'com.android.support:support-v13:22.2.1'
-    wearCompile 'com.google.android.gms:play-services-wearable:7.5.0'
+    compile 'com.android.support:appcompat-v7:23.0.0'
+    compile 'com.android.support:cardview-v7:23.0.0'
+    phoneCompile 'com.android.support:support-v4:23.0.0'
+    phoneCompile 'com.google.android.gms:play-services:7.8.0'
+    wearCompile 'com.android.support:support-v13:23.0.0'
+    wearCompile 'com.google.android.gms:play-services-wearable:7.8.0'
     wearCompile 'com.google.android.support:wearable:1.1.0'
 
     //Comment out for MavenCentral
