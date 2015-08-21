@@ -14,13 +14,12 @@ android {
     publishNonDefault true //set to false for Maven Central, otherwise set to true
 
     //Add support for Apache HTTP Client for API 23+
-//    useLibrary 'org.apache.http.legacy'
 
     defaultConfig {
         //Comment applicationId out for library
         applicationId "com.aware"
-        versionCode 386
-        versionName "3.5.5"
+        versionCode 387
+        versionName "3.5.6"
         targetSdkVersion 23
     }
     buildTypes {
