@@ -458,6 +458,7 @@ public class Aware extends Service {
                 }while(enabled_plugins.moveToNext());
             }
             if( enabled_plugins != null && ! enabled_plugins.isClosed() ) enabled_plugins.close();
+
             if( active_plugins.size() > 0 ) {
                 for(String package_name : active_plugins ) {
                     stopPlugin(getApplicationContext(), package_name);

@@ -36,9 +36,10 @@ public class Stream_UI extends Aware_Activity {
     public static final String ACTION_AWARE_STREAM_CLOSED = "ACTION_AWARE_STREAM_CLOSED";
 	
 	private static ListView stream_container;
+
+//  private static MatrixCursor core_cards;
     private static CardAdapter card_adapter;
-//    private static MatrixCursor core_cards;
-    private Cursor cards;
+    private static Cursor cards;
 
 	@Override
 	protected void onCreate(Bundle arg0) {
@@ -134,6 +135,7 @@ public class Stream_UI extends Aware_Activity {
 
         //Fixed: leak on stream cursor
         if( cards != null && ! cards.isClosed()) cards.close();
+        card_adapter.changeCursor(null);
     }
 
     @Override
@@ -141,6 +143,7 @@ public class Stream_UI extends Aware_Activity {
         super.onStop();
         //Fixed: leak on stream cursor
         if( cards != null && ! cards.isClosed()) cards.close();
+        card_adapter.changeCursor(null);
     }
 
     @Override
@@ -149,6 +152,7 @@ public class Stream_UI extends Aware_Activity {
 		unregisterReceiver(stream_updater);
         //Fixed: leak on stream cursor
         if( cards != null && ! cards.isClosed()) cards.close();
+        card_adapter.changeCursor(null);
 	}
 	
 	private StreamUpdater stream_updater = new StreamUpdater();

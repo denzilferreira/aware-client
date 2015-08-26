@@ -89,7 +89,8 @@ public class Plugins_Manager extends Aware_Activity {
 	private static GridView store_grid;
     private static SwipeRefreshLayout swipeToRefresh;
 
-    private Cursor installed_plugins;
+    private static Cursor installed_plugins;
+    private static PluginAdapter pluginAdapter;
 
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,7 +140,7 @@ public class Plugins_Manager extends Aware_Activity {
 
     private void updateGrid() {
         installed_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, Aware_Plugins.PLUGIN_NAME + " ASC");
-        PluginAdapter pluginAdapter = new PluginAdapter(getApplicationContext(), installed_plugins, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        pluginAdapter = new PluginAdapter(getApplicationContext(), installed_plugins, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         store_grid.setAdapter(pluginAdapter);
     }
 
@@ -339,6 +340,7 @@ public class Plugins_Manager extends Aware_Activity {
         super.onUserLeaveHint();
         //Fixed: leak when leaving plugin manager
         if( installed_plugins != null && ! installed_plugins.isClosed() ) installed_plugins.close();
+        pluginAdapter.changeCursor(null);
     }
 
     @Override
@@ -346,6 +348,7 @@ public class Plugins_Manager extends Aware_Activity {
         super.onPause();
         //Fixed: leak when leaving plugin manager
         if( installed_plugins != null && ! installed_plugins.isClosed() ) installed_plugins.close();
+        pluginAdapter.changeCursor(null);
     }
 
     @Override
@@ -353,6 +356,7 @@ public class Plugins_Manager extends Aware_Activity {
         super.onStop();
         //Fixed: leak when leaving plugin manager
         if( installed_plugins != null && ! installed_plugins.isClosed() ) installed_plugins.close();
+        pluginAdapter.changeCursor(null);
     }
 
     @Override
@@ -360,6 +364,7 @@ public class Plugins_Manager extends Aware_Activity {
     	super.onDestroy();
         //Fixed: leak when leaving plugin manager
         if( installed_plugins != null && ! installed_plugins.isClosed() ) installed_plugins.close();
+        pluginAdapter.changeCursor(null);
         unregisterReceiver(plugins_listener);
     }
 

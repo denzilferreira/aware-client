@@ -180,11 +180,11 @@ public class Http {
 		try{
 
             URL path = new URL(url);
-            HttpsURLConnection path_connection = (HttpsURLConnection) path.openConnection();
+            HttpURLConnection path_connection = (HttpURLConnection) path.openConnection();
             path_connection.setReadTimeout(10000);
             path_connection.setConnectTimeout(10000);
             path_connection.setRequestMethod("POST");
-            if( is_gzipped ) path_connection.setRequestProperty("Accept-Encoding","gzip");
+            if( is_gzipped ) path_connection.setRequestProperty("accept-encoding","gzip");
 
             Uri.Builder builder = new Uri.Builder();
             Enumeration e = data.keys();
