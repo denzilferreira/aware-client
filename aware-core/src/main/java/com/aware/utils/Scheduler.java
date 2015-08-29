@@ -121,7 +121,7 @@ public class Scheduler extends Service {
          * e.g. [ 9, 10, 11, 12 ] triggers this at 9AM, 10AM, 11AM and noon.
          * @param hours
          */
-        public void setHours( JSONArray hours ) {
+        public void setHours( JSONArray hours ) throws JSONException {
             this.trigger.put(TRIGGER_HOUR, hours);
         }
 
@@ -129,9 +129,9 @@ public class Scheduler extends Service {
          * Get scheduled hours
          * @return
          */
-        public JSONArray getHours() {
+        public JSONArray getHours() throws JSONException {
             if( this.trigger.has(TRIGGER_HOUR) ) {
-                return this.trigger.get(TRIGGER_HOUR);
+                return this.trigger.getJSONArray(TRIGGER_HOUR);
             }
             return new JSONArray();
         }
@@ -140,19 +140,22 @@ public class Scheduler extends Service {
          * Set trigger to a specified date and time
          * @param date
          */
-        public void setTimer( Calendar date ) {
+        public void setTimer( Calendar date ) throws JSONException {
             this.trigger.put(TRIGGER_TIMER, date.getTimeInMillis() );
         }
 
         /**
-         * Get trigger specific date and time
+         * Get trigger specific unix timestamp
          * @return
          */
-        public Calendar getTimer() {
+        public long getTimer() throws JSONException {
+            Calendar cal = Calendar.getInstance();
+
             if( this.trigger.has(TRIGGER_TIMER) ) {
-                return new Calendar().setTimeInMillis(this.trigger.get(TRIGGER_TIMER));
+                cal.setTimeInMillis(this.trigger.getLong(TRIGGER_TIMER));
+                return cal.getTimeInMillis();
             }
-            return null;
+            return 0;
         }
 
         /**
@@ -160,7 +163,7 @@ public class Scheduler extends Service {
          * e.g., ['Monday','Tuesday'] for every Monday and Tuesdays
          * @param days_of_week
          */
-        public void setWeekdays( JSONArray days_of_week ) {
+        public void setWeekdays( JSONArray days_of_week ) throws JSONException {
             this.trigger.put(TRIGGER_WEEKDAY, days_of_week );
         }
 
@@ -168,9 +171,9 @@ public class Scheduler extends Service {
          * Get days of week in which this trigger is scheduled
          * @return
          */
-        public JSONArray getWeekdays() {
+        public JSONArray getWeekdays() throws JSONException {
             if( this.trigger.has(TRIGGER_WEEKDAY) ) {
-                return this.trigger.get(TRIGGER_WEEKDAY);
+                return this.trigger.getJSONArray(TRIGGER_WEEKDAY);
             }
             return new JSONArray();
         }
@@ -180,7 +183,7 @@ public class Scheduler extends Service {
          * e.g., ['January','February'] for every January and February
          * @param months
          */
-        public void setMonths( JSONArray months ) {
+        public void setMonths( JSONArray months ) throws JSONException {
             this.trigger.put(TRIGGER_MONTH, months);
         }
 
@@ -188,9 +191,9 @@ public class Scheduler extends Service {
          * Get months where schedule is valid
          * @return
          */
-        public JSONArray getMonths() {
+        public JSONArray getMonths() throws JSONException {
             if( this.trigger.has(TRIGGER_MONTH) ) {
-                return this.trigger.get(TRIGGER_MONTH);
+                return this.trigger.getJSONArray(TRIGGER_MONTH);
             }
             return new JSONArray();
         }
@@ -200,7 +203,7 @@ public class Scheduler extends Service {
          * e.g., ACTION_AWARE_CALL_ACCEPTED runs this schedule when the user has answered a phone call
          * @param broadcasts
          */
-        public void setContext( String broadcast ) {
+        public void setContext( String broadcast ) throws JSONException {
             this.trigger.put(TRIGGER_CONTEXT, broadcast);
         }
 
@@ -208,9 +211,9 @@ public class Scheduler extends Service {
          * Get the contextual broadcast that triggers this schedule
          * @return
          */
-        public String getContexts() {
+        public String getContexts() throws JSONException {
             if( this.trigger.has(TRIGGER_CONTEXT) ) {
-                return this.trigger.get(TRIGGER_CONTEXT);
+                return this.trigger.getString(TRIGGER_CONTEXT);
             }
             return "";
         }
