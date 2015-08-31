@@ -62,6 +62,7 @@ public class ESM_Queue extends FragmentActivity {
             FragmentManager fragmentManager = getSupportFragmentManager();
             esmDialog = new ESM_UI();
             esmDialog.show(fragmentManager, TAG);
+            fragmentManager.executePendingTransactions();
             if( ! powerManager.isScreenOn() ) {
                 vibrator.vibrate(777);
             }

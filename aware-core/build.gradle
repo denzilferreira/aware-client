@@ -13,8 +13,6 @@ android {
     defaultPublishConfig "phoneRelease"
     publishNonDefault true //set to false for Maven Central, otherwise set to true
 
-    //Add support for Apache HTTP Client for API 23+
-
     defaultConfig {
         //Comment applicationId out for library
         applicationId "com.aware"

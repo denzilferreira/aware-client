@@ -218,12 +218,12 @@ public class Scheduler extends Service {
             return "";
         }
 
-        public void setRandom( int RANDOM_TYPE ) {
+        public void setRandom( int RANDOM_TYPE ) throws JSONException {
             switch( RANDOM_TYPE ) {
                 case RANDOM_TYPE_HOUR:
                     //Get valid hours
                     if( this.trigger.has(TRIGGER_HOUR) ) {
-                        JSONArray hours = this.trigger.get(TRIGGER_HOUR);
+                        JSONArray hours = this.trigger.getJSONArray(TRIGGER_HOUR);
 
                     }
                     break;

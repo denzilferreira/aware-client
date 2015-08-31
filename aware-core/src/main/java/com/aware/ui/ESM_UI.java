@@ -11,11 +11,14 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.view.inputmethod.InputMethodManager;
@@ -50,7 +53,7 @@ public class ESM_UI extends DialogFragment {
 
 	private static String TAG = "AWARE::ESM UI";
 
-	private static InputMethodManager inputManager = null;
+//	private static InputMethodManager inputManager = null;
 
 	private static ESMExpireMonitor expire_monitor = null;
 	private static Dialog current_dialog = null;
@@ -68,11 +71,12 @@ public class ESM_UI extends DialogFragment {
 	//Checkbox ESM UI to store selected items
 	private static ArrayList<String> selected_options = new ArrayList<String>();
 
-	@Override
+    @NonNull
+    @Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 		LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		inputManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+//		inputManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 
 		TAG = Aware.getSetting(getActivity().getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getActivity().getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
 
@@ -128,6 +132,8 @@ public class ESM_UI extends DialogFragment {
         	switch(esm_type) {
         		case ESM.TYPE_ESM_TEXT:
         			final EditText feedback = (EditText) layout.findViewById(R.id.esm_feedback);
+					feedback.requestFocus();
+					getDialog().getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
                     feedback.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -138,7 +144,7 @@ public class ESM_UI extends DialogFragment {
                     cancel_text.setOnClickListener(new View.OnClickListener() {
 						@Override
 						public void onClick(View v) {
-							inputManager.hideSoftInputFromWindow(feedback.getWindowToken(), 0);
+//							inputManager.hideSoftInputFromWindow(feedback.getWindowToken(), 0);
 							current_dialog.cancel();
 						}
 					});
@@ -150,7 +156,7 @@ public class ESM_UI extends DialogFragment {
 
                             if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
 
-							inputManager.hideSoftInputFromWindow(feedback.getWindowToken(), 0);
+//							inputManager.hideSoftInputFromWindow(feedback.getWindowToken(), 0);
 
 							ContentValues rowData = new ContentValues();
 		                    rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
@@ -203,6 +209,8 @@ public class ESM_UI extends DialogFragment {
 
 	                                    final EditText otherText = new EditText(getActivity());
 	                                    editor.addView(otherText);
+										otherText.requestFocus();
+										getDialog().getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 
 	                                    Button confirm = new Button(getActivity());
 	                                    confirm.setText("OK");
@@ -210,7 +218,7 @@ public class ESM_UI extends DialogFragment {
 	                                        @Override
 	                                        public void onClick(View v) {
 	                                        	if(otherText.length() > 0 ) radioOption.setText(otherText.getText());
-	                                        	inputManager.hideSoftInputFromWindow(otherText.getWindowToken(), 0);
+//	                                        	inputManager.hideSoftInputFromWindow(otherText.getWindowToken(), 0);
 	                                            editOther.dismiss();
 	                                        }
 	                                    });
@@ -293,6 +301,8 @@ public class ESM_UI extends DialogFragment {
 
 	                                                final EditText otherText = new EditText(getActivity());
 	                                                editor.addView(otherText);
+													otherText.requestFocus();
+													getDialog().getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 
 	                                                Button confirm = new Button(getActivity());
 	                                                confirm.setText("OK");
@@ -300,7 +310,7 @@ public class ESM_UI extends DialogFragment {
 	                                                    @Override
 	                                                    public void onClick(View v) {
 	                                                        if( otherText.length() > 0 ) {
-	                                                        	inputManager.hideSoftInputFromWindow(otherText.getWindowToken(), 0);
+//	                                                        	inputManager.hideSoftInputFromWindow(otherText.getWindowToken(), 0);
 	                                                        	selected_options.remove(buttonView.getText().toString());
 	                                                            checked.setText(otherText.getText());
 	                                                            selected_options.add(otherText.getText().toString());
@@ -569,7 +579,7 @@ public class ESM_UI extends DialogFragment {
 		current_dialog.setCanceledOnTouchOutside(false);
 
         //Make the dialog appear on top of already existing activities
-        current_dialog.getWindow().setType(LayoutParams.TYPE_SYSTEM_ALERT);
+        current_dialog.getWindow().setType(LayoutParams.TYPE_PRIORITY_PHONE);
         return current_dialog;
 	}
 
