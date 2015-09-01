@@ -53,6 +53,7 @@ import com.aware.ui.Stream_UI;
 import com.aware.utils.Aware_Plugin;
 import com.aware.utils.DownloadPluginService;
 import com.aware.utils.Https;
+import com.aware.utils.Scheduler;
 import com.aware.utils.WearClient;
 import com.aware.utils.WebserviceHelper;
 
@@ -1420,8 +1421,8 @@ public class Aware extends Service {
      */
     protected void startAllServices() {
 //        //Start Intent scheduler
-//        Intent scheduler = new Intent(awareContext, Scheduler.class);
-//        startService(scheduler);
+        Intent scheduler = new Intent(awareContext, Scheduler.class);
+        startService(scheduler);
 
         if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true") ) {
             startESM();

@@ -1,8 +1,6 @@
 package com.aware.utils;
 
-import android.app.AlarmManager;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
@@ -14,10 +12,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Calendar;
+import java.util.Random;
 
 public class Scheduler extends Service {
-    private static AlarmManager scheduler;
-
     public static final String SCHEDULE_TRIGGER = "trigger";
     public static final String SCHEDULE_ACTION = "action";
 
@@ -28,12 +25,14 @@ public class Scheduler extends Service {
     public static final String TRIGGER_CONTEXT = "context"; //done
 
     public static final String TRIGGER_RANDOM = "random";
-    public static final String TRIGGER_RANDOM_TYPE = "random_type";
+
     public static final int RANDOM_TYPE_HOUR = 0;
     public static final int RANDOM_TYPE_WEEKDAY = 1;
     public static final int RANDOM_TYPE_MONTH = 2;
-    public static final String TRIGGER_RANDOM_ELEMENTS = "random_elements";
-    public static final String TRIGGER_RANDOM_MAX = "random_max";
+
+    public static final String RANDOM_TYPE = "random_type";
+    public static final String RANDOM_ELEMENTS = "random_elements";
+    public static final String RANDOM_MAX = "random_max";
 
     public static final String ACTION_TYPE = "type";
     public static final String ACTION_CLASS = "class";
@@ -42,8 +41,6 @@ public class Scheduler extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        scheduler = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
 //            JSONObject new_schedule = new JSONObject();
 //            JSONObject trigger = new JSONObject();
@@ -66,9 +63,21 @@ public class Scheduler extends Service {
 //
 //            JSONObject scheduleJSON = new JSONObject().put("schedule", new_schedule);
 
+
+        try {
             Schedule schedule = new Schedule();
 
+            JSONArray hours = new JSONArray();
+            hours.put(9).put(10).put(11).put(12).put(13).put(14);
+
+            schedule.setHours(hours);
+            schedule.setRandom(RANDOM_TYPE_HOUR, 3);
+
             Log.d(Aware.TAG, schedule.toString());
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     public class Schedule {
@@ -200,8 +209,7 @@ public class Scheduler extends Service {
 
         /**
          * Listen for this contextual broadcast to trigger this schedule
-         * e.g., ACTION_AWARE_CALL_ACCEPTED runs this schedule when the user has answered a phone call
-         * @param broadcasts
+         * @param broadcast e.g., ACTION_AWARE_CALL_ACCEPTED runs this schedule when the user has answered a phone call
          */
         public void setContext( String broadcast ) throws JSONException {
             this.trigger.put(TRIGGER_CONTEXT, broadcast);
@@ -211,21 +219,53 @@ public class Scheduler extends Service {
          * Get the contextual broadcast that triggers this schedule
          * @return
          */
-        public String getContexts() throws JSONException {
+        public String getContext() throws JSONException {
             if( this.trigger.has(TRIGGER_CONTEXT) ) {
                 return this.trigger.getString(TRIGGER_CONTEXT);
             }
             return "";
         }
 
-        public void setRandom( int RANDOM_TYPE ) throws JSONException {
-            switch( RANDOM_TYPE ) {
+        public void setRandom( int random_type, int random_times ) throws JSONException {
+            JSONObject json_random;
+            if( ! this.trigger.has(TRIGGER_RANDOM) ) {
+                json_random = new JSONObject();
+                this.trigger.put(TRIGGER_RANDOM, json_random);
+            } else {
+                json_random = this.trigger.getJSONObject(TRIGGER_RANDOM);
+            }
+
+            json_random.put(RANDOM_TYPE, random_type);
+            json_random.put(RANDOM_MAX, random_times);
+
+            switch( random_type ) {
                 case RANDOM_TYPE_HOUR:
                     //Get valid hours
                     if( this.trigger.has(TRIGGER_HOUR) ) {
                         JSONArray hours = this.trigger.getJSONArray(TRIGGER_HOUR);
+                        if( hours.length() < random_times ) {
+                            Log.w(Aware.TAG, "Not enough elements to randomize");
+                            break;
+                        }
 
-                    }
+                        int min_hour = -1;
+                        int max_hour = -1;
+                        for(int i = 0; i < hours.length(); i++ ) {
+                            if( min_hour == -1 || hours.getInt(i) < min_hour ) min_hour = hours.getInt(i);
+                        }
+                        for(int i = 0; i < hours.length(); i++ ) {
+                            if( max_hour == -1 || hours.getInt(i) > min_hour ) max_hour = hours.getInt(i);
+                        }
+
+                        Random random = new Random();
+                        JSONArray random_elements = new JSONArray();
+
+                        for( int i=0; i<json_random.getInt(RANDOM_MAX); i++ ) {
+                            int random_hour = random.nextInt(max_hour - min_hour + 1) + min_hour;
+                            random_elements.put( random_hour );
+                        }
+                        json_random.put(RANDOM_ELEMENTS, random_elements);
+                     }
                     break;
                 case RANDOM_TYPE_MONTH:
                     break;
