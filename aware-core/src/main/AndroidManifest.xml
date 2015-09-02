@@ -335,6 +335,14 @@
         <!-- FOR PLUGINS/APPS COMMENT STARTS HERE -->
 
         <provider
+            android:name="com.aware.providers.Scheduler_Provider"
+            android:authorities="${applicationId}.provider.scheduler"
+            android:exported="true"
+            android:readPermission="com.aware.READ_CONTEXT_DATA"
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA"
+            >
+        </provider>
+        <provider
             android:name="com.aware.providers.Bluetooth_Provider"
             android:authorities="${applicationId}.provider.bluetooth"
             android:exported="true"
