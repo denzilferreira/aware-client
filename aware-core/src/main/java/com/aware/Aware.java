@@ -187,6 +187,7 @@ public class Aware extends Service {
     private static Intent installationsSrv = null;
     private static Intent keyboard = null;
     private static Intent wearClient = null;
+    private static Intent scheduler = null;
     
     private final String PREF_FREQUENCY_WATCHDOG = "frequency_watchdog";
     private final String PREF_LAST_UPDATE = "last_update";
@@ -1420,10 +1421,6 @@ public class Aware extends Service {
      * Start active services
      */
     protected void startAllServices() {
-//        //Start Intent scheduler
-        Intent scheduler = new Intent(awareContext, Scheduler.class);
-        startService(scheduler);
-
         if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true") ) {
             startESM();
         }else stopESM();
@@ -1531,9 +1528,14 @@ public class Aware extends Service {
             startKeyboard();
         }else stopKeyboard();
 
+        //Start Android Wear HTTP/s proxy
         if( getPackageName().equals("com.aware") ) {
             awareContext.startService(wearClient);
         }
+
+        //Start task scheduler
+        scheduler = new Intent(awareContext, Scheduler.class);
+        awareContext.startService(scheduler);
     }
     
     /**
@@ -1567,9 +1569,13 @@ public class Aware extends Service {
         stopInstallations();
         stopKeyboard();
 
+        //Stop Android Wear HTTP/s proxy
         if( getPackageName().equals("com.aware") ) {
             awareContext.stopService(wearClient);
         }
+
+        //Stop scheduler
+        awareContext.stopService(scheduler);
     }
 
     /**

@@ -133,7 +133,8 @@ public class ESM_UI extends DialogFragment {
         		case ESM.TYPE_ESM_TEXT:
         			final EditText feedback = (EditText) layout.findViewById(R.id.esm_feedback);
 					feedback.requestFocus();
-					getDialog().getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+					current_dialog.getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+
                     feedback.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -210,7 +211,7 @@ public class ESM_UI extends DialogFragment {
 	                                    final EditText otherText = new EditText(getActivity());
 	                                    editor.addView(otherText);
 										otherText.requestFocus();
-										getDialog().getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+										editOther.getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 
 	                                    Button confirm = new Button(getActivity());
 	                                    confirm.setText("OK");
@@ -302,7 +303,7 @@ public class ESM_UI extends DialogFragment {
 	                                                final EditText otherText = new EditText(getActivity());
 	                                                editor.addView(otherText);
 													otherText.requestFocus();
-													getDialog().getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+                                                    editOther.getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 
 	                                                Button confirm = new Button(getActivity());
 	                                                confirm.setText("OK");

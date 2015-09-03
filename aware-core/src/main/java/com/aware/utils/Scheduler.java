@@ -8,11 +8,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.IBinder;
+import android.os.Parcelable;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
+import com.aware.ESM;
 import com.aware.providers.Scheduler_Provider;
 
 import org.json.JSONArray;
@@ -23,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Hashtable;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Random;
 
 public class Scheduler extends Service {
@@ -59,36 +62,36 @@ public class Scheduler extends Service {
     public void onCreate() {
         super.onCreate();
 
-//        try {
-//            Schedule schedule = new Schedule("sept_15h");
-//            schedule.addHour(22)
-//                    .addMonth("September")
-//                    .setActionType(ACTION_TYPE_BROADCAST)
-//                    .setActionClass("ACTION_AWARE_VIBRATE");
-//
-//            Log.d(Aware.TAG, schedule.build().toString(1));
-//
-//            saveSchedule( schedule );
-//
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
+        removeSchedule("debug");
+
+        try {
+
+            Schedule schedule = new Schedule("debug");
+            schedule.addWeekday("Thursday")
+                    .setActionType(ACTION_TYPE_ACTIVITY)
+                    .setActionClass("com.facebook.katana.activity.FbMainTabActivity");
+
+            Log.d(Aware.TAG, schedule.build().toString(1));
+
+            saveSchedule( schedule );
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     public void saveSchedule( Schedule schedule ) {
         try {
-            String schedule_id = schedule.getScheduleID();
-
             ContentValues data = new ContentValues();
             data.put(Scheduler_Provider.Scheduler_Data.TIMESTAMP, System.currentTimeMillis());
             data.put(Scheduler_Provider.Scheduler_Data.DEVICE_ID, Aware.getSetting(this, Aware_Preferences.DEVICE_ID));
-            data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID, schedule_id);
+            data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID, schedule.getScheduleID());
             data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE, schedule.build().toString());
 
-            Cursor schedules = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "'", null, null);
+            Cursor schedules = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'", null, null);
             if( schedules != null && schedules.getCount() == 1 ) {
                 Log.d(Aware.TAG, "Updating already existing schedule...");
-                getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "'", null );
+                getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'", null );
             } else {
                 Log.d(Aware.TAG, "New schedule: " + data.toString());
                 getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
@@ -111,15 +114,12 @@ public class Scheduler extends Service {
      * - schedule trigger
      */
     public class Schedule {
-        private JSONObject schedule;
-        private JSONObject trigger;
-        private JSONObject action;
+
+        private JSONObject schedule = new JSONObject();
+        private JSONObject trigger = new JSONObject();
+        private JSONObject action = new JSONObject();
 
         public Schedule( String schedule_id ){
-            this.schedule = new JSONObject();
-            this.action = new JSONObject();
-            this.trigger = new JSONObject();
-
             try {
                 this.schedule.put(SCHEDULE_ID, schedule_id);
                 this.schedule.put(SCHEDULE_ACTION, this.action);
@@ -159,7 +159,7 @@ public class Scheduler extends Service {
         }
 
         public Schedule setActionType( String type ) throws JSONException {
-            this.action.put(ACTION_TYPE, type);
+            this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_TYPE, type);
             return this;
         }
 
@@ -169,7 +169,7 @@ public class Scheduler extends Service {
          * @throws JSONException
          */
         public String getActionType() throws JSONException{
-            return this.action.getString(ACTION_TYPE);
+            return this.schedule.getJSONObject(SCHEDULE_ACTION).getString(ACTION_TYPE);
         }
 
         /**
@@ -178,11 +178,11 @@ public class Scheduler extends Service {
          * @throws JSONException
          */
         public String getActionClass() throws JSONException {
-            return this.action.getString(ACTION_CLASS);
+            return this.schedule.getJSONObject(SCHEDULE_ACTION).getString(ACTION_CLASS);
         }
 
         public Schedule setActionClass( String classname ) throws JSONException {
-            this.action.put(ACTION_CLASS, classname);
+            this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_CLASS, classname);
             return this;
         }
 
@@ -193,13 +193,13 @@ public class Scheduler extends Service {
         }
 
         public JSONArray getActionExtras() throws JSONException {
-            if( ! this.action.has(ACTION_EXTRAS) ) {
-                this.action.put(ACTION_EXTRAS, new JSONArray());
+            if( ! this.schedule.getJSONObject(SCHEDULE_ACTION).has(ACTION_EXTRAS) ) {
+                this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_EXTRAS, new JSONArray());
             }
-            return this.action.getJSONArray(ACTION_EXTRAS);
+            return this.schedule.getJSONObject(SCHEDULE_ACTION).getJSONArray(ACTION_EXTRAS);
         }
 
-        public Schedule addActionExtra( String key, String value ) throws JSONException{
+        public Schedule addActionExtra( String key, Object value ) throws JSONException{
             JSONArray extras = getActionExtras();
             extras.put(new JSONObject().put(ACTION_EXTRA_KEY, key).put(ACTION_EXTRA_VALUE, value));
             return this;
@@ -210,10 +210,10 @@ public class Scheduler extends Service {
          * @return
          */
         public JSONArray getHours() throws JSONException {
-            if( ! this.trigger.has(TRIGGER_HOUR) ) {
-                this.trigger.put(TRIGGER_HOUR, new JSONArray());
+            if( ! this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_HOUR) ) {
+                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_HOUR, new JSONArray());
             }
-            return this.trigger.getJSONArray(TRIGGER_HOUR);
+            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_HOUR);
         }
 
         /**
@@ -221,7 +221,7 @@ public class Scheduler extends Service {
          * @param date
          */
         public void setTimer( Calendar date ) throws JSONException {
-            this.trigger.put(TRIGGER_TIMER, date.getTimeInMillis() );
+            this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_TIMER, date.getTimeInMillis());
         }
 
         /**
@@ -229,8 +229,8 @@ public class Scheduler extends Service {
          * @return
          */
         public long getTimer() throws JSONException {
-            if( this.trigger.has(TRIGGER_TIMER) ) {
-                return this.trigger.getLong(TRIGGER_TIMER);
+            if( this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_TIMER) ) {
+                return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getLong(TRIGGER_TIMER);
             }
             return -1;
         }
@@ -252,10 +252,10 @@ public class Scheduler extends Service {
          * @return
          */
         public JSONArray getWeekdays() throws JSONException {
-            if( ! this.trigger.has(TRIGGER_WEEKDAY) ) {
-                this.trigger.put(TRIGGER_WEEKDAY, new JSONArray());
+            if( ! this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_WEEKDAY) ) {
+                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_WEEKDAY, new JSONArray());
             }
-            return this.trigger.getJSONArray(TRIGGER_WEEKDAY);
+            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_WEEKDAY);
         }
 
         /**
@@ -275,17 +275,17 @@ public class Scheduler extends Service {
          * @return
          */
         public JSONArray getMonths() throws JSONException {
-            if( ! this.trigger.has(TRIGGER_MONTH) ) {
-                this.trigger.put(TRIGGER_MONTH, new JSONArray());
+            if( ! this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_MONTH) ) {
+                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_MONTH, new JSONArray());
             }
-            return this.trigger.getJSONArray(TRIGGER_MONTH);
+            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_MONTH);
         }
 
         public JSONObject getRandom() throws JSONException {
-            if( ! this.trigger.has(TRIGGER_RANDOM) ) {
-                this.trigger.put(TRIGGER_RANDOM, new JSONObject());
+            if( ! this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_RANDOM) ) {
+                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_RANDOM, new JSONObject());
             }
-            return this.trigger.getJSONObject(TRIGGER_RANDOM);
+            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONObject(TRIGGER_RANDOM);
         }
 
         /**
@@ -293,7 +293,7 @@ public class Scheduler extends Service {
          * @param broadcast e.g., ACTION_AWARE_CALL_ACCEPTED runs this schedule when the user has answered a phone call
          */
         public void setContext( String broadcast ) throws JSONException {
-            this.trigger.put(TRIGGER_CONTEXT, broadcast);
+            this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_CONTEXT, broadcast);
         }
 
         /**
@@ -301,8 +301,8 @@ public class Scheduler extends Service {
          * @return
          */
         public String getContext() throws JSONException {
-            if( this.trigger.has(TRIGGER_CONTEXT) ) {
-                return this.trigger.getString(TRIGGER_CONTEXT);
+            if( this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_CONTEXT) ) {
+                return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getString(TRIGGER_CONTEXT);
             }
             return "";
         }
@@ -313,15 +313,13 @@ public class Scheduler extends Service {
          */
         public void randomize(int random_amount) throws JSONException {
             JSONObject json_random = getRandom();
-
             Random random = new Random();
-            JSONArray random_array;
-            if( this.trigger.has(TRIGGER_HOUR) ) {
-                random_array = this.trigger.getJSONArray(TRIGGER_HOUR);
 
+            if( this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_HOUR) ) {
+                JSONArray valid_hours = getHours();
                 JSONArray selected = new JSONArray();
                 while( selected.length() < random_amount ) {
-                    int selected_random = random_array.getInt(random.nextInt(random_array.length()));
+                    int selected_random = valid_hours.getInt(random.nextInt(valid_hours.length()));
                     boolean is_repeated = false;
                     for( int i=0; i < selected.length(); i++) {
                         if( selected.getInt(i) == selected_random ) is_repeated = true;
@@ -331,11 +329,10 @@ public class Scheduler extends Service {
                 json_random.put(RANDOM_HOUR, selected );
             }
             if( this.trigger.has(TRIGGER_MONTH) ) {
-                random_array = this.trigger.getJSONArray(TRIGGER_MONTH);
-
+                JSONArray valid_months = getMonths();
                 JSONArray selected = new JSONArray();
                 while( selected.length() < random_amount ) {
-                    String selected_random = random_array.getString(random.nextInt(random_array.length()));
+                    String selected_random = valid_months.getString(random.nextInt(valid_months.length()));
                     boolean is_repeated = false;
                     for( int i=0; i < selected.length(); i++) {
                         if( selected.getString(i).equals(selected_random) ) is_repeated = true;
@@ -345,11 +342,10 @@ public class Scheduler extends Service {
                 json_random.put(RANDOM_MONTH, selected );
             }
             if( this.trigger.has(TRIGGER_WEEKDAY) ) {
-                random_array = this.trigger.getJSONArray(TRIGGER_WEEKDAY);
-
+                JSONArray valid_weekdays = getWeekdays();
                 JSONArray selected = new JSONArray();
                 while( selected.length() < random_amount ) {
-                    String selected_random = random_array.getString(random.nextInt(random_array.length()));
+                    String selected_random = valid_weekdays.getString(random.nextInt(valid_weekdays.length()));
                     boolean is_repeated = false;
                     for( int i=0; i < selected.length(); i++) {
                         if( selected.getString(i).equals(selected_random) ) is_repeated = true;
@@ -368,21 +364,25 @@ public class Scheduler extends Service {
         if( scheduled_tasks != null && scheduled_tasks.moveToFirst() ) {
             do {
                 try {
+
                     final Schedule schedule = new Schedule(scheduled_tasks.getString(scheduled_tasks.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID)));
                     schedule.rebuild(new JSONObject(scheduled_tasks.getString(scheduled_tasks.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE))));
 
                     //restore all contextual schedulers
                     if( schedule.getContext().length() > 0 ) {
+
                         BroadcastReceiver listener = new BroadcastReceiver() {
                             @Override
                             public void onReceive(Context context, Intent intent) {
-                                performAction(schedule);
+                                if( Aware.DEBUG ) Log.d(Aware.TAG, "Received scheduler broadcast");
+                                performAction( schedule );
                             }
                         };
+
                         IntentFilter filter = new IntentFilter(schedule.getContext());
+
                         Hashtable<IntentFilter, BroadcastReceiver> scheduler_listener = new Hashtable<>();
                         scheduler_listener.put(filter, listener);
-
                         schedulerListeners.put(schedule.getScheduleID(), scheduler_listener);
 
                         registerReceiver(listener, filter);
@@ -390,14 +390,10 @@ public class Scheduler extends Service {
                         if( Aware.DEBUG ) Log.d(Aware.TAG, "Registered a contextual scheduler for " + schedule.getContext());
 
                     } else {
-                        if( is_trigger(schedule) ) {
+                        if( is_trigger( schedule ) ) {
                             if( Aware.DEBUG ) Log.d(Aware.TAG, "Triggering scheduled task: " + schedule.toString());
-
-                            ContentValues data = new ContentValues();
-                            data.put(Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED, System.currentTimeMillis());
-                            getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'", null);
-
                             performAction( schedule );
+
                         } else {
                             if( Aware.DEBUG ) Log.d(Aware.TAG, "Task schedule not matched: " + schedule.build().toString(1));
                         }
@@ -431,6 +427,14 @@ public class Scheduler extends Service {
         now.setTimeInMillis(System.currentTimeMillis());
 
         try {
+            Log.d(Aware.TAG, "Hours:" + schedule.getHours().toString(1) + " Length:" + schedule.getHours().length());
+            Log.d(Aware.TAG, "Weekday:" + schedule.getWeekdays().toString(1) + " Length:" + schedule.getWeekdays().length());
+            Log.d(Aware.TAG, "Months:" + schedule.getMonths().toString(1) + " Length:" + schedule.getMonths().length());
+        } catch (JSONException e ) {
+            e.printStackTrace();
+        }
+
+        try {
             long last_triggered = 0;
             Cursor last_time_triggered = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, new String[]{Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED}, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'", null, null);
             if( last_time_triggered != null && last_time_triggered.moveToFirst() ) {
@@ -440,29 +444,41 @@ public class Scheduler extends Service {
 
             //This is a scheduled task with a precise time
             if( schedule.getTimer() != -1 && last_triggered == 0) { //not been triggered yet
+                Log.d(Aware.TAG, "Checking trigger set for a specific timestamp");
                 long trigger_time = schedule.getTimer();
                 if( (now.getTimeInMillis()-trigger_time) < 5*60*1000 ) return true;
             }
 
             //triggered at the given hours, regardless of weekday or month
             if( schedule.getHours().length() > 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0 ) {
+                Log.d(Aware.TAG, "Checking trigger at given hour, regardless of weekday or month");
                 return is_trigger_hour(schedule, last_triggered);
             //triggered at given hours and week day
             } else if( schedule.getHours().length() > 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() == 0 ) {
+                Log.d(Aware.TAG, "Checking trigger at given hour, and weekday");
                 return is_trigger_hour(schedule, last_triggered) && is_trigger_weekday(schedule, last_triggered);
             //triggered at given hours, week day and month
             } else if( schedule.getHours().length() > 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() > 0 ) {
+                Log.d(Aware.TAG, "Checking trigger at given hour, weekday and month");
                 return is_trigger_hour(schedule, last_triggered) && is_trigger_weekday(schedule, last_triggered) && is_trigger_month(schedule, last_triggered);
             //triggered at given weekday, regardless of time or month
             } else if( schedule.getHours().length() == 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() == 0 ) {
+                Log.d(Aware.TAG, "Checking trigger at given weekday, regardless of hour or month");
                 return is_trigger_weekday(schedule, last_triggered);
             //triggered at given weekday and month
             } else if( schedule.getHours().length() == 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() > 0 ) {
+                Log.d(Aware.TAG, "Checking trigger at given weekday, and month");
                 return is_trigger_weekday(schedule, last_triggered) && is_trigger_month(schedule, last_triggered);
             //triggered at given month
             } else if( schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() > 0 ) {
+                Log.d(Aware.TAG, "Checking trigger at given month");
                 return is_trigger_month(schedule, last_triggered);
+            //Triggered at given hour and months
+            } else if( schedule.getHours().length() > 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() > 0 ) {
+                Log.d(Aware.TAG, "Checking trigger at given hour and month");
+                return is_trigger_hour(schedule, last_triggered) && is_trigger_month(schedule, last_triggered);
             }
+
         } catch (JSONException e ) {
             e.printStackTrace();
         }
@@ -476,16 +492,26 @@ public class Scheduler extends Service {
      * @return
      */
     private boolean is_trigger_hour( Schedule schedule, long last_triggered ) {
+
+        if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking hour matching");
+
         Calendar now = Calendar.getInstance();
         now.setTimeInMillis(System.currentTimeMillis());
 
         Calendar previous = Calendar.getInstance();
         previous.setTimeInMillis(last_triggered);
 
+        if( Aware.DEBUG ) Log.d(Aware.TAG, "Last time hour matched: " + previous.getTime().toString());
+
         try {
             JSONArray hours = schedule.getHours();
             for( int i=0; i<hours.length(); i++ ) {
                 int hour = hours.getInt(i);
+
+                if(Aware.DEBUG) {
+                    Log.d(Aware.TAG, "Hour "+ hour +" vs now "+ now.get(Calendar.HOUR_OF_DAY) +" in trigger hours: " + hours.toString());
+                }
+
                 if( hour == now.get(Calendar.HOUR_OF_DAY) && last_triggered == 0 ) return true;
                 if( hour == now.get(Calendar.HOUR_OF_DAY) && last_triggered != 0 && now.get(Calendar.HOUR_OF_DAY) > previous.get(Calendar.HOUR_OF_DAY) ) return true;
             }
@@ -502,18 +528,28 @@ public class Scheduler extends Service {
      * @return
      */
     private boolean is_trigger_weekday( Schedule schedule, long last_triggered ) {
+
+        if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking weekday matching");
+
         Calendar now = Calendar.getInstance();
         now.setTimeInMillis(System.currentTimeMillis());
 
         Calendar previous = Calendar.getInstance();
         previous.setTimeInMillis(last_triggered);
 
+        if( Aware.DEBUG ) Log.d(Aware.TAG, "Last time weekday matched: " + previous.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase());
+
         try {
             JSONArray weekdays = schedule.getWeekdays();
             for( int i=0; i<weekdays.length(); i++ ) {
                 String weekday = weekdays.getString(i);
-                if( weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault())) && last_triggered == 0 ) return true;
-                if( weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault())) && last_triggered != 0 && now.get(Calendar.WEEK_OF_YEAR) > previous.get(Calendar.WEEK_OF_YEAR) ) return true;
+
+                if(Aware.DEBUG) {
+                    Log.d(Aware.TAG, "Weekday "+weekday.toUpperCase()+" vs now "+ now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase() +" in trigger weekdays: " + weekdays.toString());
+                }
+
+                if( weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered == 0 ) return true;
+                if( weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered != 0 && now.get(Calendar.WEEK_OF_YEAR) > previous.get(Calendar.WEEK_OF_YEAR) ) return true;
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -528,18 +564,28 @@ public class Scheduler extends Service {
      * @return
      */
     private boolean is_trigger_month( Schedule schedule, long last_triggered ) {
+
+        if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking month matching");
+
         Calendar now = Calendar.getInstance();
         now.setTimeInMillis(System.currentTimeMillis());
 
         Calendar previous = Calendar.getInstance();
         previous.setTimeInMillis(last_triggered);
 
+        if( Aware.DEBUG ) Log.d(Aware.TAG, "Last time month matched: " + previous.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase());
+
         try {
             JSONArray months = schedule.getMonths();
             for( int i=0; i<months.length(); i++ ) {
                 String month = months.getString(i);
-                if( month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault())) && last_triggered == 0 ) return true;
-                if( month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault())) && last_triggered != 0 && now.get(Calendar.MONTH) > previous.get(Calendar.MONTH) ) return true;
+
+                if(Aware.DEBUG) {
+                    Log.d(Aware.TAG, "Month "+month.toUpperCase()+" vs now "+ now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase() +" in trigger months: " + months.toString());
+                }
+
+                if( month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered == 0 ) return true;
+                if( month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered != 0 && now.get(Calendar.MONTH) > previous.get(Calendar.MONTH) ) return true;
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -553,9 +599,21 @@ public class Scheduler extends Service {
             if (schedule.getActionType().equals(ACTION_TYPE_BROADCAST)) {
                 Intent broadcast = new Intent(schedule.getActionClass());
                 JSONArray extras = schedule.getActionExtras();
-                for (int i = 0; i < extras.length(); i++) {
+                for (int i=0; i<extras.length(); i++) {
                     JSONObject extra = extras.getJSONObject(i);
-                    broadcast.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getString(ACTION_EXTRA_VALUE));
+
+                    Object extra_obj = extra.get(ACTION_EXTRA_VALUE);
+                    if( extra_obj instanceof String ) {
+                        broadcast.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getString(ACTION_EXTRA_VALUE));
+                    } else if( extra_obj instanceof Integer ) {
+                        broadcast.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getInt(ACTION_EXTRA_VALUE));
+                    } else if( extra_obj instanceof Double ) {
+                        broadcast.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getDouble(ACTION_EXTRA_VALUE));
+                    }else if( extra_obj instanceof Long ) {
+                        broadcast.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getLong(ACTION_EXTRA_VALUE));
+                    }else if( extra_obj instanceof Boolean ) {
+                        broadcast.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getBoolean(ACTION_EXTRA_VALUE));
+                    }
                 }
                 sendBroadcast(broadcast);
             //Trigger an activity
@@ -594,6 +652,11 @@ public class Scheduler extends Service {
                 }
             }
             Toast.makeText(getApplicationContext(), "Triggered " + schedule.getActionType() + "\n" + schedule.getActionClass(), Toast.LENGTH_SHORT).show();
+
+            ContentValues data = new ContentValues();
+            data.put(Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED, System.currentTimeMillis());
+            getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'", null);
+
         }catch (JSONException e ){
             e.printStackTrace();
         }
