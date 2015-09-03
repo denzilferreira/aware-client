@@ -38,19 +38,7 @@ public class Text_2_speech extends Service implements OnInitListener {
         super.onCreate();
         ttsObj = new TextToSpeech(this, this);
     }
-    
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        if( intent != null ) {
-            to_say = intent.getStringExtra(EXTRA_TTS_TEXT);
-            
-            if( ttsObj != null ) {
-                ttsObj.speak(to_say, TextToSpeech.QUEUE_ADD, null);
-            }
-        }
-        return START_STICKY;
-    }
-    
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -64,5 +52,17 @@ public class Text_2_speech extends Service implements OnInitListener {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if( intent != null ) {
+            to_say = intent.getStringExtra(EXTRA_TTS_TEXT);
+            if( ttsObj != null ) {
+                ttsObj.speak(to_say, TextToSpeech.QUEUE_ADD, null);
+            }
+        }
+
+        return super.onStartCommand(intent, flags, startId);
     }
 }

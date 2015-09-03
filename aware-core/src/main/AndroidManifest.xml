@@ -284,6 +284,7 @@
             </intent-filter>
         </service>
         <service android:name="com.aware.Aware_Preferences$StudyConfig" android:exported="true"/>
+        <service android:name="com.aware.utils.Text_2_speech" android:exported="true"/>
         <service android:name="com.aware.Aware$UpdateFrameworkService" android:exported="true" android:enabled="@bool/display_aware"/>
         <service android:name="com.aware.utils.DownloadPluginService" android:exported="true"/>
         <service android:name="com.aware.Aware$UpdatePlugins" android:exported="true" android:enabled="@bool/display_aware"/>
