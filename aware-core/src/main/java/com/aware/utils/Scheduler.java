@@ -71,29 +71,6 @@ public class Scheduler extends Service {
     public void onCreate() {
         super.onCreate();
         if( Aware.DEBUG ) Log.d(TAG, "Scheduler is created");
-
-        //Activate sensors
-        //...
-
-        //Schedule questionnaire for every morning at 9AM
-//        try{
-//
-//            Schedule schedule = new Schedule("schedule_id");
-//            schedule.addHour(21)
-//                    .addHour(22)
-//                    .addHour(23)
-//                    .setContext(Battery.ACTION_AWARE_BATTERY_CHARGING)
-//                    .setActionType(Scheduler.ACTION_TYPE_ACTIVITY)
-//                    .setActionClass("com.android.deskclock/com.android.DeskClock");
-//
-//            Scheduler.saveSchedule(getApplicationContext(), schedule);
-//
-//            //to remove
-//            Scheduler.removeSchedule("schedule_id");
-//
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
     }
 
     /**
