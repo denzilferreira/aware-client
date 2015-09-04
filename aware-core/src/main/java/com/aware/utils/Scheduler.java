@@ -32,6 +32,8 @@ import java.util.Random;
 
 public class Scheduler extends Service {
 
+    private static String TAG = "AWARE::Scheduler";
+
     public static final String SCHEDULE_TRIGGER = "trigger";
     public static final String SCHEDULE_ACTION = "action";
     public static final String SCHEDULE_ID = "schedule_id";
@@ -67,32 +69,7 @@ public class Scheduler extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
-//        removeSchedule("debug");
-
-//        try {
-//
-//            Schedule schedule = new Schedule("charging");
-//            schedule.setContext(Battery.ACTION_AWARE_BATTERY_CHARGING)
-//                    .setActionType(ACTION_TYPE_SERVICE)
-//                    .setActionClass("com.aware/com.aware.utils.Text_2_speech")
-//                    .addActionExtra(Text_2_speech.EXTRA_TTS_TEXT,"Oh nice!");
-//
-//            Log.d(Aware.TAG, schedule.build().toString(1));
-//
-//            saveSchedule(schedule);
-//
-//            schedule = new Schedule("discharging");
-//            schedule.setContext(Battery.ACTION_AWARE_BATTERY_DISCHARGING)
-//                    .setActionType(ACTION_TYPE_SERVICE)
-//                    .setActionClass("com.aware/com.aware.utils.Text_2_speech")
-//                    .addActionExtra(Text_2_speech.EXTRA_TTS_TEXT, "OK, endurance mode activated.");
-//
-//            saveSchedule(schedule);
-//
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
+        if( Aware.DEBUG ) Log.d(TAG, "Scheduler is created");
     }
 
     public void saveSchedule( Schedule schedule ) {
@@ -341,6 +318,9 @@ public class Scheduler extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        if( Aware.DEBUG ) Log.d(TAG, "Checking for scheduled tasks...");
+
         //Check if we have anything scheduled
         Cursor scheduled_tasks = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, null, null, Scheduler_Provider.Scheduler_Data.TIMESTAMP + " ASC");
         if( scheduled_tasks != null && scheduled_tasks.moveToFirst() ) {

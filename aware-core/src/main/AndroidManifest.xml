@@ -283,11 +283,13 @@
                 <action android:name="ACTION_AWARE_WEBSERVICE_CLEAR_TABLE" />
             </intent-filter>
         </service>
+
         <service android:name="com.aware.Aware_Preferences$StudyConfig" android:exported="true"/>
-        <service android:name="com.aware.utils.Text_2_speech" android:exported="true"/>
         <service android:name="com.aware.Aware$UpdateFrameworkService" android:exported="true" android:enabled="@bool/display_aware"/>
         <service android:name="com.aware.utils.DownloadPluginService" android:exported="true"/>
         <service android:name="com.aware.Aware$UpdatePlugins" android:exported="true" android:enabled="@bool/display_aware"/>
+
+        <service android:name="com.aware.utils.Aware_TTS" android:exported="true"/>
 
         <!-- Receivers -->
 
@@ -298,6 +300,12 @@
                 <action android:name="ACTION_AWARE_ANDROID_WEAR_INSTALL_PLUGIN"/>
                 <action android:name="ACTION_AWARE_ANDROID_WEAR_JOIN_STUDY"/>
                 <action android:name="ACTION_AWARE_ANDROID_WEAR_QUIT_STUDY"/>
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name="com.aware.utils.Aware_TTS$Aware_TTS_Receiver" android:exported="true">
+            <intent-filter>
+                <action android:name="ACTION_AWARE_TTS_SPEAK"/>
             </intent-filter>
         </receiver>
 
