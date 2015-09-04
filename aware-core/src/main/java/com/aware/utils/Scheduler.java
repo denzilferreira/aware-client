@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.IBinder;
 import android.os.Parcelable;
+import android.provider.AlarmClock;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -70,23 +71,51 @@ public class Scheduler extends Service {
     public void onCreate() {
         super.onCreate();
         if( Aware.DEBUG ) Log.d(TAG, "Scheduler is created");
+
+        //Activate sensors
+        //...
+
+        //Schedule questionnaire for every morning at 9AM
+//        try{
+//
+//            Schedule schedule = new Schedule("schedule_id");
+//            schedule.addHour(21)
+//                    .addHour(22)
+//                    .addHour(23)
+//                    .setContext(Battery.ACTION_AWARE_BATTERY_CHARGING)
+//                    .setActionType(Scheduler.ACTION_TYPE_ACTIVITY)
+//                    .setActionClass("com.android.deskclock/com.android.DeskClock");
+//
+//            Scheduler.saveSchedule(getApplicationContext(), schedule);
+//
+//            //to remove
+//            Scheduler.removeSchedule("schedule_id");
+//
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
     }
 
-    public void saveSchedule( Schedule schedule ) {
+    /**
+     * Save the defined scheduled task
+     * @param context
+     * @param schedule
+     */
+    public static void saveSchedule( Context context, Schedule schedule ) {
         try {
             ContentValues data = new ContentValues();
             data.put(Scheduler_Provider.Scheduler_Data.TIMESTAMP, System.currentTimeMillis());
-            data.put(Scheduler_Provider.Scheduler_Data.DEVICE_ID, Aware.getSetting(this, Aware_Preferences.DEVICE_ID));
+            data.put(Scheduler_Provider.Scheduler_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
             data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID, schedule.getScheduleID());
             data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE, schedule.build().toString());
 
-            Cursor schedules = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'", null, null);
+            Cursor schedules = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'", null, null);
             if( schedules != null && schedules.getCount() == 1 ) {
                 Log.d(Aware.TAG, "Updating already existing schedule...");
-                getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'", null );
+                context.getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'", null );
             } else {
                 Log.d(Aware.TAG, "New schedule: " + data.toString());
-                getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
+                context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
             }
             if( schedules != null && ! schedules.isClosed() ) schedules.close();
 
@@ -95,8 +124,13 @@ public class Scheduler extends Service {
         }
     }
 
-    public void removeSchedule( String schedule_id ) {
-        getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "'", null);
+    /**
+     * Remove previously defined schedule
+     * @param context
+     * @param schedule_id
+     */
+    public static void removeSchedule( Context context, String schedule_id ) {
+        context.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "'", null);
     }
 
     /**
@@ -337,8 +371,10 @@ public class Scheduler extends Service {
                             BroadcastReceiver listener = new BroadcastReceiver() {
                                 @Override
                                 public void onReceive(Context context, Intent intent) {
-                                    if( Aware.DEBUG ) Log.d(Aware.TAG, "Received contextual trigger: " + intent.getAction());
-                                    performAction( schedule );
+                                    if( is_trigger( schedule ) ) {
+                                        if( Aware.DEBUG ) Log.d(Aware.TAG, "Received contextual trigger: " + intent.getAction());
+                                        performAction( schedule );
+                                    }
                                 }
                             };
 
@@ -388,6 +424,12 @@ public class Scheduler extends Service {
         now.setTimeInMillis(System.currentTimeMillis());
 
         try {
+
+            //we might have a broadcast context without time constrains
+            if( schedule.getContext().length() > 0 ) {
+                if( schedule.getTimer() == -1 && schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0 ) return true;
+            }
+
             long last_triggered = 0;
             Cursor last_time_triggered = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, new String[]{Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED}, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'", null, null);
             if( last_time_triggered != null && last_time_triggered.moveToFirst() ) {
