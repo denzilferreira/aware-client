@@ -85,11 +85,12 @@ public class Scheduler extends Service {
             data.put(Scheduler_Provider.Scheduler_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
             data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID, schedule.getScheduleID());
             data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE, schedule.build().toString());
+            data.put(Scheduler_Provider.Scheduler_Data.PACKAGE_NAME, context.getPackageName());
 
-            Cursor schedules = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'", null, null);
+            Cursor schedules = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + context.getPackageName() + "'", null, null);
             if( schedules != null && schedules.getCount() == 1 ) {
                 Log.d(Aware.TAG, "Updating already existing schedule...");
-                context.getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'", null );
+                context.getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + context.getPackageName() + "'", null );
             } else {
                 Log.d(Aware.TAG, "New schedule: " + data.toString());
                 context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
@@ -107,7 +108,7 @@ public class Scheduler extends Service {
      * @param schedule_id
      */
     public static void removeSchedule( Context context, String schedule_id ) {
-        context.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "'", null);
+        context.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + context.getPackageName() + "'", null);
     }
 
     /**
@@ -332,8 +333,8 @@ public class Scheduler extends Service {
 
         if( Aware.DEBUG ) Log.d(TAG, "Checking for scheduled tasks...");
 
-        //Check if we have anything scheduled
-        Cursor scheduled_tasks = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, null, null, Scheduler_Provider.Scheduler_Data.TIMESTAMP + " ASC");
+        //Check if we have anything scheduled for this package
+        Cursor scheduled_tasks = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null, Scheduler_Provider.Scheduler_Data.TIMESTAMP + " ASC");
         if( scheduled_tasks != null && scheduled_tasks.moveToFirst() ) {
             do {
                 try {
@@ -416,38 +417,38 @@ public class Scheduler extends Service {
 
             //This is a scheduled task with a precise time
             if( schedule.getTimer() != -1 && last_triggered == 0) { //not been triggered yet
-                Log.d(Aware.TAG, "Checking trigger set for a specific timestamp");
+                if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking trigger set for a specific timestamp");
                 long trigger_time = schedule.getTimer();
                 if( (now.getTimeInMillis()-trigger_time) < 5*60*1000 ) return true;
             }
 
             //triggered at the given hours, regardless of weekday or month
             if( schedule.getHours().length() > 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0 ) {
-                Log.d(Aware.TAG, "Checking trigger at given hour, regardless of weekday or month");
+                if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking trigger at given hour, regardless of weekday or month");
                 return is_trigger_hour(schedule, last_triggered);
             //triggered at given hours and week day
             } else if( schedule.getHours().length() > 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() == 0 ) {
-                Log.d(Aware.TAG, "Checking trigger at given hour, and weekday");
+                if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking trigger at given hour, and weekday");
                 return is_trigger_hour(schedule, last_triggered) && is_trigger_weekday(schedule, last_triggered);
             //triggered at given hours, week day and month
             } else if( schedule.getHours().length() > 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() > 0 ) {
-                Log.d(Aware.TAG, "Checking trigger at given hour, weekday and month");
+                if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking trigger at given hour, weekday and month");
                 return is_trigger_hour(schedule, last_triggered) && is_trigger_weekday(schedule, last_triggered) && is_trigger_month(schedule, last_triggered);
             //triggered at given weekday, regardless of time or month
             } else if( schedule.getHours().length() == 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() == 0 ) {
-                Log.d(Aware.TAG, "Checking trigger at given weekday, regardless of hour or month");
+                if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking trigger at given weekday, regardless of hour or month");
                 return is_trigger_weekday(schedule, last_triggered);
             //triggered at given weekday and month
             } else if( schedule.getHours().length() == 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() > 0 ) {
-                Log.d(Aware.TAG, "Checking trigger at given weekday, and month");
+                if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking trigger at given weekday, and month");
                 return is_trigger_weekday(schedule, last_triggered) && is_trigger_month(schedule, last_triggered);
             //triggered at given month
             } else if( schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() > 0 ) {
-                Log.d(Aware.TAG, "Checking trigger at given month");
+                if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking trigger at given month");
                 return is_trigger_month(schedule, last_triggered);
             //Triggered at given hour and months
             } else if( schedule.getHours().length() > 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() > 0 ) {
-                Log.d(Aware.TAG, "Checking trigger at given hour and month");
+                if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking trigger at given hour and month");
                 return is_trigger_hour(schedule, last_triggered) && is_trigger_month(schedule, last_triggered);
             }
 
@@ -695,9 +696,13 @@ public class Scheduler extends Service {
                 }
             }
 
-            ContentValues data = new ContentValues();
-            data.put(Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED, System.currentTimeMillis());
-            getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'", null);
+            if( schedule.getTimer() != -1 ) {
+                getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" +getPackageName() + "'", null);
+            } else {
+                ContentValues data = new ContentValues();
+                data.put(Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED, System.currentTimeMillis());
+                getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" +getPackageName() + "'", null);
+            }
 
         }catch (JSONException e ){
             e.printStackTrace();

@@ -20,6 +20,7 @@ public class Aware_TTS extends Service implements OnInitListener {
 
     private static final String TAG = "AWARE::TTS";
     public static final String EXTRA_TTS_TEXT = "tts_text";
+    public static final String EXTRA_TTS_REQUESTER = "tts_requester";
     
     private TextToSpeech tts;
     private boolean ready = false;
@@ -45,7 +46,7 @@ public class Aware_TTS extends Service implements OnInitListener {
     public void onInit(int status) {
         if( status == TextToSpeech.SUCCESS ) {
             ready = true;
-            if( text.length() > 0 ) {
+            if( text != null && text.length() > 0 ) {
                 speak(text);
             }
         } else {
@@ -64,7 +65,7 @@ public class Aware_TTS extends Service implements OnInitListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if( intent != null ) {
             text = intent.getStringExtra(EXTRA_TTS_TEXT);
-            if( text.length() > 0 && tts != null ) {
+            if( tts != null && text != null && text.length() > 0 ) {
                 speak(intent.getStringExtra(EXTRA_TTS_TEXT));
             }
         }
@@ -86,8 +87,8 @@ public class Aware_TTS extends Service implements OnInitListener {
     public static class Aware_TTS_Receiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if( intent.getAction().equals(ACTION_AWARE_TTS_SPEAK) ) {
-                Intent tts_work = new Intent(context, Aware_TTS.class);
+            if( intent.getAction().equals(ACTION_AWARE_TTS_SPEAK) && intent.getStringExtra(EXTRA_TTS_REQUESTER).equals(context.getPackageName()) ) {
+                Intent tts_work = new Intent( context, Aware_TTS.class );
                 tts_work.putExtra(EXTRA_TTS_TEXT, intent.getStringExtra(EXTRA_TTS_TEXT));
                 context.startService(tts_work);
             }

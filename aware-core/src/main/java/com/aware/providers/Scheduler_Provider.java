@@ -24,7 +24,7 @@ import java.util.HashMap;
  */
 public class Scheduler_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 1;
+	public static final int DATABASE_VERSION = 2;
 
 	/**
 	 * Authority of Scheduler content provider
@@ -49,6 +49,7 @@ public class Scheduler_Provider extends ContentProvider {
         public static final String SCHEDULE_ID = "schedule_id";
         public static final String SCHEDULE = "schedule";
         public static final String LAST_TRIGGERED = "last_triggered";
+		public static final String PACKAGE_NAME = "package_name";
 	}
 
 	public static String DATABASE_NAME = Environment.getExternalStorageDirectory() + "/AWARE/scheduler.db";
@@ -61,6 +62,7 @@ public class Scheduler_Provider extends ContentProvider {
 			+ Scheduler_Data.SCHEDULE_ID + " text default '',"
             + Scheduler_Data.SCHEDULE + " text default '',"
             + Scheduler_Data.LAST_TRIGGERED + " real default 0,"
+			+ Scheduler_Data.PACKAGE_NAME + " text default '',"
             + "UNIQUE(" + Scheduler_Data.TIMESTAMP + "," + Scheduler_Data.DEVICE_ID + ")" };
 
 	private static UriMatcher sUriMatcher = null;
@@ -166,6 +168,7 @@ public class Scheduler_Provider extends ContentProvider {
         dataMap.put(Scheduler_Data.SCHEDULE_ID, Scheduler_Data.SCHEDULE_ID);
         dataMap.put(Scheduler_Data.SCHEDULE, Scheduler_Data.SCHEDULE);
         dataMap.put(Scheduler_Data.LAST_TRIGGERED, Scheduler_Data.LAST_TRIGGERED);
+		dataMap.put(Scheduler_Data.PACKAGE_NAME, Scheduler_Data.PACKAGE_NAME);
 	    
 		return true;
 	}

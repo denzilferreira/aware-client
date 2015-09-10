@@ -1535,20 +1535,10 @@ public class Aware extends Service {
         }
 
         //Start task scheduler
-        if( ! isServiceRunning(Scheduler.class) ) {
-            scheduler = new Intent(awareContext, Scheduler.class);
-            awareContext.startService(scheduler);
-        }
+        scheduler = new Intent(awareContext, Scheduler.class);
+        awareContext.startService(scheduler);
     }
 
-    private boolean isServiceRunning(Class<?> serviceClass) {
-        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for(ActivityManager.RunningServiceInfo service : activityManager.getRunningServices(Integer.MAX_VALUE)) {
-            if( serviceClass.getName().equals(service.service.getClassName())) return true;
-        }
-        return false;
-    }
-    
     /**
      * Stop all services
      */
@@ -1585,10 +1575,7 @@ public class Aware extends Service {
             awareContext.stopService(wearClient);
         }
 
-        if( isServiceRunning(Scheduler.class) ) {
-            //Stop scheduler
-            awareContext.stopService(scheduler);
-        }
+        awareContext.stopService(scheduler);
     }
 
     /**
