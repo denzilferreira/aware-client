@@ -1,6 +1,7 @@
 
 package com.aware;
 
+import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.DownloadManager;
 import android.app.DownloadManager.Query;
@@ -1534,8 +1535,18 @@ public class Aware extends Service {
         }
 
         //Start task scheduler
-        scheduler = new Intent(awareContext, Scheduler.class);
-        awareContext.startService(scheduler);
+        if( ! isServiceRunning(Scheduler.class) ) {
+            scheduler = new Intent(awareContext, Scheduler.class);
+            awareContext.startService(scheduler);
+        }
+    }
+
+    private boolean isServiceRunning(Class<?> serviceClass) {
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for(ActivityManager.RunningServiceInfo service : activityManager.getRunningServices(Integer.MAX_VALUE)) {
+            if( serviceClass.getName().equals(service.service.getClassName())) return true;
+        }
+        return false;
     }
     
     /**
@@ -1574,8 +1585,10 @@ public class Aware extends Service {
             awareContext.stopService(wearClient);
         }
 
-        //Stop scheduler
-        awareContext.stopService(scheduler);
+        if( isServiceRunning(Scheduler.class) ) {
+            //Stop scheduler
+            awareContext.stopService(scheduler);
+        }
     }
 
     /**
