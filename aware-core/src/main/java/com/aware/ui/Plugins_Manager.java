@@ -352,19 +352,8 @@ public class Plugins_Manager extends Aware_Activity {
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-        //Fixed: leak when leaving plugin manager
-        if( installed_plugins != null && ! installed_plugins.isClosed() ) installed_plugins.close();
-        pluginAdapter.changeCursor(null);
-    }
-
-    @Override
     protected void onDestroy() {
     	super.onDestroy();
-        //Fixed: leak when leaving plugin manager
-        if( installed_plugins != null && ! installed_plugins.isClosed() ) installed_plugins.close();
-        pluginAdapter.changeCursor(null);
         unregisterReceiver(plugins_listener);
     }
 

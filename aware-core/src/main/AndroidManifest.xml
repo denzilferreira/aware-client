@@ -62,7 +62,7 @@
             android:icon="@drawable/ic_launcher_aware"
             android:label="@string/aware_sensors"
             android:theme="@style/Theme.Aware"
-            android:launchMode="singleTop">
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -72,10 +72,10 @@
             android:name="com.aware.ui.Stream_UI"
             android:exported="true"
             android:enabled="@bool/display_aware"
-            android:icon="@drawable/ic_launcher_settings"
+            android:icon="@drawable/ic_launcher_aware"
             android:label="@string/aware_stream"
             android:noHistory="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:theme="@style/Theme.Aware"
             android:parentActivityName="com.aware.Aware_Preferences"
@@ -94,7 +94,7 @@
             android:name="com.aware.ui.CameraStudy"
             android:enabled="@bool/display_aware"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:theme="@style/Theme.Aware"
             android:label="@string/aware_studies"
             android:parentActivityName="com.aware.Aware_Preferences"
@@ -104,7 +104,7 @@
         <activity
             android:name="com.aware.ui.Plugins_Manager"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:exported="true"
             android:icon="@drawable/ic_launcher_settings"
             android:label="@string/aware_plugins"
@@ -116,7 +116,7 @@
         <activity android:name="com.aware.ui.About"
             android:enabled="@bool/display_aware"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:exported="true"
             android:label="@string/aware_team"
             android:theme="@style/Theme.Aware"
@@ -132,7 +132,7 @@
             android:showOnLockScreen="true"
             android:noHistory="true"
             android:clearTaskOnLaunch="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:theme="@android:style/Theme.DeviceDefault.Dialog">
         </activity>
 

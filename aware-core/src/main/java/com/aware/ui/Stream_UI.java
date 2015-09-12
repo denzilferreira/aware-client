@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
@@ -44,6 +45,8 @@ public class Stream_UI extends Aware_Activity {
 	@Override
 	protected void onCreate(Bundle arg0) {
         super.onCreate(arg0);
+
+        Log.d(Aware.TAG, "onCreate");
 
         setContentView(R.layout.stream_ui);
 
@@ -130,6 +133,7 @@ public class Stream_UI extends Aware_Activity {
     @Override
     protected void onPause() {
         super.onPause();
+
         Intent not_visible = new Intent(ACTION_AWARE_STREAM_CLOSED);
         sendBroadcast(not_visible);
 
@@ -139,20 +143,9 @@ public class Stream_UI extends Aware_Activity {
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-        //Fixed: leak on stream cursor
-        if( cards != null && ! cards.isClosed()) cards.close();
-        card_adapter.changeCursor(null);
-    }
-
-    @Override
 	protected void onDestroy() {
 		super.onDestroy();
 		unregisterReceiver(stream_updater);
-        //Fixed: leak on stream cursor
-        if( cards != null && ! cards.isClosed()) cards.close();
-        card_adapter.changeCursor(null);
 	}
 	
 	private StreamUpdater stream_updater = new StreamUpdater();

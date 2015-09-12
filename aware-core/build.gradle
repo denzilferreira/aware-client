@@ -16,8 +16,8 @@ android {
     defaultConfig {
         //Comment applicationId out for library
         applicationId "com.aware"
-        versionCode 389
-        versionName "3.5.8"
+        versionCode 390
+        versionName "3.5.9"
         targetSdkVersion 23
     }
     buildTypes {
