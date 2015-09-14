@@ -284,10 +284,11 @@
             </intent-filter>
         </service>
 
+        <service android:name="com.aware.Aware$UpdateFrameworkService" android:exported="true" android:enabled="@bool/display_aware" />
+        <service android:name="com.aware.utils.DownloadPluginService" android:exported="true" android:enabled="@bool/display_aware" />
+        <service android:name="com.aware.Aware$UpdatePlugins" android:exported="true" android:enabled="@bool/display_aware" />
+
         <service android:name="com.aware.Aware_Preferences$StudyConfig" android:exported="true"/>
-        <service android:name="com.aware.Aware$UpdateFrameworkService" android:exported="true" android:enabled="@bool/display_aware"/>
-        <service android:name="com.aware.utils.DownloadPluginService" android:exported="true"/>
-        <service android:name="com.aware.Aware$UpdatePlugins" android:exported="true"/>
         <service android:name="com.aware.utils.Aware_TTS" android:exported="true"/>
 
         <!-- Receivers -->
@@ -332,7 +333,6 @@
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_MOUNTED" />
                 <action android:name="android.intent.action.MEDIA_UNMOUNTED" />
-
                 <data android:scheme="file" />
             </intent-filter>
         </receiver>

@@ -13,7 +13,7 @@ public interface IContextCard {
     /**
      * Return inflated XML layout with data to be displayed
      * @param context
-     * @return
+     * @return View
      */
     public View getContextCard(Context context);
 }

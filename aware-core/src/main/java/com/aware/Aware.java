@@ -392,6 +392,7 @@ public class Aware extends Service {
 
             //The official client takes care of staying updated to avoid compromising studies
             if( getPackageName().equals("com.aware") ) {
+
                 //Check if there are updates on the plugins
                 if( active_plugins.size() > 0 ) {
                     if( ! Aware.is_watch(this) ) { //the phone takes care of updating the watch packages

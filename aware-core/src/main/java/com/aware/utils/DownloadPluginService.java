@@ -27,7 +27,7 @@ public class DownloadPluginService extends IntentService {
         String package_name = intent.getStringExtra("package_name");
         boolean is_update = intent.getBooleanExtra("is_update", false);
 
-        Log.d(Aware.TAG, "Trying to download: " + package_name);
+        if( Aware.DEBUG ) Log.d(Aware.TAG, "Trying to download: " + package_name);
 
         String response = new Https(this).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
         if( response != null ) {

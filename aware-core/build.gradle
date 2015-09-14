@@ -52,4 +52,4 @@ dependencies {
 }
 
 //Update AWARE's library in Maven Central
-//apply from: 'maven-publish.gradle'
+apply from: 'maven-publish.gradle'
