@@ -117,7 +117,7 @@ public class Scheduler extends Service {
      * - schedule action<br/>
      * - schedule trigger
      */
-    public class Schedule {
+    public static class Schedule {
 
         private JSONObject schedule = new JSONObject();
         private JSONObject trigger = new JSONObject();
