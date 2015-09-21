@@ -39,6 +39,7 @@ public class ESM_Queue extends FragmentActivity {
         super.onCreate(bundle);
 
         queue = this;
+
         getWindow().setType(WindowManager.LayoutParams.TYPE_PRIORITY_PHONE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);

@@ -119,11 +119,9 @@ public class Aware_Activity extends PreferenceActivity {
     public class NavigationAdapter extends ArrayAdapter<String> {
         private final String[] items;
         private final LayoutInflater inflater;
-        private final Context context;
-        
+
         public NavigationAdapter(Context context, String[] items) {
             super(context, R.layout.aware_navigation_item, items);
-            this.context = context;
             this.items = items;
             this.inflater = (LayoutInflater) context.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
         }
@@ -131,7 +129,6 @@ public class Aware_Activity extends PreferenceActivity {
         @Override
         public View getView(final int position, View convertView, ViewGroup parent) {
             LinearLayout row = (LinearLayout) inflater.inflate(R.layout.aware_navigation_item, parent, false);
-//            row.setFocusable(false);
             row.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {

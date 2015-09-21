@@ -98,11 +98,6 @@ public class ESM extends Aware_Sensor {
     public static final int STATUS_VISIBLE = 4;
     
     /**
-     * ESM status: this is a scheduled ESM
-     */
-    public static final int STATUS_SCHEDULED = 5;
-    
-    /**
      * ESM Dialog with free text 
      * Example: [{'esm':{'esm_type':1,'esm_title':'ESM Freetext','esm_instructions':'The user can answer an open ended question.','esm_submit':'Next','esm_expiration_threshold':20,'esm_trigger':'esm trigger example'}}]
      */
@@ -289,7 +284,6 @@ public class ESM extends Aware_Sensor {
                         rowData.put(ESM_Data.SCALE_MIN_LABEL, esm.optString(ESM_Data.SCALE_MIN_LABEL));
                         rowData.put(ESM_Data.SCALE_STEP, esm.optInt(ESM_Data.SCALE_STEP));
 
-                        //TODO: scheduling of ESMs. depending if there is a schedule for it, this status is NEW or SCHEDULED
                         //If NEW, it is shown immediately, otherwise it is not.
                         rowData.put(ESM_Data.STATUS, ESM.STATUS_NEW);
                         rowData.put(ESM_Data.TRIGGER, esm.optString(ESM_Data.TRIGGER));

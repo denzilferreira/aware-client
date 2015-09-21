@@ -171,7 +171,6 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
         if( Aware.DEBUG ) {
             Log.d(TAG, "Connection suspended to Google API!");
         }
-        googleClient.reconnect();
     }
 
     @Override
@@ -179,7 +178,6 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
         if( Aware.DEBUG ) {
             Log.d(TAG, "Connection failed to Google API!");
         }
-        googleClient.reconnect();
     }
 
     @Override

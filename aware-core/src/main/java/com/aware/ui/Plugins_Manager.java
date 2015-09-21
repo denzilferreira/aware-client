@@ -54,7 +54,6 @@ import java.security.cert.CertificateFactory;
 import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
@@ -338,6 +337,7 @@ public class Plugins_Manager extends Aware_Activity {
     @Override
     protected void onUserLeaveHint() {
         super.onUserLeaveHint();
+
         //Fixed: leak when leaving plugin manager
         if( installed_plugins != null && ! installed_plugins.isClosed() ) installed_plugins.close();
         pluginAdapter.changeCursor(null);
@@ -346,6 +346,7 @@ public class Plugins_Manager extends Aware_Activity {
     @Override
     protected void onPause() {
         super.onPause();
+
         //Fixed: leak when leaving plugin manager
         if( installed_plugins != null && ! installed_plugins.isClosed() ) installed_plugins.close();
         pluginAdapter.changeCursor(null);
@@ -469,54 +470,34 @@ public class Plugins_Manager extends Aware_Activity {
      */
     public class Async_PluginUpdater extends AsyncTask<Void, View, Boolean> {
 
-        private boolean needsRefresh;
-
         @Override
 		protected Boolean doInBackground(Void... params) {
 
-            needsRefresh = false;
+            boolean needsRefresh = false;
 
     		//Check for updates on the server side
     		String response = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/plugins/get_plugins" + (( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) ? "/" + Aware.getSetting(getApplicationContext(), "study_id") : ""), true );
 			if( response != null ) {
 				try {
 					JSONArray plugins = new JSONArray(response);
-
 					for( int i=0; i< plugins.length(); i++ ) {
 						JSONObject plugin = plugins.getJSONObject(i);
 
-                        boolean new_data = false;
                         Cursor is_cached = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + plugin.getString("package") + "'", null, null );
 						if( is_cached != null && is_cached.moveToFirst() ) {
-
-							if( ! Plugins_Manager.isInstalled(getApplicationContext(), plugin.getString("package")) ) {
-
-                                //We used to have it installed, now we don't, remove from database, add the new server-side package back
-                                getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + plugin.getString("package") + "'", null);
-                                new_data = true;
+                            int version = is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins.PLUGIN_VERSION));
+                            //Lets check if it is updated
+                            if (plugin.getInt("version") > version) {
+                                ContentValues data = new ContentValues();
+                                data.put(Aware_Plugins.PLUGIN_DESCRIPTION, plugin.getString("desc"));
+                                data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
+                                data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
+                                data.put(Aware_Plugins.PLUGIN_ICON, !Aware.is_watch(getApplicationContext()) ? cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()) : null);
+                                data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_UPDATED);
+                                getContentResolver().update(Aware_Plugins.CONTENT_URI, data, Aware_Plugins._ID + "=" + is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins._ID)), null);
                                 needsRefresh = true;
-
-                            } else {
-
-                                int version = is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins.PLUGIN_VERSION));
-                                //Lets check if it is updated
-                                if( plugin.getInt("version") > version ) {
-                                    ContentValues data = new ContentValues();
-                                    data.put(Aware_Plugins.PLUGIN_DESCRIPTION, plugin.getString("desc"));
-                                    data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
-                                    data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
-                                    data.put(Aware_Plugins.PLUGIN_ICON, ! Aware.is_watch(getApplicationContext())?cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()):null);
-                                    data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_UPDATED);
-                                    getContentResolver().update(Aware_Plugins.CONTENT_URI, data, Aware_Plugins._ID + "=" + is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins._ID)), null);
-                                    needsRefresh = true;
-                                }
                             }
-						} else {
-                            new_data = true;
-                        }
-                        if( is_cached != null && ! is_cached.isClosed() ) is_cached.close();
-
-                        if( new_data ) {
+                        } else {
                             //this is a new plugin available on the server that we don't have yet!
                             ContentValues data = new ContentValues();
                             data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
@@ -529,13 +510,34 @@ public class Plugins_Manager extends Aware_Activity {
                             getContentResolver().insert(Aware_Plugins.CONTENT_URI, data);
                             needsRefresh = true;
                         }
+                        if( is_cached != null && ! is_cached.isClosed() ) is_cached.close();
 					}
+
+                    //Clean-up: plugin exists in local database but is not installed, not on the server either
+                    Cursor plugins_local_db = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, null);
+                    if( plugins_local_db != null && plugins_local_db.moveToFirst() ) {
+                        do {
+                            String local_plugin = plugins_local_db.getString(plugins_local_db.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+                            if( ! Plugins_Manager.isInstalled(getApplicationContext(), local_plugin) && ! isOnServerRepository(plugins, local_plugin) ) {
+                                getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + local_plugin + "'", null);
+                                needsRefresh = true;
+                            }
+                        }while (plugins_local_db.moveToNext());
+                    }
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
 			}
 			return needsRefresh;
 		}
+
+        private boolean isOnServerRepository( JSONArray server_plugins, String local_package ) throws JSONException {
+            for( int i=0; i<server_plugins.length(); i++ ) {
+                JSONObject server_pkg = server_plugins.getJSONObject(i);
+                if(server_pkg.getString("package").equals(local_package)) return true;
+            }
+            return false;
+        }
     	
 		@Override
 		protected void onPostExecute(Boolean refresh) {

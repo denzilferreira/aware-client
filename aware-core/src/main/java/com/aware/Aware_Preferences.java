@@ -2140,18 +2140,14 @@ public class Aware_Preferences extends Aware_Activity {
         for( int i=0; i < plugins.length(); i++ ) {
             try{
                 JSONObject plugin_config = plugins.getJSONObject(i);
+
                 String package_name = plugin_config.getString("plugin");
                 active_plugins.add(package_name);
 
                 JSONArray plugin_settings = plugin_config.getJSONArray("settings");
                 for(int j=0; j<plugin_settings.length(); j++) {
                     JSONObject plugin_setting = plugin_settings.getJSONObject(j);
-
-                    ContentValues newSettings = new ContentValues();
-                    newSettings.put(Aware_Provider.Aware_Settings.SETTING_KEY, plugin_setting.getString("setting"));
-                    newSettings.put(Aware_Provider.Aware_Settings.SETTING_VALUE, plugin_setting.get("value").toString() );
-                    newSettings.put(Aware_Provider.Aware_Settings.SETTING_PACKAGE_NAME, package_name);
-                    context.getContentResolver().insert(Aware_Provider.Aware_Settings.CONTENT_URI, newSettings);
+                    Aware.setSetting(context, plugin_setting.getString("setting"), plugin_setting.get("value"), package_name);
                 }
             }catch( JSONException e ) {
                 e.printStackTrace();
@@ -2169,36 +2165,43 @@ public class Aware_Preferences extends Aware_Activity {
     public static class CheckPlugins extends AsyncTask<ArrayList<String>, Void, Void> {
         private Context context;
         public CheckPlugins(Context c) {
-            context = c;
+            this.context = c;
         }
 
         @Override
         protected Void doInBackground(ArrayList<String>... params) {
-            for( String package_name : params[0] ) {
-                JSONObject json_package = null;
+            for( final String package_name : params[0] ) {
+
                 String http_request = new Https(context).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
                 if( http_request != null ) {
                     try {
                         if( ! http_request.equals("[]") ) {
-                            json_package = new JSONObject(http_request);
+                            JSONObject json_package = new JSONObject(http_request);
+                            if( json_package.getInt("version") > Plugins_Manager.getVersion(context, package_name) ) {
+                                Aware.downloadPlugin(context, package_name, true); //update the existing plugin
+                            } else {
+                                if( Plugins_Manager.isInstalled( context, package_name) ) {
+                                    Aware.startPlugin(context, package_name); //start plugin
+                                } else {
+
+                                    //We don't have the plugin installed or bundled. Ask to install?
+                                    if (Aware.DEBUG) Log.d(Aware.TAG, package_name + " is not installed yet!");
+
+                                    android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(context);
+                                    builder.setTitle("AWARE")
+                                            .setMessage("Install necessary plugin(s)?")
+                                            .setPositiveButton("Install", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    Aware.downloadPlugin(context, package_name, false);
+                                                }
+                                            })
+                                            .setNegativeButton("Cancel", null).show();
+                                }
+                            }
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
-                    }
-                }
-                if( json_package != null ) {
-                    if( ! Plugins_Manager.isInstalled(context, package_name) ) {
-                        Aware.downloadPlugin(context, package_name, false);
-                    } else {
-                        try {
-                            if( json_package.getInt("version") > Plugins_Manager.getVersion(context, package_name) ) {
-                                Aware.downloadPlugin(context, package_name, true);
-                            } else {
-                                Aware.startPlugin(context, package_name);
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
                     }
                 }
             }
@@ -2235,14 +2238,14 @@ public class Aware_Preferences extends Aware_Activity {
 				try {
                     JSONArray configs_study = new JSONArray(answer);
 					if( configs_study.getJSONObject(0).has("message") ) {
-                        Toast.makeText(getApplicationContext(), "This study is not available.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "This study is no longer available.", Toast.LENGTH_LONG).show();
                         return;
                     }
 
                     NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
                     mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
                     mBuilder.setContentTitle("AWARE");
-                    mBuilder.setContentText("Thanks for joining!");
+                    mBuilder.setContentText("Thanks for joining the study!");
                     mBuilder.setAutoCancel(true);
 
                     NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
