@@ -62,7 +62,7 @@
             android:icon="@drawable/ic_launcher_aware"
             android:label="@string/aware_sensors"
             android:theme="@style/Theme.Aware"
-            android:launchMode="singleTask">
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -75,7 +75,7 @@
             android:icon="@drawable/ic_launcher_aware"
             android:label="@string/aware_stream"
             android:noHistory="true"
-            android:launchMode="singleTask"
+            android:launchMode="singleTop"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:theme="@style/Theme.Aware"
             android:parentActivityName="com.aware.Aware_Preferences"
@@ -94,7 +94,7 @@
             android:name="com.aware.ui.CameraStudy"
             android:enabled="@bool/display_aware"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:launchMode="singleTask"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.Aware"
             android:label="@string/aware_studies"
             android:parentActivityName="com.aware.Aware_Preferences"
@@ -104,7 +104,7 @@
         <activity
             android:name="com.aware.ui.Plugins_Manager"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:launchMode="singleTask"
+            android:launchMode="singleTop"
             android:exported="true"
             android:icon="@drawable/ic_launcher_settings"
             android:label="@string/aware_plugins"
@@ -116,7 +116,7 @@
         <activity android:name="com.aware.ui.About"
             android:enabled="@bool/display_aware"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:launchMode="singleTask"
+            android:launchMode="singleTop"
             android:exported="true"
             android:label="@string/aware_team"
             android:theme="@style/Theme.Aware"
@@ -132,7 +132,7 @@
             android:showOnLockScreen="true"
             android:noHistory="true"
             android:clearTaskOnLaunch="true"
-            android:launchMode="singleTask"
+            android:launchMode="singleTop"
             android:theme="@android:style/Theme.DeviceDefault.Dialog">
         </activity>
 
@@ -140,7 +140,6 @@
 
         <service android:name="com.aware.Keyboard" android:exported="true" />
         <service android:name="com.aware.utils.Scheduler" android:exported="true" />
-
         <service
             android:name="com.aware.Aware"
             android:exported="true" >
@@ -278,22 +277,22 @@
         </service>
 
         <service android:name="com.aware.Aware$UpdateFrameworkService" android:exported="true" android:enabled="@bool/display_aware" />
-        <service android:name="com.aware.utils.DownloadPluginService" android:exported="true" android:enabled="@bool/display_aware" />
         <service android:name="com.aware.Aware$UpdatePlugins" android:exported="true" android:enabled="@bool/display_aware" />
 
+        <service android:name="com.aware.utils.DownloadPluginService" android:exported="true" />
         <service android:name="com.aware.Aware_Preferences$StudyConfig" android:exported="true"/>
         <service android:name="com.aware.utils.Aware_TTS" android:exported="true"/>
+        <service android:name="com.aware.utils.WearClient" android:exported="true"/>
 
-        <service android:name="com.aware.utils.WearClient" android:enabled="@bool/display_aware"/>
-        <service android:name="com.aware.utils.WearProxy" android:enabled="@bool/display_aware">
-            <intent-filter>
-                <action android:name="com.google.android.gms.wearable.BIND_LISTENER"/>
-            </intent-filter>
-        </service>
+        <!--<service android:name="com.aware.utils.WearProxy" android:enabled="@bool/display_aware" android:exported="true">-->
+            <!--<intent-filter>-->
+                <!--<action android:name="com.google.android.gms.wearable.BIND_LISTENER"/>-->
+            <!--</intent-filter>-->
+        <!--</service>-->
 
         <!-- Receivers -->
 
-        <receiver android:name="com.aware.utils.WearClient$AndroidWearHTTPClient" android:enabled="@bool/display_aware">
+        <receiver android:name="com.aware.utils.WearClient$AndroidWearHTTPClient" android:enabled="@bool/display_aware" android:exported="true">
             <intent-filter>
                 <action android:name="ACTION_AWARE_ANDROID_WEAR_HTTP_GET"/>
                 <action android:name="ACTION_AWARE_ANDROID_WEAR_HTTP_POST"/>

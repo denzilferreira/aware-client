@@ -117,8 +117,8 @@ public class Https {
 
             long time = System.currentTimeMillis();
 
-            while( WearProxy.wearResponse == null ){
-				if( WearProxy.wearResponse != null || (System.currentTimeMillis()-time) > 60000 ) {
+            while( WearClient.wearResponse == null ){
+				if( WearClient.wearResponse != null || (System.currentTimeMillis()-time) > 60000 ) {
                     if( System.currentTimeMillis() - time > 60000 ) Log.w(TAG,"HTTP request timeout...");
                     break;
                 }
@@ -128,8 +128,8 @@ public class Https {
                 Log.d(TAG, "AndroidWear POST benchmark: " + (System.currentTimeMillis() - time)/1000 + " seconds");
             }
 
-            String response = WearProxy.wearResponse;
-			WearProxy.wearResponse = null;
+            String response = WearClient.wearResponse;
+            WearClient.wearResponse = null;
 
             return response;
 		}
@@ -223,8 +223,8 @@ public class Https {
             sContext.sendBroadcast(phoneRequest);
 
             long time = System.currentTimeMillis();
-            while( WearProxy.wearResponse == null ){
-				if( WearProxy.wearResponse != null || (System.currentTimeMillis()-time) > 60000 ) {
+            while( WearClient.wearResponse == null ){
+				if( WearClient.wearResponse != null || (System.currentTimeMillis()-time) > 60000 ) {
                     if( System.currentTimeMillis() - time > 60000 ) Log.w(TAG,"HTTP request timeout...");
                     break;
                 }
@@ -234,8 +234,8 @@ public class Https {
                 Log.d(TAG, "AndroidWear GET benchmark: " + (System.currentTimeMillis() - time)/1000 + " seconds");
             }
 
-            String response = WearProxy.wearResponse;
-			WearProxy.wearResponse = null;
+            String response = WearClient.wearResponse;
+            WearClient.wearResponse = null;
             return response;
         }
 
