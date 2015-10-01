@@ -48,8 +48,10 @@ public class Https {
 	public Https(Context c) {
 		sContext = c;
 
-        Intent wearClient = new Intent(sContext, WearClient.class);
-        sContext.startService(wearClient);
+        if( c.getPackageName().equalsIgnoreCase("com.aware") ) {
+            Intent wearClient = new Intent(sContext, WearClient.class);
+            sContext.startService(wearClient);
+        }
 
         try {
             //Load AWARE's SSL public certificate so we can talk with our server
