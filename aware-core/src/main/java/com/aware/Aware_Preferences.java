@@ -21,6 +21,7 @@ import android.hardware.SensorManager;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
@@ -45,6 +46,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -468,6 +470,8 @@ public class Aware_Preferences extends Aware_Activity {
      */
     public static final String STATUS_KEYBOARD = "status_keyboard";
 
+    private final String AWARE_VERSION = "aware_version";
+
     private static final Aware framework = Aware.getService();
     private static SensorManager mSensorMgr;
     private static Context sContext;
@@ -503,42 +507,15 @@ public class Aware_Preferences extends Aware_Activity {
         return dialog;
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        
-        mSensorMgr = (SensorManager) getSystemService(SENSOR_SERVICE);
-        is_watch = Aware.is_watch(this);
-        sContext = getApplicationContext();
-        sPreferences = this;
+    private boolean isDirty() {
+        File f = new File(Environment.getExternalStorageDirectory() + "/AWARE");
+        if( f.exists() ) return true;
+        return false;
+    }
 
-        //Start the Aware
-        Intent startAware = new Intent( getApplicationContext(), Aware.class );
-        startService(startAware);
+    private void defaultSettings() {
 
-        SharedPreferences prefs = getSharedPreferences( getPackageName(), Context.MODE_PRIVATE );
-    	if( prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0 ) {
-            PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
-    		prefs.edit().commit(); //commit changes
-    	} else {
-    		PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, false);
-    	}
-    	
-    	Map<String,?> defaults = prefs.getAll();
-        for(Map.Entry<String, ?> entry : defaults.entrySet()) {
-            if( Aware.getSetting(getApplicationContext(), entry.getKey()).length() == 0 ) {
-                Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue());
-            }
-        }
-        
-    	if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0 ) {
-        	UUID uuid = UUID.randomUUID();
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString());
-    	}
-
-        addPreferencesFromResource(R.xml.aware_preferences);
-        setContentView(R.layout.aware_ui);
-
+        SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         if( ! prefs.contains("intro_done") ) {
             final ViewGroup parent = (ViewGroup) findViewById(android.R.id.content);
             final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
@@ -570,6 +547,79 @@ public class Aware_Preferences extends Aware_Activity {
         developerOptions();
         servicesOptions();
         logging();
+    }
+
+    private void clearAWARE( File fileOrDirectory ) {
+        if( fileOrDirectory.isDirectory() ) {
+            for( File child : fileOrDirectory.listFiles() ) {
+                clearAWARE(child);
+            }
+        }
+        fileOrDirectory.delete();
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        mSensorMgr = (SensorManager) getSystemService(SENSOR_SERVICE);
+        is_watch = Aware.is_watch(this);
+        sContext = getApplicationContext();
+        sPreferences = this;
+
+        //Start the Aware
+        Intent startAware = new Intent( getApplicationContext(), Aware.class );
+        startService(startAware);
+
+        SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+        if( prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0 ) {
+            PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
+            prefs.edit().commit(); //commit changes
+        } else {
+            PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, false);
+        }
+
+        Map<String,?> defaults = prefs.getAll();
+        for(Map.Entry<String, ?> entry : defaults.entrySet()) {
+            if( Aware.getSetting(getApplicationContext(), entry.getKey()).length() == 0 ) {
+                Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue());
+            }
+        }
+        if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0 ) {
+            UUID uuid = UUID.randomUUID();
+            Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString());
+        }
+
+        addPreferencesFromResource(R.xml.aware_preferences);
+        setContentView(R.layout.aware_ui);
+
+        try {
+            PackageInfo awarePkg = getPackageManager().getPackageInfo("com.aware", 0);
+            int aware_version = awarePkg.versionCode;
+
+            //First time installing, updating AWARE
+            if( (! prefs.contains(AWARE_VERSION) && isDirty()) || ( prefs.contains(AWARE_VERSION) && prefs.getInt(AWARE_VERSION, 0) != aware_version ) ) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(Aware_Preferences.this);
+                builder.setMessage(R.string.aware_dirty);
+                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        defaultSettings();
+                    }
+                });
+                builder.setPositiveButton("Reset", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        clearAWARE(new File(Environment.getExternalStorageDirectory() + "/AWARE"));
+                        defaultSettings();
+                    }
+                });
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+        } catch (NameNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
