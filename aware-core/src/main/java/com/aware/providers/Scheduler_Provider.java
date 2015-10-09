@@ -4,6 +4,7 @@ package com.aware.providers;
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -17,6 +18,7 @@ import android.util.Log;
 import com.aware.Aware;
 import com.aware.utils.DatabaseHelper;
 
+import java.io.File;
 import java.util.HashMap;
 
 /**
@@ -79,6 +81,20 @@ public class Scheduler_Provider extends ContentProvider {
         }
         return( database != null && databaseHelper != null);
     }
+
+	/**
+	 * Recreates the ContentProvider
+	 */
+	public static void resetDB( Context c ) {
+		Log.d("AWARE", "Resetting " + DATABASE_NAME + "...");
+
+		File db = new File(DATABASE_NAME);
+		db.delete();
+		databaseHelper = new DatabaseHelper( c, DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
+		if( databaseHelper != null ) {
+			database = databaseHelper.getWritableDatabase();
+		}
+	}
 	
 	/**
 	 * Delete entry from the database

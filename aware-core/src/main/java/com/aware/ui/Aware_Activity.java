@@ -9,8 +9,10 @@ import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
+import android.support.annotation.LayoutRes;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -34,7 +36,8 @@ import com.aware.utils.WearClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Aware_Activity extends PreferenceActivity {
+//PreferenceActivity
+public class Aware_Activity extends AppCompatPreferenceActivity {
 
 	private DrawerLayout navigationDrawer;
 	private ListView navigationList;
@@ -67,22 +70,7 @@ public class Aware_Activity extends PreferenceActivity {
         super.onPostCreate(savedInstanceState);
 
         toolbar = (Toolbar) findViewById(R.id.aware_toolbar);
-        toolbar.setTitle(this.getTitle());
-        toolbar.inflateMenu(R.menu.aware_menu);
-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem menuItem) {
-                if (menuItem.getTitle().toString().equals("QRCode")) {
-                    Intent join_study = new Intent(Aware_Activity.this, CameraStudy.class);
-                    startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
-                }
-                if (menuItem.getTitle().toString().equals("Team")) {
-                    Intent about_us = new Intent(Aware_Activity.this, About.class);
-                    startActivity(about_us);
-                }
-                return true;
-            }
-        });
+        setSupportActionBar(toolbar);
 
         if( Aware.is_watch(this) ) {
             Menu menu = toolbar.getMenu();
@@ -104,11 +92,29 @@ public class Aware_Activity extends PreferenceActivity {
 
         if( navigationToggle != null ) navigationToggle.syncState();
     }
-    
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.aware_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getTitle().toString().equals("QRCode")) {
+            Intent join_study = new Intent(Aware_Activity.this, CameraStudy.class);
+            startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
+        }
+        if (item.getTitle().toString().equals("Team")) {
+            Intent about_us = new Intent(Aware_Activity.this, About.class);
+            startActivity(about_us);
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-
         if( navigationToggle != null ) navigationToggle.onConfigurationChanged(newConfig);
     }
 

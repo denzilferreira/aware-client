@@ -7,8 +7,8 @@ configurations {
     wear
 }
 
-ext.version_readable = "3.6.4"
-ext.version_code = 395
+ext.version_readable = "3.6.5"
+ext.version_code = 396
 
 android {
     compileSdkVersion 23
@@ -42,14 +42,15 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile files('libs/mqtt-client-0.4.0.jar')
-    compile 'com.android.support:appcompat-v7:+'
-    compile 'com.android.support:cardview-v7:+'
-    compile 'com.google.android.gms:play-services-wearable:+'
+    compile 'com.android.support:appcompat-v7:23.0.1'
+    compile 'com.android.support:cardview-v7:23.0.1'
+    compile 'com.android.support:design:23.0.1'
+    compile 'com.google.android.gms:play-services-wearable:8.1.0'
 
-    phoneCompile 'com.android.support:support-v4:+'
+    phoneCompile 'com.android.support:support-v4:23.0.1'
 
-    wearCompile 'com.android.support:support-v13:+'
-    wearCompile 'com.google.android.support:wearable:+'
+    wearCompile 'com.android.support:support-v13:23.0.1'
+    wearCompile 'com.google.android.support:wearable:1.3.0'
 
     //Comment out for MavenCentral
     phoneWearApp project(path: ':aware-wear', configuration: 'wearRelease')

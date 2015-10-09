@@ -1,27 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Aware" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="android:windowActionBar">false</item>
+    <style name="Theme.Aware" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowNoTitle">true</item>
-        <item name="toolbarStyle">@style/Aware.Toolbar</item>
-        <item name="windowActionBar">false</item>
-
-        <item name="android:colorPrimary">#33B5E5</item>
-        <item name="android:colorAccent">#33B5E5</item>
-        <item name="android:colorPrimaryDark">#33B5E5</item>
+        <item name="windowNoTitle">true</item>
+        <item name="colorPrimary">#33B5E5</item>
+        <item name="colorAccent">#33B5E5</item>
+        <item name="colorPrimaryDark">#33B5E5</item>
         <item name="android:textColor">#000000</item>
-        <item name="android:actionBarPopupTheme">@style/Aware.Toolbar</item>
-        <item name="android:popupTheme">@style/Aware.Toolbar</item>
-        <item name="android:buttonTint">#33B5E5</item>
     </style>
-
-    <style name="Aware.Toolbar" parent="ThemeOverlay.AppCompat.ActionBar">
-        <item name="android:layout_gravity">center_vertical</item>
+    <style name="Aware_Toolbar" parent="ThemeOverlay.AppCompat.ActionBar">
+        <!-- Used to for the title of the Toolbar -->
+        <item name="android:textColorPrimary">#fff</item>
+        <!-- Used to for the title of the Toolbar when parent is Theme.AppCompat.Light -->
+        <item name="android:textColorPrimaryInverse">#fff</item>
+        <!-- Used to color the text of the action menu icons -->
+        <item name="android:textColorSecondary">#fff</item>
+        <!-- Used to color the overflow menu icon -->
+        <item name="actionMenuTextColor">#fff</item>
+        <!-- Color of the Toolbar -->
         <item name="android:background">#33B5E5</item>
-        <item name="android:textColor">#FFFFFF</item>
-        <item name="android:textColorPrimary">#FFFFFF</item>
-        <item name="android:textColorSecondary">#FFFFFF</item>
-        <item name="android:navigationIcon">?attr/homeAsUpIndicator</item>
-        <item name="navigationIcon">?attr/homeAsUpIndicator</item>
     </style>
 </resources>

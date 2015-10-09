@@ -4,6 +4,7 @@ package com.aware.providers;
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -19,6 +20,7 @@ import com.aware.Aware;
 import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
+import java.io.File;
 import java.util.HashMap;
 
 /**
@@ -51,11 +53,9 @@ public class Accelerometer_Provider extends ContentProvider {
 	 * 
 	 */
 	public static final class Accelerometer_Sensor implements BaseColumns {
-		private Accelerometer_Sensor() {
-		};
+		private Accelerometer_Sensor() {}
 
-		public static final Uri CONTENT_URI = Uri.parse("content://"
-				+ Accelerometer_Provider.AUTHORITY + "/sensor_accelerometer");
+		public static final Uri CONTENT_URI = Uri.parse("content://" + Accelerometer_Provider.AUTHORITY + "/sensor_accelerometer");
 		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.aware.accelerometer.sensor";
 		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.aware.accelerometer.sensor";
 
@@ -97,10 +97,8 @@ public class Accelerometer_Provider extends ContentProvider {
 		public static final String LABEL = "label";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "accelerometer.db";
-	public static final String[] DATABASE_TABLES = { "sensor_accelerometer",
-			"accelerometer" };
+	public static String DATABASE_NAME = Environment.getExternalStorageDirectory() + "/AWARE/" + "accelerometer.db";
+	public static final String[] DATABASE_TABLES = { "sensor_accelerometer", "accelerometer" };
 	public static final String[] TABLES_FIELDS = {
 			// accelerometer device information
 			Accelerometer_Sensor._ID + " integer primary key autoincrement,"
@@ -144,6 +142,20 @@ public class Accelerometer_Provider extends ContentProvider {
         }
         return( database != null && databaseHelper != null);
     }
+
+    /**
+     * Recreates the ContentProvider
+     */
+	public static void resetDB( Context c ) {
+        Log.d("AWARE", "Resetting " + DATABASE_NAME + "...");
+
+        File db = new File(DATABASE_NAME);
+        db.delete();
+        databaseHelper = new DatabaseHelper( c, DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
+        if( databaseHelper != null ) {
+            database = databaseHelper.getWritableDatabase();
+        }
+	}
 	
 	/**
 	 * Delete entry from the database

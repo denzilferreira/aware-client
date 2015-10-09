@@ -8,7 +8,6 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -37,7 +36,33 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.aware.providers.Aware_Provider;
+import com.aware.providers.Accelerometer_Provider;
+import com.aware.providers.Applications_Provider;
+import com.aware.providers.Barometer_Provider;
+import com.aware.providers.Battery_Provider;
+import com.aware.providers.Bluetooth_Provider;
+import com.aware.providers.Communication_Provider;
+import com.aware.providers.ESM_Provider;
+import com.aware.providers.Gravity_Provider;
+import com.aware.providers.Gyroscope_Provider;
+import com.aware.providers.Installations_Provider;
+import com.aware.providers.Keyboard_Provider;
+import com.aware.providers.Light_Provider;
+import com.aware.providers.Linear_Accelerometer_Provider;
+import com.aware.providers.Locations_Provider;
+import com.aware.providers.Magnetometer_Provider;
+import com.aware.providers.Mqtt_Provider;
+import com.aware.providers.Network_Provider;
+import com.aware.providers.Processor_Provider;
+import com.aware.providers.Proximity_Provider;
+import com.aware.providers.Rotation_Provider;
+import com.aware.providers.Scheduler_Provider;
+import com.aware.providers.Screen_Provider;
+import com.aware.providers.Telephony_Provider;
+import com.aware.providers.Temperature_Provider;
+import com.aware.providers.TimeZone_Provider;
+import com.aware.providers.Traffic_Provider;
+import com.aware.providers.WiFi_Provider;
 import com.aware.ui.Aware_Activity;
 import com.aware.ui.Plugins_Manager;
 import com.aware.utils.Https;
@@ -514,7 +539,6 @@ public class Aware_Preferences extends Aware_Activity {
     }
 
     private void defaultSettings() {
-
         SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         if( ! prefs.contains("intro_done") ) {
             final ViewGroup parent = (ViewGroup) findViewById(android.R.id.content);
@@ -538,24 +562,12 @@ public class Aware_Preferences extends Aware_Activity {
                     parent.removeView(help_menu);
                 }
             });
-
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putBoolean("intro_done", true);
-            editor.commit();
+            prefs.edit().putBoolean("intro_done", true).commit();
         }
 
         developerOptions();
         servicesOptions();
         logging();
-    }
-
-    private void clearAWARE( File fileOrDirectory ) {
-        if( fileOrDirectory.isDirectory() ) {
-            for( File child : fileOrDirectory.listFiles() ) {
-                clearAWARE(child);
-            }
-        }
-        fileOrDirectory.delete();
     }
 
     @Override
@@ -598,7 +610,7 @@ public class Aware_Preferences extends Aware_Activity {
             int aware_version = awarePkg.versionCode;
 
             //First time installing, updating AWARE
-            if( (! prefs.contains(AWARE_VERSION) && isDirty()) || ( prefs.contains(AWARE_VERSION) && prefs.getInt(AWARE_VERSION, 0) != aware_version ) ) {
+            if( ( ! prefs.contains(AWARE_VERSION) && isDirty()) || ( prefs.contains(AWARE_VERSION) && prefs.getInt(AWARE_VERSION, 0) != aware_version ) ) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(Aware_Preferences.this);
                 builder.setMessage(R.string.aware_dirty);
                 builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -607,16 +619,59 @@ public class Aware_Preferences extends Aware_Activity {
                         defaultSettings();
                     }
                 });
-                builder.setPositiveButton("Reset", new DialogInterface.OnClickListener() {
+                builder.setPositiveButton("Clean", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        clearAWARE(new File(Environment.getExternalStorageDirectory() + "/AWARE"));
-                        defaultSettings();
+
+                        //Reset settings to default
+                        Aware.reset(getApplicationContext());
+
+                        //Reset core ContentProviders
+                        Accelerometer_Provider.resetDB(getApplicationContext());
+                        Applications_Provider.resetDB(getApplicationContext());
+                        Barometer_Provider.resetDB(getApplicationContext());
+                        Battery_Provider.resetDB(getApplicationContext());
+                        Bluetooth_Provider.resetDB(getApplicationContext());
+                        Communication_Provider.resetDB(getApplicationContext());
+                        ESM_Provider.resetDB(getApplicationContext());
+                        Gravity_Provider.resetDB(getApplicationContext());
+                        Gyroscope_Provider.resetDB(getApplicationContext());
+                        Installations_Provider.resetDB(getApplicationContext());
+                        Keyboard_Provider.resetDB(getApplicationContext());
+                        Light_Provider.resetDB(getApplicationContext());
+                        Linear_Accelerometer_Provider.resetDB(getApplicationContext());
+                        Locations_Provider.resetDB(getApplicationContext());
+                        Magnetometer_Provider.resetDB(getApplicationContext());
+                        Mqtt_Provider.resetDB(getApplicationContext());
+                        Network_Provider.resetDB(getApplicationContext());
+                        Processor_Provider.resetDB(getApplicationContext());
+                        Proximity_Provider.resetDB(getApplicationContext());
+                        Rotation_Provider.resetDB(getApplicationContext());
+                        Scheduler_Provider.resetDB(getApplicationContext());
+                        Screen_Provider.resetDB(getApplicationContext());
+                        Telephony_Provider.resetDB(getApplicationContext());
+                        Temperature_Provider.resetDB(getApplicationContext());
+                        TimeZone_Provider.resetDB(getApplicationContext());
+                        Traffic_Provider.resetDB(getApplicationContext());
+                        WiFi_Provider.resetDB(getApplicationContext());
+
+                        //Restart activity
+                        Intent intent = getIntent();
+                        finish();
+                        startActivity(intent);
                     }
                 });
                 AlertDialog dialog = builder.create();
                 dialog.show();
+
+                prefs.edit().putInt(AWARE_VERSION, aware_version).commit();
             }
+
+            defaultSettings();
+
+            //Check if AWARE is active on the accessibility services
+            Applications.isAccessibilityServiceActive(sContext);
+
         } catch (NameNotFoundException e) {
             e.printStackTrace();
         }

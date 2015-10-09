@@ -59,7 +59,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void setRenamedColumns( HashMap<String, String> renamed ) {
         renamed_columns = renamed;
     }
-	
+
 	@Override
     public void onCreate(SQLiteDatabase db) {
 		if(DEBUG) Log.w(TAG, "Database in use: " + db.getPath());
