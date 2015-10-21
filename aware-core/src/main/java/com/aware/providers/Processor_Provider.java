@@ -66,8 +66,8 @@ public class Processor_Provider extends ContentProvider {
 		public static final String IDLE_LOAD = "double_idle_load";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "processor.db";
+	public static String DATABASE_NAME = "processor.db";
+
 	public static final String[] DATABASE_TABLES = { "processor" };
 
 	public static final String[] TABLES_FIELDS = {

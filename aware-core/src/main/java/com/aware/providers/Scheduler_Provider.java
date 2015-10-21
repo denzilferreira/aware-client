@@ -54,7 +54,7 @@ public class Scheduler_Provider extends ContentProvider {
 		public static final String PACKAGE_NAME = "package_name";
 	}
 
-	public static String DATABASE_NAME = Environment.getExternalStorageDirectory() + "/AWARE/scheduler.db";
+	public static String DATABASE_NAME = "scheduler.db";
 	public static final String[] DATABASE_TABLES = { "scheduler" };
 
 	public static final String[] TABLES_FIELDS = {

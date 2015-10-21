@@ -98,8 +98,8 @@ public class Gravity_Provider extends ContentProvider {
 		public static final String LABEL = "label";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "gravity.db";
+	public static String DATABASE_NAME = "gravity.db";
+
 	public static final String[] DATABASE_TABLES = { "sensor_gravity",
 			"gravity" };
 	public static final String[] TABLES_FIELDS = {

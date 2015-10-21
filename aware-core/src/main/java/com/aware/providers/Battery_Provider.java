@@ -108,8 +108,8 @@ public class Battery_Provider extends ContentProvider {
 		public static final String END_TIMESTAMP = "double_end_timestamp";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "battery.db";
+	public static String DATABASE_NAME = "battery.db";
+
 	public static final String[] DATABASE_TABLES = { "battery",
 			"battery_discharges", "battery_charges" };
 	public static final String[] TABLES_FIELDS = {

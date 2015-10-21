@@ -161,8 +161,7 @@ public class Telephony_Provider extends ContentProvider {
 		public static final String EVDO_SNR = "evdo_snr";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "telephony.db";
+	public static String DATABASE_NAME = "telephony.db";
 
 	public static final String[] DATABASE_TABLES = { "telephony", "gsm",
 			"gsm_neighbor", "cdma" };

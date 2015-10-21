@@ -88,8 +88,8 @@ public class ESM_Provider extends ContentProvider {
 		public static final String SCALE_STEP = "esm_scale_step";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "esms.db";
+	public static String DATABASE_NAME = "esms.db";
+
 	public static final String[] DATABASE_TABLES = { "esms" };
 	public static final String[] TABLES_FIELDS = {
             ESM_Data._ID + " integer primary key autoincrement,"

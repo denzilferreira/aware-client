@@ -91,8 +91,8 @@ public class Bluetooth_Provider extends ContentProvider {
 		public static final String BT_LABEL = "label";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "bluetooth.db";
+	public static String DATABASE_NAME = "bluetooth.db";
+
 	public static final String[] DATABASE_TABLES = { "sensor_bluetooth",
 			"bluetooth" };
 	public static final String[] TABLES_FIELDS = {

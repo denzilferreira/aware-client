@@ -99,8 +99,8 @@ public class Magnetometer_Provider extends ContentProvider {
 		public static final String LABEL = "label";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "magnetometer.db";
+	public static String DATABASE_NAME = "magnetometer.db";
+
 	public static final String[] DATABASE_TABLES = { "sensor_magnetometer",
 			"magnetometer" };
 	public static final String[] TABLES_FIELDS = {

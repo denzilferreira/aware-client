@@ -97,7 +97,7 @@ public class Accelerometer_Provider extends ContentProvider {
 		public static final String LABEL = "label";
 	}
 
-	public static String DATABASE_NAME = Environment.getExternalStorageDirectory() + "/AWARE/" + "accelerometer.db";
+	public static String DATABASE_NAME = "accelerometer.db";
 	public static final String[] DATABASE_TABLES = { "sensor_accelerometer", "accelerometer" };
 	public static final String[] TABLES_FIELDS = {
 			// accelerometer device information
@@ -137,10 +137,10 @@ public class Accelerometer_Provider extends ContentProvider {
         if (databaseHelper == null) {
             databaseHelper = new DatabaseHelper( getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS );
         }
-        if( databaseHelper != null && ( database == null || ! database.isOpen() )) {
+        if( database == null || ! database.isOpen() ) {
             database = databaseHelper.getWritableDatabase();
         }
-        return( database != null && databaseHelper != null);
+        return( database != null );
     }
 
     /**
@@ -148,13 +148,11 @@ public class Accelerometer_Provider extends ContentProvider {
      */
 	public static void resetDB( Context c ) {
         Log.d("AWARE", "Resetting " + DATABASE_NAME + "...");
-
         File db = new File(DATABASE_NAME);
-        db.delete();
-        databaseHelper = new DatabaseHelper( c, DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
-        if( databaseHelper != null ) {
-            database = databaseHelper.getWritableDatabase();
-        }
+        if( db.delete() ) {
+			databaseHelper = new DatabaseHelper( c, DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
+			database = databaseHelper.getWritableDatabase();
+		}
 	}
 	
 	/**

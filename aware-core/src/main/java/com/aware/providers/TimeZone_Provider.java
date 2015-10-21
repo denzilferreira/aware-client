@@ -62,8 +62,7 @@ public class TimeZone_Provider extends ContentProvider {
 		public static final String TIMEZONE = "timezone";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "timezone.db";
+	public static String DATABASE_NAME = "timezone.db";
 
 	public static final String[] DATABASE_TABLES = {"timezone"};
 

@@ -91,8 +91,8 @@ public class WiFi_Provider extends ContentProvider {
 		public static final String LABEL = "label";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "wifi.db";
+	public static String DATABASE_NAME = "wifi.db";
+
 	public static final String[] DATABASE_TABLES = { "wifi", "sensor_wifi" };
 
 	public static final String[] TABLES_FIELDS = {

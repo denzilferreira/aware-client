@@ -77,8 +77,8 @@ public class Mqtt_Provider extends ContentProvider {
 		public static final String TOPIC = "topic";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "mqtt.db";
+	public static String DATABASE_NAME = "mqtt.db";
+
 	public static final String[] DATABASE_TABLES = { "mqtt_messages",
 			"mqtt_subscriptions" };
 	public static final String[] TABLES_FIELDS = {

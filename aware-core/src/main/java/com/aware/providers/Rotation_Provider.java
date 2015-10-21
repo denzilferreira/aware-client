@@ -100,8 +100,7 @@ public class Rotation_Provider extends ContentProvider {
 		public static final String LABEL = "label";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "rotation.db";
+	public static String DATABASE_NAME = "rotation.db";
 	public static final String[] DATABASE_TABLES = { "sensor_rotation",
 			"rotation" };
 	public static final String[] TABLES_FIELDS = {

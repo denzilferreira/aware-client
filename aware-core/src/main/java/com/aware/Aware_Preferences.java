@@ -1,6 +1,8 @@
 
 package com.aware;
 
+import android.*;
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.IntentService;
@@ -29,6 +31,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -502,6 +505,8 @@ public class Aware_Preferences extends Aware_Activity {
     private static Context sContext;
     private static PreferenceActivity sPreferences;
 
+    final private int REQUEST_CODE_WRITE_STORAGE = 999;
+
     @Override
     protected Dialog onCreateDialog(int id) {
         Dialog dialog = null;
@@ -571,6 +576,22 @@ public class Aware_Preferences extends Aware_Activity {
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if( requestCode == REQUEST_CODE_WRITE_STORAGE ) {
+            if( grantResults.length > 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED ) {
+                Toast.makeText(this, "AWARE external storage access required!", Toast.LENGTH_SHORT).show();
+                Intent aware = new Intent( getApplicationContext(), Aware.class );
+
+                stopService(aware);
+                framework.stopAllServices();
+                framework.stopSelf();
+                finish();
+            }
+        }
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
@@ -578,6 +599,13 @@ public class Aware_Preferences extends Aware_Activity {
         is_watch = Aware.is_watch(this);
         sContext = getApplicationContext();
         sPreferences = this;
+
+        int permissionCheck = ContextCompat.checkSelfPermission(Aware_Preferences.this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if( permissionCheck != PackageManager.PERMISSION_GRANTED ) {
+            if( ! shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE) ) {
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_WRITE_STORAGE);
+            }
+        }
 
         //Start the Aware
         Intent startAware = new Intent( getApplicationContext(), Aware.class );
@@ -670,7 +698,9 @@ public class Aware_Preferences extends Aware_Activity {
             defaultSettings();
 
             //Check if AWARE is active on the accessibility services
-            Applications.isAccessibilityServiceActive(sContext);
+            if( ! Aware.is_watch(sContext) ) {
+                Applications.isAccessibilityServiceActive(sContext);
+            }
 
         } catch (NameNotFoundException e) {
             e.printStackTrace();

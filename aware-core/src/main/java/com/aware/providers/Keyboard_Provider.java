@@ -59,8 +59,7 @@ public class Keyboard_Provider extends ContentProvider {
         public static final String IS_PASSWORD = "is_password";
     }
 
-    public static String DATABASE_NAME = Environment
-            .getExternalStorageDirectory() + "/AWARE/" + "keyboard.db";
+    public static String DATABASE_NAME = "keyboard.db";
     public static final String[] DATABASE_TABLES = { "keyboard" };
 
     public static final String[] TABLES_FIELDS = {

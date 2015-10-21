@@ -121,10 +121,8 @@ public class Aware_Provider extends ContentProvider {
 		public static final String PLUGIN_DESCRIPTION = "plugin_description";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "aware.db";
-	public static final String[] DATABASE_TABLES = { "aware_device",
-			"aware_settings", "aware_plugins" };
+	public static String DATABASE_NAME = "aware.db";
+	public static final String[] DATABASE_TABLES = { "aware_device", "aware_settings", "aware_plugins" };
 	public static final String[] TABLES_FIELDS = {
 			// Device information
 			Aware_Device._ID + " integer primary key autoincrement,"

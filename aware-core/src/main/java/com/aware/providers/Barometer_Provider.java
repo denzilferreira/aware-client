@@ -96,8 +96,7 @@ public class Barometer_Provider extends ContentProvider {
 		public static final String LABEL = "label";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "barometer.db";
+	public static String DATABASE_NAME = "barometer.db";
 	public static final String[] DATABASE_TABLES = { "sensor_barometer",
 			"barometer" };
 	public static final String[] TABLES_FIELDS = {

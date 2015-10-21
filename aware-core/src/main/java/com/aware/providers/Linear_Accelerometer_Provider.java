@@ -101,10 +101,8 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
 		public static final String LABEL = "label";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory()
-			+ "/AWARE/"
-			+ "linear_accelerometer.db";
+	public static String DATABASE_NAME = "linear_accelerometer.db";
+
 	public static final String[] DATABASE_TABLES = {
 			"sensor_linear_accelerometer", "linear_accelerometer" };
 	public static final String[] TABLES_FIELDS = {

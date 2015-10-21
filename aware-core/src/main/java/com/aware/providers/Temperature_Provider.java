@@ -96,8 +96,7 @@ public class Temperature_Provider extends ContentProvider {
 		public static final String LABEL = "label";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "temperature.db";
+	public static String DATABASE_NAME = "temperature.db";
 
 	public static final String[] DATABASE_TABLES = { "sensor_temperature",
 			"temperature" };

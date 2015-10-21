@@ -68,8 +68,7 @@ public class Traffic_Provider extends ContentProvider {
 		public static final String SENT_PACKETS = "double_sent_packets";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "network_traffic.db";
+	public static String DATABASE_NAME = "network_traffic.db";
 
 	public static final String[] DATABASE_TABLES = { "network_traffic" };
 

@@ -66,8 +66,8 @@ public class Installations_Provider extends ContentProvider {
 		public static final String INSTALLATION_STATUS = "installation_status";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "installations.db";
+	public static String DATABASE_NAME = "installations.db";
+
 	public static final String[] DATABASE_TABLES = { "installations" };
 
 	public static final String[] TABLES_FIELDS = {

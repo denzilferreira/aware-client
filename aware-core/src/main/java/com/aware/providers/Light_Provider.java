@@ -96,8 +96,7 @@ public class Light_Provider extends ContentProvider {
 		public static final String LABEL = "label";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "light.db";
+	public static String DATABASE_NAME = "light.db";
 	public static final String[] DATABASE_TABLES = { "sensor_light", "light" };
 	public static final String[] TABLES_FIELDS = {
 			// sensor device information

@@ -96,8 +96,8 @@ public class Proximity_Provider extends ContentProvider {
 		public static final String LABEL = "label";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "proximity.db";
+	public static String DATABASE_NAME = "proximity.db";
+
 	public static final String[] DATABASE_TABLES = { "sensor_proximity",
 			"proximity" };
 	public static final String[] TABLES_FIELDS = {

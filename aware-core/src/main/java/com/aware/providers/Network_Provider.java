@@ -65,8 +65,8 @@ public class Network_Provider extends ContentProvider {
 		public static final String STATE = "network_state";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "network.db";
+	public static String DATABASE_NAME = "network.db";
+
 	public static final String[] DATABASE_TABLES = { "network" };
 	public static final String[] TABLES_FIELDS = {
 	// network

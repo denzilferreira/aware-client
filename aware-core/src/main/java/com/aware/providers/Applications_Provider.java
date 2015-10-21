@@ -147,8 +147,8 @@ public class Applications_Provider extends ContentProvider {
 		public static final String IS_SYSTEM_APP = "is_system_app";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "applications.db";
+	public static String DATABASE_NAME = "applications.db";
+
 	public static final String[] DATABASE_TABLES = { "applications_foreground",
 			"applications_history", "applications_notifications",
 			"applications_crashes" };

@@ -71,8 +71,7 @@ public class Locations_Provider extends ContentProvider {
 		public static final String LABEL = "label";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "locations.db";
+	public static String DATABASE_NAME = "locations.db";
 
 	public static final String[] DATABASE_TABLES = { "locations" };
 

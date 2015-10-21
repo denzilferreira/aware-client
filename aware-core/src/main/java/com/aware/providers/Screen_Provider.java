@@ -63,8 +63,7 @@ public class Screen_Provider extends ContentProvider {
 		public static final String SCREEN_STATUS = "screen_status";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "screen.db";
+	public static String DATABASE_NAME = "screen.db";
 	public static final String[] DATABASE_TABLES = { "screen" };
 
 	public static final String[] TABLES_FIELDS = {

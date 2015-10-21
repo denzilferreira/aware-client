@@ -90,8 +90,7 @@ public class Communication_Provider extends ContentProvider {
 		public static final String TRACE = "trace";
 	}
 
-	public static String DATABASE_NAME = Environment
-			.getExternalStorageDirectory() + "/AWARE/" + "communication.db";
+	public static String DATABASE_NAME = "communication.db";
 
 	public static final String[] DATABASE_TABLES = { "calls", "messages" };
 
