@@ -3,17 +3,21 @@ package com.aware.utils;
 
 import java.util.Calendar;
 
+import android.Manifest;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.IBinder;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
+import com.aware.ui.PermissionsHandler;
 
 /**
  * Aware_Sensor: Extend to integrate with the framework (extension of Android Service class).
@@ -48,6 +52,13 @@ public class Aware_Sensor extends Service {
 	 * Context Providers URIs
 	 */
 	public Uri[] CONTEXT_URIS = null;
+
+    /**
+     * Permissions needed for this plugin to run
+     */
+    public String[] REQUIRED_PERMISSIONS = new String[]{
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
 	
 	/**
 	 * Sensor is inactive
@@ -99,6 +110,18 @@ public class Aware_Sensor extends Service {
     
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        //Ask the user all required permissions
+        for( int i=0;i<REQUIRED_PERMISSIONS.length;i++) {
+            int permission_access = ContextCompat.checkSelfPermission(getApplicationContext(), REQUIRED_PERMISSIONS[i]);
+            if( permission_access != PackageManager.PERMISSION_GRANTED ) {
+                Intent permissionRequest = new Intent(this, PermissionsHandler.class);
+                permissionRequest.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
+                permissionRequest.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(permissionRequest);
+            }
+        }
+
     	TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
         DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
         if(DEBUG) Log.d(TAG, TAG + " sensor active...");

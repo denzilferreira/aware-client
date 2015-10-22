@@ -135,6 +135,12 @@
             android:launchMode="singleTop"
             android:theme="@android:style/Theme.DeviceDefault.Dialog">
         </activity>
+        <activity android:name="com.aware.ui.PermissionsHandler"
+            android:exported="true"
+            android:theme="@android:style/Theme.NoDisplay"
+            android:launchMode="singleTop"
+            android:excludeFromRecents="true"
+            android:noHistory="true"/>
 
         <!-- Services -->
 
