@@ -1,15 +1,6 @@
 
 package com.aware.utils;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Set;
-
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -17,15 +8,18 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.os.EnvironmentCompat;
 import android.text.TextUtils;
 import android.util.Log;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * ContentProvider database helper<br/>
@@ -44,7 +38,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	private final int new_version;
     private HashMap<String, String> renamed_columns = new HashMap<>();
 	
-	private SQLiteDatabase database = null;
+	private SQLiteDatabase database;
+	private Context mContext;
 
 	public DatabaseHelper(Context context, String database_name, CursorFactory cursor_factory, int database_version, String[] database_tables, String[] table_fields) {
         super(context, database_name, cursor_factory, database_version);
@@ -53,9 +48,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         this.database_tables = database_tables;
         this.table_fields = table_fields;
         this.new_version = database_version;
+		this.mContext = context;
 
         //Create the folder where all the databases will be stored on public accessible storage
-        File documents_folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        File documents_folder = mContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
         //make sure the documents folder exists.
         documents_folder.mkdirs();
 
@@ -82,6 +78,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 		db.beginTransaction();
 		for (int i=0; i < database_tables.length;i++) {
+
 			//Create a new table if doesn't exist
 			db.execSQL("CREATE TABLE IF NOT EXISTS " + database_tables[i] + " (" + table_fields[i] + ");");
 
@@ -172,8 +169,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     	}
     	
     	//Get reference to database file, we might not have it.
-    	File database_file = new File( Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/AWARE/" , database_name );
-
+    	File database_file = new File( mContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/AWARE/" , database_name );
     	try {
     	    SQLiteDatabase current_database = SQLiteDatabase.openDatabase(database_file.getPath(), null, SQLiteDatabase.CREATE_IF_NECESSARY);
     	    int current_version = current_database.getVersion();
@@ -211,10 +207,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     	}
     	
     	//Get reference to database file, we might not have it.
-    	File database_file = new File(database_name);
+    	File database_file = new File( mContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/AWARE/" , database_name );
     	SQLiteDatabase current_database = SQLiteDatabase.openDatabase(database_file.getPath(), null, SQLiteDatabase.OPEN_READONLY);
     	onOpen(current_database);
     	database = current_database;
-    	return database; 
+    	return database;
     }
 }

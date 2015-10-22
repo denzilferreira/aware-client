@@ -15,6 +15,8 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -32,6 +34,7 @@ import android.widget.Toast;
 import com.aware.Aware;
 import com.aware.R;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
+import com.aware.utils.Aware_Plugin;
 import com.aware.utils.Https;
 
 import org.json.JSONArray;
@@ -51,6 +54,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -415,7 +419,7 @@ public class Plugins_Manager extends Aware_Activity {
 	}
     
 	/**
-	 * Given a package and class name, check if the class exists or not.
+	 * Given a package and class name, check if the class exists or not on the device, needed for reflection instantiations
 	 * @param package_name
 	 * @param class_name
 	 * @return boolean
@@ -438,13 +442,44 @@ public class Plugins_Manager extends Aware_Activity {
      * @param package_name
      * @return
      */
-    public static boolean isInstalled( Context context, String package_name ) {
+    public static PackageInfo isInstalled( Context context, String package_name ) {
         PackageManager pkgManager = context.getPackageManager();
         List<PackageInfo> packages = pkgManager.getInstalledPackages(PackageManager.GET_META_DATA);
         for( PackageInfo pkg : packages) {
-            if( pkg.packageName.equals(package_name) ) return true;
+            if( pkg.packageName.equals(package_name) ) return pkg;
         }
-        return false;
+        return null;
+    }
+
+    /**
+     * Check if plugin is on AWARE's database already
+     * @param context
+     * @param pkg_name
+     * @return
+     */
+    private static boolean isLocal( Context context, String pkg_name ) {
+        boolean is_local = false;
+        Cursor in_db = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + pkg_name + "'", null, null);
+        if( in_db != null && in_db.getCount() > 0 ) {
+            is_local = true;
+        }
+        if( in_db != null && ! in_db.isClosed()) in_db.close();
+        return is_local;
+    }
+
+    /**
+     * Get a list of all plugins' PackageInfo installed on the device
+     * @param c
+     * @return
+     */
+    public static ArrayList<PackageInfo> getInstalledPlugins(Context c) {
+        ArrayList<PackageInfo> installed = new ArrayList<>();
+        PackageManager pm = c.getPackageManager();
+        List<PackageInfo> all_packages = pm.getInstalledPackages(PackageManager.GET_META_DATA);
+        for( PackageInfo pkg : all_packages ) {
+            if( pkg.packageName.matches("com.aware.plugin.*") ) installed.add(pkg);
+        }
+        return installed;
     }
 
     /**
@@ -462,7 +497,37 @@ public class Plugins_Manager extends Aware_Activity {
         }
         return 0;
     }
-	
+
+    private JSONObject getPluginOnlineInfo( JSONArray server_pkgs, String package_name ) {
+        try {
+            for(int i=0;i<server_pkgs.length();i++) {
+                JSONObject pkg = server_pkgs.getJSONObject(i);
+                if( pkg.getString("package").equalsIgnoreCase(package_name) )
+                    return pkg;
+            }
+        } catch (JSONException e ) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    //Get a plugins' icon as byte[] for database storage
+    public static byte[] getPluginIcon( Context c, PackageInfo pkg ) {
+        Drawable d = pkg.applicationInfo.loadIcon(c.getPackageManager());
+        Bitmap bitmap = ((BitmapDrawable)d).getBitmap();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        return stream.toByteArray();
+    }
+
+    private boolean isOnServerRepository( JSONArray server_plugins, String local_package ) throws JSONException {
+        for( int i=0; i<server_plugins.length(); i++ ) {
+            JSONObject server_pkg = server_plugins.getJSONObject(i);
+            if(server_pkg.getString("package").equals(local_package)) return true;
+        }
+        return false;
+    }
+
     /**
      * Checks for changes on the server side and updates database.
      * If changes were detected, result is true and a refresh of UI is requested.
@@ -470,35 +535,66 @@ public class Plugins_Manager extends Aware_Activity {
      */
     public class Async_PluginUpdater extends AsyncTask<Void, View, Boolean> {
 
+        boolean needsRefresh = false;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            //First, clean plugins on the database if they are not installed on the device anymore
+            ArrayList<String> to_clean = new ArrayList<>();
+            Cursor on_database = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, null);
+            if( on_database != null && on_database.moveToFirst() ) {
+                do {
+                    String package_name = on_database.getString(on_database.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+                    PackageInfo installed = isInstalled(getApplicationContext(), package_name);
+
+                    //Clean
+                    if( installed == null ) {
+                        to_clean.add(package_name);
+                    }
+                }while(on_database.moveToNext());
+            }
+            if( on_database != null && ! on_database.isClosed() ) on_database.close();
+
+            if( to_clean.size() > 0 ) {
+                String to_clean_txt="";
+                for(int i=0; i<to_clean.size();i++) {
+                    to_clean_txt+="'"+to_clean.get(i)+"',";
+                }
+                to_clean_txt = to_clean_txt.substring(0, to_clean_txt.length()-1);
+                getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " in ("+to_clean_txt+")", null);
+
+                needsRefresh = true;
+            }
+        }
+
         @Override
 		protected Boolean doInBackground(Void... params) {
-
-            boolean needsRefresh = false;
+            JSONArray plugins = null;
 
     		//Check for updates on the server side
     		String response = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/plugins/get_plugins" + (( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) ? "/" + Aware.getSetting(getApplicationContext(), "study_id") : ""), true );
 			if( response != null ) {
 				try {
-					JSONArray plugins = new JSONArray(response);
+					plugins = new JSONArray(response);
 					for( int i=0; i< plugins.length(); i++ ) {
 						JSONObject plugin = plugins.getJSONObject(i);
-
-                        Cursor is_cached = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + plugin.getString("package") + "'", null, null );
-						if( is_cached != null && is_cached.moveToFirst() ) {
-                            int version = is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins.PLUGIN_VERSION));
-                            //Lets check if it is updated
-                            if (plugin.getInt("version") > version) {
+                        PackageInfo installed = isInstalled(getApplicationContext(), plugin.getString("package"));
+                        if (installed != null) {
+                            //Installed, lets check if it is updated
+                            if ( plugin.getInt("version") > installed.versionCode ) {
                                 ContentValues data = new ContentValues();
                                 data.put(Aware_Plugins.PLUGIN_DESCRIPTION, plugin.getString("desc"));
                                 data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
                                 data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
-                                data.put(Aware_Plugins.PLUGIN_ICON, !Aware.is_watch(getApplicationContext()) ? cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()) : null);
+                                data.put(Aware_Plugins.PLUGIN_ICON, ! Aware.is_watch(getApplicationContext()) ? cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()) : null);
                                 data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_UPDATED);
-                                getContentResolver().update(Aware_Plugins.CONTENT_URI, data, Aware_Plugins._ID + "=" + is_cached.getInt(is_cached.getColumnIndex(Aware_Plugins._ID)), null);
+                                getContentResolver().update(Aware_Plugins.CONTENT_URI, data, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + installed.packageName +"'", null);
                                 needsRefresh = true;
                             }
                         } else {
-                            //this is a new plugin available on the server that we don't have yet!
+                            //this is a new plugin available on the server
                             ContentValues data = new ContentValues();
                             data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
                             data.put(Aware_Plugins.PLUGIN_DESCRIPTION, plugin.getString("desc"));
@@ -510,35 +606,54 @@ public class Plugins_Manager extends Aware_Activity {
                             getContentResolver().insert(Aware_Plugins.CONTENT_URI, data);
                             needsRefresh = true;
                         }
-                        if( is_cached != null && ! is_cached.isClosed() ) is_cached.close();
 					}
-
-                    //Clean-up: plugin exists in local database but is not installed, not on the server either
-                    Cursor plugins_local_db = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, null);
-                    if( plugins_local_db != null && plugins_local_db.moveToFirst() ) {
-                        do {
-                            String local_plugin = plugins_local_db.getString(plugins_local_db.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-                            if( ! Plugins_Manager.isInstalled(getApplicationContext(), local_plugin) && ! isOnServerRepository(plugins, local_plugin) ) {
-                                getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + local_plugin + "'", null);
-                                needsRefresh = true;
-                            }
-                        }while (plugins_local_db.moveToNext());
-                    }
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
 			}
+
+            //Restore: not on local database, but installed
+            ArrayList<PackageInfo> installed_plugins = getInstalledPlugins(getApplicationContext());
+            for( PackageInfo pkg : installed_plugins ) {
+                //Installed on device, but not on AWARE's database
+                if( ! isLocal(getApplicationContext(), pkg.packageName) ) {
+                    try {
+                        if( isOnServerRepository(plugins, pkg.packageName) ) {
+                            JSONObject plugin = getPluginOnlineInfo(plugins, pkg.packageName);
+
+                            ContentValues data = new ContentValues();
+                            data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
+                            data.put(Aware_Plugins.PLUGIN_DESCRIPTION, plugin.getString("desc"));
+                            data.put(Aware_Plugins.PLUGIN_VERSION, plugin.getInt("version"));
+                            data.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, plugin.getString("package"));
+                            data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
+                            data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_DISABLED);
+                            data.put(Aware_Plugins.PLUGIN_ICON, ! Aware.is_watch(getApplicationContext())?cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()):null);
+
+                            getContentResolver().insert(Aware_Plugins.CONTENT_URI, data);
+                            needsRefresh = true;
+                        } else {
+                            //Users' own plugins, add them back to the list
+                            ContentValues data = new ContentValues();
+                            data.put(Aware_Plugins.PLUGIN_NAME, pkg.applicationInfo.loadLabel(getPackageManager()).toString());
+                            data.put(Aware_Plugins.PLUGIN_DESCRIPTION, "Your plugin! Consider submitting your plugin to our repository (https://api.awareframework.com)!");
+                            data.put(Aware_Plugins.PLUGIN_VERSION, pkg.versionCode);
+                            data.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, pkg.packageName);
+                            data.put(Aware_Plugins.PLUGIN_AUTHOR, "You");
+                            data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_DISABLED);
+                            data.put(Aware_Plugins.PLUGIN_ICON, getPluginIcon(getApplicationContext(), pkg));
+
+                            getContentResolver().insert(Aware_Plugins.CONTENT_URI, data);
+                            needsRefresh = true;
+                        }
+                    } catch (JSONException e ){
+                        e.printStackTrace();
+                    }
+                }
+            }
 			return needsRefresh;
 		}
 
-        private boolean isOnServerRepository( JSONArray server_plugins, String local_package ) throws JSONException {
-            for( int i=0; i<server_plugins.length(); i++ ) {
-                JSONObject server_pkg = server_plugins.getJSONObject(i);
-                if(server_pkg.getString("package").equals(local_package)) return true;
-            }
-            return false;
-        }
-    	
 		@Override
 		protected void onPostExecute(Boolean refresh) {
 			super.onPostExecute(refresh);

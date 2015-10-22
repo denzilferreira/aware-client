@@ -544,7 +544,7 @@ public class Aware_Preferences extends Aware_Activity {
     }
 
     private void defaultSettings() {
-        SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+        final SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         if( ! prefs.contains("intro_done") ) {
             final ViewGroup parent = (ViewGroup) findViewById(android.R.id.content);
             final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
@@ -565,9 +565,9 @@ public class Aware_Preferences extends Aware_Activity {
                 @Override
                 public void onClick(View v) {
                     parent.removeView(help_menu);
+                    prefs.edit().putBoolean("intro_done", true).commit();
                 }
             });
-            prefs.edit().putBoolean("intro_done", true).commit();
         }
 
         developerOptions();
@@ -587,6 +587,11 @@ public class Aware_Preferences extends Aware_Activity {
                 framework.stopAllServices();
                 framework.stopSelf();
                 finish();
+            } else {
+                //Restart AWARE client now that we have the permission to write to external storage
+                Intent preferences = new Intent(this, Aware_Preferences.class);
+                preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(preferences);
             }
         }
     }
@@ -802,12 +807,12 @@ public class Aware_Preferences extends Aware_Activity {
             String freq = Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_TEMPERATURE);
             frequency_temperature.setSummary(freq);
         }
-        frequency_temperature.setDefaultValue( Aware.getSetting(sContext, FREQUENCY_TEMPERATURE) );
+        frequency_temperature.setDefaultValue(Aware.getSetting(sContext, FREQUENCY_TEMPERATURE));
         frequency_temperature.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext,FREQUENCY_TEMPERATURE, (String) newValue);
-                frequency_temperature.setSummary( (String)newValue);
+                Aware.setSetting(sContext, FREQUENCY_TEMPERATURE, (String) newValue);
+                frequency_temperature.setSummary((String) newValue);
                 framework.startTemperature();
                 return true;
             }
@@ -885,21 +890,21 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         final CheckBoxPreference linear_accelerometer = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_LINEAR_ACCELEROMETER);
-        linear_accelerometer.setChecked(Aware.getSetting(sContext,Aware_Preferences.STATUS_LINEAR_ACCELEROMETER).equals("true"));
+        linear_accelerometer.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_LINEAR_ACCELEROMETER).equals("true"));
         linear_accelerometer.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
 
-                if( mSensorMgr.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) == null ) {
+                if (mSensorMgr.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) == null) {
                     sPreferences.showDialog(DIALOG_ERROR_MISSING_SENSOR);
                     linear_accelerometer.setChecked(false);
                     Aware.setSetting(sContext, Aware_Preferences.STATUS_LINEAR_ACCELEROMETER, false);
                     return false;
                 }
                 Aware.setSetting(sContext, Aware_Preferences.STATUS_LINEAR_ACCELEROMETER, linear_accelerometer.isChecked());
-                if(linear_accelerometer.isChecked()) {
+                if (linear_accelerometer.isChecked()) {
                     framework.startLinearAccelerometer();
-                }else {
+                } else {
                     framework.stopLinearAccelerometer();
                 }
                 return true;
@@ -911,12 +916,12 @@ public class Aware_Preferences extends Aware_Activity {
             String freq = Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER);
             frequency_linear_accelerometer.setSummary(freq);
         }
-        frequency_linear_accelerometer.setDefaultValue( Aware.getSetting(sContext, FREQUENCY_LINEAR_ACCELEROMETER) );
+        frequency_linear_accelerometer.setDefaultValue(Aware.getSetting(sContext, FREQUENCY_LINEAR_ACCELEROMETER));
         frequency_linear_accelerometer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext,FREQUENCY_LINEAR_ACCELEROMETER, (String) newValue);
-                frequency_linear_accelerometer.setSummary( (String)newValue);
+                Aware.setSetting(sContext, FREQUENCY_LINEAR_ACCELEROMETER, (String) newValue);
+                frequency_linear_accelerometer.setSummary((String) newValue);
                 framework.startLinearAccelerometer();
                 return true;
             }
@@ -1021,21 +1026,21 @@ public class Aware_Preferences extends Aware_Activity {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 Aware.setSetting(sContext, Aware_Preferences.FREQUENCY_APPLICATIONS, (String) newValue);
-                frequency_applications.setSummary( (String) newValue + " seconds");
+                frequency_applications.setSummary((String) newValue + " seconds");
                 framework.startApplications();
                 return true;
             }
         });
 
         final CheckBoxPreference installations = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_INSTALLATIONS);
-        installations.setChecked(Aware.getSetting(sContext,Aware_Preferences.STATUS_INSTALLATIONS).equals("true"));
+        installations.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_INSTALLATIONS).equals("true"));
         installations.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext,Aware_Preferences.STATUS_INSTALLATIONS,installations.isChecked());
-                if(installations.isChecked()) {
+                Aware.setSetting(sContext, Aware_Preferences.STATUS_INSTALLATIONS, installations.isChecked());
+                if (installations.isChecked()) {
                     framework.startInstallations();
-                }else {
+                } else {
                     framework.stopInstallations();
                 }
                 return true;
@@ -1147,12 +1152,12 @@ public class Aware_Preferences extends Aware_Activity {
         });
 
         final CheckBoxPreference communication = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_COMMUNICATION_EVENTS);
-        communication.setChecked(Aware.getSetting(sContext,Aware_Preferences.STATUS_COMMUNICATION_EVENTS).equals("true"));
+        communication.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_COMMUNICATION_EVENTS).equals("true"));
         communication.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext,Aware_Preferences.STATUS_COMMUNICATION_EVENTS,communication.isChecked());
-                if(communication.isChecked()) {
+                Aware.setSetting(sContext, Aware_Preferences.STATUS_COMMUNICATION_EVENTS, communication.isChecked());
+                if (communication.isChecked()) {
                     framework.startCommunication();
                 } else {
                     framework.stopCommunication();
@@ -1203,12 +1208,12 @@ public class Aware_Preferences extends Aware_Activity {
             String freq = Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_GRAVITY);
             frequency_gravity.setSummary(freq);
         }
-        frequency_gravity.setDefaultValue( Aware.getSetting(sContext, FREQUENCY_GRAVITY) );
+        frequency_gravity.setDefaultValue(Aware.getSetting(sContext, FREQUENCY_GRAVITY));
         frequency_gravity.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext,FREQUENCY_GRAVITY, (String) newValue);
-                frequency_gravity.setSummary( (String)newValue);
+                Aware.setSetting(sContext, FREQUENCY_GRAVITY, (String) newValue);
+                frequency_gravity.setSummary((String) newValue);
                 framework.startGravity();
                 return true;
             }
@@ -1469,14 +1474,14 @@ public class Aware_Preferences extends Aware_Activity {
      */
     private void screen () {
         final CheckBoxPreference screen = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_SCREEN);
-        screen.setChecked(Aware.getSetting(sContext,Aware_Preferences.STATUS_SCREEN).equals("true"));
+        screen.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_SCREEN).equals("true"));
         screen.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext,Aware_Preferences.STATUS_SCREEN, screen.isChecked());
-                if(screen.isChecked()) {
+                Aware.setSetting(sContext, Aware_Preferences.STATUS_SCREEN, screen.isChecked());
+                if (screen.isChecked()) {
                     framework.startScreen();
-                }else {
+                } else {
                     framework.stopScreen();
                 }
                 return true;
@@ -1860,12 +1865,12 @@ public class Aware_Preferences extends Aware_Activity {
             String freq = Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_ROTATION);
             frequency_rotation.setSummary(freq);
         }
-        frequency_rotation.setDefaultValue( Aware.getSetting(sContext, FREQUENCY_ROTATION) );
+        frequency_rotation.setDefaultValue(Aware.getSetting(sContext, FREQUENCY_ROTATION));
         frequency_rotation.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext,FREQUENCY_ROTATION, (String) newValue);
-                frequency_rotation.setSummary( (String)newValue);
+                Aware.setSetting(sContext, FREQUENCY_ROTATION, (String) newValue);
+                frequency_rotation.setSummary((String) newValue);
                 framework.startRotation();
                 return true;
             }
@@ -2136,13 +2141,13 @@ public class Aware_Preferences extends Aware_Activity {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 Aware.TAG = (String) newValue;
-                Aware.setSetting(sContext,Aware_Preferences.DEBUG_TAG, (String) newValue);
+                Aware.setSetting(sContext, Aware_Preferences.DEBUG_TAG, (String) newValue);
                 return true;
             }
         });
 
         final CheckBoxPreference auto_update = (CheckBoxPreference) findPreference(Aware_Preferences.AWARE_AUTO_UPDATE);
-        auto_update.setChecked(Aware.getSetting(sContext,Aware_Preferences.AWARE_AUTO_UPDATE).equals("true"));
+        auto_update.setChecked(Aware.getSetting(sContext, Aware_Preferences.AWARE_AUTO_UPDATE).equals("true"));
 
         PackageInfo awareInfo = null;
         try {
@@ -2150,17 +2155,20 @@ public class Aware_Preferences extends Aware_Activity {
         } catch (NameNotFoundException e) {
             e.printStackTrace();
         }
-        auto_update.setSummary("Current version is " + ((awareInfo != null)?awareInfo.versionCode:"???"));
+        auto_update.setSummary("Current version is " + ((awareInfo != null) ? awareInfo.versionCode : "???"));
         auto_update.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 Aware.setSetting(sContext, Aware_Preferences.AWARE_AUTO_UPDATE, auto_update.isChecked());
+                if (auto_update.isChecked()) {
+                    sendBroadcast(new Intent(Aware.ACTION_AWARE_CHECK_UPDATE));
+                }
                 return true;
             }
         });
 
         final CheckBoxPreference debug_db_slow = (CheckBoxPreference) findPreference(Aware_Preferences.DEBUG_DB_SLOW);
-        debug_db_slow.setChecked(Aware.getSetting(sContext,Aware_Preferences.DEBUG_DB_SLOW).equals("true"));
+        debug_db_slow.setChecked(Aware.getSetting(sContext, Aware_Preferences.DEBUG_DB_SLOW).equals("true"));
         debug_db_slow.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
@@ -2315,7 +2323,8 @@ public class Aware_Preferences extends Aware_Activity {
                             if( json_package.getInt("version") > Plugins_Manager.getVersion(context, package_name) ) {
                                 Aware.downloadPlugin(context, package_name, true); //update the existing plugin
                             } else {
-                                if( Plugins_Manager.isInstalled( context, package_name) ) {
+                                PackageInfo installed = Plugins_Manager.isInstalled( context, package_name);
+                                if( installed != null ) {
                                     Aware.startPlugin(context, package_name); //start plugin
                                 } else {
 

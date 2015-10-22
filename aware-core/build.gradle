@@ -7,8 +7,8 @@ configurations {
     wear
 }
 
-ext.version_readable = "3.6.5"
-ext.version_code = 396
+ext.version_readable = "3.6.6"
+ext.version_code = 397
 
 android {
     compileSdkVersion 23
@@ -57,4 +57,4 @@ dependencies {
 }
 
 //Update AWARE's library in Maven Central
-apply from: 'maven-publish.gradle'
+//apply from: 'maven-publish.gradle'

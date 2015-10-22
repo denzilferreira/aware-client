@@ -1,7 +1,6 @@
 
 package com.aware;
 
-import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.DownloadManager;
 import android.app.DownloadManager.Query;
@@ -14,7 +13,6 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -39,7 +37,6 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
@@ -52,7 +49,6 @@ import com.aware.providers.Aware_Provider.Aware_Device;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.providers.Aware_Provider.Aware_Settings;
 import com.aware.ui.Plugins_Manager;
-import com.aware.ui.Stream_UI;
 import com.aware.utils.Aware_Plugin;
 import com.aware.utils.DownloadPluginService;
 import com.aware.utils.Https;
@@ -143,6 +139,11 @@ public class Aware extends Service {
     public static final String ACTION_QUIT_STUDY = "ACTION_QUIT_STUDY";
 
     /**
+     * Ask the client to check if there are any updates on the server
+     */
+    public static final String ACTION_AWARE_CHECK_UPDATE = "ACTION_AWARE_CHECK_UPDATE";
+
+    /**
      * DownloadManager AWARE update ID, used to prompt user to install the update once finished downloading.
      */
     private static long AWARE_FRAMEWORK_DOWNLOAD_ID = 0;
@@ -192,12 +193,12 @@ public class Aware extends Service {
     private static Intent wearClient = null;
     private static Intent scheduler = null;
     
-    private final String PREF_FREQUENCY_WATCHDOG = "frequency_watchdog";
-    private final String PREF_LAST_UPDATE = "last_update";
-    private final String PREF_LAST_SYNC = "last_sync";
-    private final int CONST_FREQUENCY_WATCHDOG = 5 * 60; //5 minutes check
+    private final static String PREF_FREQUENCY_WATCHDOG = "frequency_watchdog";
+    private final static String PREF_LAST_UPDATE = "last_update";
+    private final static String PREF_LAST_SYNC = "last_sync";
+    private final static int CONST_FREQUENCY_WATCHDOG = 5 * 60; //5 minutes check
     
-    private SharedPreferences aware_preferences;
+    private static SharedPreferences aware_preferences;
     
     /**
      * Singleton instance of the framework
@@ -248,6 +249,7 @@ public class Aware extends Service {
         filter.addAction(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
         filter.addAction(Aware.ACTION_QUIT_STUDY);
         filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
+        filter.addAction(Aware.ACTION_AWARE_CHECK_UPDATE);
         awareContext.registerReceiver(aware_BR, filter);
 
         Intent synchronise = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
@@ -540,7 +542,6 @@ public class Aware extends Service {
     	if( cached != null && cached.moveToFirst() ) {
             //Installed on the phone
     		if( isClassAvailable(context, package_name, "Plugin") ) {
-
                 Intent plugin = new Intent();
                 plugin.setClassName(package_name, package_name + ".Plugin");
                 ComponentName cachedResult = context.startService(plugin);
@@ -1007,7 +1008,7 @@ public class Aware extends Service {
     /**
      * Client: check if there is an update to the client.
      */
-    private class Update_Check extends AsyncTask<Void, Void, Boolean> {
+    public static class Update_Check extends AsyncTask<Void, Void, Boolean> {
     	String filename = "", whats_new = "";
     	int version = 0;
     	PackageInfo awarePkg = null;
@@ -1015,13 +1016,13 @@ public class Aware extends Service {
     	@Override
     	protected Boolean doInBackground(Void... params) {
     		try {
-				awarePkg = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_META_DATA);
+				awarePkg = awareContext.getPackageManager().getPackageInfo("com.aware", PackageManager.GET_META_DATA);
 			} catch (NameNotFoundException e1) {
 				e1.printStackTrace();
 				return false;
 			}
 			
-    		String response = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/awaredev/framework_latest", true);
+    		String response = new Https(awareContext).dataGET("https://api.awareframework.com/index.php/awaredev/framework_latest", true);
 	        if( response != null ) {
 	        	try {
 					JSONArray data = new JSONArray(response);
@@ -1050,18 +1051,18 @@ public class Aware extends Service {
     	protected void onPostExecute(Boolean result) {
     		super.onPostExecute(result);
     		if( result ) {
-    			NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
+    			NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(awareContext);
     			mBuilder.setSmallIcon(R.drawable.ic_stat_aware_update);
     			mBuilder.setContentTitle("AWARE Update");
     			mBuilder.setContentText("Version: " + version + ". Install?");
                 mBuilder.setAutoCancel(true);
     			
-    			Intent updateIntent = new Intent(getApplicationContext(), UpdateFrameworkService.class);
+    			Intent updateIntent = new Intent(awareContext, UpdateFrameworkService.class);
     			updateIntent.putExtra("filename", filename);
     			
-    			PendingIntent clickIntent = PendingIntent.getService(getApplicationContext(), 0, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    			PendingIntent clickIntent = PendingIntent.getService(awareContext, 0, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
     			mBuilder.setContentIntent(clickIntent);
-    			NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+    			NotificationManager notManager = (NotificationManager) awareContext.getSystemService(Context.NOTIFICATION_SERVICE);
     			notManager.notify(version, mBuilder.build());
     		}
     	}
@@ -1089,13 +1090,18 @@ public class Aware extends Service {
             if( ! packageName.matches("com.aware.plugin.*") ) return;
         	
             if( intent.getAction().equals(Intent.ACTION_PACKAGE_ADDED) ) {
-                //Updating for new package
+                //Updating a package
                 if( extras.getBoolean(Intent.EXTRA_REPLACING) ) {
                     if(Aware.DEBUG) Log.d(TAG, packageName + " is updating!");
                     
                     ContentValues rowData = new ContentValues();
                     rowData.put(Aware_Plugins.PLUGIN_VERSION, Plugins_Manager.getVersion(context, packageName));
-                    
+                    try {
+                        rowData.put(Aware_Plugins.PLUGIN_ICON, Plugins_Manager.getPluginIcon(context, mPkgManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES)));
+                    } catch (NameNotFoundException e ) {
+                        e.printStackTrace();
+                    }
+
                     Cursor current_status = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, new String[]{Aware_Plugins.PLUGIN_STATUS}, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null, null);
                     if( current_status != null && current_status.moveToFirst() ) {
                         if( current_status.getInt(current_status.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == Plugins_Manager.PLUGIN_UPDATED ) { //was updated, set to active now
@@ -1105,12 +1111,6 @@ public class Aware extends Service {
                     if( current_status != null && ! current_status.isClosed() ) current_status.close();
                     
                     context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
-                    
-                    //Refresh plugin manager UI if visible
-                    context.sendBroadcast(new Intent(ACTION_AWARE_PLUGIN_MANAGER_REFRESH));
-                    
-                    //Refresh stream UI if visible
-                    context.sendBroadcast(new Intent(Stream_UI.ACTION_AWARE_UPDATE_STREAM));
 
                     //Start plugin
                     Aware.startPlugin(context, packageName);
@@ -1137,12 +1137,6 @@ public class Aware extends Service {
                 //Deleting
                 context.getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
                 if( Aware.DEBUG ) Log.d(TAG,"AWARE plugin removed:" + packageName);
-
-                //Refresh Plugin manager UI if visible
-                context.sendBroadcast(new Intent(ACTION_AWARE_PLUGIN_MANAGER_REFRESH));
-
-                //Refresh stream UI if visible
-                context.sendBroadcast(new Intent(Stream_UI.ACTION_AWARE_UPDATE_STREAM));
             }
     	}
     }
@@ -1155,8 +1149,7 @@ public class Aware extends Service {
     private static class Plugin_Info_Async extends AsyncTask<ApplicationInfo, Void, JSONObject> {
 
         private ApplicationInfo app;
-        private byte[] icon;
-    	
+
     	@Override
 		protected JSONObject doInBackground(ApplicationInfo... params) {
 			
@@ -1168,7 +1161,6 @@ public class Aware extends Service {
             	try {
             		if( ! http_request.trim().equalsIgnoreCase("[]") ) {
             			json_package = new JSONObject(http_request);
-                        icon = Plugins_Manager.cacheImage("http://api.awareframework.com" + json_package.getString("iconpath"), awareContext);
             		}
 				} catch (JSONException e) {
 					e.printStackTrace();
@@ -1180,7 +1172,27 @@ public class Aware extends Service {
 		@Override
 		protected void onPostExecute(JSONObject json_package) {
 			super.onPostExecute(json_package);
-			
+
+            ContentValues rowData = new ContentValues();
+            rowData.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, app.packageName);
+            rowData.put(Aware_Plugins.PLUGIN_NAME, app.loadLabel(awareContext.getPackageManager()).toString());
+            rowData.put(Aware_Plugins.PLUGIN_VERSION, Plugins_Manager.getVersion(awareContext, app.packageName));
+            rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
+            try {
+                rowData.put(Aware_Plugins.PLUGIN_ICON, Plugins_Manager.getPluginIcon(awareContext, awareContext.getPackageManager().getPackageInfo(app.packageName, PackageManager.GET_ACTIVITIES)));
+            } catch (NameNotFoundException e ) {
+                e.printStackTrace();
+            }
+
+            try {
+                if( json_package != null ) {
+                    rowData.put(Aware_Plugins.PLUGIN_AUTHOR, json_package.getString("first_name") + " " + json_package.getString("last_name") + " - " + json_package.getString("email"));
+                    rowData.put(Aware_Plugins.PLUGIN_DESCRIPTION, json_package.getString("desc"));
+                }
+            } catch ( JSONException e ) {
+                e.printStackTrace();
+            }
+
 			//If we already have cached information for this package, just update it
 			boolean is_cached = false;
 			Cursor plugin_cached = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + app.packageName + "'", null, null);
@@ -1188,26 +1200,7 @@ public class Aware extends Service {
 				is_cached = true;
 			}
 			if( plugin_cached != null && ! plugin_cached.isClosed()) plugin_cached.close();
-			
-			ContentValues rowData = new ContentValues();
-            rowData.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, app.packageName);
-            rowData.put(Aware_Plugins.PLUGIN_NAME, app.loadLabel(awareContext.getPackageManager()).toString());
-            rowData.put(Aware_Plugins.PLUGIN_VERSION, Plugins_Manager.getVersion(awareContext, app.packageName));
-            rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
 
-            //Updated information from server
-            if( json_package != null ) {
-            	try {
-
-                    rowData.put(Aware_Plugins.PLUGIN_ICON, icon);
-					rowData.put(Aware_Plugins.PLUGIN_AUTHOR, json_package.getString("first_name") + " " + json_package.getString("last_name") + " - " + json_package.getString("email"));
-					rowData.put(Aware_Plugins.PLUGIN_DESCRIPTION, json_package.getString("desc"));
-
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-            }
-            
             if( ! is_cached ) {
             	awareContext.getContentResolver().insert(Aware_Plugins.CONTENT_URI, rowData);
             } else {
@@ -1218,12 +1211,6 @@ public class Aware extends Service {
 
             //Start plugin
             Aware.startPlugin(awareContext, app.packageName);
-
-            //Refresh stream UI if visible
-            awareContext.sendBroadcast(new Intent(Stream_UI.ACTION_AWARE_UPDATE_STREAM));
-
-            //Refresh Plugin Manager UI if visible
-            awareContext.sendBroadcast(new Intent(ACTION_AWARE_PLUGIN_MANAGER_REFRESH));
 		}
     }
 
@@ -1252,7 +1239,7 @@ public class Aware extends Service {
 			String filename = intent.getStringExtra("filename");
 			
 			//Make sure we have the releases folder
-			File releases = new File(Environment.getExternalStorageDirectory()+"/AWARE/releases/");
+			File releases = new File( getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)+"/AWARE", "releases");
 			releases.mkdirs();
 			
 			String url = "http://www.awareframework.com/" + filename;
@@ -1260,7 +1247,10 @@ public class Aware extends Service {
 			DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
 			request.setDescription("Updating AWARE...");
 			request.setTitle("AWARE Update");
-			request.setDestinationInExternalPublicDir("/", "AWARE/releases/"+filename);
+
+            request.setDestinationInExternalFilesDir(getApplicationContext(), Environment.DIRECTORY_DOCUMENTS, "AWARE/releases/" + filename);
+
+//			request.setDestinationInExternalPublicDir("/", "AWARE/releases/"+filename);
 			DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
 			AWARE_FRAMEWORK_DOWNLOAD_ID = manager.enqueue(request);
 		}
@@ -1320,6 +1310,16 @@ public class Aware extends Service {
 	        		webserviceHelper.putExtra( WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[0] );
 	        		context.startService(webserviceHelper);
                 }
+            }
+
+            if( intent.getAction().equals(Aware.ACTION_AWARE_CHECK_UPDATE) ) {
+                //Check if there are updates to the client
+                if( ! Aware.is_watch(context) ) {
+                    new Update_Check().execute();
+                }
+                SharedPreferences.Editor editor = aware_preferences.edit();
+                editor.putLong(PREF_LAST_UPDATE, System.currentTimeMillis());
+                editor.commit();
             }
 
             if( intent.getAction().equals(Aware.ACTION_QUIT_STUDY) ) {
