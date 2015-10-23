@@ -366,7 +366,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         MQTT_PORT = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_PORT );
         MQTT_USERNAME = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_USERNAME );
         MQTT_PASSWORD = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_PASSWORD );
-        MQTT_KEEPALIVE = (Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_KEEP_ALIVE ).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_KEEP_ALIVE ):"600");
+        MQTT_KEEPALIVE = (Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_KEEP_ALIVE ).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_KEEP_ALIVE ) : "600");
         MQTT_QoS = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_QOS);
         MQTT_PROTOCOL = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_PROTOCOL).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_PROTOCOL ) : "tcp";
         
@@ -378,7 +378,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         	if( MQTT_MESSAGES_PERSISTENCE != null ) {
                 MQTT_MESSAGES_PERSISTENCE.close(); //close previous opened connection to persistence
         	}
-            MQTT_MESSAGES_PERSISTENCE = new MqttDefaultFilePersistence(Environment.getExternalStorageDirectory()+"/AWARE/");
+            MQTT_MESSAGES_PERSISTENCE = new MqttDefaultFilePersistence( getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/AWARE/" );
             MQTT_MESSAGES_PERSISTENCE.open( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID), MQTT_URL );
 
         } catch ( MqttException e ) {
