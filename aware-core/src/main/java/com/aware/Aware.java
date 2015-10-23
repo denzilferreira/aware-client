@@ -212,6 +212,7 @@ public class Aware extends Service {
     public static Aware getService() {
         if( awareSrv == null ) awareSrv = new Aware();
         return awareSrv;
+
     }
 
     /**
