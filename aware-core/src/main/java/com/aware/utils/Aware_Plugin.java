@@ -91,20 +91,6 @@ public class Aware_Plugin extends Service {
         registerReceiver(contextBroadcaster, filter);
 
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-    }
-    
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-        //Unregister Context Broadcaster
-        unregisterReceiver(contextBroadcaster);
-
-        if(DEBUG) Log.d(TAG, TAG + " plugin terminated...");
-    }
-    
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
 
         //Ask the user all required permissions
         ArrayList<String> missing = new ArrayList<>();
@@ -121,11 +107,20 @@ public class Aware_Plugin extends Service {
             permissionRequest.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(permissionRequest);
         }
+    }
+    
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
 
-        TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
-        if(DEBUG) Log.d(TAG, TAG + " plugin active...");
+        //Unregister Context Broadcaster
+        unregisterReceiver(contextBroadcaster);
 
+        if(DEBUG) Log.d(TAG, TAG + " plugin terminated...");
+    }
+    
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
         return START_STICKY;
     }
 
