@@ -18,6 +18,7 @@ import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.ui.PermissionsHandler;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 
 /**
@@ -59,9 +60,7 @@ public class Aware_Plugin extends Service {
     /**
      * Permissions needed for this plugin to run
      */
-    public String[] REQUIRED_PERMISSIONS = new String[]{
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-    };
+    public ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
     
     /**
      * Plugin is inactive
@@ -90,6 +89,8 @@ public class Aware_Plugin extends Service {
         filter.addAction(Aware.ACTION_AWARE_STOP_PLUGINS);
         filter.addAction(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
         registerReceiver(contextBroadcaster, filter);
+
+        REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
     }
     
     @Override
@@ -106,14 +107,19 @@ public class Aware_Plugin extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         //Ask the user all required permissions
-        for( int i=0;i<REQUIRED_PERMISSIONS.length;i++) {
-            int permission_access = ContextCompat.checkSelfPermission(getApplicationContext(), REQUIRED_PERMISSIONS[i]);
+        ArrayList<String> missing = new ArrayList<>();
+        for( String p : REQUIRED_PERMISSIONS ) {
+            int permission_access = ContextCompat.checkSelfPermission(getApplicationContext(), p);
             if( permission_access != PackageManager.PERMISSION_GRANTED ) {
-                Intent permissionRequest = new Intent(this, PermissionsHandler.class);
-                permissionRequest.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-                permissionRequest.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(permissionRequest);
+                missing.add(p);
             }
+        }
+
+        if( missing.size() > 0 ) {
+            Intent permissionRequest = new Intent(this, PermissionsHandler.class);
+            permissionRequest.putExtra( PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, missing.toArray(new String[missing.size()]) );
+            permissionRequest.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(permissionRequest);
         }
 
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
