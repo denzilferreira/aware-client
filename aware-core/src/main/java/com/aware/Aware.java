@@ -1250,7 +1250,6 @@ public class Aware extends Service {
 
             request.setDestinationInExternalFilesDir(getApplicationContext(), Environment.DIRECTORY_DOCUMENTS, "AWARE/releases/" + filename);
 
-//			request.setDestinationInExternalPublicDir("/", "AWARE/releases/"+filename);
 			DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
 			AWARE_FRAMEWORK_DOWNLOAD_ID = manager.enqueue(request);
 		}

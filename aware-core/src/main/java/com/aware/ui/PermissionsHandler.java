@@ -6,18 +6,18 @@ import android.support.v4.app.ActivityCompat;
 
 /**
  * This is an invisible activity used to request the needed permissions from the user from API 23 onwards.
+ * TODO: add feedback to the user regarding missing permissions...
  * Created by denzil on 22/10/15.
  */
 public class PermissionsHandler extends Activity {
 
-    private final int PERMISSIONS_RESULT = 999;
     public static String EXTRA_REQUIRED_PERMISSIONS = "required_permissions";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if( getIntent() != null && getIntent().getExtras() != null ) {
-            ActivityCompat.requestPermissions(PermissionsHandler.this, getIntent().getExtras().getStringArray(EXTRA_REQUIRED_PERMISSIONS), PERMISSIONS_RESULT);
+            ActivityCompat.requestPermissions(PermissionsHandler.this, getIntent().getExtras().getStringArray(EXTRA_REQUIRED_PERMISSIONS), 999);
         }
     }
 

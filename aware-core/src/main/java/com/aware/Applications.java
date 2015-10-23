@@ -308,7 +308,7 @@ public class Applications extends AccessibilityService {
         if( ! enabledServices.isEmpty() ) {
             for( AccessibilityServiceInfo service : enabledServices ) {
                 Log.d(Aware.TAG, service.toString());
-                if( service.getId().contains("com.aware") ) {
+                if( service.getId().contains(getPackageName()) ) {
                     enabled = true;
                 }
             }
@@ -318,7 +318,7 @@ public class Applications extends AccessibilityService {
         if( ! enabledServices.isEmpty() ) {
             for( AccessibilityServiceInfo service : enabledServices ) {
                 Log.d(Aware.TAG, service.toString());
-                if( service.getId().contains("com.aware") ) {
+                if( service.getId().contains(getPackageName()) ) {
                     enabled = true;
                 }
             }
@@ -327,7 +327,7 @@ public class Applications extends AccessibilityService {
         if( ! enabled ) {
             //Retro-compatibility with some devices that don't support XML defined Accessibility Services
             AccessibilityServiceInfo info = new AccessibilityServiceInfo();
-            info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED | AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED | AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED;
+            info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
             info.feedbackType = AccessibilityServiceInfoCompat.FEEDBACK_ALL_MASK;
             info.notificationTimeout = 50;
             info.packageNames = null;
@@ -377,7 +377,7 @@ public class Applications extends AccessibilityService {
         if( ! enabledServices.isEmpty() ) {
             for( AccessibilityServiceInfo service : enabledServices ) {
                 Log.d(Aware.TAG, service.toString());
-                if( service.getId().contains("com.aware") ) {
+                if( service.getId().contains(c.getPackageName()) ) {
                     return true;
                 }
             }
@@ -387,7 +387,7 @@ public class Applications extends AccessibilityService {
         if( ! enabledServices.isEmpty() ) {
             for( AccessibilityServiceInfo service : enabledServices ) {
                 Log.d(Aware.TAG, service.toString());
-                if( service.getId().contains("com.aware") ) {
+                if( service.getId().contains(c.getPackageName()) ) {
                     return true;
                 }
             }
