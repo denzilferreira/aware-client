@@ -478,7 +478,7 @@ public class Scheduler extends Service {
 
         try {
             JSONArray hours = schedule.getHours();
-            if( schedule.getRandom().getBoolean(RANDOM_HOUR) ) {
+            if( schedule.getRandom().optBoolean(RANDOM_HOUR) ) {
                 Random random = new Random();
                 int random_hour = hours.getInt(random.nextInt(hours.length()));
                 if(Aware.DEBUG) {
@@ -529,7 +529,7 @@ public class Scheduler extends Service {
         try {
             JSONArray weekdays = schedule.getWeekdays();
 
-            if( schedule.getRandom().getBoolean(RANDOM_WEEKDAY) ) {
+            if( schedule.getRandom().optBoolean(RANDOM_WEEKDAY) ) {
                 Random random = new Random();
                 String random_weekday = weekdays.getString(random.nextInt(weekdays.length()));
 
@@ -580,7 +580,7 @@ public class Scheduler extends Service {
         try {
             JSONArray months = schedule.getMonths();
 
-            if( schedule.getRandom().getBoolean(RANDOM_MONTH) ) {
+            if( schedule.getRandom().optBoolean(RANDOM_MONTH) ) {
 
                 Random random = new Random();
                 String random_month = months.getString(random.nextInt(months.length()));
