@@ -60,7 +60,7 @@ public class Aware_Plugin extends Service {
     /**
      * Permissions needed for this plugin to run
      */
-    public ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
+    public ArrayList<String> REQUIRED_PERMISSIONS;
     
     /**
      * Plugin is inactive
@@ -90,6 +90,7 @@ public class Aware_Plugin extends Service {
         filter.addAction(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
         registerReceiver(contextBroadcaster, filter);
 
+        REQUIRED_PERMISSIONS = new ArrayList<>();
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
     }
     
@@ -122,7 +123,7 @@ public class Aware_Plugin extends Service {
             startActivity(permissionRequest);
         }
 
-        return START_STICKY;
+        return onStartCommand(intent, flags, startId);
     }
 
     /**

@@ -19,6 +19,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
@@ -28,6 +29,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -469,6 +471,7 @@ public class Aware_Preferences extends Aware_Activity {
     private static PreferenceActivity sPreferences;
 
     final private int REQUEST_CODE_PERMISSIONS = 999;
+    final private int REQUEST_OVERLAY = 666;
 
     @Override
     protected Dialog onCreateDialog(int id) {
@@ -599,7 +602,12 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         if( missing_permissions.size() > 0 ) {
-            requestPermissions( missing_permissions.toArray(new String[missing_permissions.size()]), REQUEST_CODE_PERMISSIONS);
+            requestPermissions(missing_permissions.toArray(new String[missing_permissions.size()]), REQUEST_CODE_PERMISSIONS);
+        }
+
+        if( ! Settings.canDrawOverlays(this) ) {
+            Intent overlay = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:com.aware"));
+            startActivityForResult(overlay, REQUEST_OVERLAY);
         }
 
         //Start the Aware

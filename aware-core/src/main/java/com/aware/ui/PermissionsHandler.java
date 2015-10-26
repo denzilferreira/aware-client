@@ -15,8 +15,10 @@ public class PermissionsHandler extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if( getIntent() != null && getIntent().getExtras() != null ) {
+        if( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().getStringArray(EXTRA_REQUIRED_PERMISSIONS) != null ) {
             ActivityCompat.requestPermissions(PermissionsHandler.this, getIntent().getExtras().getStringArray(EXTRA_REQUIRED_PERMISSIONS), 999);
+        } else {
+            finish();
         }
     }
 
