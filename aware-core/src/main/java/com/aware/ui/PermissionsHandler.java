@@ -15,27 +15,28 @@ public class PermissionsHandler extends Activity {
     private final int CODE_PERMISSION_REQUEST = 999;
 
     @Override
-    protected void onStart() {
-        super.onStart();
-
-        //Fixes a crash on Android M for Activities with Theme.NoDisplay
-        //c.f. https://code.google.com/p/android-developer-preview/issues/detail?id=2353
-        setVisible(true);
-
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         if( getIntent() != null && getIntent().getExtras() != null && getIntent().getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS) != null ) {
             ArrayList<String> pending = new ArrayList<>();
             String[] permissions = getIntent().getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS);
             for( String p : permissions ) {
                 if( ActivityCompat.shouldShowRequestPermissionRationale(this, p) ) pending.add(p);
             }
-
             if( pending.size() > 0 ) {
                 ActivityCompat.requestPermissions(PermissionsHandler.this, pending.toArray(new String[pending.size()]), CODE_PERMISSION_REQUEST );
             } else {
                 finish();
             }
         }
-        finish();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //Fixes a crash on Android M for Activities with Theme.NoDisplay
+        //c.f. https://code.google.com/p/android-developer-preview/issues/detail?id=2353
+        setVisible(true);
     }
 
     @Override
