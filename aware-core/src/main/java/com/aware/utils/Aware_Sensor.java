@@ -125,15 +125,13 @@ public class Aware_Sensor extends Service {
                 missing.add(p);
             }
         }
-
         if( missing.size() > 0 ) {
             Intent permissionRequest = new Intent(this, PermissionsHandler.class);
             permissionRequest.putExtra( PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, missing.toArray(new String[missing.size()]) );
             permissionRequest.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(permissionRequest);
         }
-
-        return onStartCommand(intent, flags, startId);
+        return super.onStartCommand(intent, flags, startId);
     }
     
 	/**

@@ -127,8 +127,7 @@ public class Aware_Plugin extends Service {
             permissionRequest.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(permissionRequest);
         }
-
-        return onStartCommand(intent, flags, startId);
+        return super.onStartCommand(intent, flags, startId);
     }
 
     /**

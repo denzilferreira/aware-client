@@ -29,6 +29,8 @@ public class PermissionsHandler extends Activity {
         if( getIntent() != null && getIntent().getExtras() != null && getIntent().getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS) != null ) {
             String[] permissions = getIntent().getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS);
             ActivityCompat.requestPermissions(PermissionsHandler.this, permissions, CODE_PERMISSION_REQUEST );
+        } else {
+            finish();
         }
     }
 
