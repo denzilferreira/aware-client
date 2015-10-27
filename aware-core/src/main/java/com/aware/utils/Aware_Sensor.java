@@ -57,7 +57,7 @@ public class Aware_Sensor extends Service {
     /**
      * Permissions needed for this plugin to run
      */
-    public ArrayList<String> REQUIRED_PERMISSIONS;
+    public ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
 	
 	/**
 	 * Sensor is inactive
@@ -96,7 +96,6 @@ public class Aware_Sensor extends Service {
         filter.addAction(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
         registerReceiver(contextBroadcaster, filter);
 
-        REQUIRED_PERMISSIONS = new ArrayList<>();
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
     }
     

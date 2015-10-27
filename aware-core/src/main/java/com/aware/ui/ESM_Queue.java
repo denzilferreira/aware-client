@@ -40,10 +40,10 @@ public class ESM_Queue extends FragmentActivity {
 
         queue = this;
 
-        getWindow().setType(WindowManager.LayoutParams.TYPE_PRIORITY_PHONE);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+//        getWindow().setType(WindowManager.LayoutParams.TYPE_PRIORITY_PHONE);
+//        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+//        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+//        getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
 
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
 

@@ -45,6 +45,7 @@ public class WebserviceHelper extends IntentService {
 	protected void onHandleIntent(Intent intent) {
 
 		String WEBSERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
+
 		//Fixed: not using webservices
 		if( WEBSERVER.length() == 0 ) return;
 
@@ -61,26 +62,7 @@ public class WebserviceHelper extends IntentService {
 
         WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 
-		boolean wifi_only = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true");
-        boolean restore_network = false;
-
 		if( intent.getAction().equals(ACTION_AWARE_WEBSERVICE_SYNC_TABLE) ) {
-
-            if( ! Aware.is_watch(getApplicationContext()) ) { //watch doesn't care about Wi-Fi or not.
-				//Check if we should do this only over Wi-Fi
-				if( wifi_only ) {
-					ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-					NetworkInfo active_network = cm.getActiveNetworkInfo();
-
-                    //if not connected to wifi
-					if( active_network != null && active_network.getType() != ConnectivityManager.TYPE_WIFI ) {
-                        restore_network = true;
-                        //Enable Wi-Fi to sync, the request to sync will be issued automatically when there is WiFi internet access
-                        wifiManager.setWifiEnabled(true);
-                        return;
-					}
-				}
-			}
 
             if( Aware.DEBUG ) Log.d(Aware.TAG, "Synching data..." + DATABASE_TABLE);
 
@@ -217,13 +199,7 @@ public class WebserviceHelper extends IntentService {
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
-
     		}
-
-            //disable the wifi since the user didn't have it on
-            if( wifi_only && restore_network ) {
-                wifiManager.setWifiEnabled(false);
-            }
 		}
 		
 		//Clear database table remotely

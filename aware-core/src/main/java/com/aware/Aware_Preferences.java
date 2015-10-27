@@ -471,7 +471,6 @@ public class Aware_Preferences extends Aware_Activity {
     private static PreferenceActivity sPreferences;
 
     final private int REQUEST_CODE_PERMISSIONS = 999;
-    final private int REQUEST_OVERLAY = 666;
 
     @Override
     protected Dialog onCreateDialog(int id) {
@@ -602,12 +601,7 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         if( missing_permissions.size() > 0 ) {
-            requestPermissions(missing_permissions.toArray(new String[missing_permissions.size()]), REQUEST_CODE_PERMISSIONS);
-        }
-
-        if( ! Settings.canDrawOverlays(this) ) {
-            Intent overlay = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:com.aware"));
-            startActivityForResult(overlay, REQUEST_OVERLAY);
+            requestPermissions( missing_permissions.toArray(new String[missing_permissions.size()]), REQUEST_CODE_PERMISSIONS );
         }
 
         //Start the Aware

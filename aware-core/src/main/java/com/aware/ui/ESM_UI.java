@@ -195,7 +195,6 @@ public class ESM_UI extends DialogFragment {
 	                                public void onClick(View v) {
 	                                    final Dialog editOther = new Dialog(getActivity());
 	                                	editOther.setTitle(getResources().getString(R.string.aware_esm_other_follow));
-	                                	editOther.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
 	                                	editOther.getWindow().setGravity(Gravity.TOP);
                                         editOther.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 
@@ -206,6 +205,7 @@ public class ESM_UI extends DialogFragment {
 	                                    editOther.show();
 
 	                                    final EditText otherText = new EditText(getActivity());
+										otherText.setHint(getResources().getString(R.string.aware_esm_other_follow));
 	                                    editor.addView(otherText);
 										otherText.requestFocus();
 										editOther.getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
@@ -287,7 +287,6 @@ public class ESM_UI extends DialogFragment {
 	                                            public void onClick(View v) {
 	                                            	final Dialog editOther = new Dialog(getActivity());
 	        	                                	editOther.setTitle(getResources().getString(R.string.aware_esm_other_follow));
-	        	                                	editOther.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
 	        	                                	editOther.getWindow().setGravity(Gravity.TOP);
 	        	                                	editOther.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 
@@ -297,6 +296,7 @@ public class ESM_UI extends DialogFragment {
 	                                                editOther.show();
 
 	                                                final EditText otherText = new EditText(getActivity());
+													otherText.setHint(getResources().getString(R.string.aware_esm_other_follow));
 	                                                editor.addView(otherText);
 													otherText.requestFocus();
                                                     editOther.getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
