@@ -331,20 +331,17 @@ public class Scheduler extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        if( Aware.DEBUG ) Log.d(TAG, "Checking for scheduled tasks...");
+        if( Aware.DEBUG ) Log.d(TAG, "Checking for scheduled tasks: " + getPackageName());
 
-        //Check if we have anything scheduled for this package
         Cursor scheduled_tasks = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null, Scheduler_Provider.Scheduler_Data.TIMESTAMP + " ASC");
         if( scheduled_tasks != null && scheduled_tasks.moveToFirst() ) {
+            if( Aware.DEBUG ) Log.d(TAG, "Scheduled tasks for " + getPackageName() + ": " + scheduled_tasks.getCount());
             do {
                 try {
-
                     final Schedule schedule = new Schedule(scheduled_tasks.getString(scheduled_tasks.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID)));
                     schedule.rebuild(new JSONObject(scheduled_tasks.getString(scheduled_tasks.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE))));
 
-                    //restore all contextual schedulers
                     if( schedule.getContext().length() > 0 ) {
-
                         if( ! schedulerListeners.containsKey( schedule.getScheduleID()) ) {
                             BroadcastReceiver listener = new BroadcastReceiver() {
                                 @Override
@@ -377,6 +374,8 @@ public class Scheduler extends Service {
                     e.printStackTrace();
                 }
             } while (scheduled_tasks.moveToNext());
+        } else {
+            if( Aware.DEBUG ) Log.d(TAG, "No scheduled tasks for " + getPackageName());
         }
         if( scheduled_tasks != null && ! scheduled_tasks.isClosed()) scheduled_tasks.close();
 

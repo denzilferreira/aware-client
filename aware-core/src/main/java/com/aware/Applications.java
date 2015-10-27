@@ -302,7 +302,6 @@ public class Applications extends AccessibilityService {
         super.onCreate();
 
         boolean enabled = false;
-
         AccessibilityManager accessibilityManager = (AccessibilityManager) getSystemService(ACCESSIBILITY_SERVICE);
         List<AccessibilityServiceInfo> enabledServices = AccessibilityManagerCompat.getEnabledAccessibilityServiceList(accessibilityManager, AccessibilityEventCompat.TYPES_ALL_MASK);
         if( ! enabledServices.isEmpty() ) {
@@ -314,12 +313,15 @@ public class Applications extends AccessibilityService {
             }
         }
 
-        enabledServices = accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityEvent.TYPES_ALL_MASK);
-        if( ! enabledServices.isEmpty() ) {
-            for( AccessibilityServiceInfo service : enabledServices ) {
-                Log.d(Aware.TAG, service.toString());
-                if( service.getId().contains(getPackageName()) ) {
-                    enabled = true;
+        //Not enabled yet
+        if( ! enabled ) {
+            enabledServices = accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityEvent.TYPES_ALL_MASK);
+            if( ! enabledServices.isEmpty() ) {
+                for( AccessibilityServiceInfo service : enabledServices ) {
+                    Log.d(Aware.TAG, service.toString());
+                    if( service.getId().contains(getPackageName()) ) {
+                        enabled = true;
+                    }
                 }
             }
         }
@@ -332,7 +334,6 @@ public class Applications extends AccessibilityService {
             info.notificationTimeout = 50;
             info.packageNames = null;
             setServiceInfo(info);
-
             onServiceConnected();
         }
     }
@@ -372,42 +373,47 @@ public class Applications extends AccessibilityService {
      * @return boolean isActive
      */
     public static boolean isAccessibilityServiceActive(Context c) {
+        boolean enabled = false;
         AccessibilityManager accessibilityManager = (AccessibilityManager) c.getSystemService(ACCESSIBILITY_SERVICE);
         List<AccessibilityServiceInfo> enabledServices = AccessibilityManagerCompat.getEnabledAccessibilityServiceList(accessibilityManager, AccessibilityEventCompat.TYPES_ALL_MASK);
         if( ! enabledServices.isEmpty() ) {
             for( AccessibilityServiceInfo service : enabledServices ) {
                 Log.d(Aware.TAG, service.toString());
                 if( service.getId().contains(c.getPackageName()) ) {
-                    return true;
+                    enabled = true;
                 }
             }
         }
 
-        enabledServices = accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityEvent.TYPES_ALL_MASK);
-        if( ! enabledServices.isEmpty() ) {
-            for( AccessibilityServiceInfo service : enabledServices ) {
-                Log.d(Aware.TAG, service.toString());
-                if( service.getId().contains(c.getPackageName()) ) {
-                    return true;
+        if( ! enabled ) {
+            enabledServices = accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityEvent.TYPES_ALL_MASK);
+            if ( ! enabledServices.isEmpty()) {
+                for (AccessibilityServiceInfo service : enabledServices) {
+                    Log.d(Aware.TAG, service.toString());
+                    if (service.getId().contains(c.getPackageName())) {
+                        enabled = true;
+                    }
                 }
             }
         }
 
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c);
-        mBuilder.setSmallIcon(R.drawable.ic_stat_aware_accessibility);
-        mBuilder.setContentTitle("AWARE configuration");
-        mBuilder.setContentText(c.getResources().getString(R.string.aware_activate_accessibility));
-        mBuilder.setAutoCancel(true);
-        mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
+        if( ! enabled ) {
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c);
+            mBuilder.setSmallIcon(R.drawable.ic_stat_aware_accessibility);
+            mBuilder.setContentTitle("AWARE configuration");
+            mBuilder.setContentText(c.getResources().getString(R.string.aware_activate_accessibility));
+            mBuilder.setAutoCancel(true);
+            mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
 
-        Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
-        accessibilitySettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
+            accessibilitySettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
-        PendingIntent clickIntent = PendingIntent.getActivity(c, 0, accessibilitySettings, PendingIntent.FLAG_UPDATE_CURRENT);
-        mBuilder.setContentIntent(clickIntent);
-        NotificationManager notManager = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
-        notManager.notify(Applications.ACCESSIBILITY_NOTIFICATION_ID, mBuilder.build());
-        return false;
+            PendingIntent clickIntent = PendingIntent.getActivity(c, 0, accessibilitySettings, PendingIntent.FLAG_UPDATE_CURRENT);
+            mBuilder.setContentIntent(clickIntent);
+            NotificationManager notManager = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+            notManager.notify(Applications.ACCESSIBILITY_NOTIFICATION_ID, mBuilder.build());
+        }
+        return enabled;
     }
 
     /**

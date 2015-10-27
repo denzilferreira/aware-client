@@ -8,11 +8,8 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceActivity;
-import android.support.annotation.LayoutRes;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -102,7 +99,7 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getTitle().toString().equals("QRCode")) {
-            Intent join_study = new Intent(Aware_Activity.this, CameraStudy.class);
+            Intent join_study = new Intent(Aware_Activity.this, Aware_QRCode.class);
             startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
         }
         if (item.getTitle().toString().equals("Team")) {
@@ -153,7 +150,7 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
 	            			break;
 		            	case 3: //Join study
 		            		//TODO: make ui for listing available studies
-                            Intent join_study = new Intent(getApplicationContext(), CameraStudy.class);
+                            Intent join_study = new Intent(getApplicationContext(), Aware_QRCode.class);
                             startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
 		            		break;
 	            	}
