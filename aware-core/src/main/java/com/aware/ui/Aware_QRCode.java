@@ -48,14 +48,12 @@ import java.io.IOException;
  */
 public class Aware_QRCode extends Aware_Activity {
 
-    // intent request code to handle updating play services if needed.
     private static final int RC_HANDLE_GMS = 9001;
 
     private CameraSource mCameraSource;
     private CameraSourcePreview mPreview;
     private GraphicOverlay<BarcodeGraphic> mGraphicOverlay;
 
-    // helper objects for detecting taps and pinches.
     private ScaleGestureDetector scaleGestureDetector;
     private GestureDetector gestureDetector;
 
@@ -82,7 +80,7 @@ public class Aware_QRCode extends Aware_Activity {
             }
         });
 
-        Snackbar snack = Snackbar.make(mGraphicOverlay, "Tap to scan. Pinch/strech to zoom", Snackbar.LENGTH_LONG);
+        Snackbar snack = Snackbar.make(mGraphicOverlay, "Tap QRCode to scan. Pinch/strech to zoom", Snackbar.LENGTH_LONG);
         ViewGroup group = (ViewGroup) snack.getView();
         for (int i = 0; i < group.getChildCount(); i++) {
             View v = group.getChildAt(i);
@@ -98,29 +96,14 @@ public class Aware_QRCode extends Aware_Activity {
     private void createCameraSource() {
         Context context = getApplicationContext();
 
-        // A barcode detector is created to track barcodes.  An associated multi-processor instance
-        // is set to receive the barcode detection results, track the barcodes, and maintain
-        // graphics for each barcode on screen.  The factory is used by the multi-processor to
-        // create a separate tracker instance for each barcode.
         BarcodeDetector barcodeDetector = new BarcodeDetector.Builder(context).build();
         BarcodeTrackerFactory barcodeFactory = new BarcodeTrackerFactory(mGraphicOverlay);
         barcodeDetector.setProcessor(
                 new MultiProcessor.Builder<>(barcodeFactory).build());
 
-        if (!barcodeDetector.isOperational()) {
-            // Note: The first time that an app using the barcode or face API is installed on a
-            // device, GMS will download a native libraries to the device in order to do detection.
-            // Usually this completes before the app is run for the first time.  But if that
-            // download has not yet completed, then the above call will not detect any barcodes
-            // and/or faces.
-            //
-            // isOperational() can be used to check if the required native libraries are currently
-            // available.  The detectors will automatically become operational once the library
-            // downloads complete on device.
+        if ( ! barcodeDetector.isOperational()) {
             if( Aware.DEBUG) Log.w(Aware.TAG, "Detector dependencies are not yet available.");
 
-            // Check for low storage.  If there is low storage, the native library will not be
-            // downloaded, so detection will not become operational.
             IntentFilter lowstorageFilter = new IntentFilter(Intent.ACTION_DEVICE_STORAGE_LOW);
             boolean hasLowStorage = registerReceiver(null, lowstorageFilter) != null;
 
@@ -129,15 +112,11 @@ public class Aware_QRCode extends Aware_Activity {
             }
         }
 
-        // Creates and starts the camera.  Note that this uses a higher resolution in comparison
-        // to other detection examples to enable the barcode detector to detect small barcodes
-        // at long distances.
         CameraSource.Builder builder = new CameraSource.Builder(getApplicationContext(), barcodeDetector)
                 .setFacing(CameraSource.CAMERA_FACING_BACK)
                 .setRequestedPreviewSize(1600, 1024)
                 .setRequestedFps(15.0f);
 
-        // make sure that auto focus is an available option
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
             builder = builder.setFocusMode(android.hardware.Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
         }
@@ -165,12 +144,10 @@ public class Aware_QRCode extends Aware_Activity {
     }
 
     private void startCameraSource() throws SecurityException {
-        // check that the device has play services available.
-        int code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(
-                getApplicationContext());
+        int code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(getApplicationContext());
+
         if (code != ConnectionResult.SUCCESS) {
-            Dialog dlg =
-                    GoogleApiAvailability.getInstance().getErrorDialog(this, code, RC_HANDLE_GMS);
+            Dialog dlg = GoogleApiAvailability.getInstance().getErrorDialog(this, code, RC_HANDLE_GMS);
             dlg.show();
         }
 
@@ -208,8 +185,7 @@ public class Aware_QRCode extends Aware_Activity {
                     }
                     snack.show();
                 }
-            }
-            else {
+            } else {
                 if(Aware.DEBUG) Log.d(Aware.TAG, "barcode data is null");
             }
         }
