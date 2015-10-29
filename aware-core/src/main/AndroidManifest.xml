@@ -130,15 +130,17 @@
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:excludeFromRecents="true"
             android:exported="true"
-            android:showOnLockScreen="true"
             android:noHistory="true"
-            android:clearTaskOnLaunch="true"
             android:launchMode="singleTop"
-            android:theme="@android:style/Theme.DeviceDefault.Dialog">
+            android:theme="@style/Theme.Aware.Translucent">
         </activity>
         <activity android:name="com.aware.ui.PermissionsHandler"
             android:exported="true"
-            android:theme="@android:style/Theme.NoDisplay"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:launchMode="singleTop"
+            android:finishOnTaskLaunch="true"
+            android:finishOnCloseSystemDialogs="true"
+            android:theme="@style/Theme.Aware.Translucent"
             android:excludeFromRecents="true"
             android:noHistory="true"/>
 
