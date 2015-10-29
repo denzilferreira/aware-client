@@ -28,11 +28,7 @@ public class ESM_Queue extends FragmentActivity {
 
     private static String TAG = "AWARE::ESM Queue";
     private final ESM_QueueManager queue_manager = new ESM_QueueManager();
-
-    private static PowerManager powerManager;
-    private static Vibrator vibrator;
     private static ESM_Queue queue;
-    private static DialogFragment esmDialog;
 
     @Override
     protected void onCreate(Bundle bundle) {
@@ -40,15 +36,10 @@ public class ESM_Queue extends FragmentActivity {
 
         queue = this;
 
-//        getWindow().setType(WindowManager.LayoutParams.TYPE_PRIORITY_PHONE);
-//        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-//        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
-//        getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
-
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
 
-        powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ESM.ACTION_AWARE_ESM_ANSWERED);
@@ -61,7 +52,7 @@ public class ESM_Queue extends FragmentActivity {
 
         if( getQueueSize(getApplicationContext()) > 0 ) {
             FragmentManager fragmentManager = getSupportFragmentManager();
-            esmDialog = new ESM_UI();
+            DialogFragment esmDialog = new ESM_UI();
             esmDialog.show(fragmentManager, TAG);
             fragmentManager.executePendingTransactions();
             if( ! powerManager.isScreenOn() ) {

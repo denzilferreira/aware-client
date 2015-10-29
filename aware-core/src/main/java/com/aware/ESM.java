@@ -150,10 +150,7 @@ public class ESM extends Aware_Sensor {
     public static final String EXTRA_ESM = "esm";
     
     private static final int ESM_NOTIFICATION_ID = 777;
-    
-    private static Intent intent_ESM = null;
-    private static PendingIntent pending_ESM = null;
-    
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -167,11 +164,7 @@ public class ESM extends Aware_Sensor {
         IntentFilter filter = new IntentFilter();
         filter.addAction(ESM.ACTION_AWARE_QUEUE_ESM);
         registerReceiver(esmMonitor, filter);
-        
-        intent_ESM = new Intent(this, ESM_Queue.class);
-        intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        pending_ESM = PendingIntent.getActivity(this, 0, intent_ESM, PendingIntent.FLAG_UPDATE_CURRENT);
-        
+
         if(Aware.DEBUG) Log.d(TAG,"ESM service created!");
     }
     
@@ -191,7 +184,9 @@ public class ESM extends Aware_Sensor {
         if(Aware.DEBUG) Log.d(TAG,"ESM service active... Queue = " + ESM_Queue.getQueueSize(getApplicationContext()));
         
         if( ESM_Queue.getQueueSize(this) > 0 && Aware.getSetting(this, Aware_Preferences.STATUS_ESM).equals("true") ) {
-        	startActivity(intent_ESM);
+            Intent intent_ESM = new Intent(this, ESM_Queue.class);
+            intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent_ESM);
         }
         
         return START_STICKY;
@@ -305,6 +300,8 @@ public class ESM extends Aware_Sensor {
                         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                         mNotificationManager.notify(ESM_NOTIFICATION_ID, esmWaiting().build());
                     } else {
+                        Intent intent_ESM = new Intent(this, ESM_Queue.class);
+                        intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent_ESM);
                     }
                 } catch (JSONException e) {
@@ -330,6 +327,11 @@ public class ESM extends Aware_Sensor {
             mBuilder.setAutoCancel(true);
             mBuilder.setOnlyAlertOnce(true);
             mBuilder.setOngoing(true);
+
+            Intent intent_ESM = new Intent(this, ESM_Queue.class);
+            intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            PendingIntent pending_ESM = PendingIntent.getActivity(this, 0, intent_ESM, PendingIntent.FLAG_UPDATE_CURRENT);
+
             mBuilder.setContentIntent(pending_ESM);
             mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
             return mBuilder;

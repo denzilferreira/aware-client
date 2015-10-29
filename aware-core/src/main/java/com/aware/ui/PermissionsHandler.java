@@ -17,20 +17,11 @@ public class PermissionsHandler extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        //c.f. https://code.google.com/p/android-developer-preview/issues/detail?id=2353
-//        setVisible(true);
-
         if( getIntent() != null && getIntent().getExtras() != null && getIntent().getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS) != null ) {
             String[] permissions = getIntent().getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS);
             ActivityCompat.requestPermissions(PermissionsHandler.this, permissions, CODE_PERMISSION_REQUEST );
-        } else {
-            finish();
         }
+        finish();
     }
 
     @Override

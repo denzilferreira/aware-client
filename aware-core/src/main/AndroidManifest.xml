@@ -132,17 +132,16 @@
             android:exported="true"
             android:noHistory="true"
             android:launchMode="singleTop"
-            android:theme="@style/Theme.Aware.Translucent">
-        </activity>
+            android:theme="@style/Theme.AppCompat.Translucent"
+        />
         <activity android:name="com.aware.ui.PermissionsHandler"
             android:exported="true"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:launchMode="singleTop"
-            android:finishOnTaskLaunch="true"
-            android:finishOnCloseSystemDialogs="true"
-            android:theme="@style/Theme.Aware.Translucent"
+            android:theme="@style/Theme.AppCompat.Translucent"
             android:excludeFromRecents="true"
-            android:noHistory="true"/>
+            android:noHistory="true"
+        />
 
         <!-- Services -->
 

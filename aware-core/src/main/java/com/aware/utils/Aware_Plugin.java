@@ -113,18 +113,17 @@ public class Aware_Plugin extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         //Ask the user all required permissions
-        ArrayList<String> missing = new ArrayList<>();
+        final ArrayList<String> missing = new ArrayList<>();
         for( String p : REQUIRED_PERMISSIONS ) {
             int permission_access = ContextCompat.checkSelfPermission(getApplicationContext(), p);
             if( permission_access != PackageManager.PERMISSION_GRANTED ) {
                 missing.add(p);
             }
         }
-
         if( missing.size() > 0 ) {
             Intent permissionRequest = new Intent(this, PermissionsHandler.class);
             permissionRequest.putExtra( PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, missing.toArray(new String[missing.size()]) );
-            permissionRequest.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            permissionRequest.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(permissionRequest);
         }
         return super.onStartCommand(intent, flags, startId);
