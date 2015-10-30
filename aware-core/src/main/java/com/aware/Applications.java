@@ -218,7 +218,7 @@ public class Applications extends AccessibilityService {
 		            		crashData.put(Applications_Crashes.APPLICATION_NAME, appName);
 		            		crashData.put(Applications_Crashes.APPLICATION_VERSION, ( pkgInfo != null) ? pkgInfo.versionCode : -1); //some prepackages don't have version codes...
 		            		crashData.put(Applications_Crashes.ERROR_SHORT, error.shortMsg);
-		            		crashData.put(Applications_Crashes.ERROR_LONG, error.longMsg);
+		            		crashData.put(Applications_Crashes.ERROR_LONG, (error.stackTrace!=null)?error.stackTrace:"");
 		            		crashData.put(Applications_Crashes.ERROR_CONDITION, error.condition);
 		            		crashData.put(Applications_Crashes.IS_SYSTEM_APP, pkgInfo != null && isSystemPackage(pkgInfo) );
 		            		

@@ -7,12 +7,12 @@ configurations {
     wear
 }
 
-ext.version_readable = "3.7.8"
-ext.version_code = 410
+ext.version_readable = "3.7.9"
+ext.version_code = 411
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.1"
+    buildToolsVersion "23.0.2"
     defaultPublishConfig "phoneRelease"
     publishNonDefault true //set to false for Maven Central, otherwise set to true
 
