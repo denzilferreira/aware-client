@@ -498,7 +498,7 @@ public class Scheduler extends Service {
                     }
 
                     if( hour == now.get(Calendar.HOUR_OF_DAY) && last_triggered == 0 ) return true;
-                    if( hour == now.get(Calendar.HOUR_OF_DAY) && now.get(Calendar.HOUR_OF_DAY) > previous.get(Calendar.HOUR_OF_DAY) ) return true;
+                    if( hour == now.get(Calendar.HOUR_OF_DAY) && last_triggered != 0 && now.get(Calendar.HOUR_OF_DAY) > previous.get(Calendar.HOUR_OF_DAY) ) return true;
                 }
             }
 
@@ -538,7 +538,7 @@ public class Scheduler extends Service {
                 }
 
                 if( random_weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered == 0 ) return true;
-                if( random_weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase()) && now.get(Calendar.WEEK_OF_YEAR) > previous.get(Calendar.WEEK_OF_YEAR) ) return true;
+                if( random_weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered != 0 && now.get(Calendar.WEEK_OF_YEAR) > previous.get(Calendar.WEEK_OF_YEAR) ) return true;
 
             } else {
 
@@ -550,7 +550,7 @@ public class Scheduler extends Service {
                     }
 
                     if( weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered == 0 ) return true;
-                    if( weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase()) && now.get(Calendar.WEEK_OF_YEAR) > previous.get(Calendar.WEEK_OF_YEAR) ) return true;
+                    if( weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered != 0 && now.get(Calendar.WEEK_OF_YEAR) > previous.get(Calendar.WEEK_OF_YEAR) ) return true;
                 }
             }
         } catch (JSONException e) {
@@ -590,7 +590,7 @@ public class Scheduler extends Service {
                 }
 
                 if( random_month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered == 0 ) return true;
-                if( random_month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase()) && now.get(Calendar.MONTH) > previous.get(Calendar.MONTH) ) return true;
+                if( random_month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered != 0 && now.get(Calendar.MONTH) > previous.get(Calendar.MONTH) ) return true;
 
             } else {
 
@@ -602,7 +602,7 @@ public class Scheduler extends Service {
                     }
 
                     if( month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered == 0 ) return true;
-                    if( month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase()) && now.get(Calendar.MONTH) > previous.get(Calendar.MONTH) ) return true;
+                    if( month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered != 0 && now.get(Calendar.MONTH) > previous.get(Calendar.MONTH) ) return true;
                 }
             }
 
