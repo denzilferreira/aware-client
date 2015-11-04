@@ -50,6 +50,7 @@ import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.providers.Aware_Provider.Aware_Settings;
 import com.aware.ui.Plugins_Manager;
 import com.aware.utils.Aware_Plugin;
+import com.aware.utils.Aware_TTS;
 import com.aware.utils.DownloadPluginService;
 import com.aware.utils.Https;
 import com.aware.utils.Scheduler;
@@ -105,7 +106,7 @@ public class Aware extends Service {
     /**
      * Received broadcast: refresh the framework active sensors.
      */
-    public static final String ACTION_AWARE_REFRESH = "ACTION_AWARE_REFRESH";
+    protected static final String ACTION_AWARE_REFRESH = "ACTION_AWARE_REFRESH";
     
     /**
      * Received broadcast: plugins must implement awareContext broadcast receiver to share their current status.
@@ -600,7 +601,7 @@ public class Aware extends Service {
     	String ui_class = package_name + ".ContextCard";
     	CardView card = new CardView(context);
     	LayoutParams params = new LayoutParams( LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT );
-        params.setMargins( 0,0,0,10 );
+        params.setMargins(0, 0, 0, 10);
         card.setLayoutParams(params);
 
     	try {
@@ -778,7 +779,10 @@ public class Aware extends Service {
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
         global_settings.add(Aware_Preferences.WEBSERVICE_SERVER);
-        global_settings.add(Aware_Preferences.STATUS_APPLICATIONS); //allow plugins to get accessibility events
+
+        //allow plugins to get accessibility events
+        global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
+
         //allow plugin's to react to MQTT
         global_settings.add(Aware_Preferences.STATUS_MQTT);
         global_settings.add(Aware_Preferences.MQTT_USERNAME);
@@ -874,11 +878,181 @@ public class Aware extends Service {
         }
         if( qry != null && ! qry.isClosed() ) qry.close();
     }
+
+    /**
+     * Ask AWARE to start the sensor, AFTER the settings have been defined
+     * @param sensor
+     */
+    public static void startSensor( String sensor ) {
+        if( sensor.equals(Aware_Preferences.STATUS_ESM) ) {
+            startESM();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_APPLICATIONS) ) {
+            startApplications();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_ACCELEROMETER) ) {
+            startAccelerometer();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_INSTALLATIONS) ) {
+            startInstallations();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_LOCATION_GPS) || sensor.equals(Aware_Preferences.STATUS_LOCATION_NETWORK) ) {
+            startLocations();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_BLUETOOTH) ) {
+            startBluetooth();
+        }
+        if( sensor.equals( Aware_Preferences.STATUS_SCREEN) ) {
+            startScreen();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_BATTERY) ) {
+            startBattery();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_NETWORK_EVENTS) ) {
+            startNetwork();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_NETWORK_TRAFFIC) ) {
+            startTraffic();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_COMMUNICATION_EVENTS) || sensor.equals(Aware_Preferences.STATUS_CALLS) || sensor.equals(Aware_Preferences.STATUS_MESSAGES) ) {
+            startCommunication();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_PROCESSOR) ) {
+            startProcessor();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_TIMEZONE) ) {
+            startTimeZone();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_MQTT) ) {
+            startMQTT();
+        }
+        if( sensor.equals( Aware_Preferences.STATUS_GYROSCOPE) ) {
+            startGyroscope();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_WIFI) ) {
+            startWiFi();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_TELEPHONY) ) {
+            startTelephony();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_ROTATION) ) {
+            startRotation();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_LIGHT) ) {
+            startLight();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_PROXIMITY) ) {
+            startProximity();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_MAGNETOMETER) ) {
+            startMagnetometer();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_BAROMETER)) {
+            startBarometer();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_GRAVITY) ) {
+            startGravity();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_LINEAR_ACCELEROMETER) ) {
+            startLinearAccelerometer();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_TEMPERATURE) ) {
+            startTemperature();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_KEYBOARD) ) {
+            startKeyboard();
+        }
+    }
+
+    /**
+     * Ask AWARE to stop a sensor
+     * @param sensor
+     */
+    public static void stopSensor( String sensor ) {
+        if( sensor.equals(Aware_Preferences.STATUS_ESM) ) {
+            stopESM();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_APPLICATIONS) ) {
+            stopApplications();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_ACCELEROMETER) ) {
+            stopAccelerometer();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_INSTALLATIONS) ) {
+            stopInstallations();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_LOCATION_GPS) || sensor.equals(Aware_Preferences.STATUS_LOCATION_NETWORK) ) {
+            stopLocations();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_BLUETOOTH) ) {
+            stopBluetooth();
+        }
+        if( sensor.equals( Aware_Preferences.STATUS_SCREEN) ) {
+            stopScreen();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_BATTERY) ) {
+            stopBattery();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_NETWORK_EVENTS) ) {
+            stopNetwork();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_NETWORK_TRAFFIC) ) {
+            stopTraffic();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_COMMUNICATION_EVENTS) || sensor.equals(Aware_Preferences.STATUS_CALLS) || sensor.equals(Aware_Preferences.STATUS_MESSAGES) ) {
+            stopCommunication();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_PROCESSOR) ) {
+            stopProcessor();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_TIMEZONE) ) {
+            stopTimeZone();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_MQTT) ) {
+            stopMQTT();
+        }
+        if( sensor.equals( Aware_Preferences.STATUS_GYROSCOPE) ) {
+            stopGyroscope();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_WIFI) ) {
+            stopWiFi();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_TELEPHONY) ) {
+            stopTelephony();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_ROTATION) ) {
+            stopRotation();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_LIGHT) ) {
+            stopLight();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_PROXIMITY) ) {
+            stopProximity();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_MAGNETOMETER) ) {
+            stopMagnetometer();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_BAROMETER)) {
+            stopBarometer();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_GRAVITY) ) {
+            stopGravity();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_LINEAR_ACCELEROMETER) ) {
+            stopLinearAccelerometer();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_TEMPERATURE) ) {
+            stopTemperature();
+        }
+        if( sensor.equals(Aware_Preferences.STATUS_KEYBOARD) ) {
+            stopKeyboard();
+        }
+    }
     
     @Override
     public void onDestroy() {
         super.onDestroy();
-        
+
         if( repeatingIntent != null ) alarmManager.cancel(repeatingIntent);
         if( webserviceUploadIntent != null) alarmManager.cancel(webserviceUploadIntent);
         
@@ -1416,7 +1590,7 @@ public class Aware extends Service {
     protected void startAllServices() {
         if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true") ) {
             startESM();
-        }else stopESM();
+        } else stopESM();
 
         if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_APPLICATIONS).equals("true")) {
             startApplications();
@@ -1430,10 +1604,9 @@ public class Aware extends Service {
             startInstallations();
         }else stopInstallations();
         
-        if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_GPS).equals("true") 
-         || Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true") ) {
+        if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_GPS).equals("true") || Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true") ) {
             startLocations();
-        }else stopLocations();
+        } else stopLocations();
         
         if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_BLUETOOTH).equals("true") ) {
             startBluetooth();
@@ -1455,12 +1628,10 @@ public class Aware extends Service {
             startTraffic();
         }else stopTraffic();
         
-        if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_COMMUNICATION_EVENTS).equals("true") 
-    	 || Aware.getSetting(awareContext, Aware_Preferences.STATUS_CALLS).equals("true") 
-    	 || Aware.getSetting(awareContext, Aware_Preferences.STATUS_MESSAGES).equals("true") ) {
+        if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_COMMUNICATION_EVENTS).equals("true") || Aware.getSetting(awareContext, Aware_Preferences.STATUS_CALLS).equals("true") || Aware.getSetting(awareContext, Aware_Preferences.STATUS_MESSAGES).equals("true") ){
             startCommunication();
-        }else stopCommunication();
-        
+        } else stopCommunication();
+
         if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_PROCESSOR).equals("true") ) {
             startProcessor();
         }else stopProcessor();
@@ -1573,7 +1744,7 @@ public class Aware extends Service {
     /**
      * Start keyboard module
      */
-    protected void startKeyboard() {
+    protected static void startKeyboard() {
         if( keyboard == null ) keyboard = new Intent(awareContext, Keyboard.class);
         awareContext.startService(keyboard);
     }
@@ -1581,14 +1752,14 @@ public class Aware extends Service {
     /**
      * Stop keyboard module
      */
-    protected void stopKeyboard() {
+    protected static void stopKeyboard() {
         if( keyboard != null ) awareContext.stopService(keyboard);
     }
 
     /**
      * Start Applications module
      */
-    protected void startApplications() {
+    protected static void startApplications() {
         if( applicationsSrv == null) applicationsSrv = new Intent(awareContext, Applications.class);
         awareContext.startService(applicationsSrv);
     }
@@ -1596,14 +1767,14 @@ public class Aware extends Service {
     /**
      * Stop Applications module
      */
-    protected void stopApplications() {
+    protected static void stopApplications() {
         if( applicationsSrv != null) awareContext.stopService(applicationsSrv);
     }
     
     /**
      * Start Installations module
      */
-    protected void startInstallations() {
+    protected static void startInstallations() {
         if(installationsSrv == null) installationsSrv = new Intent(awareContext, Installations.class);
         awareContext.startService(installationsSrv);
     }
@@ -1611,14 +1782,14 @@ public class Aware extends Service {
     /**
      * Stop Installations module
      */
-    protected void stopInstallations() {
+    protected static void stopInstallations() {
         if(installationsSrv != null) awareContext.stopService(installationsSrv);
     }
     
     /**
      * Start ESM module
      */
-    protected void startESM() {
+    protected static void startESM() {
         if( esmSrv == null ) esmSrv = new Intent(awareContext, ESM.class);
         awareContext.startService(esmSrv);
     }
@@ -1626,14 +1797,14 @@ public class Aware extends Service {
     /**
      * Stop ESM module
      */
-    protected void stopESM() {
+    protected static void stopESM() {
         if( esmSrv != null ) awareContext.stopService(esmSrv);
     }
     
     /**
      * Start Temperature module
      */
-    protected void startTemperature() {
+    protected static void startTemperature() {
         if( temperatureSrv == null ) temperatureSrv = new Intent(awareContext, Temperature.class);
         awareContext.startService(temperatureSrv);
     }
@@ -1641,14 +1812,14 @@ public class Aware extends Service {
     /**
      * Stop Temperature module
      */
-    protected void stopTemperature() {
+    protected static void stopTemperature() {
         if( temperatureSrv != null ) awareContext.stopService(temperatureSrv);
     }
     
     /**
      * Start Linear Accelerometer module
      */
-    protected void startLinearAccelerometer() {
+    protected static void startLinearAccelerometer() {
         if( linear_accelSrv == null ) linear_accelSrv = new Intent(awareContext, LinearAccelerometer.class);
         awareContext.startService(linear_accelSrv);
     }
@@ -1656,14 +1827,14 @@ public class Aware extends Service {
     /**
      * Stop Linear Accelerometer module
      */
-    protected void stopLinearAccelerometer() {
+    protected static void stopLinearAccelerometer() {
         if( linear_accelSrv != null ) awareContext.stopService(linear_accelSrv);
     }
     
     /**
      * Start Gravity module
      */
-    protected void startGravity() {
+    protected static void startGravity() {
         if( gravitySrv == null ) gravitySrv = new Intent(awareContext, Gravity.class);
         awareContext.startService(gravitySrv);
     }
@@ -1671,14 +1842,14 @@ public class Aware extends Service {
     /**
      * Stop Gravity module
      */
-    protected void stopGravity() {
+    protected static void stopGravity() {
         if( gravitySrv != null ) awareContext.stopService(gravitySrv);
     }
     
     /**
      * Start Barometer module
      */
-    protected void startBarometer() {
+    protected static void startBarometer() {
         if( barometerSrv == null ) barometerSrv = new Intent(awareContext, Barometer.class);
         awareContext.startService(barometerSrv);
     }
@@ -1686,14 +1857,14 @@ public class Aware extends Service {
     /**
      * Stop Barometer module
      */
-    protected void stopBarometer() {
+    protected static void stopBarometer() {
         if( barometerSrv != null ) awareContext.stopService(barometerSrv);
     }
     
     /**
      * Start Magnetometer module
      */
-    protected void startMagnetometer() {
+    protected static void startMagnetometer() {
         if( magnetoSrv == null ) magnetoSrv = new Intent(awareContext, Magnetometer.class);
         awareContext.startService(magnetoSrv);
     }
@@ -1701,14 +1872,14 @@ public class Aware extends Service {
     /**
      * Stop Magnetometer module
      */
-    protected void stopMagnetometer() {
+    protected static void stopMagnetometer() {
         if( magnetoSrv != null ) awareContext.stopService(magnetoSrv);
     }
     
     /**
      * Start Proximity module
      */
-    protected void startProximity() {
+    protected static void startProximity() {
         if( proximitySrv == null ) proximitySrv = new Intent(awareContext, Proximity.class);
         awareContext.startService(proximitySrv);
     }
@@ -1716,14 +1887,14 @@ public class Aware extends Service {
     /**
      * Stop Proximity module
      */
-    protected void stopProximity() {
+    protected static void stopProximity() {
         if( proximitySrv != null ) awareContext.stopService(proximitySrv);
     }
     
     /**
      * Start Light module
      */
-    protected void startLight() {
+    protected static void startLight() {
         if( lightSrv == null ) lightSrv = new Intent(awareContext, Light.class);
         awareContext.startService(lightSrv);
     }
@@ -1731,14 +1902,14 @@ public class Aware extends Service {
     /**
      * Stop Light module
      */
-    protected void stopLight() {
+    protected static void stopLight() {
         if( lightSrv != null ) awareContext.stopService(lightSrv);
     }
     
     /**
      * Start Rotation module
      */
-    protected void startRotation() {
+    protected static void startRotation() {
         if( rotationSrv == null ) rotationSrv = new Intent(awareContext, Rotation.class);
         awareContext.startService(rotationSrv);
     }
@@ -1746,14 +1917,14 @@ public class Aware extends Service {
     /**
      * Stop Rotation module
      */
-    protected void stopRotation() {
+    protected static void stopRotation() {
         if( rotationSrv != null ) awareContext.stopService(rotationSrv);
     }
     
     /**
      * Start the Telephony module
      */
-    protected void startTelephony() {
+    protected static void startTelephony() {
         if( telephonySrv == null) telephonySrv = new Intent(awareContext, Telephony.class);
         awareContext.startService(telephonySrv);
     }
@@ -1761,26 +1932,26 @@ public class Aware extends Service {
     /**
      * Stop the Telephony module
      */
-    protected void stopTelephony() {
+    protected static void stopTelephony() {
         if( telephonySrv != null ) awareContext.stopService(telephonySrv);
     }
     
     /**
      * Start the WiFi module
      */
-    protected void startWiFi() {
+    protected static void startWiFi() {
         if( wifiSrv == null ) wifiSrv = new Intent(awareContext, WiFi.class);
         awareContext.startService(wifiSrv);
     }
     
-    protected void stopWiFi() {
+    protected static void stopWiFi() {
         if( wifiSrv != null ) awareContext.stopService(wifiSrv);
     }
     
     /**
      * Start the gyroscope module
      */
-    protected void startGyroscope() {
+    protected static void startGyroscope() {
         if( gyroSrv == null ) gyroSrv = new Intent(awareContext, Gyroscope.class);
         awareContext.startService(gyroSrv);
     }
@@ -1788,14 +1959,14 @@ public class Aware extends Service {
     /**
      * Stop the gyroscope module
      */
-    protected void stopGyroscope() {
+    protected static void stopGyroscope() {
         if( gyroSrv != null ) awareContext.stopService(gyroSrv);
     }
     
     /**
      * Start the accelerometer module
      */
-    protected void startAccelerometer() {
+    protected static void startAccelerometer() {
         if( accelerometerSrv == null ) accelerometerSrv = new Intent(awareContext, Accelerometer.class);
         awareContext.startService(accelerometerSrv);
     }
@@ -1803,14 +1974,14 @@ public class Aware extends Service {
     /**
      * Stop the accelerometer module
      */
-    protected void stopAccelerometer() {
+    protected static void stopAccelerometer() {
         if( accelerometerSrv != null) awareContext.stopService(accelerometerSrv);
     }
     
     /**
      * Start the Processor module
      */
-    protected void startProcessor() {
+    protected static void startProcessor() {
         if( processorSrv == null) processorSrv = new Intent(awareContext, Processor.class);
         awareContext.startService(processorSrv);
     }
@@ -1818,14 +1989,14 @@ public class Aware extends Service {
     /**
      * Stop the Processor module
      */
-    protected void stopProcessor() {
+    protected static void stopProcessor() {
         if( processorSrv != null ) awareContext.stopService(processorSrv);
     }
     
     /**
      * Start the locations module
      */
-    protected void startLocations() {
+    protected static void startLocations() {
         if( locationsSrv == null) locationsSrv = new Intent(awareContext, Locations.class);
         awareContext.startService(locationsSrv);
     }
@@ -1833,9 +2004,8 @@ public class Aware extends Service {
     /**
      * Stop the locations module
      */
-    protected void stopLocations() {
-        if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_GPS).equals("false") 
-         && Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_NETWORK).equals("false") ) {
+    protected static void stopLocations() {
+        if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_GPS).equals("false") && Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_NETWORK).equals("false") ) {
             if(locationsSrv != null) awareContext.stopService(locationsSrv);
         }
     }
@@ -1843,7 +2013,7 @@ public class Aware extends Service {
     /**
      * Start the bluetooth module
      */
-    protected void startBluetooth() {
+    protected static void startBluetooth() {
         if( bluetoothSrv == null) bluetoothSrv = new Intent(awareContext, Bluetooth.class);
         awareContext.startService(bluetoothSrv);
     }
@@ -1851,14 +2021,14 @@ public class Aware extends Service {
     /**
      * Stop the bluetooth module
      */
-    protected void stopBluetooth() {
+    protected static void stopBluetooth() {
         if(bluetoothSrv != null) awareContext.stopService(bluetoothSrv);
     }
     
     /**
      * Start the screen module
      */
-    protected void startScreen() {
+    protected static void startScreen() {
         if( screenSrv == null) screenSrv = new Intent(awareContext, Screen.class);
         awareContext.startService(screenSrv);
     }
@@ -1866,14 +2036,14 @@ public class Aware extends Service {
     /**
      * Stop the screen module
      */
-    protected void stopScreen() {
+    protected static void stopScreen() {
         if(screenSrv != null) awareContext.stopService(screenSrv);
     }
     
     /**
      * Start battery module
      */
-    protected void startBattery() {
+    protected static void startBattery() {
         if( batterySrv == null) batterySrv = new Intent(awareContext, Battery.class);
         awareContext.startService(batterySrv);
     }
@@ -1881,14 +2051,14 @@ public class Aware extends Service {
     /**
      * Stop battery module
      */
-    protected void stopBattery() {
+    protected static void stopBattery() {
         if(batterySrv != null) awareContext.stopService(batterySrv);
     }
     
     /**
      * Start network module
      */
-    protected void startNetwork() {
+    protected static void startNetwork() {
         if( networkSrv == null ) networkSrv = new Intent(awareContext, Network.class);
         awareContext.startService(networkSrv);
     }
@@ -1896,14 +2066,14 @@ public class Aware extends Service {
     /**
      * Stop network module
      */
-    protected void stopNetwork() {
+    protected static void stopNetwork() {
         if(networkSrv != null) awareContext.stopService(networkSrv);
     }
     
     /**
      * Start traffic module
      */
-    protected void startTraffic() {
+    protected static void startTraffic() {
         if(trafficSrv == null) trafficSrv = new Intent(awareContext, Traffic.class);
         awareContext.startService(trafficSrv);
     }
@@ -1911,16 +2081,14 @@ public class Aware extends Service {
     /**
      * Stop traffic module
      */
-    protected void stopTraffic() {
-        if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_NETWORK_TRAFFIC).equals("false") ) {
-            if( trafficSrv != null ) awareContext.stopService(trafficSrv);
-        }
+    protected static void stopTraffic() {
+        if( trafficSrv != null ) awareContext.stopService(trafficSrv);
     }
     
     /**
      * Start the TimeZone module
      */
-    protected void startTimeZone() {
+    protected static void startTimeZone() {
         if(timeZoneSrv == null) timeZoneSrv = new Intent(awareContext, TimeZone.class);
         awareContext.startService(timeZoneSrv);
     }
@@ -1928,14 +2096,14 @@ public class Aware extends Service {
     /**
      * Stop the TimeZone module
      */
-    protected void stopTimeZone() {
+    protected static void stopTimeZone() {
         if( timeZoneSrv != null ) awareContext.stopService(timeZoneSrv);
     }
     
     /**
      * Start communication module
      */
-    protected void startCommunication() {
+    protected static void startCommunication() {
         if( communicationSrv == null ) communicationSrv = new Intent(awareContext, Communication.class);
         awareContext.startService(communicationSrv);
     }
@@ -1943,7 +2111,7 @@ public class Aware extends Service {
     /**
      * Stop communication module
      */
-    protected void stopCommunication() {
+    protected static void stopCommunication() {
         if( Aware.getSetting(awareContext, Aware_Preferences.STATUS_COMMUNICATION_EVENTS).equals("false") 
          && Aware.getSetting(awareContext, Aware_Preferences.STATUS_CALLS).equals("false") 
          && Aware.getSetting(awareContext, Aware_Preferences.STATUS_MESSAGES).equals("false") ) {
@@ -1954,7 +2122,7 @@ public class Aware extends Service {
     /**
      * Start MQTT module
      */
-    protected void startMQTT() {
+    protected static void startMQTT() {
         if( mqttSrv == null ) mqttSrv = new Intent(awareContext, Mqtt.class);
         awareContext.startService(mqttSrv);
     }
@@ -1962,7 +2130,7 @@ public class Aware extends Service {
     /**
      * Stop MQTT module
      */
-    protected void stopMQTT() {
+    protected static void stopMQTT() {
         if( mqttSrv != null ) awareContext.stopService(mqttSrv);
     }
 }

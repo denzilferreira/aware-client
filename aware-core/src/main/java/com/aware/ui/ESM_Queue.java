@@ -59,6 +59,11 @@ public class ESM_Queue extends FragmentActivity {
                 vibrator.vibrate(777);
             }
         }
+
+        //Make sure the ESM service is running
+        Intent esm = new Intent(getApplicationContext(), ESM.class);
+        esm.setAction(ESM.ACTION_AWARE_ESM_KEEPALIVE);
+        startService(esm);
     }
 
     public class ESM_QueueManager extends BroadcastReceiver {

@@ -403,6 +403,7 @@ public class Applications extends AccessibilityService {
             mBuilder.setContentTitle("AWARE configuration");
             mBuilder.setContentText(c.getResources().getString(R.string.aware_activate_accessibility));
             mBuilder.setAutoCancel(true);
+            mBuilder.setOnlyAlertOnce(true);
             mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
 
             Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);

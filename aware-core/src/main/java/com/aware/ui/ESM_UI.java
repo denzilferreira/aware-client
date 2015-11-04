@@ -580,7 +580,6 @@ public class ESM_UI extends DialogFragment {
 	@Override
 	public void onCancel(DialogInterface dialog) {
 		super.onCancel(dialog);
-
 		if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
 		dismissESMs();
 	}
@@ -588,7 +587,6 @@ public class ESM_UI extends DialogFragment {
 	@Override
 	public void onDismiss(DialogInterface dialog) {
 		super.onDismiss(dialog);
-
 		if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
 	}
 

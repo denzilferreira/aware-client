@@ -2300,7 +2300,6 @@ public class Aware_Preferences extends Aware_Activity {
 			if( Aware.DEBUG ) Log.d(Aware.TAG, "Joining: " + study_url);
 			
 			if( study_url.startsWith("https://api.awareframework.com/") ) {
-
 				//Request study settings
                 Hashtable<String, String> data = new Hashtable<>();
                 data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));

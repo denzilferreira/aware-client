@@ -151,6 +151,11 @@ public class ESM extends Aware_Sensor {
     
     private static final int ESM_NOTIFICATION_ID = 777;
 
+    /**
+     * Keepalive signal for the ESM_Queue activity to fix missed queued ESMs simply because Android killed the service
+     */
+    public static final String ACTION_AWARE_ESM_KEEPALIVE = "ACTION_AWARE_ESM_KEEPALIVE";
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -182,7 +187,11 @@ public class ESM extends Aware_Sensor {
         
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
         if(Aware.DEBUG) Log.d(TAG,"ESM service active... Queue = " + ESM_Queue.getQueueSize(getApplicationContext()));
-        
+
+        if( intent != null && intent.getAction() != null && intent.getAction().equals(ACTION_AWARE_ESM_KEEPALIVE) ) {
+            return START_STICKY;
+        }
+
         if( ESM_Queue.getQueueSize(this) > 0 && Aware.getSetting(this, Aware_Preferences.STATUS_ESM).equals("true") ) {
             Intent intent_ESM = new Intent(this, ESM_Queue.class);
             intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -225,10 +234,10 @@ public class ESM extends Aware_Sensor {
         @Override
         public void onReceive(Context context, Intent intent) {
             if( intent.getAction().equals(ESM.ACTION_AWARE_QUEUE_ESM) && Aware.getSetting(context, Aware_Preferences.STATUS_ESM).equals("true") ) {
-            	Intent backgroundService = new Intent(context, BackgroundService.class);
+            	Intent backgroundService = new Intent( context, BackgroundService.class );
                 backgroundService.setAction(ESM.ACTION_AWARE_QUEUE_ESM);
                 backgroundService.putExtra(EXTRA_ESM, intent.getStringExtra("esm"));
-                context.startService(backgroundService);
+                context.startService( backgroundService );
             }
         }
     }
@@ -278,8 +287,6 @@ public class ESM extends Aware_Sensor {
                         rowData.put(ESM_Data.SCALE_MAX_LABEL, esm.optString(ESM_Data.SCALE_MAX_LABEL));
                         rowData.put(ESM_Data.SCALE_MIN_LABEL, esm.optString(ESM_Data.SCALE_MIN_LABEL));
                         rowData.put(ESM_Data.SCALE_STEP, esm.optInt(ESM_Data.SCALE_STEP));
-
-                        //If NEW, it is shown immediately, otherwise it is not.
                         rowData.put(ESM_Data.STATUS, ESM.STATUS_NEW);
                         rowData.put(ESM_Data.TRIGGER, esm.optString(ESM_Data.TRIGGER));
                         
@@ -289,8 +296,7 @@ public class ESM extends Aware_Sensor {
                         
                         try {
                             getContentResolver().insert(ESM_Data.CONTENT_URI, rowData);
-                            
-                            if( Aware.DEBUG ) Log.d(TAG, "ESM:"+ rowData.toString());
+                            if( Aware.DEBUG ) Log.d(TAG, "ESM: "+ rowData.toString() );
                         }catch( SQLiteException e ) {
                             if(Aware.DEBUG) Log.d(TAG,e.getMessage());
                         }
@@ -300,20 +306,19 @@ public class ESM extends Aware_Sensor {
                         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                         mNotificationManager.notify(ESM_NOTIFICATION_ID, esmWaiting().build());
                     } else {
-                        Intent intent_ESM = new Intent(this, ESM_Queue.class);
+                        Intent intent_ESM = new Intent( getApplicationContext(), ESM_Queue.class );
                         intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent_ESM);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();                    
-                };
+                }
             }
         }
         
         private NotificationCompat.Builder esmWaiting() {
-            //Get the number of ESM's waiting to be answered
             int esm_count = 0;
-            Cursor esm_waiting = getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS +"="+ ESM.STATUS_NEW, null, null);
+            Cursor esm_waiting = getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " = " + ESM.STATUS_NEW, null, null);
             if( esm_waiting != null && esm_waiting.moveToFirst() ) {
                 esm_count = esm_waiting.getCount();
             }
@@ -328,9 +333,9 @@ public class ESM extends Aware_Sensor {
             mBuilder.setOnlyAlertOnce(true);
             mBuilder.setOngoing(true);
 
-            Intent intent_ESM = new Intent(this, ESM_Queue.class);
+            Intent intent_ESM = new Intent( getApplicationContext(), ESM_Queue.class );
             intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            PendingIntent pending_ESM = PendingIntent.getActivity(this, 0, intent_ESM, PendingIntent.FLAG_UPDATE_CURRENT);
+            PendingIntent pending_ESM = PendingIntent.getActivity( getApplicationContext(), 0, intent_ESM, PendingIntent.FLAG_UPDATE_CURRENT );
 
             mBuilder.setContentIntent(pending_ESM);
             mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
