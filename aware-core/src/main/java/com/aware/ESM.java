@@ -151,11 +151,6 @@ public class ESM extends Aware_Sensor {
     
     private static final int ESM_NOTIFICATION_ID = 777;
 
-    /**
-     * Keepalive signal for the ESM_Queue activity to fix missed queued ESMs simply because Android killed the service
-     */
-    public static final String ACTION_AWARE_ESM_KEEPALIVE = "ACTION_AWARE_ESM_KEEPALIVE";
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -188,12 +183,8 @@ public class ESM extends Aware_Sensor {
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
         if(Aware.DEBUG) Log.d(TAG,"ESM service active... Queue = " + ESM_Queue.getQueueSize(getApplicationContext()));
 
-        if( intent != null && intent.getAction() != null && intent.getAction().equals(ACTION_AWARE_ESM_KEEPALIVE) ) {
-            return START_STICKY;
-        }
-
-        if( ESM_Queue.getQueueSize(this) > 0 && Aware.getSetting(this, Aware_Preferences.STATUS_ESM).equals("true") ) {
-            Intent intent_ESM = new Intent(this, ESM_Queue.class);
+        if( ESM_Queue.getQueueSize(getApplicationContext()) > 0 && Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_ESM).equals("true") ) {
+            Intent intent_ESM = new Intent(getApplicationContext(), ESM_Queue.class);
             intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent_ESM);
         }
@@ -330,7 +321,7 @@ public class ESM extends Aware_Sensor {
             mBuilder.setContentText(getResources().getText(R.string.aware_esm_questions));
             mBuilder.setNumber(esm_count);
             mBuilder.setAutoCancel(true);
-            mBuilder.setOnlyAlertOnce(true);
+            mBuilder.setOnlyAlertOnce(true); //notify the user only once
             mBuilder.setOngoing(true);
 
             Intent intent_ESM = new Intent( getApplicationContext(), ESM_Queue.class );
