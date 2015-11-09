@@ -168,7 +168,7 @@ public class ESM_UI extends DialogFragment {
 
 		                    if(Aware.DEBUG) Log.d(TAG,"Answer:" + rowData.toString());
 
-		                    current_dialog.dismiss();
+							if( current_dialog != null ) current_dialog.dismiss();
 						}
 					});
         		break;
@@ -256,7 +256,7 @@ public class ESM_UI extends DialogFragment {
 
 			                    if(Aware.DEBUG) Log.d(TAG,"Answer:" + rowData.toString());
 
-			                    current_dialog.dismiss();
+								if( current_dialog != null ) current_dialog.dismiss();
 							}
 						});
         			} catch (JSONException e) {
@@ -359,7 +359,7 @@ public class ESM_UI extends DialogFragment {
 
 			                    if(Aware.DEBUG) Log.d(TAG,"Answer:" + rowData.toString());
 
-			                    current_dialog.dismiss();
+								if( current_dialog != null ) current_dialog.dismiss();
 							}
 						});
         			} catch (JSONException e) {
@@ -411,7 +411,7 @@ public class ESM_UI extends DialogFragment {
 
 		                    if(Aware.DEBUG) Log.d(TAG,"Answer:" + rowData.toString());
 
-		                    current_dialog.dismiss();
+							if( current_dialog != null ) current_dialog.dismiss();
 						}
 					});
     			break;
@@ -513,7 +513,7 @@ public class ESM_UI extends DialogFragment {
 
 							if(Aware.DEBUG) Log.d(TAG,"Answer:" + rowData.toString());
 
-							current_dialog.dismiss();
+							if( current_dialog != null ) current_dialog.dismiss();
 						}
 					});
 					break;
@@ -552,7 +552,7 @@ public class ESM_UI extends DialogFragment {
 
 									if(Aware.DEBUG) Log.d(TAG,"Answer:" + rowData.toString());
 
-									current_dialog.dismiss();
+									if( current_dialog != null ) current_dialog.dismiss();
 								}
 							});
 							answersHolder.addView(answer);
@@ -674,7 +674,8 @@ public class ESM_UI extends DialogFragment {
 			Intent expired = new Intent(ESM.ACTION_AWARE_ESM_EXPIRED);
 			sContext.sendBroadcast(expired);
 
-			current_dialog.dismiss();
+			if( current_dialog != null ) current_dialog.dismiss();
+
 			return null;
 		}
 	}

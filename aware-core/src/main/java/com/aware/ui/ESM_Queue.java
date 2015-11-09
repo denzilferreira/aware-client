@@ -74,14 +74,14 @@ public class ESM_Queue extends FragmentActivity {
                     if(Aware.DEBUG) Log.d(TAG,"ESM Queue is done!");
                     Intent esm_done = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
                     context.sendBroadcast(esm_done);
-                    queue.finish();
+                    if( queue != null ) queue.finish();
                 }
             }
             if ( intent.getAction().equals(ESM.ACTION_AWARE_ESM_DISMISSED) || intent.getAction().equals(ESM.ACTION_AWARE_ESM_EXPIRED ) ) {
                 if(Aware.DEBUG) Log.d(TAG,"Rest of ESM Queue is dismissed!");
                 Intent esm_done = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
                 context.sendBroadcast(esm_done);
-                queue.finish();
+                if( queue != null ) queue.finish();
             }
         }
     }

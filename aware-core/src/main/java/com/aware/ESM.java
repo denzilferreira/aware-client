@@ -315,7 +315,7 @@ public class ESM extends Aware_Sensor {
             }
             if( esm_waiting != null && ! esm_waiting.isClosed() ) esm_waiting.close();
             
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_esm);
             mBuilder.setContentTitle("AWARE");
             mBuilder.setContentText(getResources().getText(R.string.aware_esm_questions));
@@ -323,13 +323,13 @@ public class ESM extends Aware_Sensor {
             mBuilder.setAutoCancel(true);
             mBuilder.setOnlyAlertOnce(true); //notify the user only once
             mBuilder.setOngoing(true);
+            mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
 
             Intent intent_ESM = new Intent( getApplicationContext(), ESM_Queue.class );
             intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             PendingIntent pending_ESM = PendingIntent.getActivity( getApplicationContext(), 0, intent_ESM, PendingIntent.FLAG_UPDATE_CURRENT );
-
             mBuilder.setContentIntent(pending_ESM);
-            mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
+
             return mBuilder;
         }
     }
