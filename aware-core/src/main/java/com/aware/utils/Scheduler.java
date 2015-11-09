@@ -9,31 +9,27 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.IBinder;
-import android.os.Parcelable;
-import android.provider.AlarmClock;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
-import com.aware.Battery;
-import com.aware.ESM;
 import com.aware.providers.Scheduler_Provider;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Hashtable;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Random;
 
 public class Scheduler extends Service {
 
     private static String TAG = "AWARE::Scheduler";
+
+    public static final String ACTION_AWARE_SCHEDULER_TRIGGERED = "ACTION_AWARE_SCHEDULER_TRIGGERED";
+    public static final String EXTRA_SCHEDULER_ID = "extra_scheduler_id";
 
     public static final String SCHEDULE_TRIGGER = "trigger";
     public static final String SCHEDULE_ACTION = "action";
@@ -402,8 +398,7 @@ public class Scheduler extends Service {
         now.setTimeInMillis(System.currentTimeMillis());
 
         try {
-
-            //we might have a broadcast context without time constrains
+            //Context schedulers do not have time constrains
             if( schedule.getContext().length() > 0 ) {
                 if( schedule.getTimer() == -1 && schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0 ) return true;
             }
@@ -417,39 +412,51 @@ public class Scheduler extends Service {
 
             //This is a scheduled task with a precise time
             if( schedule.getTimer() != -1 && last_triggered == 0) { //not been triggered yet
-                if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking trigger set for a specific timestamp");
-                long trigger_time = schedule.getTimer();
-                if( (now.getTimeInMillis()-trigger_time) < 10*60*1000 ) return true;
+                if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking trigger set for a specific timestamp: " + schedule.getTimer());
+                if( (now.getTimeInMillis() - schedule.getTimer()) < 5*60*1000 ) return true; //trigger within a 5-minute window
+            }
+
+            Calendar previous = null;
+            if( last_triggered != 0 ) {
+                previous = Calendar.getInstance();
+                previous.setTimeInMillis(last_triggered);
             }
 
             //triggered at the given hours, regardless of weekday or month
             if( schedule.getHours().length() > 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0 ) {
                 if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking trigger at given hour, regardless of weekday or month");
-                return is_trigger_hour(schedule, last_triggered);
-            //triggered at given hours and week day
+                if( previous != null && is_same_hour_day(now, previous) ) return false;
+                return is_trigger_hour(schedule);
+                //triggered at given hours and week day
             } else if( schedule.getHours().length() > 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() == 0 ) {
                 if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking trigger at given hour, and weekday");
-                return is_trigger_hour(schedule, last_triggered) && is_trigger_weekday(schedule, last_triggered);
-            //triggered at given hours, week day and month
+                if( previous != null && is_same_hour_day(now, previous) && is_same_weekday(now, previous) ) return false;
+                return is_trigger_hour(schedule) && is_trigger_weekday(schedule);
+                //triggered at given hours, week day and month
             } else if( schedule.getHours().length() > 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() > 0 ) {
                 if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking trigger at given hour, weekday and month");
-                return is_trigger_hour(schedule, last_triggered) && is_trigger_weekday(schedule, last_triggered) && is_trigger_month(schedule, last_triggered);
-            //triggered at given weekday, regardless of time or month
+                if( previous != null && is_same_hour_day(now, previous) && is_same_weekday(now, previous) && is_same_month(now, previous) ) return false;
+                return is_trigger_hour(schedule) && is_trigger_weekday(schedule) && is_trigger_month(schedule);
+                //triggered at given weekday, regardless of time or month
             } else if( schedule.getHours().length() == 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() == 0 ) {
                 if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking trigger at given weekday, regardless of hour or month");
-                return is_trigger_weekday(schedule, last_triggered);
-            //triggered at given weekday and month
+                if( previous != null && is_same_weekday(now, previous) ) return false;
+                return is_trigger_weekday(schedule);
+                //triggered at given weekday and month
             } else if( schedule.getHours().length() == 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() > 0 ) {
                 if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking trigger at given weekday, and month");
-                return is_trigger_weekday(schedule, last_triggered) && is_trigger_month(schedule, last_triggered);
-            //triggered at given month
+                if( previous != null && is_same_weekday(now, previous) && is_same_month(now, previous) ) return false;
+                return is_trigger_weekday(schedule) && is_trigger_month(schedule);
+                //triggered at given month
             } else if( schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() > 0 ) {
                 if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking trigger at given month");
-                return is_trigger_month(schedule, last_triggered);
-            //Triggered at given hour and months
+                if( previous != null && is_same_month(now, previous) ) return false;
+                return is_trigger_month(schedule);
+                //Triggered at given hour and months
             } else if( schedule.getHours().length() > 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() > 0 ) {
                 if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking trigger at given hour and month");
-                return is_trigger_hour(schedule, last_triggered) && is_trigger_month(schedule, last_triggered);
+                if( previous != null && is_same_hour_day(now, previous) && is_same_month(now, previous) ) return false;
+                return is_trigger_hour(schedule) && is_trigger_month(schedule);
             }
 
         } catch (JSONException e ) {
@@ -458,163 +465,147 @@ public class Scheduler extends Service {
         return false;
     }
 
+    private boolean is_same_hour_day ( Calendar date_one, Calendar date_two ) {
+        return date_one.get(Calendar.YEAR) == date_two.get(Calendar.YEAR)
+                && date_one.get(Calendar.DAY_OF_YEAR) == date_two.get(Calendar.DAY_OF_YEAR)
+                && date_one.get(Calendar.HOUR_OF_DAY) == date_two.get(Calendar.HOUR_OF_DAY);
+    }
+
+    private boolean is_same_weekday ( Calendar date_one, Calendar date_two ) {
+        return date_one.get(Calendar.YEAR) == date_two.get(Calendar.YEAR)
+                && date_one.get(Calendar.WEEK_OF_YEAR) == date_two.get(Calendar.WEEK_OF_YEAR)
+                && date_one.get(Calendar.DAY_OF_WEEK) == date_two.get(Calendar.DAY_OF_WEEK);
+    }
+
+    private boolean is_same_month ( Calendar date_one, Calendar date_two ) {
+        return date_one.get(Calendar.YEAR) == date_two.get(Calendar.YEAR)
+                && date_one.get(Calendar.MONTH) == date_two.get(Calendar.MONTH);
+    }
+
     /**
      * Check if this trigger should be triggered at this hour
      * @param schedule
-     * @param last_triggered
      * @return
      */
-    private boolean is_trigger_hour( Schedule schedule, long last_triggered ) {
+    private boolean is_trigger_hour( Schedule schedule ) {
 
         if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking hour matching");
 
         Calendar now = Calendar.getInstance();
         now.setTimeInMillis(System.currentTimeMillis());
 
-        Calendar previous = Calendar.getInstance();
-        previous.setTimeInMillis(last_triggered);
-
-        if( Aware.DEBUG && last_triggered != 0 ) Log.d(Aware.TAG, "Last time hour matched: " + previous.getTime().toString());
-
         try {
             JSONArray hours = schedule.getHours();
             if( schedule.getRandom().optBoolean(RANDOM_HOUR) ) {
                 Random random = new Random();
                 int random_hour = hours.getInt(random.nextInt(hours.length()));
-                if(Aware.DEBUG) {
-                    Log.d(Aware.TAG, "Random hour "+ random_hour +" vs now "+ now.get(Calendar.HOUR_OF_DAY) +" in trigger hours: " + hours.toString());
-                }
 
-                if( random_hour == now.get(Calendar.HOUR_OF_DAY) && last_triggered == 0 ) return true;
-                if( random_hour == now.get(Calendar.HOUR_OF_DAY) && last_triggered != 0 && now.get(Calendar.HOUR_OF_DAY) > previous.get(Calendar.HOUR_OF_DAY) ) return true;
+                if(Aware.DEBUG) Log.d(Aware.TAG, "Random hour "+ random_hour +" vs now "+ now.get(Calendar.HOUR_OF_DAY) +" in trigger hours: " + hours.toString());
+
+                if( random_hour == now.get(Calendar.HOUR_OF_DAY) ) return true;
 
             } else {
-
                 for( int i=0; i<hours.length(); i++ ) {
                     int hour = hours.getInt(i);
 
-                    if(Aware.DEBUG) {
-                        Log.d(Aware.TAG, "Hour "+ hour +" vs now "+ now.get(Calendar.HOUR_OF_DAY) +" in trigger hours: " + hours.toString());
-                    }
+                    if(Aware.DEBUG) Log.d(Aware.TAG, "Hour "+ hour +" vs now "+ now.get(Calendar.HOUR_OF_DAY) +" in trigger hours: " + hours.toString());
 
-                    if( hour == now.get(Calendar.HOUR_OF_DAY) && last_triggered == 0 ) return true;
-                    if( hour == now.get(Calendar.HOUR_OF_DAY) && last_triggered != 0 && now.get(Calendar.HOUR_OF_DAY) > previous.get(Calendar.HOUR_OF_DAY) ) return true;
+                    if( hour == now.get(Calendar.HOUR_OF_DAY) ) return true;
                 }
             }
-
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
         return false;
     }
 
     /**
      * Check if this schedule should be triggered this weekday
      * @param schedule
-     * @param last_triggered
      * @return
      */
-    private boolean is_trigger_weekday( Schedule schedule, long last_triggered ) {
+    private boolean is_trigger_weekday( Schedule schedule ) {
 
         if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking weekday matching");
 
         Calendar now = Calendar.getInstance();
         now.setTimeInMillis(System.currentTimeMillis());
 
-        Calendar previous = Calendar.getInstance();
-        previous.setTimeInMillis(last_triggered);
-
-        if( Aware.DEBUG && last_triggered != 0 ) Log.d(Aware.TAG, "Last time weekday matched: " + previous.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase());
-
         try {
             JSONArray weekdays = schedule.getWeekdays();
-
             if( schedule.getRandom().optBoolean(RANDOM_WEEKDAY) ) {
                 Random random = new Random();
                 String random_weekday = weekdays.getString(random.nextInt(weekdays.length()));
 
-                if(Aware.DEBUG) {
-                    Log.d(Aware.TAG, "Random weekday "+random_weekday.toUpperCase()+" vs now "+ now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase() +" in trigger weekdays: " + weekdays.toString());
-                }
+                if(Aware.DEBUG) Log.d(Aware.TAG, "Random weekday "+random_weekday.toUpperCase()+" vs now "+ now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase() +" in trigger weekdays: " + weekdays.toString());
 
-                if( random_weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered == 0 ) return true;
-                if( random_weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered != 0 && now.get(Calendar.WEEK_OF_YEAR) > previous.get(Calendar.WEEK_OF_YEAR) ) return true;
+                if( random_weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase()) ) return true;
 
             } else {
-
                 for( int i=0; i<weekdays.length(); i++ ) {
                     String weekday = weekdays.getString(i);
 
-                    if(Aware.DEBUG) {
-                        Log.d(Aware.TAG, "Weekday "+weekday.toUpperCase()+" vs now "+ now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase() +" in trigger weekdays: " + weekdays.toString());
-                    }
+                    if(Aware.DEBUG) Log.d(Aware.TAG, "Weekday "+weekday.toUpperCase()+" vs now "+ now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase() +" in trigger weekdays: " + weekdays.toString());
 
-                    if( weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered == 0 ) return true;
-                    if( weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered != 0 && now.get(Calendar.WEEK_OF_YEAR) > previous.get(Calendar.WEEK_OF_YEAR) ) return true;
+                    if( weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase()) ) return true;
                 }
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
         return false;
     }
 
     /**
      * Check if this schedule should be triggered this month
      * @param schedule
-     * @param last_triggered
      * @return
      */
-    private boolean is_trigger_month( Schedule schedule, long last_triggered ) {
+    private boolean is_trigger_month( Schedule schedule ) {
 
         if( Aware.DEBUG ) Log.d(Aware.TAG, "Checking month matching");
 
         Calendar now = Calendar.getInstance();
         now.setTimeInMillis(System.currentTimeMillis());
 
-        Calendar previous = Calendar.getInstance();
-        previous.setTimeInMillis(last_triggered);
-
-        if( Aware.DEBUG && last_triggered != 0 ) Log.d(Aware.TAG, "Last time month matched: " + previous.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase());
-
         try {
             JSONArray months = schedule.getMonths();
 
             if( schedule.getRandom().optBoolean(RANDOM_MONTH) ) {
-
                 Random random = new Random();
                 String random_month = months.getString(random.nextInt(months.length()));
 
-                if(Aware.DEBUG) {
-                    Log.d(Aware.TAG, "Random month "+random_month.toUpperCase()+" vs now "+ now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase() +" in trigger months: " + months.toString());
-                }
+                if(Aware.DEBUG) Log.d(Aware.TAG, "Random month "+random_month.toUpperCase()+" vs now "+ now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase() +" in trigger months: " + months.toString());
 
-                if( random_month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered == 0 ) return true;
-                if( random_month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered != 0 && now.get(Calendar.MONTH) > previous.get(Calendar.MONTH) ) return true;
+                if( random_month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase()) ) return true;
 
             } else {
 
                 for( int i=0; i<months.length(); i++ ) {
                     String month = months.getString(i);
 
-                    if(Aware.DEBUG) {
-                        Log.d(Aware.TAG, "Month "+month.toUpperCase()+" vs now "+ now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase() +" in trigger months: " + months.toString());
-                    }
+                    if(Aware.DEBUG) Log.d(Aware.TAG, "Month "+month.toUpperCase()+" vs now "+ now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase() +" in trigger months: " + months.toString());
 
-                    if( month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered == 0 ) return true;
-                    if( month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase()) && last_triggered != 0 && now.get(Calendar.MONTH) > previous.get(Calendar.MONTH) ) return true;
+                    if( month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase()) ) return true;
                 }
             }
 
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
         return false;
     }
 
     private void performAction( Schedule schedule ) {
         try {
-            //Trigger a broadcast
+
+            Intent scheduler_action = new Intent(Scheduler.ACTION_AWARE_SCHEDULER_TRIGGERED);
+            scheduler_action.putExtra(EXTRA_SCHEDULER_ID, schedule.getScheduleID());
+            sendBroadcast(scheduler_action);
+
             if (schedule.getActionType().equals(ACTION_TYPE_BROADCAST)) {
                 Intent broadcast = new Intent(schedule.getActionClass());
                 JSONArray extras = schedule.getActionExtras();
@@ -634,39 +625,38 @@ public class Scheduler extends Service {
                         broadcast.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getBoolean(ACTION_EXTRA_VALUE));
                     }
                 }
+
                 sendBroadcast(broadcast);
-            //Trigger an activity
-            } else if (schedule.getActionType().equals(ACTION_TYPE_ACTIVITY)) {
-                try {
-                    String[] activity_info = schedule.getActionClass().split("/");
+            }
 
-                    Intent activity = new Intent();
-                    activity.setComponent(new ComponentName(activity_info[0], activity_info[1]));
-                    activity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (schedule.getActionType().equals(ACTION_TYPE_ACTIVITY)) {
+                String[] activity_info = schedule.getActionClass().split("/");
 
-                    JSONArray extras = schedule.getActionExtras();
-                    for (int i = 0; i < extras.length(); i++) {
-                        JSONObject extra = extras.getJSONObject(i);
-                        Object extra_obj = extra.get(ACTION_EXTRA_VALUE);
-                        if( extra_obj instanceof String ) {
-                            activity.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getString(ACTION_EXTRA_VALUE));
-                        } else if( extra_obj instanceof Integer ) {
-                            activity.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getInt(ACTION_EXTRA_VALUE));
-                        } else if( extra_obj instanceof Double ) {
-                            activity.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getDouble(ACTION_EXTRA_VALUE));
-                        }else if( extra_obj instanceof Long ) {
-                            activity.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getLong(ACTION_EXTRA_VALUE));
-                        }else if( extra_obj instanceof Boolean ) {
-                            activity.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getBoolean(ACTION_EXTRA_VALUE));
-                        }
+                Intent activity = new Intent();
+                activity.setComponent(new ComponentName(activity_info[0], activity_info[1]));
+                activity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                JSONArray extras = schedule.getActionExtras();
+                for (int i = 0; i < extras.length(); i++) {
+                    JSONObject extra = extras.getJSONObject(i);
+                    Object extra_obj = extra.get(ACTION_EXTRA_VALUE);
+                    if( extra_obj instanceof String ) {
+                        activity.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getString(ACTION_EXTRA_VALUE));
+                    } else if( extra_obj instanceof Integer ) {
+                        activity.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getInt(ACTION_EXTRA_VALUE));
+                    } else if( extra_obj instanceof Double ) {
+                        activity.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getDouble(ACTION_EXTRA_VALUE));
+                    }else if( extra_obj instanceof Long ) {
+                        activity.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getLong(ACTION_EXTRA_VALUE));
+                    }else if( extra_obj instanceof Boolean ) {
+                        activity.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getBoolean(ACTION_EXTRA_VALUE));
                     }
-                    startActivity(activity);
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
-            //Trigger a service
-            } else if (schedule.getActionType().equals(ACTION_TYPE_SERVICE)) {
+
+                startActivity(activity);
+            }
+
+            if (schedule.getActionType().equals(ACTION_TYPE_SERVICE)) {
                 try {
                     String[] service_info = schedule.getActionClass().split("/");
 
@@ -677,15 +667,15 @@ public class Scheduler extends Service {
                     for (int i = 0; i < extras.length(); i++) {
                         JSONObject extra = extras.getJSONObject(i);
                         Object extra_obj = extra.get(ACTION_EXTRA_VALUE);
-                        if( extra_obj instanceof String ) {
+                        if (extra_obj instanceof String) {
                             service.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getString(ACTION_EXTRA_VALUE));
-                        } else if( extra_obj instanceof Integer ) {
+                        } else if (extra_obj instanceof Integer) {
                             service.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getInt(ACTION_EXTRA_VALUE));
-                        } else if( extra_obj instanceof Double ) {
+                        } else if (extra_obj instanceof Double) {
                             service.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getDouble(ACTION_EXTRA_VALUE));
-                        }else if( extra_obj instanceof Long ) {
+                        } else if (extra_obj instanceof Long) {
                             service.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getLong(ACTION_EXTRA_VALUE));
-                        }else if( extra_obj instanceof Boolean ) {
+                        } else if (extra_obj instanceof Boolean) {
                             service.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getBoolean(ACTION_EXTRA_VALUE));
                         }
                     }
@@ -703,7 +693,6 @@ public class Scheduler extends Service {
                 data.put(Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED, System.currentTimeMillis());
                 getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" +getPackageName() + "'", null);
             }
-
         }catch (JSONException e ){
             e.printStackTrace();
         }
