@@ -61,9 +61,6 @@ public class ESM_UI extends DialogFragment {
 	private static int esm_type = 0;
 	private static int expires_seconds = 0;
 
-	private IntentFilter intentFilter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
-	private BroadcastReceiver receiver = new ScreenReceiver();
-
 	private static int selected_scale_progress = -1;
 
 	//Checkbox ESM UI to store selected items
@@ -80,17 +77,15 @@ public class ESM_UI extends DialogFragment {
 
 		TAG = Aware.getSetting(getActivity().getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getActivity().getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
 
-		//Fixed: register receiver to avoid errors in OnDestroy when no register is actually received.
-		getActivity().registerReceiver(receiver, intentFilter);
-
-		Cursor visible_esm = getActivity().getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + "=" + ESM.STATUS_NEW, null, ESM_Data.TIMESTAMP + " ASC LIMIT 1");
+        Cursor visible_esm = getActivity().getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + "=" + ESM.STATUS_NEW, null, ESM_Data.TIMESTAMP + " ASC LIMIT 1");
         if( visible_esm != null && visible_esm.moveToFirst() ) {
         	esm_id = visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data._ID));
 
-        	//Fixed: set the esm as not new anymore, to avoid displaying the same ESM twice due to changes in orientation
+        	//Fixed: set the esm as VISIBLE, to avoid displaying the same ESM twice due to changes in orientation
         	ContentValues update_state = new ContentValues();
         	update_state.put(ESM_Data.STATUS, ESM.STATUS_VISIBLE);
         	getActivity().getContentResolver().update(ESM_Data.CONTENT_URI, update_state, ESM_Data._ID +"="+ esm_id, null);
+            //--
 
         	esm_type = visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data.TYPE));
         	expires_seconds = visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data.EXPIRATION_THRESHOLD));
@@ -572,8 +567,7 @@ public class ESM_UI extends DialogFragment {
 		}
 
 		//Fixed: doesn't dismiss the dialog if touched outside or ghost touches
-		current_dialog.setCanceledOnTouchOutside(false);
-
+        current_dialog.setCanceledOnTouchOutside(false);
         return current_dialog;
 	}
 
@@ -590,29 +584,11 @@ public class ESM_UI extends DialogFragment {
 		if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
 	}
 
-    public class ScreenReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-                dismissESMs();
-            }
-        }
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-		getActivity().unregisterReceiver(receiver);
-    }
-
     private void dismissESMs() {
         ContentValues rowData = new ContentValues();
         rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
         rowData.put(ESM_Data.STATUS, ESM.STATUS_DISMISSED);
         sContext.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm_id, null);
-
-        Intent answer = new Intent(ESM.ACTION_AWARE_ESM_DISMISSED);
-        sContext.sendBroadcast(answer);
 
         // Check if there are any ESMs left in the queue, if so: set ESM_Data.STATUS to 'dismissed' (note, this does not dismiss the actual ESM - this is handled in ESM_Queue.java).
         Cursor esm = sContext.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " in (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
@@ -625,6 +601,9 @@ public class ESM_UI extends DialogFragment {
             } while(esm.moveToNext());
         }
         if( esm != null && ! esm.isClosed()) esm.close();
+
+        Intent answer = new Intent(ESM.ACTION_AWARE_ESM_DISMISSED);
+        sContext.sendBroadcast(answer);
     }
 
 	/**

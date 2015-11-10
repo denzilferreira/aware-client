@@ -1,5 +1,6 @@
 package com.aware.ui;
 
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -27,108 +28,62 @@ import com.aware.providers.ESM_Provider.ESM_Data;
 public class ESM_Queue extends FragmentActivity {
 
     private static String TAG = "AWARE::ESM Queue";
-    private final ESM_QueueManager queue_manager = new ESM_QueueManager();
-    private static ESM_Queue queue;
+
+    private ESM_State esmStateListener = new ESM_State();
 
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
 
-        queue = this;
+        //Clear notification
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        manager.cancel(ESM.ESM_NOTIFICATION_ID);
 
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
 
-        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(ESM.ACTION_AWARE_ESM_ANSWERED);
-        filter.addAction(ESM.ACTION_AWARE_ESM_DISMISSED);
-        filter.addAction(ESM.ACTION_AWARE_ESM_EXPIRED);
-        registerReceiver(queue_manager, filter);
-
         Intent queue_started = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_STARTED);
         sendBroadcast(queue_started);
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
+        filter.addAction(ESM.ACTION_AWARE_ESM_DISMISSED);
+        filter.addAction(ESM.ACTION_AWARE_ESM_EXPIRED);
+        registerReceiver(esmStateListener, filter);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
 
         if( getQueueSize(getApplicationContext()) > 0 ) {
             FragmentManager fragmentManager = getSupportFragmentManager();
             DialogFragment esmDialog = new ESM_UI();
             esmDialog.show(fragmentManager, TAG);
             fragmentManager.executePendingTransactions();
-            if( ! powerManager.isScreenOn() ) {
-                vibrator.vibrate(777);
-            }
         }
     }
 
-    public class ESM_QueueManager extends BroadcastReceiver {
+    public class ESM_State extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if( intent.getAction().equals(ESM.ACTION_AWARE_ESM_ANSWERED) ) {
-                if( getQueueSize(context) > 0 || visibleUnanswered(context) ) {
-                    FragmentManager fragmentManager = getSupportFragmentManager();
-                    DialogFragment esm = new ESM_UI();
-                    esm.show(fragmentManager, TAG);
-                }
-                if( getQueueSize(context) == 0 ) {
-                    if(Aware.DEBUG) Log.d(TAG,"ESM Queue is done!");
-                    Intent esm_done = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
-                    context.sendBroadcast(esm_done);
-                    if( queue != null ) queue.finish();
-                }
-            }
-            if ( intent.getAction().equals(ESM.ACTION_AWARE_ESM_DISMISSED) || intent.getAction().equals(ESM.ACTION_AWARE_ESM_EXPIRED ) ) {
-                if(Aware.DEBUG) Log.d(TAG,"Rest of ESM Queue is dismissed!");
-                Intent esm_done = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
-                context.sendBroadcast(esm_done);
-                if( queue != null ) queue.finish();
-            }
+            Log.d(TAG, "ESM State action received: " + intent.getAction());
+            finish();
         }
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        //Fixed: if ESM window is dismissed by HOME/Recent Apps buttons, dismiss the whole ESM Queue
-        Cursor esm = getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
-        if( esm != null && esm.moveToFirst() ) {
-            do {
-                ContentValues rowData = new ContentValues();
-                rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
-                rowData.put(ESM_Data.STATUS, ESM.STATUS_DISMISSED);
-                getContentResolver().update(ESM_Data.CONTENT_URI, rowData, null, null);
-            } while(esm.moveToNext());
-        }
-        if( esm != null && ! esm.isClosed()) esm.close();
-
-        if( Aware.DEBUG ) Log.d(TAG, "ESM Queue is done!");
-    }
-
-    public boolean visibleUnanswered(Context context) {
-        boolean visible = false;
-        // Check if there is an ESM set as Visible but not answered for some reason. If so, request the FragmentManager to display the ESM again
-        Cursor esm = context.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " in (" + (ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE)+")", null, ESM_Data.TIMESTAMP + " ASC LIMIT 1");
-        if( esm != null && esm.moveToFirst() ) {
-            visible = true;
-        }
-        if( esm!= null && ! esm.isClosed()) esm.close();
-        return visible;
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(queue_manager);
+        unregisterReceiver(esmStateListener);
     }
 
     /**
-     * Get amount of ESMs waiting on database
+     * Get amount of ESMs waiting on database (visible or new)
      * @return int count
      */
     public static int getQueueSize(Context c) {
         int size = 0;
-        Cursor onqueue = c.getContentResolver().query(ESM_Data.CONTENT_URI,null, ESM_Data.STATUS + "=" + ESM.STATUS_NEW, null, null);
+        Cursor onqueue = c.getContentResolver().query(ESM_Data.CONTENT_URI,null, ESM_Data.STATUS + " IN (" + ESM.STATUS_VISIBLE +","+ ESM.STATUS_NEW + ")", null, null);
         if( onqueue != null && onqueue.moveToFirst() ) {
             size = onqueue.getCount();
         }
