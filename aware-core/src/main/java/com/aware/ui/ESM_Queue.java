@@ -19,6 +19,7 @@ import android.view.WindowManager;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.ESM;
+import com.aware.Screen;
 import com.aware.providers.ESM_Provider.ESM_Data;
 
 /**
@@ -29,13 +30,13 @@ public class ESM_Queue extends FragmentActivity {
 
     private static String TAG = "AWARE::ESM Queue";
 
-    private ESM_State esmStateListener = new ESM_State();
+    public ESM_State esmStateListener = new ESM_State();
 
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
 
-        //Clear notification
+        //Clear notification if it exists, since we are going through the ESMs
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         manager.cancel(ESM.ESM_NOTIFICATION_ID);
 
@@ -52,15 +53,12 @@ public class ESM_Queue extends FragmentActivity {
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
+    protected void onResume() {
+        super.onResume();
 
-        if( getQueueSize(getApplicationContext()) > 0 ) {
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            DialogFragment esmDialog = new ESM_UI();
-            esmDialog.show(fragmentManager, TAG);
-            fragmentManager.executePendingTransactions();
-        }
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        DialogFragment esmDialog = new ESM_UI();
+        esmDialog.show(fragmentManager, TAG);
     }
 
     public class ESM_State extends BroadcastReceiver {
