@@ -64,7 +64,6 @@ public class ESM_Queue extends FragmentActivity {
     public class ESM_State extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "ESM State action received: " + intent.getAction());
             finish();
         }
     }

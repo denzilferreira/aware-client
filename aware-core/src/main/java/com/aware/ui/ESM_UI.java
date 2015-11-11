@@ -2,6 +2,7 @@ package com.aware.ui;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.NotificationManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -579,13 +580,36 @@ public class ESM_UI extends DialogFragment {
 		if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
 	}
 
-    private void dismissESM() {
+	@Override
+	public void onPause() {
+		super.onPause();
+
+        if( ESM.isESMVisible(getActivity().getApplicationContext()) ) {
+            if( Aware.DEBUG ) Log.d(TAG, "ESM was visible, go back to notification bar");
+
+            //Revert to NEW state
+            ContentValues rowData = new ContentValues();
+            rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
+            rowData.put(ESM_Data.STATUS, ESM.STATUS_NEW);
+            sContext.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm_id, null);
+
+            //Update notification
+            ESM.notifyESM(getActivity().getApplicationContext());
+
+            current_dialog.dismiss();
+            getActivity().finish();
+        }
+	}
+
+    /**
+     * When dismissing one ESM by pressing cancel, the rest of the queue gets dismissed
+     */
+	private void dismissESM() {
         ContentValues rowData = new ContentValues();
         rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
         rowData.put(ESM_Data.STATUS, ESM.STATUS_DISMISSED);
         sContext.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm_id, null);
 
-        // Check if there are any ESMs left in the queue, if so: set ESM_Data.STATUS to 'dismissed' (note, this does not dismiss the actual ESM - this is handled in ESM_Queue.java).
         Cursor esm = sContext.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
         if( esm != null && esm.moveToFirst() ) {
             do {

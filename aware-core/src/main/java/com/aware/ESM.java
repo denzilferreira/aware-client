@@ -292,7 +292,7 @@ public class ESM extends Aware_Sensor {
             if( intent.getAction().equals(ESM.ACTION_AWARE_QUEUE_ESM) ) {
             	Intent backgroundService = new Intent( context, BackgroundService.class );
                 backgroundService.setAction(ESM.ACTION_AWARE_QUEUE_ESM);
-                backgroundService.putExtra(EXTRA_ESM, intent.getStringExtra("esm"));
+                backgroundService.putExtra(EXTRA_ESM, intent.getStringExtra(ESM.EXTRA_ESM));
                 context.startService( backgroundService );
             }
 
