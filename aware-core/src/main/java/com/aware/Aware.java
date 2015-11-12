@@ -43,6 +43,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.aware.providers.Aware_Provider;
 import com.aware.providers.Aware_Provider.Aware_Device;
@@ -158,6 +159,9 @@ public class Aware extends Service {
      * DownloadManager queue for plugins, in case we have multiple dependencies to install.
      */
     public static final ArrayList<String> AWARE_PLUGIN_DOWNLOAD_PACKAGES = new ArrayList<>();
+
+    public static String STUDY_ID = "study_id";
+    public static String STUDY_START = "study_start";
 
     private static AlarmManager alarmManager = null;
     private static PendingIntent repeatingIntent = null;
@@ -711,14 +715,15 @@ public class Aware extends Service {
     	ArrayList<String> global_settings = new ArrayList<String>();
         global_settings.add(Aware_Preferences.DEBUG_FLAG);
         global_settings.add(Aware_Preferences.DEBUG_TAG);
-        global_settings.add("study_id");
-        global_settings.add("study_start");
+        global_settings.add(Aware.STUDY_ID);
+        global_settings.add(Aware.STUDY_START);
         global_settings.add(Aware_Preferences.DEVICE_ID);
         global_settings.add(Aware_Preferences.STATUS_WEBSERVICE);
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
         global_settings.add(Aware_Preferences.WEBSERVICE_SERVER);
         global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
+        global_settings.add(Applications.STATUS_AWARE_ACCESSIBILITY);
 
         //allow plugin's to react to MQTT
         global_settings.add(Aware_Preferences.STATUS_MQTT);
@@ -766,19 +771,19 @@ public class Aware extends Service {
      * @param value
      */
     public static void setSetting( Context context, String key, Object value ) {
-        
-    	boolean is_global = false;
+    	boolean is_global;
     	
     	ArrayList<String> global_settings = new ArrayList<String>();
     	global_settings.add(Aware_Preferences.DEBUG_FLAG);
     	global_settings.add(Aware_Preferences.DEBUG_TAG);
-    	global_settings.add("study_id");
-    	global_settings.add("study_start");
+    	global_settings.add(Aware.STUDY_ID);
+    	global_settings.add(Aware.STUDY_START);
         global_settings.add(Aware_Preferences.DEVICE_ID);
         global_settings.add(Aware_Preferences.STATUS_WEBSERVICE);
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
         global_settings.add(Aware_Preferences.WEBSERVICE_SERVER);
+        global_settings.add(Applications.STATUS_AWARE_ACCESSIBILITY);
 
         //allow plugins to get accessibility events
         global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
@@ -793,9 +798,7 @@ public class Aware extends Service {
         global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
         global_settings.add(Aware_Preferences.MQTT_QOS);
 
-    	if( global_settings.contains(key) ) {
-    		is_global = true;
-    	}
+        is_global = global_settings.contains(key);
 
         //We already have a device ID, bail-out!
         if( key.equals(Aware_Preferences.DEVICE_ID) && Aware.getSetting(context, Aware_Preferences.DEVICE_ID).length() > 0 ) return;
@@ -1048,7 +1051,98 @@ public class Aware extends Service {
             stopKeyboard(context);
         }
     }
-    
+
+    /**
+     * Allows self-contained apps to join a study
+     * @param context
+     * @param study_url
+     */
+    public static void joinStudy( Context context, String study_url ) {
+        Intent join = new Intent( context, JoinStudy.class );
+        join.putExtra(Aware_Preferences.StudyConfig.EXTRA_JOIN_STUDY, study_url);
+        context.startService(join);
+    }
+
+    /**
+     * Used by self-contained apps to join a study
+     */
+    public static class JoinStudy extends Aware_Preferences.StudyConfig {
+        @Override
+        protected void onHandleIntent(Intent intent) {
+            String study_url = intent.getStringExtra(EXTRA_JOIN_STUDY);
+
+            if( Aware.DEBUG ) Log.d(Aware.TAG, "Joining: " + study_url);
+
+            if( study_url.startsWith("https://api.awareframework.com/") ) {
+                //Request study settings
+                Hashtable<String, String> data = new Hashtable<>();
+                data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                String answer = new Https(getApplicationContext()).dataPOST(study_url, data, true);
+                try {
+                    JSONArray configs = new JSONArray(answer);
+                    if (configs.getJSONObject(0).has("message")) {
+                        Toast.makeText(getApplicationContext(), "This study is no longer available.", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+
+                    //Apply study settings
+                    JSONArray plugins = new JSONArray();
+                    JSONArray sensors = new JSONArray();
+
+                    for( int i = 0; i<configs.length(); i++ ) {
+                        try {
+                            JSONObject element = configs.getJSONObject(i);
+                            if( element.has("plugins") ) {
+                                plugins = element.getJSONArray("plugins");
+                            }
+                            if( element.has("sensors")) {
+                                sensors = element.getJSONArray("sensors");
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    //Set the sensors' settings first
+                    for( int i=0; i < sensors.length(); i++ ) {
+                        try {
+                            JSONObject sensor_config = sensors.getJSONObject(i);
+                            Aware.setSetting( getApplicationContext(), sensor_config.getString("setting"), sensor_config.get("value") );
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    //Set the plugins' settings now
+                    ArrayList<String> active_plugins = new ArrayList<>();
+                    for( int i=0; i < plugins.length(); i++ ) {
+                        try{
+                            JSONObject plugin_config = plugins.getJSONObject(i);
+
+                            String package_name = plugin_config.getString("plugin");
+                            active_plugins.add(package_name);
+
+                            JSONArray plugin_settings = plugin_config.getJSONArray("settings");
+                            for(int j=0; j<plugin_settings.length(); j++) {
+                                JSONObject plugin_setting = plugin_settings.getJSONObject(j);
+                                Aware.setSetting(getApplicationContext(), plugin_setting.getString("setting"), plugin_setting.get("value"), package_name);
+                            }
+                        }catch( JSONException e ) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    //Start bundled plugins
+                    for( String p : active_plugins ) {
+                        Aware.startPlugin(getApplicationContext(), p);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();

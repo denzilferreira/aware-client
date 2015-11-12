@@ -64,6 +64,8 @@ public class Applications extends AccessibilityService {
     private static PendingIntent repeatingIntent = null;
     public static final int ACCESSIBILITY_NOTIFICATION_ID = 42;
 
+    public static final String STATUS_AWARE_ACCESSIBILITY = "STATUS_AWARE_ACCESSIBILITY";
+
     /**
      * Broadcasted event: a new application is visible on the foreground
      */
@@ -91,7 +93,7 @@ public class Applications extends AccessibilityService {
      */
     private String getApplicationName( String package_name ) {
     	PackageManager packageManager = getPackageManager();
-        ApplicationInfo appInfo = null;
+        ApplicationInfo appInfo;
         try {
             appInfo = packageManager.getApplicationInfo(package_name, PackageManager.GET_ACTIVITIES);
         } catch( final NameNotFoundException e ) {
@@ -266,6 +268,8 @@ public class Applications extends AccessibilityService {
         super.onServiceConnected();
 
         if( Aware.DEBUG ) Log.d("AWARE","Aware service connected to accessibility services...");
+        //This makes sure that plugins and apps can check if the accessibility service is active
+        Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, true, "com.aware");
         
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
         
@@ -294,35 +298,56 @@ public class Applications extends AccessibilityService {
     
     @Override
     public void onInterrupt() {
-        //Remind the user to activate AWARE's accessibility service again...
-        isAccessibilityServiceActive(getApplicationContext());
+        Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, false, "com.aware");
         Log.e(TAG,"Accessibility Service has been interrupted...");
     }
-    
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, false, "com.aware");
+        Log.e(TAG,"Accessibility Service has been interrupted...");
+        return super.onUnbind(intent);
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
 
         boolean enabled = false;
-        AccessibilityManager accessibilityManager = (AccessibilityManager) getSystemService(ACCESSIBILITY_SERVICE);
-        List<AccessibilityServiceInfo> enabledServices = AccessibilityManagerCompat.getEnabledAccessibilityServiceList(accessibilityManager, AccessibilityEventCompat.TYPES_ALL_MASK);
-        if( ! enabledServices.isEmpty() ) {
-            for( AccessibilityServiceInfo service : enabledServices ) {
-                Log.d(Aware.TAG, service.toString());
-                if( service.getId().contains(getPackageName()) ) {
+        //Fix bug where some devices report the accessibility service as inactive, even though it is!
+        TextUtils.SimpleStringSplitter splitter = new TextUtils.SimpleStringSplitter(':');
+        String settingValue = Settings.Secure.getString(getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+        if( settingValue != null ) {
+            splitter.setString(settingValue);
+            while (splitter.hasNext()) {
+                if (splitter.next().matches(getPackageName())){
                     enabled = true;
+                    break;
                 }
             }
         }
 
-        //Not enabled yet
+        AccessibilityManager accessibilityManager = (AccessibilityManager) getSystemService(ACCESSIBILITY_SERVICE);
         if( ! enabled ) {
-            enabledServices = accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityEvent.TYPES_ALL_MASK);
+            List<AccessibilityServiceInfo> enabledServices = AccessibilityManagerCompat.getEnabledAccessibilityServiceList(accessibilityManager, AccessibilityEventCompat.TYPES_ALL_MASK);
             if( ! enabledServices.isEmpty() ) {
                 for( AccessibilityServiceInfo service : enabledServices ) {
                     Log.d(Aware.TAG, service.toString());
                     if( service.getId().contains(getPackageName()) ) {
                         enabled = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if( ! enabled ) {
+            List<AccessibilityServiceInfo> enabledServices = accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityEvent.TYPES_ALL_MASK);
+            if ( ! enabledServices.isEmpty()) {
+                for (AccessibilityServiceInfo service : enabledServices) {
+                    Log.d(Aware.TAG, service.toString());
+                    if (service.getId().contains(getPackageName())) {
+                        enabled = true;
+                        break;
                     }
                 }
             }
@@ -375,8 +400,9 @@ public class Applications extends AccessibilityService {
      * @return boolean isActive
      */
     public static boolean isAccessibilityServiceActive(Context c) {
-        boolean enabled = false;
+        if( Aware.getSetting(c, Applications.STATUS_AWARE_ACCESSIBILITY).equals("true") ) return true;
 
+        boolean enabled = false;
         //Fix bug where some devices report the accessibility service as inactive, even though it is!
         TextUtils.SimpleStringSplitter splitter = new TextUtils.SimpleStringSplitter(':');
         String settingValue = Settings.Secure.getString(c.getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
@@ -390,21 +416,23 @@ public class Applications extends AccessibilityService {
             }
         }
 
-
         AccessibilityManager accessibilityManager = (AccessibilityManager) c.getSystemService(ACCESSIBILITY_SERVICE);
-        List<AccessibilityServiceInfo> enabledServices = AccessibilityManagerCompat.getEnabledAccessibilityServiceList(accessibilityManager, AccessibilityEventCompat.TYPES_ALL_MASK);
-        if( ! enabledServices.isEmpty() ) {
-            for( AccessibilityServiceInfo service : enabledServices ) {
-                Log.d(Aware.TAG, service.toString());
-                if( service.getId().contains(c.getPackageName()) ) {
-                    enabled = true;
-                    break;
+
+        if( ! enabled ) {
+            List<AccessibilityServiceInfo> enabledServices = AccessibilityManagerCompat.getEnabledAccessibilityServiceList(accessibilityManager, AccessibilityEventCompat.TYPES_ALL_MASK);
+            if( ! enabledServices.isEmpty() ) {
+                for( AccessibilityServiceInfo service : enabledServices ) {
+                    Log.d(Aware.TAG, service.toString());
+                    if( service.getId().contains(c.getPackageName()) ) {
+                        enabled = true;
+                        break;
+                    }
                 }
             }
         }
 
         if( ! enabled ) {
-            enabledServices = accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityEvent.TYPES_ALL_MASK);
+            List<AccessibilityServiceInfo> enabledServices = accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityEvent.TYPES_ALL_MASK);
             if ( ! enabledServices.isEmpty()) {
                 for (AccessibilityServiceInfo service : enabledServices) {
                     Log.d(Aware.TAG, service.toString());
