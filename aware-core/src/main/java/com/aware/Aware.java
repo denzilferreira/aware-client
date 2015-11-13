@@ -734,10 +734,8 @@ public class Aware extends Service {
         global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
         global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
         global_settings.add(Aware_Preferences.MQTT_QOS);
-    	
-    	if( global_settings.contains(key) ) {
-    		is_global = true;
-    	}
+
+        is_global = global_settings.contains(key);
     	
     	String value = "";
         Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + (( is_global ) ? "'com.aware'" : "'" + context.getPackageName() + "'") + (( is_global ) ? " OR " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE ''":""), null, null);

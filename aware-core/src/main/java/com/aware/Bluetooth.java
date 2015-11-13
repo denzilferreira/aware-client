@@ -35,7 +35,6 @@ public class Bluetooth extends Aware_Sensor {
 	
 	private static AlarmManager alarmManager = null;
 	private static PendingIntent bluetoothScan = null;
-	private static Intent backgroundService = null;
 	private static long scanTimestamp = 0;
 	
     /**
@@ -52,6 +51,7 @@ public class Bluetooth extends Aware_Sensor {
 	 * Broadcasted event: new bluetooth device detected
 	 */
 	public static final String ACTION_AWARE_BLUETOOTH_NEW_DEVICE = "ACTION_AWARE_BLUETOOTH_NEW_DEVICE";
+    public static final String EXTRA_DEVICE = "extra_device";
 	
 	/**
 	 * Broadcasted event: bluetooth scan started
@@ -94,6 +94,7 @@ public class Bluetooth extends Aware_Sensor {
 		if( bluetoothAdapter == null ) {
 		    if(Aware.DEBUG) Log.w(TAG,"No bluetooth is detected on this device");
 		    stopSelf();
+            return;
 		}
 		
         if( ! bluetoothAdapter.isEnabled() ) {
@@ -115,7 +116,7 @@ public class Bluetooth extends Aware_Sensor {
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
         registerReceiver(bluetoothMonitor, filter);
         
-        backgroundService = new Intent(ACTION_AWARE_BLUETOOTH_REQUEST_SCAN);
+        Intent backgroundService = new Intent(ACTION_AWARE_BLUETOOTH_REQUEST_SCAN);
         bluetoothScan = PendingIntent.getBroadcast(this, 0, backgroundService, 0);
         alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+1000, UPDATE_BLUETOOTH_INTERVAL * 1000, bluetoothScan);
         
@@ -188,7 +189,7 @@ public class Bluetooth extends Aware_Sensor {
                 Bundle extras = intent.getExtras();
                 if(extras == null) return;
                 
-                BluetoothDevice btDevice = (BluetoothDevice) extras.getParcelable(BluetoothDevice.EXTRA_DEVICE);
+                BluetoothDevice btDevice = extras.getParcelable(BluetoothDevice.EXTRA_DEVICE);
                 if(btDevice == null) return;
                 
                 Short btDeviceRSSI = extras.getShort(BluetoothDevice.EXTRA_RSSI);
@@ -209,8 +210,9 @@ public class Bluetooth extends Aware_Sensor {
                     if(Aware.DEBUG) Log.d(TAG,e.getMessage());
                 }
             
-                if( Aware.DEBUG ) Log.d(TAG, ACTION_AWARE_BLUETOOTH_NEW_DEVICE + rowData.toString());
+                if( Aware.DEBUG ) Log.d(TAG, ACTION_AWARE_BLUETOOTH_NEW_DEVICE + ": " + rowData.toString());
                 Intent detectedBT = new Intent(ACTION_AWARE_BLUETOOTH_NEW_DEVICE);
+                detectedBT.putExtra(EXTRA_DEVICE, rowData);
                 context.sendBroadcast(detectedBT);
             }   
             

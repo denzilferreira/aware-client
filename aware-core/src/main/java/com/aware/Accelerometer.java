@@ -53,7 +53,6 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     private static Sensor mAccelerometer;
     private static HandlerThread sensorThread = null;
     private static Handler sensorHandler = null;
-    private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
     private static String LABEL = "";
     
@@ -69,12 +68,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     public static final String ACTION_AWARE_ACCELEROMETER_LABEL = "ACTION_AWARE_ACCELEROMETER_LABEL";
     public static final String EXTRA_LABEL = "label";
 
-    /**
-     * Until today, no available Android phone samples higher than 208Hz (Nexus 7).
-     * http://ilessendata.blogspot.com/2012/11/android-accelerometer-sampling-rates.html
-     */
-    private static ContentValues[] data_buffer;
-    private static List<ContentValues> data_values = new ArrayList<ContentValues>();
+    private List<ContentValues> data_values = new ArrayList<ContentValues>();
 
     private static DataLabel dataLabeler = new DataLabel();
     public static class DataLabel extends BroadcastReceiver {
@@ -114,11 +108,11 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
             return;
         }
 
-        data_buffer = new ContentValues[data_values.size()];
+        ContentValues[] data_buffer = new ContentValues[data_values.size()];
         data_values.toArray(data_buffer);
 
         try {
-        	if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("false") ) {
+        	if( ! Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true") ) {
         		new AsyncStore().execute(data_buffer);
         	}
         }catch( SQLiteException e ) {
@@ -192,7 +186,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         super.onCreate();
         
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 

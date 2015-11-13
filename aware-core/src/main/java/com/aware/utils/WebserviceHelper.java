@@ -60,8 +60,6 @@ public class WebserviceHelper extends IntentService {
 		String TABLES_FIELDS = intent.getStringExtra(EXTRA_FIELDS);
 		Uri CONTENT_URI = Uri.parse(intent.getStringExtra(EXTRA_CONTENT_URI));
 
-        WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-
 		if( intent.getAction().equals(ACTION_AWARE_WEBSERVICE_SYNC_TABLE) ) {
 
             if( Aware.DEBUG ) Log.d(Aware.TAG, "Synching data..." + DATABASE_TABLE);
@@ -74,7 +72,7 @@ public class WebserviceHelper extends IntentService {
     		//Create table if doesn't exist on the remote webservice server
     		String response = new Https(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
     		if( response != null ) {
-    		    if( DEBUG ) Log.d(Aware.TAG, response);
+    		    if( DEBUG ) Log.d(Aware.TAG, "CREATE TABLE RESULT: " + response);
 
     			String[] columnsStr = new String[]{};
     			Cursor columnsDB = getContentResolver().query(CONTENT_URI, null, null, null, null);
@@ -98,7 +96,7 @@ public class WebserviceHelper extends IntentService {
     				    Log.d(Aware.TAG,"Unable to connect to webservices...");
     				}
 
-                    if( DEBUG ) Log.d(Aware.TAG, "Server answer: " + data);
+                    if( DEBUG ) Log.d(Aware.TAG, "LATEST REMOTE ENTRY RESULT: " + data);
 
     				//If in a study, get from joined date onwards
     				String study_condition = "";
@@ -175,8 +173,11 @@ public class WebserviceHelper extends IntentService {
                                 request = new Hashtable<>();
 								request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
 								request.put("data", context_data_entries.toString());
-								new Https(getApplicationContext()).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
-								
+								String insert = new Https(getApplicationContext()).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+								if( insert != null ) {
+									if( DEBUG ) Log.d(Aware.TAG, "INSERT RESULT: " + insert);
+								}
+
 								context_data_entries = new JSONArray();
 							}
 
@@ -189,7 +190,10 @@ public class WebserviceHelper extends IntentService {
                             request = new Hashtable<>();
 							request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
 							request.put("data", context_data_entries.toString());
-							new Https(getApplicationContext()).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+							String insert = new Https(getApplicationContext()).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+							if( insert != null ) {
+								if( DEBUG ) Log.d(Aware.TAG, "INSERT RESULT: " + insert);
+							}
 						}
                         if( DEBUG ) Log.d(Aware.TAG, "Sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis()-start)/1000));
 					}
@@ -207,7 +211,10 @@ public class WebserviceHelper extends IntentService {
             if (Aware.DEBUG) Log.d(Aware.TAG, "Clearing data..." + DATABASE_TABLE);
 			Hashtable<String, String> request = new Hashtable<>();
 			request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
-    		new Https(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
+    		String clear = new Https(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
+			if( clear != null ) {
+				if( DEBUG ) Log.d(Aware.TAG, "CLEAR RESULT: " + clear);
+			}
 		}
 	}
 }

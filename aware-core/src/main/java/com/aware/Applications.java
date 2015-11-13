@@ -268,6 +268,7 @@ public class Applications extends AccessibilityService {
         super.onServiceConnected();
 
         if( Aware.DEBUG ) Log.d("AWARE","Aware service connected to accessibility services...");
+
         //This makes sure that plugins and apps can check if the accessibility service is active
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, true, "com.aware");
         
