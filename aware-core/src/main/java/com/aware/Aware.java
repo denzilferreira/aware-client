@@ -529,9 +529,7 @@ public class Aware extends Service {
      * @param context
      * @param package_name
      */
-    public static void startPlugin(final Context context, final String package_name ) {
-        boolean started = false;
-
+    public static void startPlugin(Context context, String package_name ) {
         if( awareContext == null ) awareContext = context;
 
         //Check if plugin is bundled within an application/plugin
@@ -540,7 +538,15 @@ public class Aware extends Service {
         ComponentName bundledResult = context.startService(bundled);
         if( bundledResult != null ) {
             if( Aware.DEBUG ) Log.d(TAG, "Bundled " + package_name + ".Plugin started...");
-            started = true;
+
+            //Fixed: add the bundled plugin to the list of installed plugins on the self-contained apps
+            ContentValues rowData = new ContentValues();
+            rowData.put(Aware_Plugins.PLUGIN_AUTHOR, "Self-packaged");
+            rowData.put(Aware_Plugins.PLUGIN_DESCRIPTION, "Bundled with " + context.getPackageName());
+            rowData.put(Aware_Plugins.PLUGIN_NAME, "Self-packaged");
+            rowData.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, package_name);
+            rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
+            rowData.put(Aware_Plugins.PLUGIN_VERSION, 1);
         }
 
     	//Check if plugin is cached
@@ -553,17 +559,14 @@ public class Aware extends Service {
                 ComponentName cachedResult = context.startService(plugin);
                 if( cachedResult != null ) {
                     if( Aware.DEBUG ) Log.d(TAG, package_name + " started...");
-                    started = true;
+
+                    ContentValues rowData = new ContentValues();
+                    rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
+                    context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
                 }
             }
     	}
         if( cached != null && ! cached.isClosed() ) cached.close();
-
-        if ( started ) {
-            ContentValues rowData = new ContentValues();
-            rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
-            context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
-        }
     }
 
     /**
