@@ -536,16 +536,13 @@ public class Applications extends AccessibilityService {
                 if(Aware.DEBUG) Log.d(TAG,"Running " + runningApps.size() + " applications");
                     
                 for( RunningAppProcessInfo app : runningApps ) {
-                    
-                	Cursor appUnclosed = null;
-                	
                     try {
                         PackageInfo appPkg = packageManager.getPackageInfo(app.processName, PackageManager.GET_META_DATA);
                         ApplicationInfo appInfo = packageManager.getApplicationInfo(app.processName, PackageManager.GET_ACTIVITIES);
                         
                         String appName = ( appInfo != null ) ? (String) packageManager.getApplicationLabel(appInfo):"";
                         
-                        appUnclosed = getContentResolver().query(Applications_History.CONTENT_URI, null, Applications_History.PACKAGE_NAME + " LIKE '%"+app.processName+"%' AND "+Applications_History.PROCESS_ID + "=" +app.pid + " AND " + Applications_History.END_TIMESTAMP +"=0", null, null);
+                        Cursor appUnclosed = getContentResolver().query(Applications_History.CONTENT_URI, null, Applications_History.PACKAGE_NAME + " LIKE '%"+app.processName+"%' AND "+Applications_History.PROCESS_ID + "=" +app.pid + " AND " + Applications_History.END_TIMESTAMP +"=0", null, null);
                         if( appUnclosed == null || ! appUnclosed.moveToFirst() ) {
                             ContentValues rowData = new ContentValues();
                             rowData.put(Applications_History.TIMESTAMP, System.currentTimeMillis());
@@ -595,16 +592,15 @@ public class Applications extends AccessibilityService {
                                 if(Aware.DEBUG) Log.d(TAG,e.getMessage());
                             }
                         }
-                    }catch(PackageManager.NameNotFoundException e) {
-                    }catch( IllegalStateException e ) {
-                    } finally {
-                    	if( appUnclosed != null && ! appUnclosed.isClosed() ) appUnclosed.close();
+                        if( appUnclosed != null && ! appUnclosed.isClosed() ) appUnclosed.close();
+                    }catch(PackageManager.NameNotFoundException | IllegalStateException | SQLiteException e ) {
+                        if(Aware.DEBUG) Log.e(TAG,e.toString());
                     }
                 }
                     
                 //Close open applications that are not running anymore
-                Cursor appsOpened = getContentResolver().query(Applications_History.CONTENT_URI, null, Applications_History.END_TIMESTAMP+"=0", null, null);
                 try {
+                    Cursor appsOpened = getContentResolver().query(Applications_History.CONTENT_URI, null, Applications_History.END_TIMESTAMP+"=0", null, null);
                     if(appsOpened != null && appsOpened.moveToFirst() ) {
                         do{
                             if( ! exists(runningApps, appsOpened) ) {
@@ -620,10 +616,9 @@ public class Applications extends AccessibilityService {
                             }
                         } while(appsOpened.moveToNext());
                     }
-                }catch(IllegalStateException e) {
-                    if(Aware.DEBUG) Log.e(TAG,e.toString());
-                }finally{
                     if(appsOpened != null && ! appsOpened.isClosed() ) appsOpened.close();
+                }catch(IllegalStateException | SQLiteException e) {
+                    if(Aware.DEBUG) Log.e(TAG,e.toString());
                 }
                 
                 Intent statsUpdated = new Intent(ACTION_AWARE_APPLICATIONS_HISTORY);
