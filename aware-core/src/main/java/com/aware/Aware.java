@@ -497,6 +497,11 @@ public class Aware extends Service {
 
         if( result ) {
             if( Aware.DEBUG ) Log.d(TAG, "Bundled " + package_name + ".Plugin stopped...");
+
+            ContentValues rowData = new ContentValues();
+            rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
+            context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+            return;
         }
 
         boolean is_installed = false;
@@ -547,6 +552,9 @@ public class Aware extends Service {
             rowData.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, package_name);
             rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
             rowData.put(Aware_Plugins.PLUGIN_VERSION, 1);
+
+            context.getContentResolver().insert(Aware_Plugins.CONTENT_URI, rowData);
+            return;
         }
 
     	//Check if plugin is cached
