@@ -208,7 +208,7 @@ public class Applications extends AccessibilityService {
             	//Check if there is a crashed application
 	            ActivityManager activityMng = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
 	            List<ProcessErrorStateInfo> errors = activityMng.getProcessesInErrorState();
-	            if(errors != null ) {
+	            if( errors != null ) {
 	            	for(ProcessErrorStateInfo error : errors ) {
 	            		try {
 							PackageInfo pkgInfo = packageManager.getPackageInfo(error.processName, PackageManager.GET_META_DATA);

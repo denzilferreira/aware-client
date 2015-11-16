@@ -487,7 +487,7 @@ public class Aware extends Service {
      * @param context
      * @param package_name
      */
-    public static void stopPlugin( Context context, String package_name ) {
+    public static void stopPlugin( final Context context, final String package_name ) {
         if( awareContext == null ) awareContext = context;
 
         //Check if plugin is bundled within an application/plugin
@@ -501,6 +501,11 @@ public class Aware extends Service {
             ContentValues rowData = new ContentValues();
             rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
             context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+
+            //FIXED: terminate bundled AWARE service within a plugin
+            Intent core = new Intent( context, com.aware.Aware.class );
+            context.stopService(core);
+
             return;
         }
 
@@ -534,7 +539,7 @@ public class Aware extends Service {
      * @param context
      * @param package_name
      */
-    public static void startPlugin(Context context, String package_name ) {
+    public static void startPlugin( final Context context, final String package_name ) {
         if( awareContext == null ) awareContext = context;
 
         //Check if plugin is bundled within an application/plugin
@@ -544,36 +549,40 @@ public class Aware extends Service {
         if( bundledResult != null ) {
             if( Aware.DEBUG ) Log.d(TAG, "Bundled " + package_name + ".Plugin started...");
 
-            //Fixed: add the bundled plugin to the list of installed plugins on the self-contained apps
-            ContentValues rowData = new ContentValues();
-            rowData.put(Aware_Plugins.PLUGIN_AUTHOR, "Self-packaged");
-            rowData.put(Aware_Plugins.PLUGIN_DESCRIPTION, "Bundled with " + context.getPackageName());
-            rowData.put(Aware_Plugins.PLUGIN_NAME, "Self-packaged");
-            rowData.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, package_name);
-            rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
-            rowData.put(Aware_Plugins.PLUGIN_VERSION, 1);
+            //Check if plugin is cached
+            Cursor cached = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+            if( cached == null || ! cached.moveToFirst() ) {
+                //Fixed: add the bundled plugin to the list of installed plugins on the self-contained apps
+                ContentValues rowData = new ContentValues();
+                rowData.put(Aware_Plugins.PLUGIN_AUTHOR, "Self-packaged");
+                rowData.put(Aware_Plugins.PLUGIN_DESCRIPTION, "Bundled with " + context.getPackageName());
+                rowData.put(Aware_Plugins.PLUGIN_NAME, "Self-packaged");
+                rowData.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, package_name);
+                rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
+                rowData.put(Aware_Plugins.PLUGIN_VERSION, 1);
+                context.getContentResolver().insert(Aware_Plugins.CONTENT_URI, rowData);
+                if(Aware.DEBUG) Log.d(TAG, "Added self-package " + package_name + " to " + context.getPackageName());
+            }
+            if( cached != null && ! cached.isClosed() ) cached.close();
 
-            context.getContentResolver().insert(Aware_Plugins.CONTENT_URI, rowData);
-            return;
         }
 
-    	//Check if plugin is cached
-    	Cursor cached = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
-    	if( cached != null && cached.moveToFirst() ) {
+        //Check if plugin is cached
+        Cursor cached = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+        if( cached != null && cached.moveToFirst() ) {
             //Installed on the phone
-    		if( isClassAvailable(context, package_name, "Plugin") ) {
+            if( isClassAvailable(context, package_name, "Plugin") ) {
                 Intent plugin = new Intent();
                 plugin.setClassName(package_name, package_name + ".Plugin");
                 ComponentName cachedResult = context.startService(plugin);
                 if( cachedResult != null ) {
                     if( Aware.DEBUG ) Log.d(TAG, package_name + " started...");
-
                     ContentValues rowData = new ContentValues();
                     rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
                     context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
                 }
             }
-    	}
+        }
         if( cached != null && ! cached.isClosed() ) cached.close();
     }
 
@@ -721,7 +730,7 @@ public class Aware extends Service {
      */
     public static String getSetting( Context context, String key ) {
         
-    	boolean is_global = false;
+    	boolean is_global;
     	
     	ArrayList<String> global_settings = new ArrayList<String>();
         global_settings.add(Aware_Preferences.DEBUG_FLAG);
