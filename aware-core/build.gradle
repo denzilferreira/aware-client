@@ -7,8 +7,8 @@ configurations {
     wear
 }
 
-ext.version_readable = "3.8.7"
-ext.version_code = 419
+ext.version_readable = "3.8.8"
+ext.version_code = 420
 
 android {
     compileSdkVersion 23
