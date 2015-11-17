@@ -50,13 +50,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         this.new_version = database_version;
 		this.mContext = context;
 
-        //Create the folder where all the databases will be stored on public accessible storage
-        File documents_folder = mContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
-        //make sure the documents folder exists.
-        documents_folder.mkdirs();
-
+        File documents_folder = mContext.getExternalFilesDir(null);
         File aware_folder = new File( documents_folder, "AWARE" );
-        aware_folder.mkdirs();
+        if( ! aware_folder.exists() ) aware_folder.mkdirs();
     }
 
     public void setRenamedColumns( HashMap<String, String> renamed ) {
