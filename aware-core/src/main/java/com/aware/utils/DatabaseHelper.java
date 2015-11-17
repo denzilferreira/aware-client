@@ -50,8 +50,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         this.new_version = database_version;
 		this.mContext = context;
 
-        File documents_folder = mContext.getExternalFilesDir(null);
-        File aware_folder = new File( documents_folder, "AWARE" );
+        File documents_folder = mContext.getExternalFilesDir(null); //get the root of OS handled app external folder
+        File docs = new File( documents_folder, "Documents" ); //create a Documents folder if it doesn't exist
+        if( ! docs.exists() ) docs.mkdirs();
+        File aware_folder = new File( docs, "AWARE" ); //create an AWARE folder if it doesn't exist
         if( ! aware_folder.exists() ) aware_folder.mkdirs();
     }
 
