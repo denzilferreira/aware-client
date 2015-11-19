@@ -167,7 +167,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     	}
     	
     	//Get reference to database file, we might not have it.
-    	File database_file = new File( mContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/AWARE/" , database_name );
+    	File database_file = new File( mContext.getExternalFilesDir(null) + "/Documents/AWARE/" , database_name );
     	try {
     	    SQLiteDatabase current_database = SQLiteDatabase.openDatabase(database_file.getPath(), null, SQLiteDatabase.CREATE_IF_NECESSARY);
     	    int current_version = current_database.getVersion();
@@ -205,10 +205,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     	}
     	
     	//Get reference to database file, we might not have it.
-    	File database_file = new File( mContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/AWARE/" , database_name );
-    	SQLiteDatabase current_database = SQLiteDatabase.openDatabase(database_file.getPath(), null, SQLiteDatabase.OPEN_READONLY);
-    	onOpen(current_database);
-    	database = current_database;
-    	return database;
+		File database_file = new File( mContext.getExternalFilesDir(null) + "/Documents/AWARE/" , database_name );
+		try {
+			SQLiteDatabase current_database = SQLiteDatabase.openDatabase(database_file.getPath(), null, SQLiteDatabase.OPEN_READONLY);
+			onOpen(current_database);
+			database = current_database;
+			return database;
+		} catch (SQLException e ) {
+			return null;
+		}
     }
 }
