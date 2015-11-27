@@ -521,6 +521,7 @@ public class Plugins_Manager extends Aware_Activity {
     }
 
     private boolean isOnServerRepository( JSONArray server_plugins, String local_package ) throws JSONException {
+        if( server_plugins == null ) return false;
         for( int i=0; i<server_plugins.length(); i++ ) {
             JSONObject server_pkg = server_plugins.getJSONObject(i);
             if(server_pkg.getString("package").equals(local_package)) return true;

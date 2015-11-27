@@ -1091,72 +1091,70 @@ public class Aware extends Service {
 
             if( Aware.DEBUG ) Log.d(Aware.TAG, "Joining: " + study_url);
 
-            if( study_url.startsWith("https://api.awareframework.com/") ) {
-                //Request study settings
-                Hashtable<String, String> data = new Hashtable<>();
-                data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-                String answer = new Https(getApplicationContext()).dataPOST(study_url, data, true);
-                try {
-                    JSONArray configs = new JSONArray(answer);
-                    if (configs.getJSONObject(0).has("message")) {
-                        Toast.makeText(getApplicationContext(), "This study is no longer available.", Toast.LENGTH_LONG).show();
-                        return;
-                    }
-
-                    //Apply study settings
-                    JSONArray plugins = new JSONArray();
-                    JSONArray sensors = new JSONArray();
-
-                    for( int i = 0; i<configs.length(); i++ ) {
-                        try {
-                            JSONObject element = configs.getJSONObject(i);
-                            if( element.has("plugins") ) {
-                                plugins = element.getJSONArray("plugins");
-                            }
-                            if( element.has("sensors")) {
-                                sensors = element.getJSONArray("sensors");
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    //Set the sensors' settings first
-                    for( int i=0; i < sensors.length(); i++ ) {
-                        try {
-                            JSONObject sensor_config = sensors.getJSONObject(i);
-                            Aware.setSetting( getApplicationContext(), sensor_config.getString("setting"), sensor_config.get("value") );
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    //Set the plugins' settings now
-                    ArrayList<String> active_plugins = new ArrayList<>();
-                    for( int i=0; i < plugins.length(); i++ ) {
-                        try{
-                            JSONObject plugin_config = plugins.getJSONObject(i);
-
-                            String package_name = plugin_config.getString("plugin");
-                            active_plugins.add(package_name);
-
-                            JSONArray plugin_settings = plugin_config.getJSONArray("settings");
-                            for(int j=0; j<plugin_settings.length(); j++) {
-                                JSONObject plugin_setting = plugin_settings.getJSONObject(j);
-                                Aware.setSetting(getApplicationContext(), plugin_setting.getString("setting"), plugin_setting.get("value"), package_name);
-                            }
-                        }catch( JSONException e ) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    //Start bundled plugins
-                    for( String p : active_plugins ) {
-                        Aware.startPlugin(getApplicationContext(), p);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+            //Request study settings
+            Hashtable<String, String> data = new Hashtable<>();
+            data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+            String answer = new Https(getApplicationContext()).dataPOST(study_url, data, true);
+            try {
+                JSONArray configs = new JSONArray(answer);
+                if (configs.getJSONObject(0).has("message")) {
+                    Toast.makeText(getApplicationContext(), "This study is no longer available.", Toast.LENGTH_LONG).show();
+                    return;
                 }
+
+                //Apply study settings
+                JSONArray plugins = new JSONArray();
+                JSONArray sensors = new JSONArray();
+
+                for( int i = 0; i<configs.length(); i++ ) {
+                    try {
+                        JSONObject element = configs.getJSONObject(i);
+                        if( element.has("plugins") ) {
+                            plugins = element.getJSONArray("plugins");
+                        }
+                        if( element.has("sensors")) {
+                            sensors = element.getJSONArray("sensors");
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                //Set the sensors' settings first
+                for( int i=0; i < sensors.length(); i++ ) {
+                    try {
+                        JSONObject sensor_config = sensors.getJSONObject(i);
+                        Aware.setSetting( getApplicationContext(), sensor_config.getString("setting"), sensor_config.get("value") );
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                //Set the plugins' settings now
+                ArrayList<String> active_plugins = new ArrayList<>();
+                for( int i=0; i < plugins.length(); i++ ) {
+                    try{
+                        JSONObject plugin_config = plugins.getJSONObject(i);
+
+                        String package_name = plugin_config.getString("plugin");
+                        active_plugins.add(package_name);
+
+                        JSONArray plugin_settings = plugin_config.getJSONArray("settings");
+                        for(int j=0; j<plugin_settings.length(); j++) {
+                            JSONObject plugin_setting = plugin_settings.getJSONObject(j);
+                            Aware.setSetting(getApplicationContext(), plugin_setting.getString("setting"), plugin_setting.get("value"), package_name);
+                        }
+                    }catch( JSONException e ) {
+                        e.printStackTrace();
+                    }
+                }
+
+                //Start bundled plugins
+                for( String p : active_plugins ) {
+                    Aware.startPlugin(getApplicationContext(), p);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -1875,8 +1873,14 @@ public class Aware extends Service {
      */
     protected static void startApplications(Context context) {
         awareContext = context;
-        if( applicationsSrv == null) applicationsSrv = new Intent(awareContext, Applications.class);
-        awareContext.startService(applicationsSrv);
+        if( applicationsSrv == null) {
+            applicationsSrv = new Intent(awareContext, Applications.class);
+        }
+        try{
+            ComponentName service = awareContext.startService(applicationsSrv);
+        } catch (RuntimeException e ) {
+            //Gingerbread and Jelly Bean complain when we start the service explicitly. In these, it is handled by the OS
+        }
     }
     
     /**
@@ -1884,7 +1888,13 @@ public class Aware extends Service {
      */
     protected static void stopApplications(Context context) {
         awareContext = context;
-        if( applicationsSrv != null) awareContext.stopService(applicationsSrv);
+        if( applicationsSrv != null) {
+            try {
+                awareContext.stopService(applicationsSrv);
+            } catch (RuntimeException e ) {
+                //Gingerbread and Jelly Bean complain when we stop the serive explicitly. In these, it is handled by the OS
+            }
+        }
     }
     
     /**

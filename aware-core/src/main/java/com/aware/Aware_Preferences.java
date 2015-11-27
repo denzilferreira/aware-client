@@ -675,7 +675,6 @@ public class Aware_Preferences extends Aware_Activity {
             mobile_esm.setEnabled(false);
             return;
         }
-
         final CheckBoxPreference esm = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_ESM);
         esm.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_ESM).equals("true"));
         esm.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -684,8 +683,10 @@ public class Aware_Preferences extends Aware_Activity {
                 Aware.setSetting(sContext, Aware_Preferences.STATUS_ESM, esm.isChecked());
                 if(esm.isChecked()) {
                     framework.startESM(sContext);
+                    mobile_esm.setIcon(getResources().getDrawable(R.drawable.ic_action_esm_active));
                 }else {
                     framework.stopESM(sContext);
+                    mobile_esm.setIcon(getResources().getDrawable(R.drawable.ic_action_esm));
                 }
                 return true;
             }
@@ -721,8 +722,10 @@ public class Aware_Preferences extends Aware_Activity {
                 Aware.setSetting( sContext, Aware_Preferences.STATUS_TEMPERATURE, temperature.isChecked());
                 if( temperature.isChecked() ) {
                     framework.startTemperature(sContext);
+                    temp_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_temperature_active));
                 }else {
                     framework.stopTemperature(sContext);
+                    temp_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_temperature));
                 }
                 return true;
             }
@@ -776,8 +779,10 @@ public class Aware_Preferences extends Aware_Activity {
                 Aware.setSetting(sContext, Aware_Preferences.STATUS_ACCELEROMETER, accelerometer.isChecked());
                 if(accelerometer.isChecked()) {
                     framework.startAccelerometer(sContext);
+                    accel_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_accelerometer_active));
                 }else {
                     framework.stopAccelerometer(sContext);
+                    accel_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_accelerometer));
                 }
                 return true;
             }
@@ -830,8 +835,10 @@ public class Aware_Preferences extends Aware_Activity {
                 Aware.setSetting(sContext, Aware_Preferences.STATUS_LINEAR_ACCELEROMETER, linear_accelerometer.isChecked());
                 if (linear_accelerometer.isChecked()) {
                     framework.startLinearAccelerometer(sContext);
+                    linear_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_linear_acceleration_active));
                 } else {
                     framework.stopLinearAccelerometer(sContext);
+                    linear_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_linear_acceleration_active));
                 }
                 return true;
             }
@@ -858,6 +865,7 @@ public class Aware_Preferences extends Aware_Activity {
      * Applications module settings UI
      */
     private void applications() {
+        final PreferenceScreen apps_pref = (PreferenceScreen) findPreference("applications");
         final CheckBoxPreference notifications = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_NOTIFICATIONS);
         notifications.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_NOTIFICATIONS).equals("true"));
         notifications.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -867,6 +875,7 @@ public class Aware_Preferences extends Aware_Activity {
                     Aware.setSetting(sContext, Aware_Preferences.STATUS_NOTIFICATIONS, notifications.isChecked());
                     notifications.setChecked(true);
                     framework.startApplications(sContext);
+                    apps_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_applications_active));
                     return true;
                 }
                 Applications.isAccessibilityServiceActive(sContext);
@@ -885,6 +894,7 @@ public class Aware_Preferences extends Aware_Activity {
                     keyboard.setChecked(true);
                     framework.startApplications(sContext);
                     framework.startKeyboard(sContext);
+                    apps_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_applications_active));
                     return true;
                 }
                 Applications.isAccessibilityServiceActive(sContext);
@@ -903,6 +913,7 @@ public class Aware_Preferences extends Aware_Activity {
                     Aware.setSetting(sContext, Aware_Preferences.STATUS_CRASHES, crashes.isChecked());
                     crashes.setChecked(true);
                     framework.startApplications(sContext);
+                    apps_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_applications_active));
                     return true;
                 }
                 Applications.isAccessibilityServiceActive(sContext);
@@ -915,6 +926,7 @@ public class Aware_Preferences extends Aware_Activity {
         if( Aware.getSetting(sContext, Aware_Preferences.STATUS_APPLICATIONS).equals("true") && ! Applications.isAccessibilityServiceActive(sContext) ) {
             Aware.setSetting(sContext, Aware_Preferences.STATUS_APPLICATIONS, false );
             framework.stopApplications(sContext);
+            apps_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_applications));
         }
         applications.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_APPLICATIONS).equals("true"));
         applications.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -924,6 +936,7 @@ public class Aware_Preferences extends Aware_Activity {
                     Aware.setSetting(sContext, Aware_Preferences.STATUS_APPLICATIONS, true);
                     applications.setChecked(true);
                     framework.startApplications(sContext);
+                    apps_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_applications_active));
                     return true;
                 }else {
                     Applications.isAccessibilityServiceActive(sContext);
@@ -938,6 +951,7 @@ public class Aware_Preferences extends Aware_Activity {
                     crashes.setChecked(false);
 
                     framework.stopApplications(sContext);
+                    apps_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_applications));
                     return false;
                 }
             }
@@ -966,8 +980,10 @@ public class Aware_Preferences extends Aware_Activity {
                 Aware.setSetting(sContext, Aware_Preferences.STATUS_INSTALLATIONS, installations.isChecked());
                 if (installations.isChecked()) {
                     framework.startInstallations(sContext);
+                    apps_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_applications_active));
                 } else {
                     framework.stopInstallations(sContext);
+                    apps_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_applications));
                 }
                 return true;
             }
@@ -2298,37 +2314,35 @@ public class Aware_Preferences extends Aware_Activity {
 			String study_url = intent.getStringExtra(EXTRA_JOIN_STUDY);
 			
 			if( Aware.DEBUG ) Log.d(Aware.TAG, "Joining: " + study_url);
-			
-			if( study_url.startsWith("https://api.awareframework.com/") ) {
-				//Request study settings
-                Hashtable<String, String> data = new Hashtable<>();
-                data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-				String answer = new Https(getApplicationContext()).dataPOST(study_url, data, true);
-				try {
-                    JSONArray configs_study = new JSONArray(answer);
-					if( configs_study.getJSONObject(0).has("message") ) {
-                        Toast.makeText(getApplicationContext(), "This study is no longer available.", Toast.LENGTH_LONG).show();
-                        return;
-                    }
 
-                    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
-                    mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
-                    mBuilder.setContentTitle("AWARE");
-                    mBuilder.setContentText("Thanks for joining the study!");
-                    mBuilder.setAutoCancel(true);
+            //Request study settings
+            Hashtable<String, String> data = new Hashtable<>();
+            data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+            String answer = new Https(getApplicationContext()).dataPOST(study_url, data, true);
+            try {
+                JSONArray configs_study = new JSONArray(answer);
+                if( configs_study.getJSONObject(0).has("message") ) {
+                    Toast.makeText(getApplicationContext(), "This study is no longer available.", Toast.LENGTH_LONG).show();
+                    return;
+                }
 
-                    NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                    notManager.notify(33, mBuilder.build());
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
+                mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
+                mBuilder.setContentTitle("AWARE");
+                mBuilder.setContentText("Thanks for joining the study!");
+                mBuilder.setAutoCancel(true);
 
-					if( Aware.DEBUG ) Log.d(Aware.TAG, "Study configs: " + configs_study.toString(5));
-					
-					//Apply new configurations in AWARE Client
-					applySettings( getApplicationContext(), configs_study );
+                NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                notManager.notify(33, mBuilder.build());
 
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-          	}
+                if( Aware.DEBUG ) Log.d(Aware.TAG, "Study configs: " + configs_study.toString(5));
+
+                //Apply new configurations in AWARE Client
+                applySettings( getApplicationContext(), configs_study );
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
     	}
     }
 }

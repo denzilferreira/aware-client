@@ -29,5 +29,6 @@
         <item name="actionMenuTextColor">#FFFFFF</item>
         <!-- Color of the Toolbar -->
         <item name="android:background">#33B5E5</item>
+        <item name="android:displayOptions">showHome|homeAsUp|showTitle</item>
     </style>
 </resources>

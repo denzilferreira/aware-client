@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -32,6 +33,8 @@ import com.aware.utils.WearClient;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.logging.Logger;
 
 //PreferenceActivity
 public class Aware_Activity extends AppCompatPreferenceActivity {
@@ -199,7 +202,10 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
         @Override
         protected JSONObject doInBackground(String... params) {
             study_url = params[0];
+
             String study_api_key = study_url.substring(study_url.lastIndexOf("/")+1, study_url.length());
+            //TODO: parse the host string
+            //String study_host = study_url.substring()
 
             if( study_api_key.length() == 0 ) return null;
 

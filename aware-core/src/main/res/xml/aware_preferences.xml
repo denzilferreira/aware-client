@@ -9,7 +9,6 @@
             android:persistent="true"
             android:summary="@string/aware_debug_summary"
             android:title="@string/aware_debug_title" />
-
         <EditTextPreference
             android:defaultValue="AWARE"
             android:dependency="debug_flag"
@@ -17,7 +16,6 @@
             android:persistent="true"
             android:summary="@string/aware_debug_tag_summary"
             android:title="@string/aware_debug_tag" />
-
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="aware_auto_update"

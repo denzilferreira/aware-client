@@ -69,8 +69,6 @@ public class Aware_Sensor extends Service {
 	 */
 	public static final int STATUS_SENSOR_ON = 1;
 
-    private Intent aware;
-
 	/**
      * Interface to share context with other applications/addons<br/>
      * You MUST broadcast your contexts here!
@@ -83,9 +81,6 @@ public class Aware_Sensor extends Service {
     @Override
     public void onCreate() {
     	super.onCreate();
-
-        aware = new Intent(getApplicationContext(), Aware.class);
-        startService(aware);
     	
     	TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
         DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
@@ -112,7 +107,6 @@ public class Aware_Sensor extends Service {
         unregisterReceiver(contextBroadcaster);
         
         if(DEBUG) Log.d(TAG, TAG + " sensor terminated...");
-        if( aware!= null ) stopService(aware);
     }
     
     @Override

@@ -42,7 +42,6 @@ public class Https {
 	private static final String TAG = "AWARE::HTTPS";
 
     private static SSLContext sslContext;
-//    private static HostnameVerifier sslHostVerifier;
     private static Context sContext;
 
 	public Https(Context c) {
@@ -143,8 +142,10 @@ public class Https {
 			HttpsURLConnection path_connection = (HttpsURLConnection) path.openConnection();
             path_connection.setSSLSocketFactory(sslContext.getSocketFactory());
             path_connection.setReadTimeout(10000);
-			path_connection.setConnectTimeout(10000);
+            path_connection.setConnectTimeout(10000);
 			path_connection.setRequestMethod("POST");
+            path_connection.setDoOutput(true);
+
 			if( is_gzipped ) path_connection.setRequestProperty("accept-encoding","gzip");
 
 			Uri.Builder builder = new Uri.Builder();
@@ -249,6 +250,8 @@ public class Https {
             path_connection.setReadTimeout(10000);
             path_connection.setConnectTimeout(10000);
             path_connection.setRequestMethod("GET");
+            path_connection.setDoInput(true);
+
             if( is_gzipped ) path_connection.setRequestProperty("accept-encoding","gzip");
 
             if(Aware.DEBUG) {
@@ -296,10 +299,8 @@ public class Https {
         if(con!=null){
             try {
                 String output = "";
-
                 output+="Response Code : " + con.getResponseCode() +"\n";
                 output+="Cipher Suite : " + con.getCipherSuite() + "\n";
-
                 Certificate[] certs = con.getServerCertificates();
                 for(Certificate cert : certs){
                     output+=("Cert Type : " + cert.getType()) + "\n";
@@ -307,9 +308,7 @@ public class Https {
                     output+=("Cert Public Key Algorithm : " + cert.getPublicKey().getAlgorithm()) + "\n";
                     output+=("Cert Public Key Format : " + cert.getPublicKey().getFormat()) + "\n\n";
                 }
-
                 Log.d(TAG, output);
-
             } catch (SSLPeerUnverifiedException e) {
                 e.printStackTrace();
             } catch (IOException e){

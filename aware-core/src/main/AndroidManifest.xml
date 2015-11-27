@@ -43,6 +43,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE" />
 
     <application
         android:icon="@drawable/ic_launcher_aware"
@@ -147,11 +148,9 @@
 
         <service android:name="com.aware.Keyboard" android:exported="true" />
         <service android:name="com.aware.utils.Scheduler" android:exported="true" />
+        <service android:name="com.aware.Aware" android:exported="true" />
         <service android:name="com.aware.Aware$JoinStudy" android:exported="true" />
-        <service
-            android:name="com.aware.Aware"
-            android:exported="true" >
-        </service>
+
         <service
             android:name="com.aware.Applications"
             android:exported="true"
@@ -159,9 +158,11 @@
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" >
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
+                <category android:name="android.accessibilityservice.category.FEEDBACK_GENERIC" />
             </intent-filter>
             <meta-data android:name="android.accessibilityservice" android:resource="@xml/aware_accessibility_config" />
         </service>
+
         <service
             android:name="com.aware.Applications$BackgroundService"
             android:exported="true" >

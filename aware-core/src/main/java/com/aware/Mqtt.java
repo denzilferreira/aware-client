@@ -378,7 +378,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         	if( MQTT_MESSAGES_PERSISTENCE != null ) {
                 MQTT_MESSAGES_PERSISTENCE.close(); //close previous opened connection to persistence
         	}
-            MQTT_MESSAGES_PERSISTENCE = new MqttDefaultFilePersistence( getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/AWARE/" );
+            MQTT_MESSAGES_PERSISTENCE = new MqttDefaultFilePersistence( getExternalFilesDir(null) + "/Documents/AWARE/" );
             MQTT_MESSAGES_PERSISTENCE.open( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID), MQTT_URL );
 
         } catch ( MqttException e ) {

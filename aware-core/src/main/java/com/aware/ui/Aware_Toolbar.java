@@ -26,7 +26,7 @@ public class Aware_Toolbar extends Preference {
 
     @Override
     protected View onCreateView(ViewGroup parent) {
-
+        super.onCreateView(parent);
         parent.setPadding(0,0,0,0);
 
         LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);

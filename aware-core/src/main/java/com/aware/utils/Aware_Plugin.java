@@ -72,14 +72,9 @@ public class Aware_Plugin extends Service {
      */
     public static final int STATUS_PLUGIN_ON = 1;
 
-    private Intent aware;
-    
     @Override
     public void onCreate() {
         super.onCreate();
-
-        aware = new Intent(getApplicationContext(), Aware.class);
-        startService(aware);
 
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
         DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
@@ -106,8 +101,6 @@ public class Aware_Plugin extends Service {
         unregisterReceiver(contextBroadcaster);
 
         if(DEBUG) Log.d(TAG, TAG + " plugin terminated...");
-
-        if( aware != null ) stopService(aware);
     }
     
     @Override

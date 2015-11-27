@@ -91,6 +91,8 @@ public class Http {
             path_connection.setReadTimeout(10000);
             path_connection.setConnectTimeout(10000);
             path_connection.setRequestMethod("GET");
+            path_connection.setDoInput(true);
+
             if( is_gzipped ) path_connection.setRequestProperty("accept-encoding","gzip");
 
             path_connection.connect();
@@ -186,6 +188,8 @@ public class Http {
             path_connection.setReadTimeout(10000);
             path_connection.setConnectTimeout(10000);
             path_connection.setRequestMethod("POST");
+            path_connection.setDoOutput(true);
+
             if( is_gzipped ) path_connection.setRequestProperty("accept-encoding","gzip");
 
             Uri.Builder builder = new Uri.Builder();
