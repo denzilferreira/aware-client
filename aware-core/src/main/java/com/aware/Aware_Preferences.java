@@ -41,6 +41,7 @@ import android.widget.Toast;
 
 import com.aware.ui.Aware_Activity;
 import com.aware.ui.Plugins_Manager;
+import com.aware.utils.Http;
 import com.aware.utils.Https;
 
 import org.json.JSONArray;
@@ -91,6 +92,11 @@ public class Aware_Preferences extends Aware_Activity {
      * AWARE Device ID (UUID)
      */
     public static final String DEVICE_ID = "device_id";
+
+    /**
+     * AWARE Group ID, used for assigning clients to a specific research group upon deployment
+     */
+    public static final String GROUP_ID = "group_id";
     
     /**
      * Automatically check for updates on the client
@@ -2114,7 +2120,7 @@ public class Aware_Preferences extends Aware_Activity {
         debug_db_slow.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext,Aware_Preferences.DEBUG_DB_SLOW, debug_db_slow.isChecked());
+                Aware.setSetting(sContext, Aware_Preferences.DEBUG_DB_SLOW, debug_db_slow.isChecked());
                 return true;
             }
         });
@@ -2127,6 +2133,18 @@ public class Aware_Preferences extends Aware_Activity {
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 Aware.setSetting(sContext, Aware_Preferences.DEVICE_ID, (String) newValue);
                 device_id.setSummary("UUID: " + Aware.getSetting(sContext, Aware_Preferences.DEVICE_ID));
+                return true;
+            }
+        });
+
+        final EditTextPreference group_id = (EditTextPreference) findPreference(Aware_Preferences.GROUP_ID);
+        device_id.setSummary("Group: " + Aware.getSetting(sContext, GROUP_ID));
+        device_id.setText(Aware.getSetting(sContext, Aware_Preferences.GROUP_ID));
+        device_id.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                Aware.setSetting(sContext, Aware_Preferences.GROUP_ID, (String) newValue);
+                group_id.setSummary("Group: " + Aware.getSetting(sContext, Aware_Preferences.GROUP_ID));
                 return true;
             }
         });
@@ -2255,9 +2273,20 @@ public class Aware_Preferences extends Aware_Activity {
 
         @Override
         protected Void doInBackground(ArrayList<String>... params) {
+
+            String study_url = Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SERVER);
+            String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
+            String protocol = study_url.substring(0, study_url.indexOf(":"));
+
             for( final String package_name : params[0] ) {
 
-                String http_request = new Https(context).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
+                String http_request;
+                if( protocol.equals("https") ) {
+                    http_request = new Https(context, context.getResources().openRawResource(R.raw.awareframework)).dataGET( study_host + "/index.php/plugins/get_plugin/" + package_name, true);
+                } else {
+                    http_request = new Http(context).dataGET( study_host + "/index.php/plugins/get_plugin/" + package_name, true);
+                }
+
                 if( http_request != null ) {
                     try {
                         if( ! http_request.equals("[]") ) {
@@ -2318,7 +2347,7 @@ public class Aware_Preferences extends Aware_Activity {
             //Request study settings
             Hashtable<String, String> data = new Hashtable<>();
             data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-            String answer = new Https(getApplicationContext()).dataPOST(study_url, data, true);
+            String answer = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(study_url, data, true);
             try {
                 JSONArray configs_study = new JSONArray(answer);
                 if( configs_study.getJSONObject(0).has("message") ) {

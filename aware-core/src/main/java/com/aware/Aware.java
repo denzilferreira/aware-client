@@ -2,8 +2,6 @@
 package com.aware;
 
 import android.app.AlarmManager;
-import android.app.DownloadManager;
-import android.app.DownloadManager.Query;
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -51,12 +49,14 @@ import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.providers.Aware_Provider.Aware_Settings;
 import com.aware.ui.Plugins_Manager;
 import com.aware.utils.Aware_Plugin;
-import com.aware.utils.Aware_TTS;
 import com.aware.utils.DownloadPluginService;
+import com.aware.utils.Http;
 import com.aware.utils.Https;
 import com.aware.utils.Scheduler;
 import com.aware.utils.WearClient;
 import com.aware.utils.WebserviceHelper;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -144,21 +144,6 @@ public class Aware extends Service {
      * Ask the client to check if there are any updates on the server
      */
     public static final String ACTION_AWARE_CHECK_UPDATE = "ACTION_AWARE_CHECK_UPDATE";
-
-    /**
-     * DownloadManager AWARE update ID, used to prompt user to install the update once finished downloading.
-     */
-    private static long AWARE_FRAMEWORK_DOWNLOAD_ID = 0;
-
-    /**
-     * DownloadManager queue for plugins, in case we have multiple dependencies to install.
-     */
-    public static final ArrayList<Long> AWARE_PLUGIN_DOWNLOAD_IDS = new ArrayList<>();
-
-    /**
-     * DownloadManager queue for plugins, in case we have multiple dependencies to install.
-     */
-    public static final ArrayList<String> AWARE_PLUGIN_DOWNLOAD_PACKAGES = new ArrayList<>();
 
     public static String STUDY_ID = "study_id";
     public static String STUDY_START = "study_start";
@@ -252,7 +237,6 @@ public class Aware extends Service {
         filter.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
         filter.addAction(Aware.ACTION_AWARE_REFRESH);
         filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
-        filter.addAction(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
         filter.addAction(Aware.ACTION_QUIT_STUDY);
         filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
         filter.addAction(Aware.ACTION_AWARE_CHECK_UPDATE);
@@ -308,7 +292,10 @@ public class Aware extends Service {
             if (DEBUG) Log.d(TAG, "Starting Android Wear HTTP proxy...");
             wearClient = new Intent(this, WearClient.class);
             startService(wearClient);
-            new AsyncPing().execute();
+
+            if( Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER).contains("api.awareframework.com") ) {
+                new AsyncPing().execute();
+            }
         }
 
         awareStatusMonitor = new Intent(this, Aware.class);
@@ -323,7 +310,7 @@ public class Aware extends Service {
             Hashtable<String, String> device_ping = new Hashtable<>();
             device_ping.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID));
 	        device_ping.put("ping", String.valueOf(System.currentTimeMillis()));
-	        new Https(awareContext).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
+	        new Https(awareContext, getResources().openRawResource(R.raw.awareframework)).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
 	        return true;
 		}
     }
@@ -332,20 +319,23 @@ public class Aware extends Service {
         Cursor awareContextDevice = awareContext.getContentResolver().query(Aware_Device.CONTENT_URI, null, null, null, null);
         if( awareContextDevice == null || ! awareContextDevice.moveToFirst() ) {
             ContentValues rowData = new ContentValues();
-            rowData.put("timestamp", System.currentTimeMillis());
-            rowData.put("device_id", Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID));
-            rowData.put("board", Build.BOARD);
-            rowData.put("brand", Build.BRAND);
-            rowData.put("device",Build.DEVICE);
-            rowData.put("build_id", Build.DISPLAY);
-            rowData.put("hardware", Build.HARDWARE);
-            rowData.put("manufacturer", Build.MANUFACTURER);
-            rowData.put("model", Build.MODEL);
-            rowData.put("product", Build.PRODUCT);
-            rowData.put("serial", Build.SERIAL);
-            rowData.put("release", Build.VERSION.RELEASE);
-            rowData.put("release_type", Build.TYPE);
-            rowData.put("sdk", Build.VERSION.SDK_INT);
+            rowData.put(Aware_Device.TIMESTAMP, System.currentTimeMillis());
+            rowData.put(Aware_Device.DEVICE_ID, Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID));
+            rowData.put(Aware_Device.BOARD, Build.BOARD);
+            rowData.put(Aware_Device.BRAND, Build.BRAND);
+            rowData.put(Aware_Device.DEVICE,Build.DEVICE);
+            rowData.put(Aware_Device.BUILD_ID, Build.DISPLAY);
+            rowData.put(Aware_Device.HARDWARE, Build.HARDWARE);
+            rowData.put(Aware_Device.MANUFACTURER, Build.MANUFACTURER);
+            rowData.put(Aware_Device.MODEL, Build.MODEL);
+            rowData.put(Aware_Device.PRODUCT, Build.PRODUCT);
+            rowData.put(Aware_Device.SERIAL, Build.SERIAL);
+            rowData.put(Aware_Device.RELEASE, Build.VERSION.RELEASE);
+            rowData.put(Aware_Device.RELEASE_TYPE, Build.TYPE);
+            rowData.put(Aware_Device.SDK, Build.VERSION.SDK_INT);
+
+            //Added research group as label
+            rowData.put(Aware_Device.LABEL, Aware.getSetting(awareContext, Aware_Preferences.GROUP_ID));
             
             try {
                 awareContext.getContentResolver().insert(Aware_Device.CONTENT_URI, rowData);
@@ -593,21 +583,10 @@ public class Aware extends Service {
      * @param is_update
      */
     public static void downloadPlugin( Context context, String package_name, boolean is_update ) {
-    	if( is_queued(package_name) ) return;
-
-        AWARE_PLUGIN_DOWNLOAD_PACKAGES.add(package_name);
-
         Intent pluginIntent = new Intent(context, DownloadPluginService.class);
     	pluginIntent.putExtra("package_name", package_name);
     	pluginIntent.putExtra("is_update", is_update);
 		context.startService(pluginIntent);
-    }
-
-    private static boolean is_queued(String package_name) {
-        for( String pkg : AWARE_PLUGIN_DOWNLOAD_PACKAGES ) {
-            if( pkg.equalsIgnoreCase( package_name ) ) return true;
-        }
-        return false;
     }
     
     /**
@@ -1094,7 +1073,7 @@ public class Aware extends Service {
             //Request study settings
             Hashtable<String, String> data = new Hashtable<>();
             data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-            String answer = new Https(getApplicationContext()).dataPOST(study_url, data, true);
+            String answer = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(study_url, data, true);
             try {
                 JSONArray configs = new JSONArray(answer);
                 if (configs.getJSONObject(0).has("message")) {
@@ -1179,13 +1158,14 @@ public class Aware extends Service {
 
             Hashtable<String, String> data = new Hashtable<>();
             data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-            String response = new Https(getApplicationContext()).dataPOST(Aware.getSetting(getApplicationContext(),Aware_Preferences.WEBSERVICE_SERVER), data, true);
+            String response = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(Aware.getSetting(getApplicationContext(),Aware_Preferences.WEBSERVICE_SERVER), data, true);
             if( response != null ) {
                 try {
                     JSONArray j_array = new JSONArray(response);
                     JSONObject io = j_array.getJSONObject(0);
                     if( io.has("message") ) {
                         if( io.getString("message").equals("This study is not ongoing anymore.") ) return true;
+                        Log.d(Aware.TAG, io.getString("message"));
                     }
                     return false;
                 } catch (JSONException e) {
@@ -1254,7 +1234,18 @@ public class Aware extends Service {
         @Override
         protected Boolean doInBackground(ArrayList<String>... params) {
             for( String package_name : params[0] ) {
-                String http_request = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + package_name, true);
+
+                String study_url = Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER);
+                String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
+                String protocol = study_url.substring(0, study_url.indexOf(":"));
+
+                String http_request;
+                if( protocol.equals("https") ) {
+                    http_request = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataGET( study_host + "/index.php/plugins/get_plugin/" + package_name, true);
+                } else {
+                    http_request = new Http(getApplicationContext()).dataGET( study_host + "/index.php/plugins/get_plugin/" + package_name, true);
+                }
+
                 if( http_request != null ) {
                     if( ! http_request.equals("[]") ) {
                         try {
@@ -1300,14 +1291,16 @@ public class Aware extends Service {
     	
     	@Override
     	protected Boolean doInBackground(Void... params) {
-    		try {
+            if( ! Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER).contains("api.awareframework.com") ) return false;
+
+            try {
 				awarePkg = awareContext.getPackageManager().getPackageInfo("com.aware", PackageManager.GET_META_DATA);
 			} catch (NameNotFoundException e1) {
 				e1.printStackTrace();
 				return false;
 			}
-			
-    		String response = new Https(awareContext).dataGET("https://api.awareframework.com/index.php/awaredev/framework_latest", true);
+
+    		String response = new Https(awareContext, awareContext.getResources().openRawResource(R.raw.awareframework)).dataGET("https://api.awareframework.com/index.php/awaredev/framework_latest", true);
 	        if( response != null ) {
 	        	try {
 					JSONArray data = new JSONArray(response);
@@ -1441,7 +1434,17 @@ public class Aware extends Service {
     		app = params[0];
     		
     		JSONObject json_package = null;
-            String http_request = new Https(awareContext).dataGET("https://api.awareframework.com/index.php/plugins/get_plugin/" + app.packageName, true);
+
+            String study_url = Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER);
+            String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
+            String protocol = study_url.substring(0, study_url.indexOf(":"));
+
+            String http_request;
+            if( protocol.equals("https")) {
+                http_request = new Https(awareContext, awareContext.getResources().openRawResource(R.raw.awareframework)).dataGET(study_host + "/index.php/plugins/get_plugin/" + app.packageName, true);
+            } else {
+                http_request = new Http(awareContext).dataGET(study_host + "/index.php/plugins/get_plugin/" + app.packageName, true);
+            }
             if( http_request != null ) {
             	try {
             		if( ! http_request.trim().equalsIgnoreCase("[]") ) {
@@ -1524,19 +1527,27 @@ public class Aware extends Service {
 			String filename = intent.getStringExtra("filename");
 			
 			//Make sure we have the releases folder
-			File releases = new File( getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)+"/AWARE", "releases");
+			File releases = new File( getExternalFilesDir(null)+"/Documents/AWARE", "releases");
 			releases.mkdirs();
 			
 			String url = "http://www.awareframework.com/" + filename;
-			
-			DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
-			request.setDescription("Updating AWARE...");
-			request.setTitle("AWARE Update");
 
-            request.setDestinationInExternalFilesDir(getApplicationContext(), Environment.DIRECTORY_DOCUMENTS, "AWARE/releases/" + filename);
+            Toast.makeText(this, "Updating AWARE...", Toast.LENGTH_SHORT).show();
 
-			DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-			AWARE_FRAMEWORK_DOWNLOAD_ID = manager.enqueue(request);
+            Ion.with(getApplicationContext())
+                    .load(url)
+                    .write(new File(getExternalFilesDir(null)+"/Documents/AWARE/releases/" + filename))
+                    .setCallback(new FutureCallback<File>() {
+                        @Override
+                        public void onCompleted(Exception e, File result) {
+                            if (result != null) {
+                                Intent promptInstall = new Intent(Intent.ACTION_VIEW);
+                                promptInstall.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                promptInstall.setDataAndType(Uri.fromFile(result), "application/vnd.android.package-archive");
+                                startActivity(promptInstall);
+                            }
+                        }
+                    });
 		}
     }
     
@@ -1545,7 +1556,6 @@ public class Aware extends Service {
      * - ACTION_AWARE_SYNC_DATA = upload data to remote webservice server.
      * - ACTION_AWARE_CLEAR_DATA = clears local device's AWARE modules databases.
      * - ACTION_AWARE_REFRESH - apply changes to the configuration.
-     * - {@link DownloadManager#ACTION_DOWNLOAD_COMPLETE} - when AWARE framework update has been downloaded.
      * - {}@link WifiManager#WIFI_STATE_CHANGED_ACTION} - when Wi-Fi is available to sync
      * @author denzil
      *
@@ -1558,7 +1568,7 @@ public class Aware extends Service {
         	String[] DATABASE_TABLES = Aware_Provider.DATABASE_TABLES;
         	String[] TABLES_FIELDS = Aware_Provider.TABLES_FIELDS;
         	Uri[] CONTEXT_URIS = new Uri[]{ Aware_Device.CONTENT_URI };
-        	
+
         	if( intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA) && Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true") ) {
             	Intent webserviceHelper = new Intent( context, WebserviceHelper.class );
                 webserviceHelper.setAction( WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE );
@@ -1618,59 +1628,6 @@ public class Aware extends Service {
             if( intent.getAction().equals(Aware.ACTION_AWARE_REFRESH)) {
                 Intent refresh = new Intent(context, com.aware.Aware.class);
                 context.startService(refresh);
-            }
-            
-            if( intent.getAction().equals(DownloadManager.ACTION_DOWNLOAD_COMPLETE) ) {
-
-            	DownloadManager manager = (DownloadManager) context.getSystemService(DOWNLOAD_SERVICE);
-            	long downloaded_id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-            	
-            	if( downloaded_id == AWARE_FRAMEWORK_DOWNLOAD_ID ) {
-            		if( Aware.DEBUG ) Log.d(Aware.TAG, "AWARE framework update received...");
-            		Query qry = new Query();
-            		qry.setFilterById(AWARE_FRAMEWORK_DOWNLOAD_ID);
-            		Cursor data = manager.query(qry);
-            		if( data != null && data.moveToFirst() ) {
-            			if( data.getInt(data.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL ) {
-            				String filePath = data.getString(data.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
-            				File mFile = new File( Uri.parse(filePath).getPath() );
-            				Intent promptUpdate = new Intent(Intent.ACTION_VIEW);
-            				promptUpdate.setDataAndType(Uri.fromFile(mFile), "application/vnd.android.package-archive");
-            				promptUpdate.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            				context.startActivity(promptUpdate);
-            			}
-            		}
-            		if( data != null && ! data.isClosed() ) data.close();
-
-                    return;
-            	}
-
-            	if( AWARE_PLUGIN_DOWNLOAD_IDS.size() > 0 ) {
-            		for( int i = 0; i < AWARE_PLUGIN_DOWNLOAD_IDS.size(); i++ ) {
-                	    long queue = AWARE_PLUGIN_DOWNLOAD_IDS.get(i);
-                	    if( queue == downloaded_id ) {
-                            Cursor cur = manager.query(new Query().setFilterById(queue));
-                            if( cur != null && cur.moveToFirst() ) {
-                                if( cur.getInt(cur.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL ) {
-                                    String filePath = cur.getString(cur.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
-
-                                    if( Aware.DEBUG ) Log.d(Aware.TAG, "Plugin to install: " + filePath);
-
-                                    File mFile = new File( Uri.parse(filePath).getPath() );
-                                    if( ! Aware.is_watch(context) ) {
-                                        Intent promptInstall = new Intent(Intent.ACTION_VIEW);
-                                        promptInstall.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                        promptInstall.setDataAndType(Uri.fromFile(mFile), "application/vnd.android.package-archive");
-                                        context.startActivity(promptInstall);
-                                    }
-                                }
-                            }
-                            if( cur != null && ! cur.isClosed() ) cur.close();
-                            AWARE_PLUGIN_DOWNLOAD_IDS.remove(downloaded_id);//dequeue
-                	    }
-                	}
-            	}
-                if( AWARE_PLUGIN_DOWNLOAD_IDS.size() == 0 ) AWARE_PLUGIN_DOWNLOAD_PACKAGES.clear();
             }
         }
     }

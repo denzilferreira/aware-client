@@ -31,6 +31,7 @@ import com.aware.ui.qrcode.BarcodeTrackerFactory;
 import com.aware.ui.qrcode.CameraSource;
 import com.aware.ui.qrcode.CameraSourcePreview;
 import com.aware.ui.qrcode.GraphicOverlay;
+import com.aware.utils.Http;
 import com.aware.utils.Https;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -171,20 +172,19 @@ public class Aware_QRCode extends Aware_Activity {
             barcode = graphic.getBarcode();
             if (barcode != null) {
                 String scanned = barcode.rawValue;
-                if( scanned.contains("api.awareframework.com") ) {
-                    new StudyData().execute(scanned);
-                } else {
-                    Snackbar snack = Snackbar.make(mGraphicOverlay, scanned, Snackbar.LENGTH_LONG);
-                    ViewGroup group = (ViewGroup) snack.getView();
-                    for (int i = 0; i < group.getChildCount(); i++) {
-                        View v = group.getChildAt(i);
-                        if (v instanceof TextView) {
-                            TextView t = (TextView) v;
-                            t.setTextColor(Color.WHITE);
-                        }
+                new StudyData().execute(scanned);
+
+                Snackbar snack = Snackbar.make(mGraphicOverlay, scanned, Snackbar.LENGTH_LONG);
+                ViewGroup group = (ViewGroup) snack.getView();
+                for (int i = 0; i < group.getChildCount(); i++) {
+                    View v = group.getChildAt(i);
+                    if (v instanceof TextView) {
+                        TextView t = (TextView) v;
+                        t.setTextColor(Color.WHITE);
                     }
-                    snack.show();
                 }
+                snack.show();
+
             } else {
                 if(Aware.DEBUG) Log.d(Aware.TAG, "barcode data is null");
             }
@@ -240,9 +240,18 @@ public class Aware_QRCode extends Aware_Activity {
         @Override
         protected JSONObject doInBackground(String... params) {
             study_url = params[0];
-            String study_api_key = study_url.substring(study_url.lastIndexOf("/")+1, study_url.length());
 
-            String request = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/webservice/client_get_study_info/" + study_api_key, true);
+            String study_api_key = study_url.substring(study_url.lastIndexOf("/")+1, study_url.length());
+            String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
+            String protocol = study_url.substring(0, study_url.indexOf(":"));
+
+            String request = "";
+            if( protocol.equals("https") ) {
+                 request = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataGET( study_host + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+            } else {
+                request = new Http(getApplicationContext()).dataGET( study_host + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+            }
+
             if( request != null ) {
                 try {
                     if( request.equals("[]") ) {

@@ -14,6 +14,7 @@ import android.util.Log;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
+import com.aware.R;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -70,7 +71,7 @@ public class WebserviceHelper extends IntentService {
     		fields.put(EXTRA_FIELDS, TABLES_FIELDS);
 
     		//Create table if doesn't exist on the remote webservice server
-    		String response = new Https(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
+    		String response = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
     		if( response != null ) {
     		    if( DEBUG ) Log.d(Aware.TAG, "CREATE TABLE RESULT: " + response);
 
@@ -86,7 +87,7 @@ public class WebserviceHelper extends IntentService {
 					request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
     				
     				//check the latest entry in remote database
-    				String latest = new Https(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
+    				String latest = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
     				if( latest == null ) return;
     				
     				String data = "[]";
@@ -173,7 +174,7 @@ public class WebserviceHelper extends IntentService {
                                 request = new Hashtable<>();
 								request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
 								request.put("data", context_data_entries.toString());
-								String insert = new Https(getApplicationContext()).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+								String insert = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
 								if( insert != null ) {
 									if( DEBUG ) Log.d(Aware.TAG, "INSERT RESULT: " + insert);
 								}
@@ -190,7 +191,7 @@ public class WebserviceHelper extends IntentService {
                             request = new Hashtable<>();
 							request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
 							request.put("data", context_data_entries.toString());
-							String insert = new Https(getApplicationContext()).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+							String insert = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
 							if( insert != null ) {
 								if( DEBUG ) Log.d(Aware.TAG, "INSERT RESULT: " + insert);
 							}
@@ -211,7 +212,7 @@ public class WebserviceHelper extends IntentService {
             if (Aware.DEBUG) Log.d(Aware.TAG, "Clearing data..." + DATABASE_TABLE);
 			Hashtable<String, String> request = new Hashtable<>();
 			request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
-    		String clear = new Https(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
+    		String clear = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
 			if( clear != null ) {
 				if( DEBUG ) Log.d(Aware.TAG, "CLEAR RESULT: " + clear);
 			}

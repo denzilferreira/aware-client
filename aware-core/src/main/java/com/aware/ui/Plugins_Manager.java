@@ -32,9 +32,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.aware.Aware;
+import com.aware.Aware_Preferences;
 import com.aware.R;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.utils.Aware_Plugin;
+import com.aware.utils.Http;
 import com.aware.utils.Https;
 
 import org.json.JSONArray;
@@ -45,6 +47,7 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.KeyManagementException;
@@ -368,52 +371,74 @@ public class Plugins_Manager extends Aware_Activity {
 	 * @return
 	 */
 	public static byte[] cacheImage( String image_url, Context sContext ) {
-		try {
 
-            //Load AWARE's SSL public certificate so we can talk with our server
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            InputStream caInput = new BufferedInputStream(sContext.getResources().openRawResource(R.raw.awareframework));
-            Certificate ca = cf.generateCertificate(caInput);
-            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            keyStore.load(null, null); //initialize as empty keystore
-            keyStore.setCertificateEntry("ca", ca); //add our certificate to keystore
+        String study_url = Aware.getSetting(sContext, Aware_Preferences.WEBSERVICE_SERVER);
+        String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
+        String protocol = study_url.substring(0, study_url.indexOf(":"));
 
-            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            trustManagerFactory.init(keyStore); //add our keystore to the trusted keystores
+        image_url = study_host + image_url;
 
-            //Initialize a SSL connection context
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+        if( protocol.equals("https") ) {
+            try {
+                //Load SSL public certificate so we can talk with server
+                CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                InputStream caInput = new BufferedInputStream(sContext.getResources().openRawResource(R.raw.awareframework));
+                Certificate ca = cf.generateCertificate(caInput);
+                KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+                keyStore.load(null, null); //initialize as empty keystore
+                keyStore.setCertificateEntry("ca", ca); //add our certificate to keystore
 
-            //Fix for known-bug on <= JellyBean (4.x)
-            System.setProperty("http.keepAlive", "false");
+                TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                trustManagerFactory.init(keyStore); //add our keystore to the trusted keystores
 
-			//Fetch image now that we recognise SSL
-			URL image_path = new URL(image_url.replace("http://", "https://")); //make sure we are fetching the images over https
-			HttpsURLConnection image_connection = (HttpsURLConnection) image_path.openConnection();
-			image_connection.setSSLSocketFactory(sslContext.getSocketFactory());
-			
-			InputStream in_stream = image_connection.getInputStream();
-			Bitmap tmpBitmap = BitmapFactory.decodeStream(in_stream);
-			ByteArrayOutputStream output = new ByteArrayOutputStream();
-			tmpBitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
-			
-			return output.toByteArray();
-			
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (KeyStoreException e) {
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		} catch (CertificateException e) {
-			e.printStackTrace();
-		} catch (KeyManagementException e) {
-			e.printStackTrace();
-		} catch (NullPointerException e) {
-            e.printStackTrace();
+                //Initialize a SSL connection context
+                SSLContext sslContext = SSLContext.getInstance("TLS");
+                sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+
+                //Fix for known-bug on <= JellyBean (4.x)
+                System.setProperty("http.keepAlive", "false");
+
+                //Fetch image now that we recognise SSL
+                URL image_path = new URL(image_url);
+                HttpsURLConnection image_connection = (HttpsURLConnection) image_path.openConnection();
+                image_connection.setSSLSocketFactory(sslContext.getSocketFactory());
+
+                InputStream in_stream = image_connection.getInputStream();
+                Bitmap tmpBitmap = BitmapFactory.decodeStream(in_stream);
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                tmpBitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
+
+                return output.toByteArray();
+
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (KeyStoreException e) {
+                e.printStackTrace();
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            } catch (CertificateException e) {
+                e.printStackTrace();
+            } catch (KeyManagementException e) {
+                e.printStackTrace();
+            } catch (NullPointerException e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                URL image_path = new URL(image_url);
+                HttpURLConnection image_connection = (HttpURLConnection) image_path.openConnection();
+                InputStream in_stream = image_connection.getInputStream();
+                Bitmap tmpBitmap = BitmapFactory.decodeStream(in_stream);
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                tmpBitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
+                return output.toByteArray();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 		return null;
 	}
@@ -574,8 +599,18 @@ public class Plugins_Manager extends Aware_Activity {
 		protected Boolean doInBackground(Void... params) {
             JSONArray plugins = null;
 
+            String study_url = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
+            String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
+            String protocol = study_url.substring(0, study_url.indexOf(":"));
+
     		//Check for updates on the server side
-    		String response = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/plugins/get_plugins" + (( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) ? "/" + Aware.getSetting(getApplicationContext(), "study_id") : ""), true );
+            String response;
+            if( protocol.equals("https")) {
+                response = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataGET( study_host + "/index.php/plugins/get_plugins" + (( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) ? "/" + Aware.getSetting(getApplicationContext(), "study_id") : ""), true );
+            } else {
+                response = new Http(getApplicationContext()).dataGET( study_host + "/index.php/plugins/get_plugins" + (( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) ? "/" + Aware.getSetting(getApplicationContext(), "study_id") : ""), true );
+            }
+
 			if( response != null ) {
 				try {
 					plugins = new JSONArray(response);
@@ -589,7 +624,7 @@ public class Plugins_Manager extends Aware_Activity {
                                 data.put(Aware_Plugins.PLUGIN_DESCRIPTION, plugin.getString("desc"));
                                 data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
                                 data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
-                                data.put(Aware_Plugins.PLUGIN_ICON, ! Aware.is_watch(getApplicationContext()) ? cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()) : null);
+                                data.put(Aware_Plugins.PLUGIN_ICON, ! Aware.is_watch(getApplicationContext()) ? cacheImage(plugin.getString("iconpath"), getApplicationContext()) : null);
                                 data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_UPDATED);
                                 getContentResolver().update(Aware_Plugins.CONTENT_URI, data, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + installed.packageName +"'", null);
                                 needsRefresh = true;
@@ -603,7 +638,7 @@ public class Plugins_Manager extends Aware_Activity {
                             data.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, plugin.getString("package"));
                             data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
                             data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_NOT_INSTALLED);
-                            data.put(Aware_Plugins.PLUGIN_ICON, ! Aware.is_watch(getApplicationContext())?cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()):null);
+                            data.put(Aware_Plugins.PLUGIN_ICON, ! Aware.is_watch(getApplicationContext()) ? cacheImage(plugin.getString("iconpath"), getApplicationContext()) : null);
                             getContentResolver().insert(Aware_Plugins.CONTENT_URI, data);
                             needsRefresh = true;
                         }
@@ -629,7 +664,7 @@ public class Plugins_Manager extends Aware_Activity {
                             data.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, plugin.getString("package"));
                             data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
                             data.put(Aware_Plugins.PLUGIN_STATUS, PLUGIN_DISABLED);
-                            data.put(Aware_Plugins.PLUGIN_ICON, ! Aware.is_watch(getApplicationContext())?cacheImage("http://api.awareframework.com" + plugin.getString("iconpath"), getApplicationContext()):null);
+                            data.put(Aware_Plugins.PLUGIN_ICON, ! Aware.is_watch(getApplicationContext()) ? cacheImage(plugin.getString("iconpath"), getApplicationContext()) : null);
 
                             getContentResolver().insert(Aware_Plugins.CONTENT_URI, data);
                             needsRefresh = true;

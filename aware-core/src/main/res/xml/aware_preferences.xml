@@ -38,6 +38,13 @@
             android:selectable="false"
             android:summary="UUID:"
             android:title="@string/aware_device_id" />
+        <EditTextPreference
+            android:key="group_id"
+            android:persistent="true"
+            android:selectable="false"
+            android:summary="Group: AWARE"
+            android:defaultValue="AWARE"
+            android:title="@string/aware_research_group" />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="sensors"
@@ -686,7 +693,8 @@
                 android:key="webservice_server"
                 android:persistent="true"
                 android:summary="URL"
-                android:title="Study URL" />
+                android:title="Study URL"
+                android:defaultValue="https://api.awareframework.com/index.php"/>
 
             <CheckBoxPreference
                 android:defaultValue="false"

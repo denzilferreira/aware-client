@@ -44,25 +44,35 @@ public class Https {
     private static SSLContext sslContext;
     private static Context sContext;
 
-	public Https(Context c) {
+    /**
+     * The InputStream certificate should be:
+     * getResources().openRawResource(R.raw.yourcertificate)<br/>
+     * where the certificate is a .crt public key for connecting to your server.
+     * @param c
+     * @param certificate
+     */
+	public Https(Context c, InputStream certificate ) {
 		sContext = c;
-
         if( c.getPackageName().equalsIgnoreCase("com.aware") ) {
             Intent wearClient = new Intent(sContext, WearClient.class);
             sContext.startService(wearClient);
         }
 
         try {
-            //Load AWARE's SSL public certificate so we can talk with our server
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            InputStream caInput = new BufferedInputStream(sContext.getResources().openRawResource(R.raw.awareframework));
-            Certificate ca = cf.generateCertificate(caInput);
-            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            keyStore.load(null, null); //initialize as empty keystore
-            keyStore.setCertificateEntry("ca", ca); //add our certificate to keystore
 
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
             TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
             trustManagerFactory.init(keyStore); //add our keystore to the trusted keystores
+
+            if( certificate != null ) {
+                //Load SSL public certificate so we can talk with the server
+                CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                InputStream caInput = new BufferedInputStream(certificate);
+                Certificate ca = cf.generateCertificate(caInput);
+                keyStore.load(null, null); //initialize as empty keystore
+                keyStore.setCertificateEntry("ca", ca); //add our certificate to keystore
+                trustManagerFactory.init(keyStore); //add our keystore to the trusted keystores
+            }
 
             //Initialize a SSL connection context
             sslContext = SSLContext.getInstance("TLS");
@@ -298,7 +308,7 @@ public class Https {
     private void print_https_cert(HttpsURLConnection con){
         if(con!=null){
             try {
-                String output = "";
+                String output = "Using SSL to connect to server!\n";
                 output+="Response Code : " + con.getResponseCode() +"\n";
                 output+="Cipher Suite : " + con.getCipherSuite() + "\n";
                 Certificate[] certs = con.getServerCertificates();

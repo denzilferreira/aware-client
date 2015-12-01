@@ -489,7 +489,7 @@ public class Applications extends AccessibilityService {
                 PackageManager packageManager = getPackageManager();
                 List<RunningAppProcessInfo> runningApps = activityManager.getRunningAppProcesses();
                 
-                if(Aware.DEBUG) Log.d(TAG,"Running " + runningApps.size() + " applications");
+                if(Aware.DEBUG && runningApps != null) Log.d(TAG,"Running " + runningApps.size() + " applications");
                     
                 for( RunningAppProcessInfo app : runningApps ) {
                     try {

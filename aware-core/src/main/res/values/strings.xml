@@ -26,4 +26,5 @@
     <string name="aware_esm_other">Other</string>
     <string name="aware_esm_other_follow">Can you be more specific, please?</string>
     <string name="aware_dirty">Clean old data?</string>
+    <string name="aware_research_group">Research group</string>
 </resources>

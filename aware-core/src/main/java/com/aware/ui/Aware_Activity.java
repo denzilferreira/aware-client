@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,13 +27,12 @@ import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.Aware_Preferences.StudyConfig;
 import com.aware.R;
+import com.aware.utils.Http;
 import com.aware.utils.Https;
 import com.aware.utils.WearClient;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.logging.Logger;
 
 //PreferenceActivity
 public class Aware_Activity extends AppCompatPreferenceActivity {
@@ -204,12 +202,18 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
             study_url = params[0];
 
             String study_api_key = study_url.substring(study_url.lastIndexOf("/")+1, study_url.length());
-            //TODO: parse the host string
-            //String study_host = study_url.substring()
+            String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
+            String protocol = study_url.substring(0, study_url.indexOf(":"));
 
             if( study_api_key.length() == 0 ) return null;
 
-            String request = new Https(getApplicationContext()).dataGET("https://api.awareframework.com/index.php/webservice/client_get_study_info/" + study_api_key, true);
+            String request = "";
+            if( protocol.equals("https") ) {
+                request = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataGET( study_host + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+            } else {
+                request = new Http(getApplicationContext()).dataGET( study_host + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+            }
+
             if( request != null ) {
                 try {
                     if( request.equals("[]") ) {
