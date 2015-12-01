@@ -116,7 +116,7 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
         data_values.toArray(data_buffer);
 
         try {
-            if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("false") ) {
+            if( ! Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true") ) {
                 new AsyncStore().execute(data_buffer);
             }
         }catch( SQLiteException e ) {
