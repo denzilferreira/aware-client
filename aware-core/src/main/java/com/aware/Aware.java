@@ -717,6 +717,7 @@ public class Aware extends Service {
         global_settings.add(Aware.STUDY_ID);
         global_settings.add(Aware.STUDY_START);
         global_settings.add(Aware_Preferences.DEVICE_ID);
+        global_settings.add(Aware_Preferences.GROUP_ID);
         global_settings.add(Aware_Preferences.STATUS_WEBSERVICE);
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
@@ -776,6 +777,7 @@ public class Aware extends Service {
     	global_settings.add(Aware.STUDY_ID);
     	global_settings.add(Aware.STUDY_START);
         global_settings.add(Aware_Preferences.DEVICE_ID);
+        global_settings.add(Aware_Preferences.GROUP_ID);
         global_settings.add(Aware_Preferences.STATUS_WEBSERVICE);
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
@@ -797,8 +799,9 @@ public class Aware extends Service {
 
         is_global = global_settings.contains(key);
 
-        //We already have a device ID, bail-out!
+        //We already have a Device ID or Group ID, bail-out!
         if( key.equals(Aware_Preferences.DEVICE_ID) && Aware.getSetting(context, Aware_Preferences.DEVICE_ID).length() > 0 ) return;
+        if( key.equals(Aware_Preferences.GROUP_ID) && Aware.getSetting(context, Aware_Preferences.GROUP_ID).length() > 0 ) return;
 
     	ContentValues setting = new ContentValues();
         setting.put(Aware_Settings.SETTING_KEY, key);

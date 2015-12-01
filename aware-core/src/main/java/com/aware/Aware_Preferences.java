@@ -624,8 +624,8 @@ public class Aware_Preferences extends Aware_Activity {
 
         Map<String,?> defaults = prefs.getAll();
         for(Map.Entry<String, ?> entry : defaults.entrySet()) {
-            if( Aware.getSetting(getApplicationContext(), entry.getKey()).length() == 0 ) {
-                Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue());
+            if( Aware.getSetting(getApplicationContext(), entry.getKey(), "com.aware").length() == 0 ) {
+                Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue(), "com.aware");
             }
         }
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0 ) {
@@ -2138,9 +2138,9 @@ public class Aware_Preferences extends Aware_Activity {
         });
 
         final EditTextPreference group_id = (EditTextPreference) findPreference(Aware_Preferences.GROUP_ID);
-        device_id.setSummary("Group: " + Aware.getSetting(sContext, GROUP_ID));
-        device_id.setText(Aware.getSetting(sContext, Aware_Preferences.GROUP_ID));
-        device_id.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+        group_id.setSummary("Group: " + Aware.getSetting(sContext, GROUP_ID));
+        group_id.setText(Aware.getSetting(sContext, Aware_Preferences.GROUP_ID));
+        group_id.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 Aware.setSetting(sContext, Aware_Preferences.GROUP_ID, (String) newValue);
