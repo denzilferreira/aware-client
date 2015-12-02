@@ -2263,6 +2263,9 @@ public class Aware_Preferences extends Aware_Activity {
         //Send data to server
         Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
         context.sendBroadcast(sync);
+
+        Intent applyNew = new Intent(Aware.ACTION_AWARE_REFRESH);
+        context.sendBroadcast(applyNew);
     }
 
     public static class CheckPlugins extends AsyncTask<ArrayList<String>, Void, Void> {

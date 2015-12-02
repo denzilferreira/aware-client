@@ -1129,6 +1129,13 @@ public class Aware extends Service {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+
+            //Send data to server
+            Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
+            sendBroadcast(sync);
+
+            Intent applyNew = new Intent(Aware.ACTION_AWARE_REFRESH);
+            sendBroadcast(applyNew);
         }
     }
 
