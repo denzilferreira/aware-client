@@ -491,11 +491,6 @@ public class Aware extends Service {
             ContentValues rowData = new ContentValues();
             rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
             context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
-
-            //FIXED: terminate bundled AWARE service within a plugin
-            Intent core = new Intent( context, com.aware.Aware.class );
-            context.stopService(core);
-
             return;
         }
 
@@ -517,10 +512,6 @@ public class Aware extends Service {
         ContentValues rowData = new ContentValues();
         rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
         context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
-
-        //FIXED: terminate bundled AWARE service within a plugin
-        Intent core = new Intent( context, com.aware.Aware.class );
-        context.stopService(core);
     }
     
     /**

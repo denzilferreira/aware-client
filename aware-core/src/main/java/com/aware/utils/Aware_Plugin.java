@@ -72,6 +72,8 @@ public class Aware_Plugin extends Service {
      */
     public static final int STATUS_PLUGIN_ON = 1;
 
+    private Intent aware;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -91,6 +93,9 @@ public class Aware_Plugin extends Service {
         registerReceiver(contextBroadcaster, filter);
 
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        aware = new Intent(getApplicationContext(), Aware.class);
+        startService(aware);
     }
     
     @Override
@@ -99,6 +104,8 @@ public class Aware_Plugin extends Service {
 
         //Unregister Context Broadcaster
         unregisterReceiver(contextBroadcaster);
+
+        if( aware != null ) stopService(aware);
 
         if(DEBUG) Log.d(TAG, TAG + " plugin terminated...");
     }
