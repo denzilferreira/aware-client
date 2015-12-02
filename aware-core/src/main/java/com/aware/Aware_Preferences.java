@@ -2350,7 +2350,20 @@ public class Aware_Preferences extends Aware_Activity {
             //Request study settings
             Hashtable<String, String> data = new Hashtable<>();
             data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-            String answer = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(study_url, data, true);
+
+            String protocol = study_url.substring(0, study_url.indexOf(":"));
+            String answer;
+            if( protocol.equals("https") ) {
+                answer = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(study_url, data, true);
+            } else {
+                answer = new Http(getApplicationContext()).dataPOST(study_url, data, true);
+            }
+
+            if( answer == null ) {
+                Toast.makeText(getApplicationContext(), "Failed to connect to server... try again.", Toast.LENGTH_LONG).show();
+                return;
+            }
+
             try {
                 JSONArray configs_study = new JSONArray(answer);
                 if( configs_study.getJSONObject(0).has("message") ) {

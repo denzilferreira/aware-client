@@ -1067,7 +1067,21 @@ public class Aware extends Service {
             //Request study settings
             Hashtable<String, String> data = new Hashtable<>();
             data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-            String answer = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(study_url, data, true);
+
+            String protocol = study_url.substring(0, study_url.indexOf(":"));
+
+            String answer;
+            if( protocol.equals("https") ) {
+                answer = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(study_url, data, true);
+            } else {
+                answer = new Http(getApplicationContext()).dataPOST(study_url, data, true);
+            }
+
+            if( answer == null ) {
+                Toast.makeText(getApplicationContext(), "Failed to connect to server, try again.", Toast.LENGTH_LONG).show();
+                return;
+            }
+
             try {
                 JSONArray configs = new JSONArray(answer);
                 if (configs.getJSONObject(0).has("message")) {
@@ -1159,7 +1173,17 @@ public class Aware extends Service {
 
             Hashtable<String, String> data = new Hashtable<>();
             data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-            String response = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(Aware.getSetting(getApplicationContext(),Aware_Preferences.WEBSERVICE_SERVER), data, true);
+
+            String study_url = Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER);
+            String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
+            String protocol = study_url.substring(0, study_url.indexOf(":"));
+
+            String response;
+            if( protocol.equals("https") ) {
+                response = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(study_url, data, true);
+            } else {
+                response = new Http(getApplicationContext()).dataPOST(study_url, data, true);
+            }
             if( response != null ) {
                 try {
                     JSONArray j_array = new JSONArray(response);

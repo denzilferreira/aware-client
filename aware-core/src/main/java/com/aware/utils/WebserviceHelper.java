@@ -46,6 +46,7 @@ public class WebserviceHelper extends IntentService {
 	protected void onHandleIntent(Intent intent) {
 
 		String WEBSERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
+		String protocol = WEBSERVER.substring(0, WEBSERVER.indexOf(":"));
 
 		//Fixed: not using webservices
 		if( WEBSERVER.length() == 0 ) return;
@@ -71,7 +72,12 @@ public class WebserviceHelper extends IntentService {
     		fields.put(EXTRA_FIELDS, TABLES_FIELDS);
 
     		//Create table if doesn't exist on the remote webservice server
-    		String response = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
+			String response;
+			if( protocol.equals("https")) {
+				response = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
+			} else {
+				response = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
+			}
     		if( response != null ) {
     		    if( DEBUG ) Log.d(Aware.TAG, "CREATE TABLE RESULT: " + response);
 
@@ -87,7 +93,12 @@ public class WebserviceHelper extends IntentService {
 					request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
     				
     				//check the latest entry in remote database
-    				String latest = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
+					String latest;
+					if( protocol.equals("https") ) {
+						latest = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
+					} else {
+						latest = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
+					}
     				if( latest == null ) return;
     				
     				String data = "[]";
@@ -174,14 +185,18 @@ public class WebserviceHelper extends IntentService {
                                 request = new Hashtable<>();
 								request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
 								request.put("data", context_data_entries.toString());
-								String insert = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+
+								String insert;
+								if( protocol.equals("https") ) {
+									insert = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+								} else {
+									insert = new Http(getApplicationContext()).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+								}
 								if( insert != null ) {
 									if( DEBUG ) Log.d(Aware.TAG, "INSERT RESULT: " + insert);
 								}
-
 								context_data_entries = new JSONArray();
 							}
-
 						} while ( context_data.moveToNext() );
 						
 						if( context_data_entries.length() > 0 ) {
@@ -191,7 +206,13 @@ public class WebserviceHelper extends IntentService {
                             request = new Hashtable<>();
 							request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
 							request.put("data", context_data_entries.toString());
-							String insert = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+
+							String insert;
+							if( protocol.equals("https") ) {
+								insert = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+							} else {
+								insert = new Http(getApplicationContext()).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+							}
 							if( insert != null ) {
 								if( DEBUG ) Log.d(Aware.TAG, "INSERT RESULT: " + insert);
 							}
@@ -212,7 +233,12 @@ public class WebserviceHelper extends IntentService {
             if (Aware.DEBUG) Log.d(Aware.TAG, "Clearing data..." + DATABASE_TABLE);
 			Hashtable<String, String> request = new Hashtable<>();
 			request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
-    		String clear = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
+    		String clear;
+			if( protocol.equals("https") ) {
+				clear = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
+			} else {
+				clear = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
+			}
 			if( clear != null ) {
 				if( DEBUG ) Log.d(Aware.TAG, "CLEAR RESULT: " + clear);
 			}

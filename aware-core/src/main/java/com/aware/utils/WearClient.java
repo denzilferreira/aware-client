@@ -150,9 +150,20 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
             if( messageEvent.getPath().equals("/https/get") ) {
                 try {
                     JSONObject request = new JSONObject(new String(messageEvent.getData()));
-                    String output = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataGET(request.getString(WearClient.EXTRA_URL), request.getBoolean(WearClient.EXTRA_GZIP));
 
-                    Wearable.MessageApi.sendMessage(WearClient.googleClient, WearClient.peer.getId(), "/https/get", output.getBytes());
+                    String request_url = request.getString(WearClient.EXTRA_URL);
+                    String protocol = request_url.substring(0, request_url.indexOf(":"));
+
+                    String output;
+                    if( protocol.equals("https")) {
+                        output = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataGET(request_url, request.getBoolean(WearClient.EXTRA_GZIP));
+                    } else {
+                        output = new Http(getApplicationContext()).dataGET(request_url, request.getBoolean(WearClient.EXTRA_GZIP));
+                    }
+
+                    if( output != null ) {
+                        Wearable.MessageApi.sendMessage(WearClient.googleClient, WearClient.peer.getId(), "/https/get", output.getBytes());
+                    }
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -173,8 +184,19 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
                         String value = data_json.getString(key);
                         data.put(key, value);
                     }
-                    String output = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(request.getString(WearClient.EXTRA_URL), data, request.getBoolean(WearClient.EXTRA_GZIP));
-                    Wearable.MessageApi.sendMessage(WearClient.googleClient, WearClient.peer.getId(), "/https/post", output.getBytes());
+
+                    String request_url = request.getString(WearClient.EXTRA_URL);
+                    String protocol = request_url.substring(0, request_url.indexOf(":"));
+
+                    String output;
+                    if( protocol.equals("https")) {
+                        output = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(request.getString(WearClient.EXTRA_URL), data, request.getBoolean(WearClient.EXTRA_GZIP));
+                    } else {
+                        output = new Http(getApplicationContext()).dataPOST(request.getString(WearClient.EXTRA_URL), data, request.getBoolean(WearClient.EXTRA_GZIP));
+                    }
+                    if( output != null ) {
+                        Wearable.MessageApi.sendMessage(WearClient.googleClient, WearClient.peer.getId(), "/https/post", output.getBytes());
+                    }
 
                 } catch (JSONException e) {
                     e.printStackTrace();
