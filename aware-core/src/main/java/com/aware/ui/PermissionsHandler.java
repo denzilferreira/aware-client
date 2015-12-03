@@ -25,6 +25,18 @@ public class PermissionsHandler extends Activity {
         super.onCreate(savedInstanceState);
         if( getIntent() != null && getIntent().getExtras() != null && getIntent().getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS) != null ) {
             String[] permissions = getIntent().getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS);
+            for( String p : permissions ) {
+                int ok = ContextCompat.checkSelfPermission(this, p);
+                if( ok != PackageManager.PERMISSION_GRANTED && ! is_missing(p) ) missing.add(p);
+            }
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if( intent != null && intent.getExtras() != null && intent.getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS) != null ) {
+            String[] permissions = intent.getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS);
             //Check if we have requested this permission already
             for( String p : permissions ) {
                 int ok = ContextCompat.checkSelfPermission(this, p);
@@ -36,22 +48,18 @@ public class PermissionsHandler extends Activity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        for(String pp : missing ) {
-            if( ContextCompat.checkSelfPermission(getApplicationContext(), pp) == PackageManager.PERMISSION_GRANTED ) missing.remove(pp);
-        }
-        if( missing.size() == 0) finish();
+        //Done with the requested permissions
+        finish();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        for(String pp : missing ) {
-            if( ContextCompat.checkSelfPermission(getApplicationContext(), pp) == PackageManager.PERMISSION_GRANTED ) missing.remove(pp);
-        }
         if( missing.size() > 0 ) {
             ActivityCompat.requestPermissions(PermissionsHandler.this, missing.toArray(new String[missing.size()]), CODE_PERMISSION_REQUEST);
+        } else {
+            finish();
         }
-        if( missing.size() == 0 ) finish();
     }
 
     /**

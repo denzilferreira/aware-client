@@ -134,6 +134,7 @@
         <activity android:name="com.aware.ui.PermissionsHandler"
             android:exported="true"
             android:configChanges="keyboardHidden|orientation|screenSize"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.AppCompat.Translucent"
             android:excludeFromRecents="true"
             android:noHistory="true"
