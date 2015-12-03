@@ -345,7 +345,9 @@ public class Applications extends AccessibilityService {
         super.onDestroy();
         Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS, false);
         alarmManager.cancel(repeatingIntent);
-        unregisterReceiver(awareMonitor);
+        if(Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
+            unregisterReceiver(awareMonitor);
+        }
     }
 
     private static boolean isAccessibilityEnabled(Context c) {

@@ -1252,6 +1252,8 @@ public class Aware extends Service {
             }
             if( Aware.DEBUG ) Log.w(TAG,"AWARE plugins disabled...");
         }
+        Intent applyNew = new Intent(Aware.ACTION_AWARE_REFRESH);
+        c.sendBroadcast(applyNew);
     }
 
     private class CheckPlugins extends AsyncTask<ArrayList<String>, Void, Boolean> {
