@@ -80,16 +80,13 @@
             android:launchMode="singleTop"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:theme="@style/Theme.Aware"
-            android:parentActivityName="com.aware.Aware_Preferences"
-            >
+            android:parentActivityName="com.aware.Aware_Preferences">
             <intent-filter>
                 <action android:name="android.intent.action.ASSIST" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <meta-data
-                android:name="com.android.systemui.action_assist_icon"
-                android:resource="@drawable/ic_launcher_aware" />
+            <meta-data android:name="com.android.systemui.action_assist_icon" android:resource="@drawable/ic_launcher_aware" />
             <meta-data android:name="android.support.PARENT_ACTIVITY" android:value="com.aware.Aware_Preferences" />
         </activity>
         <activity
@@ -99,8 +96,7 @@
             android:launchMode="singleTop"
             android:theme="@style/Theme.Aware"
             android:label="@string/aware_studies"
-            android:parentActivityName="com.aware.Aware_Preferences"
-            >
+            android:parentActivityName="com.aware.Aware_Preferences">
             <meta-data android:name="android.support.PARENT_ACTIVITY" android:value="com.aware.Aware_Preferences" />
         </activity>
         <activity
@@ -138,7 +134,6 @@
         <activity android:name="com.aware.ui.PermissionsHandler"
             android:exported="true"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:launchMode="singleTop"
             android:theme="@style/Theme.AppCompat.Translucent"
             android:excludeFromRecents="true"
             android:noHistory="true"
