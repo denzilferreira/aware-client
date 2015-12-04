@@ -310,12 +310,18 @@ public class Applications extends AccessibilityService {
     
     @Override
     public void onInterrupt() {
+        if(Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY, "com.aware").equals("true")) {
+            unregisterReceiver(awareMonitor);
+        }
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, false, "com.aware");
         Log.e(TAG,"Accessibility Service has been interrupted...");
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
+        if(Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY, "com.aware").equals("true")) {
+            unregisterReceiver(awareMonitor);
+        }
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, false, "com.aware");
         Log.e(TAG,"Accessibility Service has been interrupted...");
         return super.onUnbind(intent);
@@ -345,8 +351,10 @@ public class Applications extends AccessibilityService {
         super.onDestroy();
         Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS, false);
         alarmManager.cancel(repeatingIntent);
-        if(Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
+        try {
             unregisterReceiver(awareMonitor);
+        } catch (Exception e) {
+            Log.e(TAG, "Tried to unregister Applications receiver not registered.");
         }
     }
 
