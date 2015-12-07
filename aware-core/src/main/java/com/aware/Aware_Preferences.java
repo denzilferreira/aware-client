@@ -628,9 +628,13 @@ public class Aware_Preferences extends Aware_Activity {
                 Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue(), "com.aware");
             }
         }
+
         if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0 ) {
             UUID uuid = UUID.randomUUID();
             Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString());
+        }
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
+            Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php");
         }
 
         addPreferencesFromResource(R.xml.aware_preferences);
