@@ -52,6 +52,7 @@ import com.aware.utils.Aware_Plugin;
 import com.aware.utils.DownloadPluginService;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
+import com.aware.utils.SSLManager;
 import com.aware.utils.Scheduler;
 import com.aware.utils.WearClient;
 import com.aware.utils.WebserviceHelper;
@@ -63,6 +64,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -284,6 +286,10 @@ public class Aware extends Service {
             Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php");
         }
 
+        Intent aware_SSL = new Intent(this, SSLManager.class);
+        aware_SSL.putExtra(SSLManager.EXTRA_SERVER, "https://api.awareframework.com/index.php");
+        startService(aware_SSL);
+
         DEBUG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_FLAG).equals("true");
         TAG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(awareContext,Aware_Preferences.DEBUG_TAG):TAG;
 
@@ -297,9 +303,7 @@ public class Aware extends Service {
             wearClient = new Intent(this, WearClient.class);
             startService(wearClient);
 
-            if( Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER).contains("api.awareframework.com") ) {
-                new AsyncPing().execute();
-            }
+            new AsyncPing().execute();
         }
 
         awareStatusMonitor = new Intent(this, Aware.class);
@@ -314,7 +318,9 @@ public class Aware extends Service {
             Hashtable<String, String> device_ping = new Hashtable<>();
             device_ping.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID));
 	        device_ping.put("ping", String.valueOf(System.currentTimeMillis()));
-	        new Https(awareContext, getResources().openRawResource(R.raw.awareframework)).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
+            try {
+                new Https(awareContext, SSLManager.getHTTPS(getApplicationContext(), "https://api.awareframework.com/index.php")).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
+            } catch (FileNotFoundException e) {}
 	        return true;
 		}
     }
@@ -1076,7 +1082,15 @@ public class Aware extends Service {
 
             String answer;
             if( protocol.equals("https") ) {
-                answer = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(study_url, data, true);
+
+                //Make sure we have the server's certificates for security
+                Intent ssl = new Intent(getApplicationContext(), SSLManager.class);
+                ssl.putExtra(SSLManager.EXTRA_SERVER, study_url);
+                startService(ssl);
+
+                try {
+                    answer = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataPOST(study_url, data, true);
+                } catch (FileNotFoundException e) { answer = null; }
             } else {
                 answer = new Http(getApplicationContext()).dataPOST(study_url, data, true);
             }
@@ -1179,12 +1193,13 @@ public class Aware extends Service {
             data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
 
             String study_url = Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER);
-            String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
             String protocol = study_url.substring(0, study_url.indexOf(":"));
 
             String response;
             if( protocol.equals("https") ) {
-                response = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(study_url, data, true);
+                try {
+                    response = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataPOST(study_url, data, true);
+                } catch (FileNotFoundException e ) { response = null; }
             } else {
                 response = new Http(getApplicationContext()).dataPOST(study_url, data, true);
             }
