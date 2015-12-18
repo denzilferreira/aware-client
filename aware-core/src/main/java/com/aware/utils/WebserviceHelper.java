@@ -20,6 +20,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileNotFoundException;
 import java.util.Hashtable;
 
 public class WebserviceHelper extends IntentService {
@@ -74,7 +75,11 @@ public class WebserviceHelper extends IntentService {
     		//Create table if doesn't exist on the remote webservice server
 			String response;
 			if( protocol.equals("https")) {
-				response = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
+				try {
+					response = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
+				} catch (FileNotFoundException e ) {
+					response = null;
+				}
 			} else {
 				response = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
 			}
@@ -95,7 +100,11 @@ public class WebserviceHelper extends IntentService {
     				//check the latest entry in remote database
 					String latest;
 					if( protocol.equals("https") ) {
-						latest = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
+						try {
+							latest = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
+						} catch (FileNotFoundException e) {
+							latest = null;
+						}
 					} else {
 						latest = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
 					}
@@ -188,7 +197,11 @@ public class WebserviceHelper extends IntentService {
 
 								String insert;
 								if( protocol.equals("https") ) {
-									insert = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+									try {
+										insert = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+									} catch (FileNotFoundException e ) {
+										insert = null;
+									}
 								} else {
 									insert = new Http(getApplicationContext()).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
 								}
@@ -209,7 +222,11 @@ public class WebserviceHelper extends IntentService {
 
 							String insert;
 							if( protocol.equals("https") ) {
-								insert = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+								try {
+									insert = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+								} catch (FileNotFoundException e ) {
+									insert = null;
+								}
 							} else {
 								insert = new Http(getApplicationContext()).dataPOST( WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
 							}
@@ -235,7 +252,11 @@ public class WebserviceHelper extends IntentService {
 			request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
     		String clear;
 			if( protocol.equals("https") ) {
-				clear = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
+				try {
+					clear = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
+				} catch (FileNotFoundException e ) {
+					clear = null;
+				}
 			} else {
 				clear = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
 			}

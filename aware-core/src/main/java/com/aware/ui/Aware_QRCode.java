@@ -33,6 +33,7 @@ import com.aware.ui.qrcode.CameraSourcePreview;
 import com.aware.ui.qrcode.GraphicOverlay;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
+import com.aware.utils.SSLManager;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.vision.MultiProcessor;
@@ -42,6 +43,7 @@ import com.google.android.gms.vision.barcode.BarcodeDetector;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 /**
@@ -241,13 +243,27 @@ public class Aware_QRCode extends Aware_Activity {
         protected JSONObject doInBackground(String... params) {
             study_url = params[0];
 
+            //Load server SSL certificates
+            Intent aware_SSL = new Intent(getApplicationContext(), SSLManager.class);
+            aware_SSL.putExtra(SSLManager.EXTRA_SERVER, study_url);
+            startService(aware_SSL);
+
             String study_api_key = study_url.substring(study_url.lastIndexOf("/")+1, study_url.length());
             String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
             String protocol = study_url.substring(0, study_url.indexOf(":"));
 
-            String request = "";
+            String request;
             if( protocol.equals("https") ) {
-                 request = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataGET( study_host + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+
+                try {
+                    Thread.sleep(3000); //wait 3 seconds for SSL certificates
+                } catch (InterruptedException e) {}
+
+                try {
+                    request = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET( study_host + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                } catch (FileNotFoundException e ) {
+                    request = null;
+                }
             } else {
                 request = new Http(getApplicationContext()).dataGET( study_host + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
             }

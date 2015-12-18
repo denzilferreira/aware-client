@@ -38,6 +38,7 @@ import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.utils.Aware_Plugin;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
+import com.aware.utils.SSLManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,6 +46,7 @@ import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -382,7 +384,7 @@ public class Plugins_Manager extends Aware_Activity {
             try {
                 //Load SSL public certificate so we can talk with server
                 CertificateFactory cf = CertificateFactory.getInstance("X.509");
-                InputStream caInput = new BufferedInputStream(sContext.getResources().openRawResource(R.raw.awareframework));
+                InputStream caInput = SSLManager.getHTTPS(sContext, study_url);
                 Certificate ca = cf.generateCertificate(caInput);
                 KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
                 keyStore.load(null, null); //initialize as empty keystore
@@ -606,7 +608,11 @@ public class Plugins_Manager extends Aware_Activity {
     		//Check for updates on the server side
             String response;
             if( protocol.equals("https")) {
-                response = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataGET( study_host + "/index.php/plugins/get_plugins" + (( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) ? "/" + Aware.getSetting(getApplicationContext(), "study_id") : ""), true );
+                try{
+                    response = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET( study_host + "/index.php/plugins/get_plugins" + (( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) ? "/" + Aware.getSetting(getApplicationContext(), "study_id") : ""), true );
+                } catch (FileNotFoundException e ) {
+                    response = null;
+                }
             } else {
                 response = new Http(getApplicationContext()).dataGET( study_host + "/index.php/plugins/get_plugins" + (( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) ? "/" + Aware.getSetting(getApplicationContext(), "study_id") : ""), true );
             }

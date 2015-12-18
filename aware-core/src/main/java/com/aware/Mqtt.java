@@ -12,7 +12,6 @@ import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
-import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -20,6 +19,7 @@ import com.aware.providers.Mqtt_Provider;
 import com.aware.providers.Mqtt_Provider.Mqtt_Messages;
 import com.aware.providers.Mqtt_Provider.Mqtt_Subscriptions;
 import com.aware.utils.Aware_Sensor;
+import com.aware.utils.SSLUtils;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -37,8 +37,6 @@ import org.json.JSONArray;
 /**
  * Service that connects to the MQTT P2P network for AWARE
  * @author denzil
- *
- * TODO: add support for SSL connections to server
  */
 public class Mqtt extends Aware_Sensor implements MqttCallback {
 	
@@ -58,7 +56,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	private static String MQTT_SERVER = "";
 	
 	/**
-	 * The MQTT server connection port
+	 * The MQTT server options port
 	 */
 	private static String MQTT_PORT = "";
 	
@@ -86,10 +84,10 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	private static String MQTT_QoS = "2";
 	
 	/**
-	 * MQTT connection protocol (default = tcp)
+	 * MQTT options protocol (default = tcp)
 	 * Options:
-	 * tcp: unencrypted connection protocol
-	 * ssl: encrypted connection protocol
+	 * tcp: unencrypted options protocol
+	 * ssl: encrypted options protocol
 	 */
 	private static String MQTT_PROTOCOL = "tcp";
 	
@@ -129,6 +127,11 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	 * {@link Mqtt#EXTRA_TOPIC}
 	 */
 	public static final String ACTION_AWARE_MQTT_TOPIC_UNSUBSCRIBE = "ACTION_AWARE_MQTT_TOPIC_UNSUBSCRIBE";
+
+    /**
+     * Received broadcast to update MQTT user credentials
+     */
+    public static final String ACTION_AWARE_MQTT_CREDENTIALS = "ACTION_AWARE_MQTT_CREDENTIALS";
 	
 	/**
 	 * Extra for Mqtt broadcast as "topic"
@@ -228,7 +231,6 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
      * @author df
      */
     public static class MQTTReceiver extends BroadcastReceiver {
-
         public void onReceive(Context context, Intent intent) {
             if(intent.getAction().equals(ACTION_AWARE_MQTT_MSG_PUBLISH)) {
                 String topic = intent.getStringExtra(EXTRA_TOPIC);
@@ -297,9 +299,13 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                     }
                 }
             }
-        };
+            if( intent.getAction().equals(ACTION_AWARE_MQTT_CREDENTIALS) ) {
+                Intent self = new Intent(context, Mqtt.class);
+                context.startService(self);
+            }
+        }
     }
-    private static final MQTTReceiver mqttReceiver = new MQTTReceiver();
+    private final MQTTReceiver mqttReceiver = new MQTTReceiver();
     
 	@Override
 	public void onCreate() {
@@ -316,19 +322,23 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         filter.addAction(Mqtt.ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
         filter.addAction(Mqtt.ACTION_AWARE_MQTT_TOPIC_UNSUBSCRIBE);
         filter.addAction(Mqtt.ACTION_AWARE_MQTT_MSG_PUBLISH);
+        filter.addAction(Mqtt.ACTION_AWARE_MQTT_CREDENTIALS);
         registerReceiver(mqttReceiver, filter);
 
         if( Aware.is_watch(this) ) {
             Log.d(TAG,"This is an Android Wear device, we can't connect to MQTT. Disabling it!");
             Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, false);
             stopSelf();
-            return;
         }
-
-        initializeMQTT();
     }
 
-	@Override
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        initializeMQTT();
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
 	public void onDestroy() {
 		super.onDestroy();
 
@@ -345,19 +355,10 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	    }
 		if(Aware.DEBUG) Log.d(TAG,"MQTT service terminated...");
 	}
-	
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
-	    initializeMQTT();
-        return START_STICKY;
-	}
 
 	private void initializeMQTT() {
-		
-		//Fixed: duplicate client connections to the server
 		if( MQTT_CLIENT != null && MQTT_CLIENT.isConnected() ) {
-			if( DEBUG ) Log.d(TAG,"Still connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
-			return;
+			if( DEBUG ) Log.d(TAG,"Connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
 		}
 
 		TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
@@ -372,56 +373,50 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         
         String MQTT_URL = MQTT_PROTOCOL + "://" + MQTT_SERVER + ":" + MQTT_PORT;
         
-        if(Aware.DEBUG) Log.d(TAG, "MQTT service active...");
-    	
-        try {
-        	if( MQTT_MESSAGES_PERSISTENCE != null ) {
-                MQTT_MESSAGES_PERSISTENCE.close(); //close previous opened connection to persistence
-        	}
-            MQTT_MESSAGES_PERSISTENCE = new MqttDefaultFilePersistence( getExternalFilesDir(null) + "/Documents/AWARE/" );
-            MQTT_MESSAGES_PERSISTENCE.open( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID), MQTT_URL );
+        if(Aware.DEBUG) Log.d(TAG, "MQTT service connecting: " + MQTT_URL);
 
-        } catch ( MqttException e ) {
-        	//It's OK because we use the same client ID for all instances of the client.
-        }
-        
+        if( MQTT_MESSAGES_PERSISTENCE == null ) MQTT_MESSAGES_PERSISTENCE = new MqttDefaultFilePersistence( getExternalFilesDir(null) + "/Documents/AWARE/" );
+        try {
+            MQTT_MESSAGES_PERSISTENCE.open( String.valueOf(Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).hashCode()), MQTT_URL );
+        } catch (MqttPersistenceException e ) { e.printStackTrace(); }
+
         MqttConnectOptions MQTT_OPTIONS = new MqttConnectOptions();
         MQTT_OPTIONS.setCleanSession( false ); //false to resume any pending messages
-        MQTT_OPTIONS.setConnectionTimeout( Integer.parseInt(MQTT_KEEPALIVE) + 10 ); //add 10 seconds to keep alive as connection timeout
+        MQTT_OPTIONS.setConnectionTimeout( Integer.parseInt(MQTT_KEEPALIVE) + 10 ); //add 10 seconds to keep alive as options timeout
         MQTT_OPTIONS.setKeepAliveInterval( Integer.parseInt(MQTT_KEEPALIVE) );
         if( MQTT_USERNAME.length() > 0 ) MQTT_OPTIONS.setUserName( MQTT_USERNAME );
         if( MQTT_PASSWORD.length() > 0 ) MQTT_OPTIONS.setPassword( MQTT_PASSWORD.toCharArray() );
+        if( MQTT_PROTOCOL.equalsIgnoreCase("ssl") ) {
+            MQTT_OPTIONS.setSocketFactory(new SSLUtils(this).getSocketFactory(MQTT_SERVER));
+        }
         
     	try {
     		MQTT_CLIENT = new MqttClient( MQTT_URL, String.valueOf(Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).hashCode()), MQTT_MESSAGES_PERSISTENCE );
-    		MQTT_CLIENT.setCallback( this );
-    		//Make connection in secondary thread
-			new MQTTAsync().execute( MQTT_OPTIONS );
+            MQTT_CLIENT.setCallback( this );
+            new MQTTAsync().execute( MQTT_OPTIONS );
 		} catch ( MqttException e ) {
 			if( Aware.DEBUG) Log.e(TAG, "Failed: " + e.getMessage());
 		}
 	}
-	
+
 	/**
-	 * UI Thread safe background MQTT connection attempt!
+	 * UI Thread safe background MQTT options attempt!
 	 * @author denzil
 	 */
 	private class MQTTAsync extends AsyncTask<MqttConnectOptions, Void, Boolean> {
-        
-		private MqttConnectOptions connection;
-		
+		private MqttConnectOptions options;
 		@Override
         protected Boolean doInBackground(MqttConnectOptions... params) {
-            connection = params[0];
+            options = params[0];
         	try {
                 if( MQTT_CLIENT != null && ! MQTT_CLIENT.isConnected() ) {
-                	MQTT_CLIENT.connect(connection);
+                	MQTT_CLIENT.connect(options);
                 }
             } catch (MqttSecurityException e) {
-                if( Aware.DEBUG ) Log.e(TAG,"Failed: "+e.getMessage());
+                if( Aware.DEBUG ) Log.e(TAG,"SecurityException: "+ e.getMessage());
                 return false;
             } catch (MqttException e) {
-                if( Aware.DEBUG ) Log.e(TAG,"Failed: "+e.getMessage());
+                if( Aware.DEBUG ) Log.e(TAG,"MqttException: "+ e.getMessage());
                 return false;
             }
             return true;
@@ -468,7 +463,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                 mContext.sendBroadcast(selfSubscribe);
 
 	        } else {
-	        	if( Aware.DEBUG ) Log.d( TAG,"MQTT Client failed to connect... Parameters used: " + connection.toString() );
+	        	if( Aware.DEBUG ) Log.d(TAG, "MQTT Client failed to connect... Parameters used: " + options.toString());
 	        }
 	    }
 	}

@@ -29,10 +29,14 @@ import com.aware.Aware_Preferences.StudyConfig;
 import com.aware.R;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
+import com.aware.utils.SSLManager;
 import com.aware.utils.WearClient;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileNotFoundException;
 
 //PreferenceActivity
 public class Aware_Activity extends AppCompatPreferenceActivity {
@@ -207,9 +211,13 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
 
             if( study_api_key.length() == 0 ) return null;
 
-            String request = "";
+            String request;
             if( protocol.equals("https") ) {
-                request = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataGET( study_host + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                try {
+                    request = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET( study_host + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                } catch (FileNotFoundException e ) {
+                    request = null;
+                }
             } else {
                 request = new Http(getApplicationContext()).dataGET( study_host + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
             }

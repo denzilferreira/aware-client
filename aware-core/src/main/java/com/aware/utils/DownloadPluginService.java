@@ -16,6 +16,7 @@ import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyManagementException;
@@ -50,7 +51,11 @@ public class DownloadPluginService extends IntentService {
 
         String response;
         if( protocol.equals("https") ) {
-            response = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataGET( study_host + "/index.php/plugins/get_plugin/" + package_name, true);
+            try {
+                response = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET( study_host + "/index.php/plugins/get_plugin/" + package_name, true);
+            } catch (FileNotFoundException e ) {
+                response = null;
+            }
         } else {
             response = new Http(getApplicationContext()).dataGET( study_host + "/index.php/plugins/get_plugin/" + package_name, true);
         }
@@ -70,7 +75,7 @@ public class DownloadPluginService extends IntentService {
                 if( protocol.equals("https") ) { //Load SSL public certificate so we can talk with server
 
                     CertificateFactory cf = CertificateFactory.getInstance("X.509");
-                    InputStream caInput = new BufferedInputStream(getResources().openRawResource(R.raw.awareframework));
+                    InputStream caInput = SSLManager.getHTTPS(getApplicationContext(), study_url);
                     Certificate ca = cf.generateCertificate(caInput);
                     KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
                     keyStore.load(null, null); //initialize as empty keystore

@@ -43,11 +43,14 @@ import com.aware.ui.Aware_Activity;
 import com.aware.ui.Plugins_Manager;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
+import com.aware.utils.SSLManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -2289,7 +2292,11 @@ public class Aware_Preferences extends Aware_Activity {
 
                 String http_request;
                 if( protocol.equals("https") ) {
-                    http_request = new Https(context, context.getResources().openRawResource(R.raw.awareframework)).dataGET( study_host + "/index.php/plugins/get_plugin/" + package_name, true);
+                    try {
+                        http_request = new Https(context, SSLManager.getHTTPS(context, study_url)).dataGET( study_host + "/index.php/plugins/get_plugin/" + package_name, true);
+                    } catch (FileNotFoundException e ) {
+                        http_request = null;
+                    }
                 } else {
                     http_request = new Http(context).dataGET( study_host + "/index.php/plugins/get_plugin/" + package_name, true);
                 }
@@ -2351,6 +2358,11 @@ public class Aware_Preferences extends Aware_Activity {
 			
 			if( Aware.DEBUG ) Log.d(Aware.TAG, "Joining: " + study_url);
 
+            //Load server SSL certificates
+            Intent aware_SSL = new Intent(this, SSLManager.class);
+            aware_SSL.putExtra(SSLManager.EXTRA_SERVER, study_url);
+            startService(aware_SSL);
+
             //Request study settings
             Hashtable<String, String> data = new Hashtable<>();
             data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
@@ -2358,7 +2370,11 @@ public class Aware_Preferences extends Aware_Activity {
             String protocol = study_url.substring(0, study_url.indexOf(":"));
             String answer;
             if( protocol.equals("https") ) {
-                answer = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(study_url, data, true);
+                try {
+                    answer = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataPOST(study_url, data, true);
+                } catch (FileNotFoundException e ) {
+                    answer = null;
+                }
             } else {
                 answer = new Http(getApplicationContext()).dataPOST(study_url, data, true);
             }

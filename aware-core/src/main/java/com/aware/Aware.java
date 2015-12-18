@@ -286,8 +286,9 @@ public class Aware extends Service {
             Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php");
         }
 
+        //Load default awareframework.com SSL certificate for shared public plugins
         Intent aware_SSL = new Intent(this, SSLManager.class);
-        aware_SSL.putExtra(SSLManager.EXTRA_SERVER, "https://api.awareframework.com/index.php");
+        aware_SSL.putExtra(SSLManager.EXTRA_SERVER, "http://awareframework.com/index.php");
         startService(aware_SSL);
 
         DEBUG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_FLAG).equals("true");
@@ -319,7 +320,7 @@ public class Aware extends Service {
             device_ping.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID));
 	        device_ping.put("ping", String.valueOf(System.currentTimeMillis()));
             try {
-                new Https(awareContext, SSLManager.getHTTPS(getApplicationContext(), "https://api.awareframework.com/index.php")).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
+                new Https(awareContext, SSLManager.getHTTPS(getApplicationContext(), "http://awareframework.com/index.php")).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
             } catch (FileNotFoundException e) {}
 	        return true;
 		}
@@ -1205,11 +1206,39 @@ public class Aware extends Service {
             }
             if( response != null ) {
                 try {
-                    JSONArray j_array = new JSONArray(response);
-                    JSONObject io = j_array.getJSONObject(0);
+                    JSONArray configs = new JSONArray(response);
+                    JSONObject io = configs.getJSONObject(0);
                     if( io.has("message") ) {
                         if( io.getString("message").equals("This study is not ongoing anymore.") ) return true;
                         Log.d(Aware.TAG, io.getString("message"));
+                    } else { //We keep rotating MQTT credentials for security against malicious spam.
+                        JSONArray sensors = new JSONArray();
+                        for( int i = 0; i<configs.length(); i++ ) {
+                            try {
+                                JSONObject element = configs.getJSONObject(i);
+                                if( element.has("sensors")) {
+                                    sensors = element.getJSONArray("sensors");
+                                    break;
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        //Set the sensors' settings first
+                        for( int i=0; i < sensors.length(); i++ ) {
+                            try {
+                                JSONObject sensor_config = sensors.getJSONObject(i);
+                                if( sensor_config.getString("setting").equals(Aware_Preferences.MQTT_PASSWORD) ) {
+                                    Aware.setSetting( getApplicationContext(), sensor_config.getString("setting"), sensor_config.get("value") );
+                                    Intent updated_credentials = new Intent(Mqtt.ACTION_AWARE_MQTT_CREDENTIALS);
+                                    sendBroadcast(updated_credentials);
+                                    break;
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
                     return false;
                 } catch (JSONException e) {
@@ -1287,7 +1316,11 @@ public class Aware extends Service {
 
                 String http_request;
                 if( protocol.equals("https") ) {
-                    http_request = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataGET( study_host + "/index.php/plugins/get_plugin/" + package_name, true);
+                    try {
+                        http_request = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url) ).dataGET( study_host + "/index.php/plugins/get_plugin/" + package_name, true);
+                    } catch (FileNotFoundException e ) {
+                        http_request = null;
+                    }
                 } else {
                     http_request = new Http(getApplicationContext()).dataGET( study_host + "/index.php/plugins/get_plugin/" + package_name, true);
                 }
@@ -1346,7 +1379,12 @@ public class Aware extends Service {
 				return false;
 			}
 
-    		String response = new Https(awareContext, awareContext.getResources().openRawResource(R.raw.awareframework)).dataGET("https://api.awareframework.com/index.php/awaredev/framework_latest", true);
+            String response;
+            try {
+                response = new Https(awareContext, SSLManager.getHTTPS(awareContext, "http://awareframework.com/index.php") ).dataGET("https://api.awareframework.com/index.php/awaredev/framework_latest", true);
+            } catch (FileNotFoundException e ) {
+                response = null;
+            }
 	        if( response != null ) {
 	        	try {
 					JSONArray data = new JSONArray(response);
@@ -1487,7 +1525,11 @@ public class Aware extends Service {
 
             String http_request;
             if( protocol.equals("https")) {
-                http_request = new Https(awareContext, awareContext.getResources().openRawResource(R.raw.awareframework)).dataGET(study_host + "/index.php/plugins/get_plugin/" + app.packageName, true);
+                try {
+                    http_request = new Https(awareContext, SSLManager.getHTTPS(awareContext, study_url)).dataGET(study_host + "/index.php/plugins/get_plugin/" + app.packageName, true);
+                } catch (FileNotFoundException e ) {
+                    http_request = null;
+                }
             } else {
                 http_request = new Http(awareContext).dataGET(study_host + "/index.php/plugins/get_plugin/" + app.packageName, true);
             }
@@ -1576,7 +1618,7 @@ public class Aware extends Service {
 			File releases = new File( getExternalFilesDir(null)+"/Documents/AWARE", "releases");
 			releases.mkdirs();
 			
-			String url = "http://www.awareframework.com/" + filename;
+			String url = "http://awareframework.com/" + filename;
 
             Toast.makeText(this, "Updating AWARE...", Toast.LENGTH_SHORT).show();
 

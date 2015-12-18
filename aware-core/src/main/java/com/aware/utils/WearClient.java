@@ -24,6 +24,7 @@ import com.google.android.gms.wearable.Wearable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileNotFoundException;
 import java.util.Hashtable;
 import java.util.Iterator;
 
@@ -156,7 +157,11 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
 
                     String output;
                     if( protocol.equals("https")) {
-                        output = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataGET(request_url, request.getBoolean(WearClient.EXTRA_GZIP));
+                        try {
+                            output = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), request_url)).dataGET(request_url, request.getBoolean(WearClient.EXTRA_GZIP));
+                        } catch (FileNotFoundException e ) {
+                            output = null;
+                        }
                     } else {
                         output = new Http(getApplicationContext()).dataGET(request_url, request.getBoolean(WearClient.EXTRA_GZIP));
                     }
@@ -190,7 +195,11 @@ public class WearClient extends Service implements GoogleApiClient.ConnectionCal
 
                     String output;
                     if( protocol.equals("https")) {
-                        output = new Https(getApplicationContext(), getResources().openRawResource(R.raw.awareframework)).dataPOST(request.getString(WearClient.EXTRA_URL), data, request.getBoolean(WearClient.EXTRA_GZIP));
+                        try {
+                            output = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), request_url)).dataPOST(request_url, data, request.getBoolean(WearClient.EXTRA_GZIP));
+                        } catch (FileNotFoundException e ) {
+                            output = null;
+                        }
                     } else {
                         output = new Http(getApplicationContext()).dataPOST(request.getString(WearClient.EXTRA_URL), data, request.getBoolean(WearClient.EXTRA_GZIP));
                     }
