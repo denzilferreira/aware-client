@@ -254,9 +254,8 @@ public class Aware_QRCode extends Aware_Activity {
 
             String request;
             if( protocol.equals("https") ) {
-
                 try {
-                    Thread.sleep(3000); //wait 3 seconds for SSL certificates
+                    Thread.sleep(2000); //wait 2 seconds for SSL certificates
                 } catch (InterruptedException e) {}
 
                 try {

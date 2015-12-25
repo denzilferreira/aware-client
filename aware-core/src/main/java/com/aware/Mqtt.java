@@ -58,7 +58,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	/**
 	 * The MQTT server options port
 	 */
-	private static String MQTT_PORT = "";
+	private static String MQTT_PORT = "8883";
 	
 	/**
 	 * The user that is allowed to connect to the MQTT server
@@ -84,12 +84,12 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	private static String MQTT_QoS = "2";
 	
 	/**
-	 * MQTT options protocol (default = tcp)
+	 * MQTT options protocol (default = ssl)
 	 * Options:
 	 * tcp: unencrypted options protocol
 	 * ssl: encrypted options protocol
 	 */
-	private static String MQTT_PROTOCOL = "tcp";
+	private static String MQTT_PROTOCOL = "ssl";
 	
 	/**
 	 * MQTT message published ID
@@ -128,11 +128,6 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	 */
 	public static final String ACTION_AWARE_MQTT_TOPIC_UNSUBSCRIBE = "ACTION_AWARE_MQTT_TOPIC_UNSUBSCRIBE";
 
-    /**
-     * Received broadcast to update MQTT user credentials
-     */
-    public static final String ACTION_AWARE_MQTT_CREDENTIALS = "ACTION_AWARE_MQTT_CREDENTIALS";
-	
 	/**
 	 * Extra for Mqtt broadcast as "topic"
 	 */
@@ -299,13 +294,9 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                     }
                 }
             }
-            if( intent.getAction().equals(ACTION_AWARE_MQTT_CREDENTIALS) ) {
-                Intent self = new Intent(context, Mqtt.class);
-                context.startService(self);
-            }
         }
     }
-    private final MQTTReceiver mqttReceiver = new MQTTReceiver();
+    private static final MQTTReceiver mqttReceiver = new MQTTReceiver();
     
 	@Override
 	public void onCreate() {
@@ -322,7 +313,6 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         filter.addAction(Mqtt.ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
         filter.addAction(Mqtt.ACTION_AWARE_MQTT_TOPIC_UNSUBSCRIBE);
         filter.addAction(Mqtt.ACTION_AWARE_MQTT_MSG_PUBLISH);
-        filter.addAction(Mqtt.ACTION_AWARE_MQTT_CREDENTIALS);
         registerReceiver(mqttReceiver, filter);
 
         if( Aware.is_watch(this) ) {
@@ -359,6 +349,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	private void initializeMQTT() {
 		if( MQTT_CLIENT != null && MQTT_CLIENT.isConnected() ) {
 			if( DEBUG ) Log.d(TAG,"Connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
+            return;
 		}
 
 		TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;

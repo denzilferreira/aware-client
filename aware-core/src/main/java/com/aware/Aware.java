@@ -1192,6 +1192,7 @@ public class Aware extends Service {
 
             Hashtable<String, String> data = new Hashtable<>();
             data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+            data.put("study_check", "1");
 
             String study_url = Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER);
             String protocol = study_url.substring(0, study_url.indexOf(":"));
@@ -1209,36 +1210,8 @@ public class Aware extends Service {
                     JSONArray configs = new JSONArray(response);
                     JSONObject io = configs.getJSONObject(0);
                     if( io.has("message") ) {
-                        if( io.getString("message").equals("This study is not ongoing anymore.") ) return true;
                         Log.d(Aware.TAG, io.getString("message"));
-                    } else { //We keep rotating MQTT credentials for security against malicious spam.
-                        JSONArray sensors = new JSONArray();
-                        for( int i = 0; i<configs.length(); i++ ) {
-                            try {
-                                JSONObject element = configs.getJSONObject(i);
-                                if( element.has("sensors")) {
-                                    sensors = element.getJSONArray("sensors");
-                                    break;
-                                }
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                        //Set the sensors' settings first
-                        for( int i=0; i < sensors.length(); i++ ) {
-                            try {
-                                JSONObject sensor_config = sensors.getJSONObject(i);
-                                if( sensor_config.getString("setting").equals(Aware_Preferences.MQTT_PASSWORD) ) {
-                                    Aware.setSetting( getApplicationContext(), sensor_config.getString("setting"), sensor_config.get("value") );
-                                    Intent updated_credentials = new Intent(Mqtt.ACTION_AWARE_MQTT_CREDENTIALS);
-                                    sendBroadcast(updated_credentials);
-                                    break;
-                                }
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
+                        if( io.getString("message").equals("This study is not ongoing anymore.") ) return true;
                     }
                     return false;
                 } catch (JSONException e) {
