@@ -1066,6 +1066,54 @@ public class Aware extends Service {
     }
 
     /**
+     * Allows the dashboard to modify unitary settings for tweaking a configuration for devices.
+     * @param c
+     * @param configs
+     */
+    protected static void tweakSettings( Context c, JSONArray configs ) {
+        //Apply study settings
+        JSONArray plugins = new JSONArray();
+        JSONArray sensors = new JSONArray();
+        for( int i = 0; i<configs.length(); i++ ) {
+            try {
+                JSONObject element = configs.getJSONObject(i);
+                if( element.has("plugins") ) {
+                    plugins = element.getJSONArray("plugins");
+                }
+                if( element.has("sensors")) {
+                    sensors = element.getJSONArray("sensors");
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        //Set the sensors' settings first
+        for( int i=0; i < sensors.length(); i++ ) {
+            try {
+                JSONObject sensor_config = sensors.getJSONObject(i);
+                Aware.setSetting( c, sensor_config.getString("setting"), sensor_config.get("value") );
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        for( int i=0; i < plugins.length(); i++ ) {
+            try{
+                JSONObject plugin_config = plugins.getJSONObject(i);
+                String package_name = plugin_config.getString("plugin");
+                JSONArray plugin_settings = plugin_config.getJSONArray("settings");
+                for(int j=0; j<plugin_settings.length(); j++) {
+                    JSONObject plugin_setting = plugin_settings.getJSONObject(j);
+                    Aware.setSetting(c, plugin_setting.getString("setting"), plugin_setting.get("value"), package_name);
+                }
+            }catch( JSONException e ) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
      * Used by self-contained apps to join a study
      */
     public static class JoinStudy extends Aware_Preferences.StudyConfig {

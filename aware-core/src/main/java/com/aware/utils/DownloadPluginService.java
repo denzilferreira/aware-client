@@ -1,8 +1,11 @@
 package com.aware.utils;
 
 import android.app.IntentService;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.aware.Aware;
@@ -26,6 +29,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.util.Random;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
@@ -39,6 +43,8 @@ public class DownloadPluginService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+
+        final NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         String package_name = intent.getStringExtra("package_name");
         boolean is_update = intent.getBooleanExtra("is_update", false);
@@ -71,6 +77,16 @@ public class DownloadPluginService extends IntentService {
                 folders.mkdirs();
 
                 String package_url = study_host + json_package.getString("package_path") + json_package.getString("package_name");
+
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
+                mBuilder.setSmallIcon(R.drawable.ic_action_aware_plugins);
+                mBuilder.setContentTitle("AWARE Plugin");
+                mBuilder.setContentText(((is_update) ? "Updating " : "Downloading ") + json_package.getString("title"));
+                mBuilder.setProgress(0, 0, true);
+                mBuilder.setAutoCancel(true);
+
+                final int notID = new Random(System.currentTimeMillis()).nextInt();
+                notManager.notify(notID, mBuilder.build());
 
                 if( protocol.equals("https") ) { //Load SSL public certificate so we can talk with server
 
@@ -105,6 +121,9 @@ public class DownloadPluginService extends IntentService {
                                 @Override
                                 public void onCompleted(Exception e, File result) {
                                     if (result != null) {
+
+                                        notManager.cancel(notID);
+
                                         Intent promptInstall = new Intent(Intent.ACTION_VIEW);
                                         promptInstall.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                         promptInstall.setDataAndType(Uri.fromFile(result), "application/vnd.android.package-archive");
@@ -120,6 +139,9 @@ public class DownloadPluginService extends IntentService {
                                 @Override
                                 public void onCompleted(Exception e, File result) {
                                     if( result != null ) {
+
+                                        notManager.cancel(notID);
+
                                         Intent promptInstall = new Intent(Intent.ACTION_VIEW);
                                         promptInstall.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                         promptInstall.setDataAndType(Uri.fromFile(result), "application/vnd.android.package-archive");

@@ -1963,7 +1963,6 @@ public class Aware_Preferences extends Aware_Activity {
      * MQTT module settings UI
      */
     private void mqtt() {
-
         final CheckBoxPreference mqtt = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_MQTT);
         mqtt.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_MQTT).equals("true"));
         mqtt.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -2181,24 +2180,6 @@ public class Aware_Preferences extends Aware_Activity {
         if( Aware.getSetting(getApplicationContext(), "study_id").length() > 0 ) {
             new Async_StudyData().execute(Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
         }
-    }
-
-    /**
-     * Allows the dashboard to modify unitary settings for tweaking a configuration for devices.
-     * @param c
-     * @param configs
-     */
-    protected static void tweakSettings( Context c, JSONArray configs ) {
-        for( int i = 0; i< configs.length(); i++ ) {
-            try{
-                JSONObject setting = configs.getJSONObject(i);
-                Aware.setSetting( c, setting.getString("setting"), setting.get("value") );
-            } catch (JSONException e ){
-                e.printStackTrace();
-            }
-        }
-        //Apply new settings
-        c.sendBroadcast(new Intent(Aware.ACTION_AWARE_REFRESH));
     }
 
     /**

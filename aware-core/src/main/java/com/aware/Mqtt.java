@@ -188,7 +188,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
         if( topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/configuration") ||  topic.equals(Aware.getSetting(mContext, "study_id") + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID)+"/configuration") ) {
             JSONArray configs = new JSONArray(message.toString());
-            Aware_Preferences.tweakSettings(mContext, configs);
+            Aware.tweakSettings(mContext, configs);
         }
     }
 
@@ -372,7 +372,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         } catch (MqttPersistenceException e ) { e.printStackTrace(); }
 
         MqttConnectOptions MQTT_OPTIONS = new MqttConnectOptions();
-        MQTT_OPTIONS.setCleanSession( false ); //false to resume any pending messages
+        MQTT_OPTIONS.setCleanSession( true );
         MQTT_OPTIONS.setConnectionTimeout( Integer.parseInt(MQTT_KEEPALIVE) + 10 ); //add 10 seconds to keep alive as options timeout
         MQTT_OPTIONS.setKeepAliveInterval( Integer.parseInt(MQTT_KEEPALIVE) );
         if( MQTT_USERNAME.length() > 0 ) MQTT_OPTIONS.setUserName( MQTT_USERNAME );
