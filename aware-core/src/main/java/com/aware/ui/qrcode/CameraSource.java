@@ -743,6 +743,9 @@ public class CameraSource {
         // setting mFocusMode to the one set in the params
         mFocusMode = parameters.getFocusMode();
 
+        // setting mFlashMode to the one set in the params
+        mFlashMode = parameters.getFlashMode();
+
         if (mFlashMode != null) {
             if (parameters.getSupportedFlashModes().contains(
                     mFlashMode)) {
@@ -751,9 +754,6 @@ public class CameraSource {
                 Log.i(TAG, "Camera flash mode: " + mFlashMode + " is not supported on this device.");
             }
         }
-
-        // setting mFlashMode to the one set in the params
-        mFlashMode = parameters.getFlashMode();
 
         camera.setParameters(parameters);
 
