@@ -1092,7 +1092,7 @@ public class Aware extends Service {
         for( int i=0; i < sensors.length(); i++ ) {
             try {
                 JSONObject sensor_config = sensors.getJSONObject(i);
-                Aware.setSetting( c, sensor_config.getString("setting"), sensor_config.get("value") );
+                Aware.setSetting( c, sensor_config.getString("setting"), sensor_config.get("value"), "com.aware" );
             } catch (JSONException e) {
                 e.printStackTrace();
             }

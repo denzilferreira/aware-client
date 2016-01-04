@@ -34,8 +34,7 @@ public class SSLUtils {
 
     public SSLSocketFactory getSocketFactory( String host ) {
         try {
-            //-- ca.crt --
-            //load SSL certificate for Mosquitto
+            //load SSL certificate
             InputStream crt = SSLManager.getCA(mContext, host);
 
             //Load SSL public certificate so we can talk with the server

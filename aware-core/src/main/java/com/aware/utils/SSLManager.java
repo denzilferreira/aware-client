@@ -37,9 +37,6 @@ public class SSLManager extends IntentService {
         File host_credentials = new File( getExternalFilesDir(null) + "/Documents/", "credentials/"+ aware_host );
         host_credentials.mkdirs();
 
-//        Ion.with(getApplicationContext())
-//                .load("http://" + aware_host + "/public/ca.crt")
-//                .write(new File(getExternalFilesDir(null) + "/Documents/credentials/" + aware_host + "/ca.crt"));
         Ion.with(getApplicationContext())
                 .load("http://" + aware_host + "/public/server.crt")
                 .write(new File(getExternalFilesDir(null) + "/Documents/credentials/" + aware_host + "/server.crt"));

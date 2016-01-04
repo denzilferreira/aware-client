@@ -270,8 +270,10 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                             }
                         } else {
                             if( Aware.DEBUG ) Log.w( TAG, "Already subscribed: " + topic );
-                            if( ! subscriptions.isClosed() ) subscriptions.close();
                         }
+
+                        if( subscriptions != null && ! subscriptions.isClosed() ) subscriptions.close();
+
                     } else {
                         if( Aware.DEBUG ) Log.w( TAG, "Failed to subscribe: " + topic );
                     }

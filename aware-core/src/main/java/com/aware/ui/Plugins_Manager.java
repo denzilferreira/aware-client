@@ -678,7 +678,7 @@ public class Plugins_Manager extends Aware_Activity {
                             //Users' own plugins, add them back to the list
                             ContentValues data = new ContentValues();
                             data.put(Aware_Plugins.PLUGIN_NAME, pkg.applicationInfo.loadLabel(getPackageManager()).toString());
-                            data.put(Aware_Plugins.PLUGIN_DESCRIPTION, "Your plugin! Consider submitting your plugin to our repository (https://api.awareframework.com)!");
+                            data.put(Aware_Plugins.PLUGIN_DESCRIPTION, "Your plugin!");
                             data.put(Aware_Plugins.PLUGIN_VERSION, pkg.versionCode);
                             data.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, pkg.packageName);
                             data.put(Aware_Plugins.PLUGIN_AUTHOR, "You");
