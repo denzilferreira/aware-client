@@ -32,14 +32,29 @@ public class SSLManager extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         String server_url = intent.getStringExtra("aware_server");
+
         String aware_host = server_url.substring(0, server_url.indexOf("/index.php"));
         aware_host = aware_host.substring(aware_host.indexOf("//")+2, aware_host.length());
+
         File host_credentials = new File( getExternalFilesDir(null) + "/Documents/", "credentials/"+ aware_host );
         host_credentials.mkdirs();
 
+        String exception_aware;
+        if( aware_host.equals("api.awareframework.com") ) {
+            exception_aware = "awareframework.com";
+        } else exception_aware = aware_host;
+
         Ion.with(getApplicationContext())
-                .load("http://" + aware_host + "/public/server.crt")
-                .write(new File(getExternalFilesDir(null) + "/Documents/credentials/" + aware_host + "/server.crt"));
+                .load("http://" + exception_aware + "/public/server.crt")
+                .write(new File(getExternalFilesDir(null) + "/Documents/credentials/" + aware_host + "/server.crt"))
+                .setCallback(new FutureCallback<File>() {
+                    @Override
+                    public void onCompleted(Exception e, File result) {
+                        if( e == null ) {
+                            Log.d(Aware.TAG, "SSL certificate " + result.toString());
+                        }
+                    }
+                });
     }
 
     /**
@@ -53,9 +68,7 @@ public class SSLManager extends IntentService {
         String aware_host = server.substring(0, server.indexOf("/index.php"));
         aware_host = aware_host.substring(aware_host.indexOf("//")+2, aware_host.length());
 
-        if( aware_host.equalsIgnoreCase("api.awareframework.com") ) {
-            aware_host = "awareframework.com"; //we are using a different host for AWARE...
-        }
+        Log.d(Aware.TAG, "getHTTPS: " + aware_host );
 
         File host_credentials = new File( c.getExternalFilesDir(null) + "/Documents/", "credentials/"+ aware_host );
         if( host_credentials.exists() ) {
@@ -75,9 +88,7 @@ public class SSLManager extends IntentService {
      * @throws FileNotFoundException
      */
     public static InputStream getCA(Context c, String server) throws FileNotFoundException {
-
-        Log.d(Aware.TAG, "Load SSL certificate for Mosquitto: " + server);
-
+        Log.d(Aware.TAG, "getCA: " + server);
         File host_credentials = new File( c.getExternalFilesDir(null) + "/Documents/", "credentials/"+ server );
         if( host_credentials.exists() ) {
             File[] certs = host_credentials.listFiles();

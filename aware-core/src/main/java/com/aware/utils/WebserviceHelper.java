@@ -109,15 +109,8 @@ public class WebserviceHelper extends IntentService {
 						latest = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
 					}
     				if( latest == null ) return;
-    				
-    				String data = "[]";
-    				try {
-    				    data = latest;
-    				} catch( IllegalStateException e ) {
-    				    Log.d(Aware.TAG,"Unable to connect to webservices...");
-    				}
 
-                    if( DEBUG ) Log.d(Aware.TAG, "LATEST REMOTE ENTRY RESULT: " + data);
+                    if( DEBUG ) Log.d(Aware.TAG, "LATEST REMOTE ENTRY RESULT: " + latest);
 
     				//If in a study, get from joined date onwards
     				String study_condition = "";
@@ -128,7 +121,7 @@ public class WebserviceHelper extends IntentService {
                     //We always want to sync the device's profile
 					if( DATABASE_TABLE.equalsIgnoreCase("aware_device") ) study_condition = "";
 
-					JSONArray remoteData = new JSONArray(data);
+					JSONArray remoteData = new JSONArray(latest);
 
 					Cursor context_data;
 					if( remoteData.length() == 0 ) {

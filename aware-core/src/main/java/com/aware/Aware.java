@@ -288,7 +288,7 @@ public class Aware extends Service {
 
         //Load default awareframework.com SSL certificate for shared public plugins
         Intent aware_SSL = new Intent(this, SSLManager.class);
-        aware_SSL.putExtra(SSLManager.EXTRA_SERVER, "http://awareframework.com/index.php");
+        aware_SSL.putExtra(SSLManager.EXTRA_SERVER, "https://api.awareframework.com/index.php");
         startService(aware_SSL);
 
         DEBUG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_FLAG).equals("true");
@@ -320,7 +320,7 @@ public class Aware extends Service {
             device_ping.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID));
 	        device_ping.put("ping", String.valueOf(System.currentTimeMillis()));
             try {
-                new Https(awareContext, SSLManager.getHTTPS(getApplicationContext(), "http://awareframework.com/index.php")).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
+                new Https(awareContext, SSLManager.getHTTPS(getApplicationContext(), "https://api.awareframework.com/index.php")).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
             } catch (FileNotFoundException e) {}
 	        return true;
 		}
@@ -1402,7 +1402,7 @@ public class Aware extends Service {
 
             String response;
             try {
-                response = new Https(awareContext, SSLManager.getHTTPS(awareContext, "http://awareframework.com/index.php") ).dataGET("https://api.awareframework.com/index.php/awaredev/framework_latest", true);
+                response = new Https(awareContext, SSLManager.getHTTPS(awareContext, "http://api.awareframework.com/index.php") ).dataGET("https://api.awareframework.com/index.php/awaredev/framework_latest", true);
             } catch (FileNotFoundException e ) {
                 response = null;
             }
