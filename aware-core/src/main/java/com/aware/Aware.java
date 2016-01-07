@@ -1111,6 +1111,9 @@ public class Aware extends Service {
                 e.printStackTrace();
             }
         }
+
+        Intent apply = new Intent( Aware.ACTION_AWARE_REFRESH);
+        c.sendBroadcast(apply);
     }
 
     /**

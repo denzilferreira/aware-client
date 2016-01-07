@@ -374,7 +374,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         } catch (MqttPersistenceException e ) { e.printStackTrace(); }
 
         MqttConnectOptions MQTT_OPTIONS = new MqttConnectOptions();
-        MQTT_OPTIONS.setCleanSession( false );
+        MQTT_OPTIONS.setCleanSession( true );
         MQTT_OPTIONS.setConnectionTimeout( Integer.parseInt(MQTT_KEEPALIVE) + 10 ); //add 10 seconds to keep alive as options timeout
         MQTT_OPTIONS.setKeepAliveInterval( Integer.parseInt(MQTT_KEEPALIVE) );
         if( MQTT_USERNAME.length() > 0 ) MQTT_OPTIONS.setUserName( MQTT_USERNAME );
