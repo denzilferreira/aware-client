@@ -96,6 +96,12 @@ public class Aware_Plugin extends Service {
 
         aware = new Intent(getApplicationContext(), Aware.class);
         startService(aware);
+
+        if( Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true") ) {
+            Intent study_SSL = new Intent(this, SSLManager.class);
+            study_SSL.putExtra(SSLManager.EXTRA_SERVER, Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
+            startService(study_SSL);
+        }
     }
     
     @Override
