@@ -267,53 +267,59 @@ public class ESM_UI extends DialogFragment {
 
 	                    for(int i=0; i<checks.length(); i++) {
 	                        final CheckBox checked = new CheckBox(getActivity());
-	                        checked.setText(" " + checks.getString(i));
+
+							final int current_position = i;
+							checked.setText(" " + checks.getString(i));
 	                        checked.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 	                            @Override
 	                            public void onCheckedChanged(final CompoundButton buttonView, boolean isChecked) {
-                                    if( isChecked ) {
-	                                    if( buttonView.getText().equals(getResources().getString(R.string.aware_esm_other)) ) {
-	                                        checked.setOnClickListener(new View.OnClickListener() {
-	                                            @Override
-	                                            public void onClick(View v) {
-	                                            	final Dialog editOther = new Dialog(getActivity());
-	        	                                	editOther.setTitle(getResources().getString(R.string.aware_esm_other_follow));
-	        	                                	editOther.getWindow().setGravity(Gravity.TOP);
-	        	                                	editOther.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+                                    try {
+                                        if (isChecked) {
+                                            if (checks.getString(current_position).equals(getResources().getString(R.string.aware_esm_other))) {
+                                                checked.setOnClickListener(new View.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(View v) {
+                                                        final Dialog editOther = new Dialog(getActivity());
+                                                        editOther.setTitle(getResources().getString(R.string.aware_esm_other_follow));
+                                                        editOther.getWindow().setGravity(Gravity.TOP);
+                                                        editOther.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 
-	                                            	LinearLayout editor = new LinearLayout(getActivity());
-	                                                editor.setOrientation(LinearLayout.VERTICAL);
-	                                                editOther.setContentView(editor);
-	                                                editOther.show();
+                                                        LinearLayout editor = new LinearLayout(getActivity());
+                                                        editor.setOrientation(LinearLayout.VERTICAL);
+                                                        editOther.setContentView(editor);
+                                                        editOther.show();
 
-	                                                final EditText otherText = new EditText(getActivity());
-													otherText.setHint(getResources().getString(R.string.aware_esm_other_follow));
-	                                                editor.addView(otherText);
-													otherText.requestFocus();
-                                                    editOther.getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+                                                        final EditText otherText = new EditText(getActivity());
+                                                        otherText.setHint(getResources().getString(R.string.aware_esm_other_follow));
+                                                        editor.addView(otherText);
+                                                        otherText.requestFocus();
+                                                        editOther.getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 
-	                                                Button confirm = new Button(getActivity());
-	                                                confirm.setText("OK");
-	                                                confirm.setOnClickListener(new View.OnClickListener() {
-	                                                    @Override
-	                                                    public void onClick(View v) {
-	                                                        if( otherText.length() > 0 ) {
-	                                                        	selected_options.remove(buttonView.getText().toString());
-	                                                            checked.setText(otherText.getText());
-	                                                            selected_options.add(otherText.getText().toString());
-	                                                        }
-	                                                        editOther.dismiss();
-	                                                    }
-	                                                });
-	                                                editor.addView(confirm);
-	                                            }
-	                                        });
-	                                    }else {
-	                                    	selected_options.add(buttonView.getText().toString());
-	                                    }
-	                                } else {
-	                                    selected_options.remove(buttonView.getText().toString());
-	                                }
+                                                        Button confirm = new Button(getActivity());
+                                                        confirm.setText("OK");
+                                                        confirm.setOnClickListener(new View.OnClickListener() {
+                                                            @Override
+                                                            public void onClick(View v) {
+                                                                if (otherText.length() > 0) {
+                                                                    selected_options.remove(buttonView.getText().toString());
+                                                                    checked.setText(otherText.getText());
+                                                                    selected_options.add(otherText.getText().toString());
+                                                                }
+                                                                editOther.dismiss();
+                                                            }
+                                                        });
+                                                        editor.addView(confirm);
+                                                    }
+                                                });
+                                            } else {
+                                                selected_options.add(buttonView.getText().toString());
+                                            }
+                                        } else {
+                                            selected_options.remove(buttonView.getText().toString());
+                                        }
+                                    }catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
 	                            }
 	                        });
 	                        checkboxes.addView(checked);
@@ -585,11 +591,11 @@ public class ESM_UI extends DialogFragment {
 		super.onPause();
 
         if( ESM.isESMVisible(getActivity().getApplicationContext()) ) {
-            if( Aware.DEBUG ) Log.d(TAG, "ESM was visible, go back to notification bar");
+            if( Aware.DEBUG ) Log.d(TAG, "ESM was visible but not answered, go back to notification bar");
 
             //Revert to NEW state
             ContentValues rowData = new ContentValues();
-            rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
+            rowData.put(ESM_Data.ANSWER_TIMESTAMP, 0);
             rowData.put(ESM_Data.STATUS, ESM.STATUS_NEW);
             sContext.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm_id, null);
 

@@ -364,7 +364,7 @@ public class ESM extends Aware_Sensor {
                         JSONObject esm = esms.getJSONObject(i).getJSONObject(EXTRA_ESM);
                         
                         ContentValues rowData = new ContentValues();
-                        rowData.put(ESM_Data.TIMESTAMP, esm_timestamp);
+                        rowData.put(ESM_Data.TIMESTAMP, esm_timestamp+i); //fix issue with synching
                         rowData.put(ESM_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
                         rowData.put(ESM_Data.TYPE, esm.optInt(ESM_Data.TYPE));
                         rowData.put(ESM_Data.TITLE, esm.optString(ESM_Data.TITLE));
