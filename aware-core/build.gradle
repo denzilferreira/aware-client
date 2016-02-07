@@ -37,6 +37,19 @@ android {
             minSdkVersion 10 //Android 2.3.3
         }
     }
+
+    signingConfigs {
+        release { //set values in ~/.gradle/gradle.properties to sign with your own keystore and certificate
+            storeFile file(KEYSTORE_FILE)
+            storePassword KEYSTORE_PASSWORD
+            keyAlias KEY
+            keyPassword KEY_PASSWORD
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+    }
 }
 
 dependencies {
