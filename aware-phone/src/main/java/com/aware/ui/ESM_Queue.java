@@ -12,7 +12,6 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 
 import com.aware.Aware;
-import com.aware.Aware_Preferences;
 import com.aware.ESM;
 import com.aware.providers.ESM_Provider.ESM_Data;
 
@@ -34,7 +33,7 @@ public class ESM_Queue extends FragmentActivity {
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         manager.cancel(ESM.ESM_NOTIFICATION_ID);
 
-        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
+        TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
 
         Intent queue_started = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_STARTED);
         sendBroadcast(queue_started);

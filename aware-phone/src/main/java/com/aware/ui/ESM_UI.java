@@ -28,7 +28,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.aware.Aware;
-import com.aware.Aware_Preferences;
 import com.aware.ESM;
 import com.aware.R;
 import com.aware.providers.ESM_Provider.ESM_Data;
@@ -65,7 +64,7 @@ public class ESM_UI extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 		LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-		TAG = Aware.getSetting(getActivity().getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getActivity().getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
+		TAG = Aware.getSetting(getActivity().getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getActivity().getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
 
         Cursor visible_esm;
         if( ESM.isESMVisible(getActivity().getApplicationContext()) ) {

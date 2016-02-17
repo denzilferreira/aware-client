@@ -54,7 +54,7 @@ import com.aware.utils.Http;
 import com.aware.utils.Https;
 import com.aware.utils.SSLManager;
 import com.aware.utils.Scheduler;
-import com.aware.utils.WearClient;
+import com.aware.utils.StudyUtils;
 import com.aware.utils.WebserviceHelper;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
@@ -300,9 +300,9 @@ public class Aware extends Service {
 
         //Only the official client will do this.
         if ( getPackageName().equals("com.aware") ) {
-            if (DEBUG) Log.d(TAG, "Starting Android Wear HTTP proxy...");
-            wearClient = new Intent(this, WearClient.class);
-            startService(wearClient);
+//            if (DEBUG) Log.d(TAG, "Starting Android Wear HTTP proxy...");
+//            wearClient = new Intent(this, WearClient.class);
+//            startService(wearClient);
 
             new AsyncPing().execute();
         }
@@ -1061,7 +1061,7 @@ public class Aware extends Service {
      */
     public static void joinStudy( Context context, String study_url ) {
         Intent join = new Intent( context, JoinStudy.class );
-        join.putExtra(Aware_Preferences.StudyConfig.EXTRA_JOIN_STUDY, study_url);
+        join.putExtra(StudyUtils.EXTRA_JOIN_STUDY, study_url);
         context.startService(join);
     }
 
@@ -1119,7 +1119,7 @@ public class Aware extends Service {
     /**
      * Used by self-contained apps to join a study
      */
-    public static class JoinStudy extends Aware_Preferences.StudyConfig {
+    public static class JoinStudy extends StudyUtils {
         @Override
         protected void onHandleIntent(Intent intent) {
             String study_url = intent.getStringExtra(EXTRA_JOIN_STUDY);

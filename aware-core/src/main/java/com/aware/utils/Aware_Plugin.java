@@ -12,7 +12,6 @@ import android.net.Uri;
 import android.os.IBinder;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
@@ -78,7 +77,7 @@ public class Aware_Plugin extends Service {
     public void onCreate() {
         super.onCreate();
 
-        TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
+        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
         DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
         
         if( DEBUG ) Log.d(TAG, TAG + " plugin created!");

@@ -9,10 +9,7 @@ import android.os.Build;
 import android.os.IBinder;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
-import android.support.annotation.Nullable;
 import android.util.Log;
-
-import java.util.HashMap;
 
 public class Aware_TTS extends Service implements OnInitListener {
 
@@ -78,7 +75,6 @@ public class Aware_TTS extends Service implements OnInitListener {
         if( tts != null ) tts.shutdown();
     }
 
-    @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;

@@ -24,18 +24,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.aware.Aware;
-import com.aware.Aware_Preferences;
 import com.aware.Aware_Preferences.StudyConfig;
 import com.aware.R;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
 import com.aware.utils.SSLManager;
-import com.aware.utils.WearClient;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 
 //PreferenceActivity

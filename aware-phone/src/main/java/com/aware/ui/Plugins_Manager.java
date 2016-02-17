@@ -1,7 +1,6 @@
 
 package com.aware.ui;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
@@ -33,7 +32,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.aware.Aware;
-import com.aware.Aware_Preferences;
 import com.aware.R;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.utils.Http;
@@ -70,7 +68,7 @@ import javax.net.ssl.TrustManagerFactory;
  * @author denzil
  *
  */
-public class Plugins_Manager extends Activity {
+public class Plugins_Manager extends Aware_Activity {
     
 	/**
 	 * Plugin installed but disabled

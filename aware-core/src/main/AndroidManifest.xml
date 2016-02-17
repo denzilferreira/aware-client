@@ -51,77 +51,8 @@
         android:theme="@style/Theme.Aware"
         android:hardwareAccelerated="true">
 
-        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
-        <meta-data android:name="com.google.android.gms.vision.DEPENDENCIES" android:value="barcode" />
-
         <!-- Activities -->
 
-        <activity
-            android:name="com.aware.Aware_Preferences"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:enabled="@bool/display_aware"
-            android:exported="true"
-            android:icon="@drawable/ic_launcher_aware"
-            android:label="@string/aware_sensors"
-            android:theme="@style/Theme.Aware"
-            android:launchMode="singleTop">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name="com.aware.ui.Stream_UI"
-            android:exported="true"
-            android:enabled="@bool/display_aware"
-            android:icon="@drawable/ic_launcher_aware"
-            android:label="@string/aware_stream"
-            android:noHistory="true"
-            android:launchMode="singleTop"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:theme="@style/Theme.Aware"
-            android:parentActivityName="com.aware.Aware_Preferences">
-            <intent-filter>
-                <action android:name="android.intent.action.ASSIST" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            <meta-data android:name="com.android.systemui.action_assist_icon" android:resource="@drawable/ic_launcher_aware" />
-            <meta-data android:name="android.support.PARENT_ACTIVITY" android:value="com.aware.Aware_Preferences" />
-        </activity>
-        <activity
-            android:name="com.aware.ui.Aware_QRCode"
-            android:enabled="@bool/display_aware"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:launchMode="singleTop"
-            android:theme="@style/Theme.Aware"
-            android:label="@string/aware_studies"
-            android:parentActivityName="com.aware.Aware_Preferences">
-            <meta-data android:name="android.support.PARENT_ACTIVITY" android:value="com.aware.Aware_Preferences" />
-        </activity>
-        <activity
-            android:name="com.aware.ui.Plugins_Manager"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:launchMode="singleTop"
-            android:exported="true"
-            android:icon="@drawable/ic_launcher_settings"
-            android:label="@string/aware_plugins"
-            android:theme="@style/Theme.Aware"
-            android:parentActivityName="com.aware.Aware_Preferences"
-            >
-            <meta-data android:name="android.support.PARENT_ACTIVITY" android:value="com.aware.Aware_Preferences" />
-        </activity>
-        <activity android:name="com.aware.ui.About"
-            android:enabled="@bool/display_aware"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:launchMode="singleTop"
-            android:exported="true"
-            android:label="@string/aware_team"
-            android:theme="@style/Theme.Aware"
-            android:parentActivityName="com.aware.Aware_Preferences"
-            >
-            <meta-data android:name="android.support.PARENT_ACTIVITY" android:value="com.aware.Aware_Preferences" />
-        </activity>
         <activity
             android:name="com.aware.ui.ESM_Queue"
             android:configChanges="keyboardHidden|orientation|screenSize"
@@ -288,7 +219,6 @@
         <service android:name="com.aware.utils.DownloadPluginService" android:exported="true" />
         <service android:name="com.aware.Aware_Preferences$StudyConfig" android:exported="true"/>
         <service android:name="com.aware.utils.Aware_TTS" android:exported="true"/>
-        <service android:name="com.aware.utils.WearClient" android:exported="true"/>
 
         <!-- Receivers -->
 
