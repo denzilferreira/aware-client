@@ -53,10 +53,6 @@ public class Https {
      */
 	public Https(Context c, InputStream certificate ) {
 		sContext = c;
-        if( c.getPackageName().equalsIgnoreCase("com.aware") ) {
-            Intent wearClient = new Intent(sContext, WearClient.class);
-            sContext.startService(wearClient);
-        }
 
         try {
 
@@ -103,47 +99,6 @@ public class Https {
 	 */
 	public synchronized String dataPOST(String url, Hashtable<String, String> data, boolean is_gzipped) {
         if( url.length() == 0 ) return null;
-
-        if( Aware.is_watch(sContext) ) {
-
-            JSONObject data_json = new JSONObject();
-
-			Enumeration e = data.keys();
-			while(e.hasMoreElements()) {
-				String key = (String) e.nextElement();
-				try {
-					data_json.put(key, data.get(key));
-				} catch (JSONException e1) {
-					e1.printStackTrace();
-				}
-			}
-
-			if( Aware.DEBUG ) Log.d(TAG, "Waiting for phone's HTTPS POST request...\n" + "URL:" + url + "\nData:" + data_json.toString());
-
-            Intent phoneRequest = new Intent(WearClient.ACTION_AWARE_ANDROID_WEAR_HTTP_POST);
-            phoneRequest.putExtra(WearClient.EXTRA_URL, url);
-            phoneRequest.putExtra(WearClient.EXTRA_DATA, data_json.toString());
-            phoneRequest.putExtra(WearClient.EXTRA_GZIP, is_gzipped);
-            sContext.sendBroadcast(phoneRequest);
-
-            long time = System.currentTimeMillis();
-
-            while( WearClient.wearResponse == null ){
-				if( WearClient.wearResponse != null || (System.currentTimeMillis()-time) > 60000 ) {
-                    if( System.currentTimeMillis() - time > 60000 ) Log.w(TAG,"HTTP request timeout...");
-                    break;
-                }
-            }
-
-            if( Aware.DEBUG ) {
-                Log.d(TAG, "AndroidWear POST benchmark: " + (System.currentTimeMillis() - time)/1000 + " seconds");
-            }
-
-            String response = WearClient.wearResponse;
-            WearClient.wearResponse = null;
-
-            return response;
-		}
 
 		try{
 
@@ -225,32 +180,6 @@ public class Https {
      */
     public synchronized String dataGET(String url, boolean is_gzipped) {
         if( url.length() == 0 ) return null;
-
-        if( Aware.is_watch(sContext) ) {
-
-            if( Aware.DEBUG ) Log.d(TAG, "Waiting for phone's HTTPS GET request...\n" + "URL:" + url );
-
-            Intent phoneRequest = new Intent(WearClient.ACTION_AWARE_ANDROID_WEAR_HTTP_GET);
-            phoneRequest.putExtra(WearClient.EXTRA_URL, url);
-            phoneRequest.putExtra(WearClient.EXTRA_GZIP, is_gzipped);
-            sContext.sendBroadcast(phoneRequest);
-
-            long time = System.currentTimeMillis();
-            while( WearClient.wearResponse == null ){
-				if( WearClient.wearResponse != null || (System.currentTimeMillis()-time) > 60000 ) {
-                    if( System.currentTimeMillis() - time > 60000 ) Log.w(TAG,"HTTP request timeout...");
-                    break;
-                }
-            }
-
-            if( Aware.DEBUG ) {
-                Log.d(TAG, "AndroidWear GET benchmark: " + (System.currentTimeMillis() - time)/1000 + " seconds");
-            }
-
-            String response = WearClient.wearResponse;
-            WearClient.wearResponse = null;
-            return response;
-        }
 
         try {
 

@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">AWARE</string>
-    <string name="aware_description">AWARE is an Android\'s framework dedicated to infer, log and share mobile context information between mobile applications. Visit www.awareframework.com for details.</string>
+    <string name="aware_description">AWARE is an Android\'s framework dedicated to infer, log and share mobile context information between mobile applications. Visit awareframework.com for details.</string>
     <string name="read_permission">Allow read-only access to the Context Providers data.</string>
     <string name="write_permission">Allow read and write access to the Context Providers data.</string>
-    <string name="drawer_open">Opened</string>
-    <string name="drawer_close">Closed</string>
     <string name="aware_studies">AWARE Studies</string>
     <string name="aware_sensors">AWARE</string>
     <string name="aware_stream">AWARE Stream</string>

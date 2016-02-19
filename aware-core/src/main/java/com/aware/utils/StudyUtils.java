@@ -18,7 +18,6 @@ import android.widget.Toast;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.R;
-import com.aware.ui.Plugins_Manager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -206,10 +205,10 @@ public class StudyUtils extends IntentService {
                     try {
                         if (!http_request.equals("[]")) {
                             JSONObject json_package = new JSONObject(http_request);
-                            if (json_package.getInt("version") > Plugins_Manager.getVersion(context, package_name)) {
+                            if (json_package.getInt("version") > PluginsManager.getVersion(context, package_name)) {
                                 Aware.downloadPlugin(context, package_name, true); //update the existing plugin
                             } else {
-                                PackageInfo installed = Plugins_Manager.isInstalled(context, package_name);
+                                PackageInfo installed = PluginsManager.isInstalled(context, package_name);
                                 if (installed != null) {
                                     Aware.startPlugin(context, package_name); //start plugin
                                 } else {

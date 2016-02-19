@@ -1,2 +1,2 @@
-include ':aware-core', ':aware-phone'
+include ':aware-core'
 
