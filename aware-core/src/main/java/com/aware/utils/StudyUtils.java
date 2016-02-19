@@ -46,7 +46,7 @@ public class StudyUtils extends IntentService {
     protected void onHandleIntent(Intent intent) {
         String study_url = intent.getStringExtra(EXTRA_JOIN_STUDY);
 
-        if( Aware.DEBUG ) Log.d(Aware.TAG, "Joining: " + study_url);
+        if (Aware.DEBUG) Log.d(Aware.TAG, "Joining: " + study_url);
 
         //Load server SSL certificates
         Intent aware_SSL = new Intent(this, SSLManager.class);
@@ -59,24 +59,24 @@ public class StudyUtils extends IntentService {
 
         String protocol = study_url.substring(0, study_url.indexOf(":"));
         String answer;
-        if( protocol.equals("https") ) {
+        if (protocol.equals("https")) {
             try {
                 answer = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataPOST(study_url, data, true);
-            } catch (FileNotFoundException e ) {
+            } catch (FileNotFoundException e) {
                 answer = null;
             }
         } else {
             answer = new Http(getApplicationContext()).dataPOST(study_url, data, true);
         }
 
-        if( answer == null ) {
+        if (answer == null) {
             Toast.makeText(getApplicationContext(), "Failed to connect to server... try again.", Toast.LENGTH_LONG).show();
             return;
         }
 
         try {
             JSONArray configs_study = new JSONArray(answer);
-            if( configs_study.getJSONObject(0).has("message") ) {
+            if (configs_study.getJSONObject(0).has("message")) {
                 Toast.makeText(getApplicationContext(), "This study is no longer available.", Toast.LENGTH_LONG).show();
                 return;
             }
@@ -90,10 +90,10 @@ public class StudyUtils extends IntentService {
             NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             notManager.notify(33, mBuilder.build());
 
-            if( Aware.DEBUG ) Log.d(Aware.TAG, "Study configs: " + configs_study.toString(5));
+            if (Aware.DEBUG) Log.d(Aware.TAG, "Study configs: " + configs_study.toString(5));
 
             //Apply new configurations in AWARE Client
-            applySettings( getApplicationContext(), configs_study );
+            applySettings(getApplicationContext(), configs_study);
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -104,29 +104,30 @@ public class StudyUtils extends IntentService {
      * Sets first all the settings to the client.
      * If there are plugins, apply the same settings to them.
      * This allows us to add plugins to studies from the dashboard.
+     *
      * @param context
      * @param configs
      */
-    protected static void applySettings( Context context, JSONArray configs ) {
+    protected static void applySettings(Context context, JSONArray configs) {
 
         boolean is_developer = Aware.getSetting(context, Aware_Preferences.DEBUG_FLAG).equals("true");
 
         //First reset the client to default settings...
         Aware.reset(context);
 
-        if( is_developer ) Aware.setSetting(context, Aware_Preferences.DEBUG_FLAG, true);
+        if (is_developer) Aware.setSetting(context, Aware_Preferences.DEBUG_FLAG, true);
 
         //Now apply the new settings
         JSONArray plugins = new JSONArray();
         JSONArray sensors = new JSONArray();
 
-        for( int i = 0; i<configs.length(); i++ ) {
+        for (int i = 0; i < configs.length(); i++) {
             try {
                 JSONObject element = configs.getJSONObject(i);
-                if( element.has("plugins") ) {
+                if (element.has("plugins")) {
                     plugins = element.getJSONArray("plugins");
                 }
-                if( element.has("sensors")) {
+                if (element.has("sensors")) {
                     sensors = element.getJSONArray("sensors");
                 }
             } catch (JSONException e) {
@@ -135,10 +136,10 @@ public class StudyUtils extends IntentService {
         }
 
         //Set the sensors' settings first
-        for( int i=0; i < sensors.length(); i++ ) {
+        for (int i = 0; i < sensors.length(); i++) {
             try {
                 JSONObject sensor_config = sensors.getJSONObject(i);
-                Aware.setSetting( context, sensor_config.getString("setting"), sensor_config.get("value") );
+                Aware.setSetting(context, sensor_config.getString("setting"), sensor_config.get("value"));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -146,19 +147,19 @@ public class StudyUtils extends IntentService {
 
         //Set the plugins' settings now
         ArrayList<String> active_plugins = new ArrayList<>();
-        for( int i=0; i < plugins.length(); i++ ) {
-            try{
+        for (int i = 0; i < plugins.length(); i++) {
+            try {
                 JSONObject plugin_config = plugins.getJSONObject(i);
 
                 String package_name = plugin_config.getString("plugin");
                 active_plugins.add(package_name);
 
                 JSONArray plugin_settings = plugin_config.getJSONArray("settings");
-                for(int j=0; j<plugin_settings.length(); j++) {
+                for (int j = 0; j < plugin_settings.length(); j++) {
                     JSONObject plugin_setting = plugin_settings.getJSONObject(j);
                     Aware.setSetting(context, plugin_setting.getString("setting"), plugin_setting.get("value"), package_name);
                 }
-            }catch( JSONException e ) {
+            } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
@@ -176,6 +177,7 @@ public class StudyUtils extends IntentService {
 
     public static class CheckPlugins extends AsyncTask<ArrayList<String>, Void, Void> {
         private Context context;
+
         public CheckPlugins(Context c) {
             this.context = c;
         }
@@ -187,33 +189,34 @@ public class StudyUtils extends IntentService {
             String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
             String protocol = study_url.substring(0, study_url.indexOf(":"));
 
-            for( final String package_name : params[0] ) {
+            for (final String package_name : params[0]) {
 
                 String http_request;
-                if( protocol.equals("https") ) {
+                if (protocol.equals("https")) {
                     try {
-                        http_request = new Https(context, SSLManager.getHTTPS(context, study_url)).dataGET( study_host + "/index.php/plugins/get_plugin/" + package_name, true);
-                    } catch (FileNotFoundException e ) {
+                        http_request = new Https(context, SSLManager.getHTTPS(context, study_url)).dataGET(study_host + "/index.php/plugins/get_plugin/" + package_name, true);
+                    } catch (FileNotFoundException e) {
                         http_request = null;
                     }
                 } else {
-                    http_request = new Http(context).dataGET( study_host + "/index.php/plugins/get_plugin/" + package_name, true);
+                    http_request = new Http(context).dataGET(study_host + "/index.php/plugins/get_plugin/" + package_name, true);
                 }
 
-                if( http_request != null ) {
+                if (http_request != null) {
                     try {
-                        if( ! http_request.equals("[]") ) {
+                        if (!http_request.equals("[]")) {
                             JSONObject json_package = new JSONObject(http_request);
-                            if( json_package.getInt("version") > Plugins_Manager.getVersion(context, package_name) ) {
+                            if (json_package.getInt("version") > Plugins_Manager.getVersion(context, package_name)) {
                                 Aware.downloadPlugin(context, package_name, true); //update the existing plugin
                             } else {
                                 PackageInfo installed = Plugins_Manager.isInstalled(context, package_name);
-                                if( installed != null ) {
+                                if (installed != null) {
                                     Aware.startPlugin(context, package_name); //start plugin
                                 } else {
 
                                     //We don't have the plugin installed or bundled. Ask to install?
-                                    if (Aware.DEBUG) Log.d(Aware.TAG, package_name + " is not installed yet!");
+                                    if (Aware.DEBUG)
+                                        Log.d(Aware.TAG, package_name + " is not installed yet!");
 
                                     android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(context);
                                     builder.setTitle("AWARE")

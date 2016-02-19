@@ -300,10 +300,6 @@ public class Aware extends Service {
 
         //Only the official client will do this.
         if ( getPackageName().equals("com.aware") ) {
-//            if (DEBUG) Log.d(TAG, "Starting Android Wear HTTP proxy...");
-//            wearClient = new Intent(this, WearClient.class);
-//            startService(wearClient);
-
             new AsyncPing().execute();
         }
 
