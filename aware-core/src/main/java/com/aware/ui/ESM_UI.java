@@ -45,60 +45,22 @@ import java.util.ArrayList;
  */
 public class ESM_UI extends DialogFragment {
 
-	private static String TAG = "AWARE::ESM UI";
-
-	private static ESMExpireMonitor expire_monitor = null;
-	private static Dialog current_dialog = null;
-	private static Context sContext = null;
-
-	private static int esm_id = 0;
-	private static int esm_type = 0;
-	private static int expires_seconds = 0;
-
-	private static int selected_scale_progress = -1;
-
-	//Checkbox ESM UI to store selected items
-	private static ArrayList<String> selected_options = new ArrayList<String>();
-
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-
-        TAG = Aware.getSetting(getActivity().getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getActivity().getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
-
-        Cursor visible_esm;
-        if( ESM.isESMVisible(getActivity().getApplicationContext()) ) {
-            visible_esm = getActivity().getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + "=" + ESM.STATUS_VISIBLE, null, ESM_Data.TIMESTAMP + " ASC LIMIT 1");
-        } else {
-            visible_esm = getActivity().getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + "=" + ESM.STATUS_NEW, null, ESM_Data.TIMESTAMP + " ASC LIMIT 1");
-        }
-
-        if( visible_esm != null && visible_esm.moveToFirst() ) {
-            esm_id = visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data._ID));
-
-            //Fixed: set the esm as VISIBLE, to avoid displaying the same ESM twice due to changes in orientation
-        	ContentValues update_state = new ContentValues();
-        	update_state.put(ESM_Data.STATUS, ESM.STATUS_VISIBLE);
-        	getActivity().getContentResolver().update(ESM_Data.CONTENT_URI, update_state, ESM_Data._ID +"="+ esm_id, null);
-            //--
-
-            try {
-                JSONObject esm_json = new JSONObject(visible_esm.getString(visible_esm.getColumnIndex(ESM_Data.JSON)));
-
-
-
-                esm_type = visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data.TYPE));
-                expires_seconds = visible_esm.getInt(visible_esm.getColumnIndex(ESM_Data.EXPIRATION_THRESHOLD));
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return super.onCreateDialog(savedInstanceState);
-    }
-
-    //    @NonNull
+//	private static String TAG = "AWARE::ESM UI";
+//
+//	private static ESMExpireMonitor expire_monitor = null;
+//	private static Dialog current_dialog = null;
+//	private static Context sContext = null;
+//
+//	private static int esm_id = 0;
+//	private static int esm_type = 0;
+//	private static int expires_seconds = 0;
+//
+//	private static int selected_scale_progress = -1;
+//
+//	//Checkbox ESM UI to store selected items
+//	private static ArrayList<String> selected_options = new ArrayList<String>();
+//
+//    @NonNull
 //    @Override
 //	public Dialog onCreateDialog(Bundle savedInstanceState) {
 //        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -611,117 +573,117 @@ public class ESM_UI extends DialogFragment {
 //        current_dialog.setCanceledOnTouchOutside(false);
 //        return current_dialog;
 //	}
-
-	@Override
-	public void onCancel(DialogInterface dialog) {
-		super.onCancel(dialog);
-		if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
-		dismissESM();
-	}
-
-	@Override
-	public void onDismiss(DialogInterface dialog) {
-		super.onDismiss(dialog);
-		if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
-	}
-
-	@Override
-	public void onPause() {
-		super.onPause();
-
-        if( ESM.isESMVisible(getActivity().getApplicationContext()) ) {
-            if( Aware.DEBUG ) Log.d(TAG, "ESM was visible but not answered, go back to notification bar");
-
-            //Revert to NEW state
-            ContentValues rowData = new ContentValues();
-            rowData.put(ESM_Data.ANSWER_TIMESTAMP, 0);
-            rowData.put(ESM_Data.STATUS, ESM.STATUS_NEW);
-            sContext.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm_id, null);
-
-            //Update notification
-            ESM.notifyESM(getActivity().getApplicationContext());
-
-            current_dialog.dismiss();
-            getActivity().finish();
-        }
-	}
-
-    /**
-     * When dismissing one ESM by pressing cancel, the rest of the queue gets dismissed
-     */
-	private void dismissESM() {
-        ContentValues rowData = new ContentValues();
-        rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
-        rowData.put(ESM_Data.STATUS, ESM.STATUS_DISMISSED);
-        sContext.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm_id, null);
-
-        Cursor esm = sContext.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
-        if( esm != null && esm.moveToFirst() ) {
-            do {
-                rowData = new ContentValues();
-                rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
-                rowData.put(ESM_Data.STATUS, ESM.STATUS_DISMISSED);
-                sContext.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, null, null);
-            } while(esm.moveToNext());
-        }
-        if( esm != null && ! esm.isClosed()) esm.close();
-
-        Intent answer = new Intent(ESM.ACTION_AWARE_ESM_DISMISSED);
-        sContext.sendBroadcast(answer);
-
-		if( current_dialog != null ) current_dialog.dismiss();
-    }
-
-	/**
-	 * Checks on the background if the current visible dialog has expired or not. If it did, removes dialog and updates the status to expired.
-	 * @author denzil
-	 *
-	 */
-	private class ESMExpireMonitor extends AsyncTask<Void, Void, Void> {
-		private long display_timestamp = 0;
-		private int expires_in_seconds = 0;
-		private int esm_id = 0;
-
-		public ESMExpireMonitor(long display_timestamp, int expires_in_seconds, int esm_id) {
-			this.display_timestamp = display_timestamp;
-			this.expires_in_seconds = expires_in_seconds;
-			this.esm_id = esm_id;
-		}
-
-		@Override
-		protected Void doInBackground(Void... params) {
-			while( (System.currentTimeMillis()-display_timestamp) / 1000 <= expires_in_seconds ) {
-				if( isCancelled() ) {
-					Cursor esm = sContext.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data._ID + "=" + esm_id, null, null );
-					if( esm != null && esm.moveToFirst() ) {
-						int status = esm.getInt(esm.getColumnIndex(ESM_Data.STATUS));
-						switch(status) {
-							case ESM.STATUS_ANSWERED:
-								if( Aware.DEBUG ) Log.d(TAG,"ESM has been answered!");
-								break;
-							case ESM.STATUS_DISMISSED:
-								if( Aware.DEBUG ) Log.d(TAG,"ESM has been dismissed!");
-								break;
-						}
-					}
-					if( esm != null && ! esm.isClosed() ) esm.close();
-					return null;
-				}
-			}
-
-			if( Aware.DEBUG ) Log.d(TAG,"ESM has expired!");
-
-			ContentValues rowData = new ContentValues();
-			rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
-			rowData.put(ESM_Data.STATUS, ESM.STATUS_EXPIRED);
-			sContext.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm_id, null);
-
-			Intent expired = new Intent(ESM.ACTION_AWARE_ESM_EXPIRED);
-			sContext.sendBroadcast(expired);
-
-			if( current_dialog != null ) current_dialog.dismiss();
-
-			return null;
-		}
-	}
+//
+//	@Override
+//	public void onCancel(DialogInterface dialog) {
+//		super.onCancel(dialog);
+//		if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+//		dismissESM();
+//	}
+//
+//	@Override
+//	public void onDismiss(DialogInterface dialog) {
+//		super.onDismiss(dialog);
+//		if( expires_seconds > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+//	}
+//
+//	@Override
+//	public void onPause() {
+//		super.onPause();
+//
+//        if( ESM.isESMVisible(getActivity().getApplicationContext()) ) {
+//            if( Aware.DEBUG ) Log.d(TAG, "ESM was visible but not answered, go back to notification bar");
+//
+//            //Revert to NEW state
+//            ContentValues rowData = new ContentValues();
+//            rowData.put(ESM_Data.ANSWER_TIMESTAMP, 0);
+//            rowData.put(ESM_Data.STATUS, ESM.STATUS_NEW);
+//            sContext.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm_id, null);
+//
+//            //Update notification
+//            ESM.notifyESM(getActivity().getApplicationContext());
+//
+//            current_dialog.dismiss();
+//            getActivity().finish();
+//        }
+//	}
+//
+//    /**
+//     * When dismissing one ESM by pressing cancel, the rest of the queue gets dismissed
+//     */
+//	private void dismissESM() {
+//        ContentValues rowData = new ContentValues();
+//        rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
+//        rowData.put(ESM_Data.STATUS, ESM.STATUS_DISMISSED);
+//        sContext.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm_id, null);
+//
+//        Cursor esm = sContext.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
+//        if( esm != null && esm.moveToFirst() ) {
+//            do {
+//                rowData = new ContentValues();
+//                rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
+//                rowData.put(ESM_Data.STATUS, ESM.STATUS_DISMISSED);
+//                sContext.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, null, null);
+//            } while(esm.moveToNext());
+//        }
+//        if( esm != null && ! esm.isClosed()) esm.close();
+//
+//        Intent answer = new Intent(ESM.ACTION_AWARE_ESM_DISMISSED);
+//        sContext.sendBroadcast(answer);
+//
+//		if( current_dialog != null ) current_dialog.dismiss();
+//    }
+//
+//	/**
+//	 * Checks on the background if the current visible dialog has expired or not. If it did, removes dialog and updates the status to expired.
+//	 * @author denzil
+//	 *
+//	 */
+//	private class ESMExpireMonitor extends AsyncTask<Void, Void, Void> {
+//		private long display_timestamp = 0;
+//		private int expires_in_seconds = 0;
+//		private int esm_id = 0;
+//
+//		public ESMExpireMonitor(long display_timestamp, int expires_in_seconds, int esm_id) {
+//			this.display_timestamp = display_timestamp;
+//			this.expires_in_seconds = expires_in_seconds;
+//			this.esm_id = esm_id;
+//		}
+//
+//		@Override
+//		protected Void doInBackground(Void... params) {
+//			while( (System.currentTimeMillis()-display_timestamp) / 1000 <= expires_in_seconds ) {
+//				if( isCancelled() ) {
+//					Cursor esm = sContext.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data._ID + "=" + esm_id, null, null );
+//					if( esm != null && esm.moveToFirst() ) {
+//						int status = esm.getInt(esm.getColumnIndex(ESM_Data.STATUS));
+//						switch(status) {
+//							case ESM.STATUS_ANSWERED:
+//								if( Aware.DEBUG ) Log.d(TAG,"ESM has been answered!");
+//								break;
+//							case ESM.STATUS_DISMISSED:
+//								if( Aware.DEBUG ) Log.d(TAG,"ESM has been dismissed!");
+//								break;
+//						}
+//					}
+//					if( esm != null && ! esm.isClosed() ) esm.close();
+//					return null;
+//				}
+//			}
+//
+//			if( Aware.DEBUG ) Log.d(TAG,"ESM has expired!");
+//
+//			ContentValues rowData = new ContentValues();
+//			rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
+//			rowData.put(ESM_Data.STATUS, ESM.STATUS_EXPIRED);
+//			sContext.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm_id, null);
+//
+//			Intent expired = new Intent(ESM.ACTION_AWARE_ESM_EXPIRED);
+//			sContext.sendBroadcast(expired);
+//
+//			if( current_dialog != null ) current_dialog.dismiss();
+//
+//			return null;
+//		}
+//	}
 }

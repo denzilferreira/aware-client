@@ -182,7 +182,6 @@ public class ESM extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG) : TAG;
         if (Aware.DEBUG)
             Log.d(TAG, "ESM service active... Queue = " + ESM_Queue.getQueueSize(getApplicationContext()));
@@ -371,10 +370,10 @@ public class ESM extends Aware_Sensor {
                         ContentValues rowData = new ContentValues();
                         rowData.put(ESM_Data.TIMESTAMP, esm_timestamp + i); //fix issue with synching
                         rowData.put(ESM_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-                        rowData.put(ESM_Data.JSON, esm.optString(ESM_Data.JSON));
-                        rowData.put(ESM_Data.EXPIRATION_THRESHOLD, esm.optInt(ESM_Data.EXPIRATION_THRESHOLD));
+                        rowData.put(ESM_Data.JSON, esm.getString(ESM_Data.JSON));
+                        rowData.put(ESM_Data.EXPIRATION_THRESHOLD, esm.optInt(ESM_Data.EXPIRATION_THRESHOLD)); //optional, defaults to 0
                         rowData.put(ESM_Data.STATUS, ESM.STATUS_NEW);
-                        rowData.put(ESM_Data.TRIGGER, esm.optString(ESM_Data.TRIGGER));
+                        rowData.put(ESM_Data.TRIGGER, esm.optString(ESM_Data.TRIGGER)); //optional, defaults to ""
 
                         if (rowData.getAsInteger(ESM_Data.EXPIRATION_THRESHOLD) == 0) {
                             is_persistent = true;

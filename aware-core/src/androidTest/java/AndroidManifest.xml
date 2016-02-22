@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.aware">
+    <uses-permission android:name="com.aware.READ_CONTEXT_DATA" />
+    <uses-permission android:name="com.aware.WRITE_CONTEXT_DATA" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE" />
+
+    <application android:label="@string/app_name">
+        <!-- Activities -->
+        <activity
+            android:name="com.aware.ui.ESM_Queue"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:noHistory="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.AppCompat.Translucent"
+        />
+        <activity android:name="com.aware.ui.PermissionsHandler"
+            android:exported="true"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.AppCompat.Translucent"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+        />
+
+        <!-- Services -->
+        <service android:name="com.aware.Keyboard" android:exported="true" />
+        <service android:name="com.aware.utils.Scheduler" android:exported="true" />
+        <service android:name="com.aware.Aware" android:exported="true" />
+        <service android:name="com.aware.Aware$JoinStudy" android:exported="true" />
+        <service android:name="com.aware.utils.SSLManager" android:exported="true" />
+
+        <service
+            android:name="com.aware.Applications"
+            android:exported="true"
+            android:enabled="@bool/accessibility_access"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" >
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+                <category android:name="android.accessibilityservice.category.FEEDBACK_GENERIC" />
+            </intent-filter>
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/aware_accessibility_config" />
+        </service>
+
+        <service
+            android:name="com.aware.Applications$BackgroundService"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Locations"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Bluetooth"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Screen"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Battery"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Network"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Communication"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Processor"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.TimeZone"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Mqtt"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Traffic"
+            android:exported="true" >
+        </service>
+
+        <service
+            android:name="com.aware.Accelerometer"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Gyroscope"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Bluetooth$BackgroundService"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.WiFi"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.WiFi$BackgroundService"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Telephony"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Rotation"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Light"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Proximity"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Magnetometer"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Barometer"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Gravity"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.LinearAccelerometer"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Temperature"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.ESM"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.ESM$BackgroundService"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.Installations"
+            android:exported="true" >
+        </service>
+        <service
+            android:name="com.aware.utils.WebserviceHelper"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="ACTION_AWARE_WEBSERVICE_SYNC_TABLE" />
+                <action android:name="ACTION_AWARE_WEBSERVICE_CLEAR_TABLE" />
+            </intent-filter>
+        </service>
+
+        <service android:name="com.aware.utils.DownloadPluginService" android:exported="true" />
+        <service android:name="com.aware.utils.StudyUtils" android:exported="true"/>
+        <service android:name="com.aware.utils.Aware_TTS" android:exported="true"/>
+
+        <!-- BroadcastReceivers -->
+
+        <receiver android:name="com.aware.utils.Aware_TTS$Aware_TTS_Receiver" android:exported="true">
+            <intent-filter>
+                <action android:name="ACTION_AWARE_TTS_SPEAK"/>
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="com.aware.Aware$Aware_Broadcaster"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="ACTION_AWARE_SYNC_DATA" />
+                <action android:name="ACTION_AWARE_CLEAR_DATA" />
+                <action android:name="ACTION_AWARE_CONFIGURATION" />
+                <action android:name="ACTION_AWARE_REFRESH" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

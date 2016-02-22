@@ -1,6 +1,7 @@
 package com.aware.ui.esms;
 
 import android.content.Context;
+import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
 
@@ -13,7 +14,7 @@ import org.json.JSONException;
 /**
  * Created by denzilferreira on 21/02/16.
  */
-public class ESM_Radio extends ESM_Question {
+public class ESM_Radio extends ESM_Question implements IESM {
 
     private String esm_radios = "esm_radios";
 
@@ -52,8 +53,13 @@ public class ESM_Radio extends ESM_Question {
     }
 
     @Override
-    View getView(Context context) throws JSONException {
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        return inflater.inflate(R.layout.esm_radio, null);
+    public void show(FragmentManager fragmentManager, String tag) {
+        super.show(fragmentManager, tag);
     }
+
+//    @Override
+//    View getView(Context context) throws JSONException {
+//        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+//        return inflater.inflate(R.layout.esm_radio, null);
+//    }
 }

@@ -2,12 +2,12 @@ package com.aware.ui;
 
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 
@@ -15,6 +15,11 @@ import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.ESM;
 import com.aware.providers.ESM_Provider.ESM_Data;
+import com.aware.ui.esms.ESMFactory;
+import com.aware.ui.esms.ESM_Question;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Processes an  ESM queue until it's over.
@@ -26,6 +31,8 @@ public class ESM_Queue extends FragmentActivity {
     private static String TAG = "AWARE::ESM Queue";
 
     public ESM_State esmStateListener = new ESM_State();
+
+    private ESMFactory esmFactory = new ESMFactory();
 
     @Override
     protected void onCreate(Bundle bundle) {
@@ -51,9 +58,35 @@ public class ESM_Queue extends FragmentActivity {
     protected void onResume() {
         super.onResume();
 
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        DialogFragment esmDialog = new ESM_UI();
-        esmDialog.show(fragmentManager, TAG);
+        try {
+            FragmentManager fragmentManager = getSupportFragmentManager();
+
+            Cursor current_esm;
+            if (ESM.isESMVisible(getApplicationContext())) {
+                current_esm = getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + "=" + ESM.STATUS_VISIBLE, null, ESM_Data.TIMESTAMP + " ASC LIMIT 1");
+            } else {
+                current_esm = getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + "=" + ESM.STATUS_NEW, null, ESM_Data.TIMESTAMP + " ASC LIMIT 1");
+            }
+            if (current_esm != null && current_esm.moveToFirst()) {
+
+                int _id = current_esm.getInt(current_esm.getColumnIndex(ESM_Data._ID));
+
+                //Fixed: set the esm as VISIBLE, to avoid displaying the same ESM twice due to changes in orientation
+                ContentValues update_state = new ContentValues();
+                update_state.put(ESM_Data.STATUS, ESM.STATUS_VISIBLE);
+                getContentResolver().update(ESM_Data.CONTENT_URI, update_state, ESM_Data._ID +"="+ _id, null);
+                //--
+
+                JSONObject esm_question = new JSONObject(current_esm.getString(current_esm.getColumnIndex(ESM_Data.JSON)));
+                if(esm_question.has(ESM_Question.esm_type)) {
+                    ESM_Question esm = esmFactory.getESM(esm_question.getInt(ESM_Question.esm_type), esm_question, _id);
+                    esm.show(fragmentManager, TAG);
+                }
+            }
+            if (current_esm != null && !current_esm.isClosed()) current_esm.close();
+        } catch (JSONException e){
+            e.printStackTrace();
+        }
     }
 
     public class ESM_State extends BroadcastReceiver {
