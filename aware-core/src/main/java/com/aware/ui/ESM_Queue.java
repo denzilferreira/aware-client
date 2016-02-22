@@ -18,6 +18,7 @@ import com.aware.providers.ESM_Provider.ESM_Data;
 
 /**
  * Processes an  ESM queue until it's over.
+ *
  * @author denzilferreira
  */
 public class ESM_Queue extends FragmentActivity {
@@ -34,7 +35,7 @@ public class ESM_Queue extends FragmentActivity {
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         manager.cancel(ESM.ESM_NOTIFICATION_ID);
 
-        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
+        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG) : TAG;
 
         Intent queue_started = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_STARTED);
         sendBroadcast(queue_started);
@@ -70,15 +71,16 @@ public class ESM_Queue extends FragmentActivity {
 
     /**
      * Get amount of ESMs waiting on database (visible or new)
+     *
      * @return int count
      */
     public static int getQueueSize(Context c) {
         int size = 0;
-        Cursor onqueue = c.getContentResolver().query(ESM_Data.CONTENT_URI,null, ESM_Data.STATUS + " IN (" + ESM.STATUS_VISIBLE +","+ ESM.STATUS_NEW + ")", null, null);
-        if( onqueue != null && onqueue.moveToFirst() ) {
+        Cursor onqueue = c.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_VISIBLE + "," + ESM.STATUS_NEW + ")", null, null);
+        if (onqueue != null && onqueue.moveToFirst()) {
             size = onqueue.getCount();
         }
-        if( onqueue != null && ! onqueue.isClosed() ) onqueue.close();
+        if (onqueue != null && !onqueue.isClosed()) onqueue.close();
         return size;
     }
 }

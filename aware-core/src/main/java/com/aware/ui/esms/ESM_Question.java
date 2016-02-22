@@ -4,8 +4,8 @@ package com.aware.ui.esms;
  * Created by denzilferreira on 21/02/16.
  */
 
-import android.content.Context;
-import android.view.View;
+import android.app.Activity;
+import android.app.Dialog;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -18,17 +18,17 @@ public abstract class ESM_Question {
 
     public JSONObject esm = new JSONObject();
 
-    private final String esm_type = "esm_type";
-    private final String esm_title = "esm_title";
-    private final String esm_instructions = "esm_instructions";
-    private final String esm_submit = "esm_submit";
-    private final String esm_expiration_threshold = "esm_expiration_threshold";
-    private final String esm_trigger = "esm_trigger";
-    private final String esm_flows = "esm_flows";
-    private final String esm_id = "esm_id";
+    public final String esm_type = "esm_type";
+    public final String esm_title = "esm_title";
+    public final String esm_instructions = "esm_instructions";
+    public final String esm_submit = "esm_submit";
+    public final String esm_expiration_threshold = "esm_expiration_threshold";
+    public final String esm_trigger = "esm_trigger";
+    public final String esm_flows = "esm_flows";
+    public final String esm_id = "esm_id";
 
-    private final String flow_user_answer = "user_answer";
-    private final String flow_next_esm_id = "next_esm_id";
+    public final String flow_user_answer = "user_answer";
+    public final String flow_next_esm_id = "next_esm_id";
 
     public int getType() throws JSONException {
         if (!this.esm.has(esm_type)) return -1;
@@ -204,6 +204,7 @@ public abstract class ESM_Question {
 
     /**
      * Add a flow condition to this ESM
+     *
      * @param user_answer
      * @param nextEsmID
      * @return
@@ -221,15 +222,16 @@ public abstract class ESM_Question {
 
     /**
      * Given user's answer, what's the next esm ID?
+     *
      * @param user_answer
      * @return
      * @throws JSONException
      */
     public String getFlow(String user_answer) throws JSONException {
         JSONArray flows = getFlows();
-        for(int i=0;i<flows.length();i++) {
+        for (int i = 0; i < flows.length(); i++) {
             JSONObject flow = flows.getJSONObject(i);
-            if( flow.getString(flow_user_answer).equals(user_answer) )
+            if (flow.getString(flow_user_answer).equals(user_answer))
                 return flow.getString(flow_next_esm_id);
         }
         return null;
@@ -237,6 +239,7 @@ public abstract class ESM_Question {
 
     /**
      * Remove a flow condition from this ESM based on user's answer
+     *
      * @param user_answer
      * @return
      * @throws JSONException
@@ -244,9 +247,9 @@ public abstract class ESM_Question {
     public ESM_Question removeFlow(String user_answer) throws JSONException {
         JSONArray flows = getFlows();
         JSONArray new_flows = new JSONArray();
-        for(int i=0;i<flows.length();i++) {
+        for (int i = 0; i < flows.length(); i++) {
             JSONObject flow = flows.getJSONObject(i);
-            if( flow.getString(flow_user_answer).equals(user_answer) ) continue;
+            if (flow.getString(flow_user_answer).equals(user_answer)) continue;
             new_flows.put(flow);
         }
         this.setFlows(new_flows);
@@ -255,8 +258,9 @@ public abstract class ESM_Question {
 
     /**
      * Return ESM interface
-     * @param context
+     *
+     * @param activity
      * @return
      */
-    abstract View getView(Context context) throws JSONException;
+    abstract Dialog getDialog(Activity activity) throws JSONException;
 }
