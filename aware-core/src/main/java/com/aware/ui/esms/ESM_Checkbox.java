@@ -1,22 +1,41 @@
 package com.aware.ui.esms;
 
+import android.app.Dialog;
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
+import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 
+import com.aware.Aware;
 import com.aware.ESM;
 import com.aware.R;
+import com.aware.providers.ESM_Provider;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.util.ArrayList;
+
 /**
  * Created by denzilferreira on 21/02/16.
  */
-public class ESM_Checkbox extends ESM_Question implements IESM {
+public class ESM_Checkbox extends ESM_Question {
 
-    private String esm_checkboxes = "esm_checkboxes";
+    private static ArrayList<String> selected_options = new ArrayList<>();
+
+    public static final String esm_checkboxes = "esm_checkboxes";
 
     public ESM_Checkbox() throws JSONException {
         this.setType(ESM.TYPE_ESM_CHECKBOX);
@@ -52,14 +71,130 @@ public class ESM_Checkbox extends ESM_Question implements IESM {
         return this;
     }
 
+    @NonNull
     @Override
-    public void show(FragmentManager fragmentManager, String tag) {
-        super.show(fragmentManager, tag);
-    }
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        super.onCreateDialog(savedInstanceState);
 
-//    @Override
-//    View getView(Context context) throws JSONException {
-//        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-//        return inflater.inflate(R.layout.esm_checkbox, null);
-//    }
+        LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View ui = inflater.inflate(R.layout.esm_checkbox, null);
+        esm_dialog.setContentView(ui);
+
+        try {
+            final LinearLayout checkboxes = (LinearLayout) ui.findViewById(R.id.esm_checkboxes);
+            checkboxes.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        if( getExpirationThreshold() > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+                    }catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            final JSONArray checks = getCheckboxes();
+            for(int i=0; i<checks.length(); i++) {
+                final CheckBox checked = new CheckBox(getActivity());
+
+                final int current_position = i;
+                checked.setText(" " + checks.getString(i));
+                checked.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(final CompoundButton buttonView, boolean isChecked) {
+                        try {
+                            if (isChecked) {
+                                if (checks.getString(current_position).equals(getResources().getString(R.string.aware_esm_other))) {
+                                    checked.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            final Dialog editOther = new Dialog(getActivity());
+                                            editOther.setTitle(getResources().getString(R.string.aware_esm_other_follow));
+                                            editOther.getWindow().setGravity(Gravity.TOP);
+                                            editOther.getWindow().setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
+
+                                            LinearLayout editor = new LinearLayout(getActivity());
+                                            editor.setOrientation(LinearLayout.VERTICAL);
+                                            editOther.setContentView(editor);
+                                            editOther.show();
+
+                                            final EditText otherText = new EditText(getActivity());
+                                            otherText.setHint(getResources().getString(R.string.aware_esm_other_follow));
+                                            editor.addView(otherText);
+                                            otherText.requestFocus();
+                                            editOther.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+
+                                            Button confirm = new Button(getActivity());
+                                            confirm.setText("OK");
+                                            confirm.setOnClickListener(new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View v) {
+                                                    if (otherText.length() > 0) {
+                                                        selected_options.remove(buttonView.getText().toString());
+                                                        checked.setText(otherText.getText());
+                                                        selected_options.add(otherText.getText().toString());
+                                                    }
+                                                    editOther.dismiss();
+                                                }
+                                            });
+                                            editor.addView(confirm);
+                                        }
+                                    });
+                                } else {
+                                    selected_options.add(buttonView.getText().toString());
+                                }
+                            } else {
+                                selected_options.remove(buttonView.getText().toString());
+                            }
+                        }catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+                checkboxes.addView(checked);
+            }
+            Button cancel_checkbox = (Button) ui.findViewById(R.id.esm_cancel);
+            cancel_checkbox.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    esm_dialog.cancel();
+                }
+            });
+            Button submit_checkbox = (Button) ui.findViewById(R.id.esm_submit);
+            submit_checkbox.setText(getNextButton());
+            submit_checkbox.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        if( getExpirationThreshold() > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    ContentValues rowData = new ContentValues();
+                    rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
+
+                    if( selected_options.size() > 0 ){
+                        rowData.put(ESM_Provider.ESM_Data.ANSWER, selected_options.toString());
+                    }
+
+                    rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_ANSWERED);
+
+                    getContext().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
+                    selected_options.clear();
+
+                    Intent answer = new Intent(ESM.ACTION_AWARE_ESM_ANSWERED);
+                    getActivity().sendBroadcast(answer);
+
+                    if(Aware.DEBUG) Log.d(Aware.TAG, "Answer: " + rowData.toString());
+
+                    esm_dialog.dismiss();
+                }
+            });
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return esm_dialog;
+    }
 }

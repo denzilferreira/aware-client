@@ -13,16 +13,16 @@ public class ESMFactory {
         switch (esmType){
             case ESM.TYPE_ESM_TEXT:
                 return new ESM_Freetext().setType(esmType).rebuild(esm).setID(_id);
-//            case ESM.TYPE_ESM_CHECKBOX:
-//                return new ESM_Checkbox(esm);
-//            case ESM.TYPE_ESM_LIKERT:
-//                return new ESM_Likert(esm);
-//            case ESM.TYPE_ESM_QUICK_ANSWERS:
-//                return new ESM_QuickAnswer(esm);
-//            case ESM.TYPE_ESM_RADIO:
-//                return new ESM_Radio(esm);
-//            case ESM.TYPE_ESM_SCALE:
-//                return new ESM_Scale(esm);
+            case ESM.TYPE_ESM_CHECKBOX:
+                return new ESM_Checkbox().setType(esmType).rebuild(esm).setID(_id);
+            case ESM.TYPE_ESM_LIKERT:
+                return new ESM_Likert().setType(esmType).rebuild(esm).setID(_id);
+            case ESM.TYPE_ESM_QUICK_ANSWERS:
+                return new ESM_QuickAnswer().setType(esmType).rebuild(esm).setID(_id);
+            case ESM.TYPE_ESM_RADIO:
+                return new ESM_Radio().setType(esmType).rebuild(esm).setID(_id);
+            case ESM.TYPE_ESM_SCALE:
+                return new ESM_Scale().setType(esmType).rebuild(esm).setID(_id);
             default:
                 return null;
         }

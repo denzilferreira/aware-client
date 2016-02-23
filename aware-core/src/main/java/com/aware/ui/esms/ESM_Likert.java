@@ -1,24 +1,35 @@
 package com.aware.ui.esms;
 
+import android.app.Dialog;
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
+import android.widget.RatingBar;
+import android.widget.TextView;
 
+import com.aware.Aware;
 import com.aware.ESM;
 import com.aware.R;
+import com.aware.providers.ESM_Provider;
 
 import org.json.JSONException;
 
 /**
  * Created by denzilferreira on 21/02/16.
  */
-public class ESM_Likert extends ESM_Question implements IESM {
+public class ESM_Likert extends ESM_Question {
 
-    private String esm_likert_max = "esm_likert_max";
-    private String esm_likert_max_label = "esm_likert_max_label";
-    private String esm_likert_min_label = "esm_likert_min_label";
-    private String esm_likert_step = "esm_likert_step";
+    public static final String esm_likert_max = "esm_likert_max";
+    public static final String esm_likert_max_label = "esm_likert_max_label";
+    public static final String esm_likert_min_label = "esm_likert_min_label";
+    public static final String esm_likert_step = "esm_likert_step";
 
     public ESM_Likert() throws JSONException {
         this.setType(ESM.TYPE_ESM_LIKERT);
@@ -72,14 +83,76 @@ public class ESM_Likert extends ESM_Question implements IESM {
         return this;
     }
 
+    @NonNull
     @Override
-    public void show(FragmentManager fragmentManager, String tag) {
-        super.show(fragmentManager, tag);
-    }
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        super.onCreateDialog(savedInstanceState);
 
-//    @Override
-//    View getView(Context context) throws JSONException {
-//        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-//        return inflater.inflate(R.layout.esm_likert, null);
-//    }
+        LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View ui = inflater.inflate(R.layout.esm_likert, null);
+        esm_dialog.setContentView(ui);
+
+        try {
+            final RatingBar ratingBar = (RatingBar) ui.findViewById(R.id.esm_likert);
+            ratingBar.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        if (getExpirationThreshold() > 0 && expire_monitor != null)
+                            expire_monitor.cancel(true);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            ratingBar.setMax(getLikertMax());
+            ratingBar.setStepSize((float) getLikertStep());
+            ratingBar.setNumStars(getLikertMax());
+
+            TextView min_label = (TextView) ui.findViewById(R.id.esm_min);
+            min_label.setText(getLikertMinLabel());
+
+            TextView max_label = (TextView) ui.findViewById(R.id.esm_max);
+            max_label.setText(getLikertMaxLabel());
+
+            Button cancel = (Button) ui.findViewById(R.id.esm_cancel);
+            cancel.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    esm_dialog.cancel();
+                }
+            });
+            Button submit = (Button) ui.findViewById(R.id.esm_submit);
+            submit.setText(getNextButton());
+            submit.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    try{
+                        if (getExpirationThreshold() > 0 && expire_monitor != null) expire_monitor.cancel(true);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    ContentValues rowData = new ContentValues();
+                    rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
+                    rowData.put(ESM_Provider.ESM_Data.ANSWER, ratingBar.getRating());
+                    rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_ANSWERED);
+
+                    getContext().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
+
+                    Intent answer = new Intent(ESM.ACTION_AWARE_ESM_ANSWERED);
+                    getActivity().sendBroadcast(answer);
+
+                    if (Aware.DEBUG) Log.d(Aware.TAG, "Answer:" + rowData.toString());
+
+                    esm_dialog.dismiss();
+                }
+            });
+        }catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return esm_dialog;
+    }
 }
