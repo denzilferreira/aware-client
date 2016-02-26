@@ -108,7 +108,9 @@ public class Aware_Plugin extends Service {
         super.onDestroy();
 
         //Unregister Context Broadcaster
-        unregisterReceiver(contextBroadcaster);
+        if( contextBroadcaster != null ) {
+            unregisterReceiver(contextBroadcaster);
+        }
 
         if( aware != null ) stopService(aware);
 

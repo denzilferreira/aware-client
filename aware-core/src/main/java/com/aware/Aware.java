@@ -109,7 +109,7 @@ public class Aware extends Service {
     /**
      * Received broadcast: refresh the framework active sensors.
      */
-    protected static final String ACTION_AWARE_REFRESH = "ACTION_AWARE_REFRESH";
+    public static final String ACTION_AWARE_REFRESH = "ACTION_AWARE_REFRESH";
 
     /**
      * Received broadcast: plugins must implement awareContext broadcast receiver to share their current status.
@@ -1797,7 +1797,7 @@ public class Aware extends Service {
     /**
      * Start active services
      */
-    protected void startAllServices() {
+    public void startAllServices() {
         if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true")) {
             startESM(awareContext);
         } else stopESM(awareContext);
@@ -1914,7 +1914,7 @@ public class Aware extends Service {
     /**
      * Stop all services
      */
-    protected void stopAllServices() {
+    public void stopAllServices() {
         stopApplications(awareContext);
         stopAccelerometer(awareContext);
         stopBattery(awareContext);
@@ -1948,7 +1948,7 @@ public class Aware extends Service {
     /**
      * Start keyboard module
      */
-    protected static void startKeyboard(Context context) {
+    public static void startKeyboard(Context context) {
         awareContext = context;
         if (keyboard == null) keyboard = new Intent(awareContext, Keyboard.class);
         awareContext.startService(keyboard);
@@ -1957,7 +1957,7 @@ public class Aware extends Service {
     /**
      * Stop keyboard module
      */
-    protected static void stopKeyboard(Context context) {
+    public static void stopKeyboard(Context context) {
         awareContext = context;
         if (keyboard != null) awareContext.stopService(keyboard);
     }
@@ -1965,7 +1965,7 @@ public class Aware extends Service {
     /**
      * Start Applications module
      */
-    protected static void startApplications(Context context) {
+    public static void startApplications(Context context) {
         awareContext = context;
         if (applicationsSrv == null) {
             applicationsSrv = new Intent(awareContext, Applications.class);
@@ -1980,7 +1980,7 @@ public class Aware extends Service {
     /**
      * Stop Applications module
      */
-    protected static void stopApplications(Context context) {
+    public static void stopApplications(Context context) {
         awareContext = context;
         if (applicationsSrv != null) {
             try {
@@ -1994,7 +1994,7 @@ public class Aware extends Service {
     /**
      * Start Installations module
      */
-    protected static void startInstallations(Context context) {
+    public static void startInstallations(Context context) {
         awareContext = context;
         if (installationsSrv == null)
             installationsSrv = new Intent(awareContext, Installations.class);
@@ -2004,7 +2004,7 @@ public class Aware extends Service {
     /**
      * Stop Installations module
      */
-    protected static void stopInstallations(Context context) {
+    public static void stopInstallations(Context context) {
         awareContext = context;
         if (installationsSrv != null) awareContext.stopService(installationsSrv);
     }
@@ -2012,7 +2012,7 @@ public class Aware extends Service {
     /**
      * Start ESM module
      */
-    protected static void startESM(Context context) {
+    public static void startESM(Context context) {
         awareContext = context;
         if (esmSrv == null) esmSrv = new Intent(awareContext, ESM.class);
         awareContext.startService(esmSrv);
@@ -2021,7 +2021,7 @@ public class Aware extends Service {
     /**
      * Stop ESM module
      */
-    protected static void stopESM(Context context) {
+    public static void stopESM(Context context) {
         awareContext = context;
         if (esmSrv != null) awareContext.stopService(esmSrv);
     }
@@ -2029,7 +2029,7 @@ public class Aware extends Service {
     /**
      * Start Temperature module
      */
-    protected static void startTemperature(Context context) {
+    public static void startTemperature(Context context) {
         awareContext = context;
         if (temperatureSrv == null) temperatureSrv = new Intent(awareContext, Temperature.class);
         awareContext.startService(temperatureSrv);
@@ -2038,7 +2038,7 @@ public class Aware extends Service {
     /**
      * Stop Temperature module
      */
-    protected static void stopTemperature(Context context) {
+    public static void stopTemperature(Context context) {
         awareContext = context;
         if (temperatureSrv != null) awareContext.stopService(temperatureSrv);
     }
@@ -2046,7 +2046,7 @@ public class Aware extends Service {
     /**
      * Start Linear Accelerometer module
      */
-    protected static void startLinearAccelerometer(Context context) {
+    public static void startLinearAccelerometer(Context context) {
         awareContext = context;
         if (linear_accelSrv == null)
             linear_accelSrv = new Intent(awareContext, LinearAccelerometer.class);
@@ -2056,7 +2056,7 @@ public class Aware extends Service {
     /**
      * Stop Linear Accelerometer module
      */
-    protected static void stopLinearAccelerometer(Context context) {
+    public static void stopLinearAccelerometer(Context context) {
         awareContext = context;
         if (linear_accelSrv != null) awareContext.stopService(linear_accelSrv);
     }
@@ -2064,7 +2064,7 @@ public class Aware extends Service {
     /**
      * Start Gravity module
      */
-    protected static void startGravity(Context context) {
+    public static void startGravity(Context context) {
         awareContext = context;
         if (gravitySrv == null) gravitySrv = new Intent(awareContext, Gravity.class);
         awareContext.startService(gravitySrv);
@@ -2073,7 +2073,7 @@ public class Aware extends Service {
     /**
      * Stop Gravity module
      */
-    protected static void stopGravity(Context context) {
+    public static void stopGravity(Context context) {
         awareContext = context;
         if (gravitySrv != null) awareContext.stopService(gravitySrv);
     }
@@ -2081,7 +2081,7 @@ public class Aware extends Service {
     /**
      * Start Barometer module
      */
-    protected static void startBarometer(Context context) {
+    public static void startBarometer(Context context) {
         awareContext = context;
         if (barometerSrv == null) barometerSrv = new Intent(awareContext, Barometer.class);
         awareContext.startService(barometerSrv);
@@ -2090,7 +2090,7 @@ public class Aware extends Service {
     /**
      * Stop Barometer module
      */
-    protected static void stopBarometer(Context context) {
+    public static void stopBarometer(Context context) {
         awareContext = context;
         if (barometerSrv != null) awareContext.stopService(barometerSrv);
     }
@@ -2098,7 +2098,7 @@ public class Aware extends Service {
     /**
      * Start Magnetometer module
      */
-    protected static void startMagnetometer(Context context) {
+    public static void startMagnetometer(Context context) {
         awareContext = context;
         if (magnetoSrv == null) magnetoSrv = new Intent(awareContext, Magnetometer.class);
         awareContext.startService(magnetoSrv);
@@ -2107,7 +2107,7 @@ public class Aware extends Service {
     /**
      * Stop Magnetometer module
      */
-    protected static void stopMagnetometer(Context context) {
+    public static void stopMagnetometer(Context context) {
         awareContext = context;
         if (magnetoSrv != null) awareContext.stopService(magnetoSrv);
     }
@@ -2115,7 +2115,7 @@ public class Aware extends Service {
     /**
      * Start Proximity module
      */
-    protected static void startProximity(Context context) {
+    public static void startProximity(Context context) {
         awareContext = context;
         if (proximitySrv == null) proximitySrv = new Intent(awareContext, Proximity.class);
         awareContext.startService(proximitySrv);
@@ -2124,7 +2124,7 @@ public class Aware extends Service {
     /**
      * Stop Proximity module
      */
-    protected static void stopProximity(Context context) {
+    public static void stopProximity(Context context) {
         awareContext = context;
         if (proximitySrv != null) awareContext.stopService(proximitySrv);
     }
@@ -2132,7 +2132,7 @@ public class Aware extends Service {
     /**
      * Start Light module
      */
-    protected static void startLight(Context context) {
+    public static void startLight(Context context) {
         awareContext = context;
         if (lightSrv == null) lightSrv = new Intent(awareContext, Light.class);
         awareContext.startService(lightSrv);
@@ -2141,7 +2141,7 @@ public class Aware extends Service {
     /**
      * Stop Light module
      */
-    protected static void stopLight(Context context) {
+    public static void stopLight(Context context) {
         awareContext = context;
         if (lightSrv != null) awareContext.stopService(lightSrv);
     }
@@ -2149,7 +2149,7 @@ public class Aware extends Service {
     /**
      * Start Rotation module
      */
-    protected static void startRotation(Context context) {
+    public static void startRotation(Context context) {
         awareContext = context;
         if (rotationSrv == null) rotationSrv = new Intent(awareContext, Rotation.class);
         awareContext.startService(rotationSrv);
@@ -2158,7 +2158,7 @@ public class Aware extends Service {
     /**
      * Stop Rotation module
      */
-    protected static void stopRotation(Context context) {
+    public static void stopRotation(Context context) {
         awareContext = context;
         if (rotationSrv != null) awareContext.stopService(rotationSrv);
     }
@@ -2166,7 +2166,7 @@ public class Aware extends Service {
     /**
      * Start the Telephony module
      */
-    protected static void startTelephony(Context context) {
+    public static void startTelephony(Context context) {
         awareContext = context;
         if (telephonySrv == null) telephonySrv = new Intent(awareContext, Telephony.class);
         awareContext.startService(telephonySrv);
@@ -2175,7 +2175,7 @@ public class Aware extends Service {
     /**
      * Stop the Telephony module
      */
-    protected static void stopTelephony(Context context) {
+    public static void stopTelephony(Context context) {
         awareContext = context;
         if (telephonySrv != null) awareContext.stopService(telephonySrv);
     }
@@ -2183,13 +2183,13 @@ public class Aware extends Service {
     /**
      * Start the WiFi module
      */
-    protected static void startWiFi(Context context) {
+    public static void startWiFi(Context context) {
         awareContext = context;
         if (wifiSrv == null) wifiSrv = new Intent(awareContext, WiFi.class);
         awareContext.startService(wifiSrv);
     }
 
-    protected static void stopWiFi(Context context) {
+    public static void stopWiFi(Context context) {
         awareContext = context;
         if (wifiSrv != null) awareContext.stopService(wifiSrv);
     }
@@ -2197,7 +2197,7 @@ public class Aware extends Service {
     /**
      * Start the gyroscope module
      */
-    protected static void startGyroscope(Context context) {
+    public static void startGyroscope(Context context) {
         awareContext = context;
         if (gyroSrv == null) gyroSrv = new Intent(awareContext, Gyroscope.class);
         awareContext.startService(gyroSrv);
@@ -2206,7 +2206,7 @@ public class Aware extends Service {
     /**
      * Stop the gyroscope module
      */
-    protected static void stopGyroscope(Context context) {
+    public static void stopGyroscope(Context context) {
         awareContext = context;
         if (gyroSrv != null) awareContext.stopService(gyroSrv);
     }
@@ -2214,7 +2214,7 @@ public class Aware extends Service {
     /**
      * Start the accelerometer module
      */
-    protected static void startAccelerometer(Context context) {
+    public static void startAccelerometer(Context context) {
         awareContext = context;
         if (accelerometerSrv == null)
             accelerometerSrv = new Intent(awareContext, Accelerometer.class);
@@ -2224,7 +2224,7 @@ public class Aware extends Service {
     /**
      * Stop the accelerometer module
      */
-    protected static void stopAccelerometer(Context context) {
+    public static void stopAccelerometer(Context context) {
         awareContext = context;
         if (accelerometerSrv != null) awareContext.stopService(accelerometerSrv);
     }
@@ -2232,7 +2232,7 @@ public class Aware extends Service {
     /**
      * Start the Processor module
      */
-    protected static void startProcessor(Context context) {
+    public static void startProcessor(Context context) {
         awareContext = context;
         if (processorSrv == null) processorSrv = new Intent(awareContext, Processor.class);
         awareContext.startService(processorSrv);
@@ -2241,7 +2241,7 @@ public class Aware extends Service {
     /**
      * Stop the Processor module
      */
-    protected static void stopProcessor(Context context) {
+    public static void stopProcessor(Context context) {
         awareContext = context;
         if (processorSrv != null) awareContext.stopService(processorSrv);
     }
@@ -2249,7 +2249,7 @@ public class Aware extends Service {
     /**
      * Start the locations module
      */
-    protected static void startLocations(Context context) {
+    public static void startLocations(Context context) {
         awareContext = context;
         if (locationsSrv == null) locationsSrv = new Intent(awareContext, Locations.class);
         awareContext.startService(locationsSrv);
@@ -2258,7 +2258,7 @@ public class Aware extends Service {
     /**
      * Stop the locations module
      */
-    protected static void stopLocations(Context context) {
+    public static void stopLocations(Context context) {
         awareContext = context;
         if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_GPS).equals("false") && Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_NETWORK).equals("false")) {
             if (locationsSrv != null) awareContext.stopService(locationsSrv);
@@ -2268,7 +2268,7 @@ public class Aware extends Service {
     /**
      * Start the bluetooth module
      */
-    protected static void startBluetooth(Context context) {
+    public static void startBluetooth(Context context) {
         awareContext = context;
         if (bluetoothSrv == null) bluetoothSrv = new Intent(awareContext, Bluetooth.class);
         awareContext.startService(bluetoothSrv);
@@ -2277,7 +2277,7 @@ public class Aware extends Service {
     /**
      * Stop the bluetooth module
      */
-    protected static void stopBluetooth(Context context) {
+    public static void stopBluetooth(Context context) {
         awareContext = context;
         if (bluetoothSrv != null) awareContext.stopService(bluetoothSrv);
     }
@@ -2285,7 +2285,7 @@ public class Aware extends Service {
     /**
      * Start the screen module
      */
-    protected static void startScreen(Context context) {
+    public static void startScreen(Context context) {
         awareContext = context;
         if (screenSrv == null) screenSrv = new Intent(awareContext, Screen.class);
         awareContext.startService(screenSrv);
@@ -2294,7 +2294,7 @@ public class Aware extends Service {
     /**
      * Stop the screen module
      */
-    protected static void stopScreen(Context context) {
+    public static void stopScreen(Context context) {
         awareContext = context;
         if (screenSrv != null) awareContext.stopService(screenSrv);
     }
@@ -2302,7 +2302,7 @@ public class Aware extends Service {
     /**
      * Start battery module
      */
-    protected static void startBattery(Context context) {
+    public static void startBattery(Context context) {
         awareContext = context;
         if (batterySrv == null) batterySrv = new Intent(awareContext, Battery.class);
         awareContext.startService(batterySrv);
@@ -2311,7 +2311,7 @@ public class Aware extends Service {
     /**
      * Stop battery module
      */
-    protected static void stopBattery(Context context) {
+    public static void stopBattery(Context context) {
         awareContext = context;
         if (batterySrv != null) awareContext.stopService(batterySrv);
     }
@@ -2319,7 +2319,7 @@ public class Aware extends Service {
     /**
      * Start network module
      */
-    protected static void startNetwork(Context context) {
+    public static void startNetwork(Context context) {
         awareContext = context;
         if (networkSrv == null) networkSrv = new Intent(awareContext, Network.class);
         awareContext.startService(networkSrv);
@@ -2328,7 +2328,7 @@ public class Aware extends Service {
     /**
      * Stop network module
      */
-    protected static void stopNetwork(Context context) {
+    public static void stopNetwork(Context context) {
         awareContext = context;
         if (networkSrv != null) awareContext.stopService(networkSrv);
     }
@@ -2336,7 +2336,7 @@ public class Aware extends Service {
     /**
      * Start traffic module
      */
-    protected static void startTraffic(Context context) {
+    public static void startTraffic(Context context) {
         awareContext = context;
         if (trafficSrv == null) trafficSrv = new Intent(awareContext, Traffic.class);
         awareContext.startService(trafficSrv);
@@ -2345,7 +2345,7 @@ public class Aware extends Service {
     /**
      * Stop traffic module
      */
-    protected static void stopTraffic(Context context) {
+    public static void stopTraffic(Context context) {
         awareContext = context;
         if (trafficSrv != null) awareContext.stopService(trafficSrv);
     }
@@ -2353,7 +2353,7 @@ public class Aware extends Service {
     /**
      * Start the TimeZone module
      */
-    protected static void startTimeZone(Context context) {
+    public static void startTimeZone(Context context) {
         awareContext = context;
         if (timeZoneSrv == null) timeZoneSrv = new Intent(awareContext, TimeZone.class);
         awareContext.startService(timeZoneSrv);
@@ -2362,7 +2362,7 @@ public class Aware extends Service {
     /**
      * Stop the TimeZone module
      */
-    protected static void stopTimeZone(Context context) {
+    public static void stopTimeZone(Context context) {
         awareContext = context;
         if (timeZoneSrv != null) awareContext.stopService(timeZoneSrv);
     }
@@ -2370,7 +2370,7 @@ public class Aware extends Service {
     /**
      * Start communication module
      */
-    protected static void startCommunication(Context context) {
+    public static void startCommunication(Context context) {
         awareContext = context;
         if (communicationSrv == null)
             communicationSrv = new Intent(awareContext, Communication.class);
@@ -2380,7 +2380,7 @@ public class Aware extends Service {
     /**
      * Stop communication module
      */
-    protected static void stopCommunication(Context context) {
+    public static void stopCommunication(Context context) {
         awareContext = context;
         if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_COMMUNICATION_EVENTS).equals("false")
                 && Aware.getSetting(awareContext, Aware_Preferences.STATUS_CALLS).equals("false")
@@ -2392,7 +2392,7 @@ public class Aware extends Service {
     /**
      * Start MQTT module
      */
-    protected static void startMQTT(Context context) {
+    public static void startMQTT(Context context) {
         awareContext = context;
         if (mqttSrv == null) mqttSrv = new Intent(awareContext, Mqtt.class);
         awareContext.startService(mqttSrv);
@@ -2401,7 +2401,7 @@ public class Aware extends Service {
     /**
      * Stop MQTT module
      */
-    protected static void stopMQTT(Context context) {
+    public static void stopMQTT(Context context) {
         awareContext = context;
         if (mqttSrv != null) awareContext.stopService(mqttSrv);
     }
