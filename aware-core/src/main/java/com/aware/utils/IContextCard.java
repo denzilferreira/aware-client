@@ -9,11 +9,10 @@ import android.view.View;
  * Created by denzil on 28/08/14.
  */
 public interface IContextCard {
-
     /**
      * Return inflated XML layout with data to be displayed
      * @param context
      * @return View
      */
-    public View getContextCard(Context context);
+    View getContextCard(Context context);
 }

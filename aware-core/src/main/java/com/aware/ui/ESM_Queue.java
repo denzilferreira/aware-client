@@ -77,9 +77,11 @@ public class ESM_Queue extends FragmentActivity {
                 getContentResolver().update(ESM_Data.CONTENT_URI, update_state, ESM_Data._ID +"="+ _id, null);
                 //--
 
+                //Load esm question JSON from database
                 JSONObject esm_question = new JSONObject(current_esm.getString(current_esm.getColumnIndex(ESM_Data.JSON)));
-                if(esm_question.has(ESM_Question.esm_type)) {
-                    ESM_Question esm = esmFactory.getESM(esm_question.getInt(ESM_Question.esm_type), esm_question, _id);
+
+                ESM_Question esm = esmFactory.getESM(esm_question.getInt(ESM_Question.esm_type), esm_question, _id);
+                if( esm != null ) {
                     esm.show(fragmentManager, TAG);
                 }
             }
