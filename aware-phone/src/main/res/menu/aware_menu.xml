@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/aware_qrcode" android:icon="@drawable/ic_action_qrcode" android:title="@string/aware_qrcode" app:showAsAction="always" />
+    <item android:id="@+id/aware_about" android:icon="@drawable/ic_launcher_aware" android:title="@string/aware_team" app:showAsAction="never" />
+</menu>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AWARE context framework description and settings link - Mandatory by Android 4.1 -->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/aware_description"
+    android:settingsActivity="com.aware.Aware_Preferences"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeNotificationStateChanged|typeViewTextChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault"
+    android:notificationTimeout="50"
+    android:canRetrieveWindowContent="true"
+/>
