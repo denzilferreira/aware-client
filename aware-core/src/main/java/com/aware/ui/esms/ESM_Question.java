@@ -34,6 +34,7 @@ public abstract class ESM_Question extends DialogFragment {
 
     public JSONObject esm = new JSONObject();
 
+    public static final String esm_id = "_id";
     public static final String esm_type = "esm_type";
     public static final String esm_title = "esm_title";
     public static final String esm_instructions = "esm_instructions";
@@ -136,6 +137,15 @@ public abstract class ESM_Question extends DialogFragment {
         return this.esm.getString(this.esm_trigger);
     }
 
+    public ESM_Question setID(int id) throws JSONException {
+        this.esm.put(this.esm_id, id);
+        return this;
+    }
+
+    public int getID() throws JSONException{
+        return this.esm.getInt(this.esm_id);
+    }
+
     /**
      * A label for what triggered this ESM
      *
@@ -145,24 +155,6 @@ public abstract class ESM_Question extends DialogFragment {
      */
     public ESM_Question setTrigger(String esm_trigger) throws JSONException {
         this.esm.put(this.esm_trigger, esm_trigger);
-        return this;
-    }
-
-    public JSONObject build() throws JSONException {
-        JSONObject esm = new JSONObject();
-        esm.put("esm", this.esm);
-        return esm;
-    }
-
-    /**
-     * Rebuild ESM_Question object from database JSON
-     *
-     * @param esm
-     * @return
-     * @throws JSONException
-     */
-    public ESM_Question rebuild(JSONObject esm) throws JSONException {
-        this.esm = esm.getJSONObject("esm");
         return this;
     }
 
@@ -245,14 +237,29 @@ public abstract class ESM_Question extends DialogFragment {
         return this;
     }
 
-    public ESM_Question setID(int id) {
-        this._id = id;
+    public JSONObject build() throws JSONException {
+        JSONObject esm = new JSONObject();
+        esm.put("esm", this.esm);
+        return esm;
+    }
+
+    /**
+     * Rebuild ESM_Question object from database JSON
+     *
+     * @param esm
+     * @return
+     * @throws JSONException
+     */
+    public ESM_Question rebuild(JSONObject esm) throws JSONException {
+        this.esm = esm.getJSONObject("esm");
         return this;
     }
 
-    public int getID() {
-        return this._id;
-    }
+    /**
+     * COMMON CODE TO HANDLE ESM INTERACTIONS
+     */
+    public Dialog esm_dialog = null;
+    public ESMExpireMonitor expire_monitor = null;
 
     /**
      * Extended on sub-classes
@@ -263,7 +270,7 @@ public abstract class ESM_Question extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         try {
             if (getExpirationThreshold() > 0) {
-                expire_monitor = new ESMExpireMonitor(System.currentTimeMillis(), getExpirationThreshold(), _id);
+                expire_monitor = new ESMExpireMonitor(System.currentTimeMillis(), getExpirationThreshold(), getID());
                 expire_monitor.execute();
             }
         } catch (JSONException e) {
@@ -275,13 +282,6 @@ public abstract class ESM_Question extends DialogFragment {
         esm_dialog.setCanceledOnTouchOutside(false);
         return esm_dialog;
     }
-
-    /**
-     * COMMON CODE TO HANDLE ESM INTERACTIONS
-     */
-    public Dialog esm_dialog = null;
-    public ESMExpireMonitor expire_monitor = null;
-    public int _id;
 
     /**
      * Checks on the background if the current visible dialog has expired or not. If it did, removes dialog and updates the status to expired.
@@ -340,15 +340,20 @@ public abstract class ESM_Question extends DialogFragment {
      * When dismissing one ESM by pressing cancel, the rest of the queue gets dismissed
      */
     private void dismissESM() {
-        ContentValues rowData = new ContentValues();
-        rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
-        rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_DISMISSED);
-        getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + _id, null);
+
+        try {
+            ContentValues rowData = new ContentValues();
+            rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
+            rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_DISMISSED);
+            getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
         Cursor esm = getActivity().getContentResolver().query(ESM_Provider.ESM_Data.CONTENT_URI, null, ESM_Provider.ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
         if (esm != null && esm.moveToFirst()) {
             do {
-                rowData = new ContentValues();
+                ContentValues rowData = new ContentValues();
                 rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
                 rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_DISMISSED);
                 getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, null, null);
@@ -392,11 +397,15 @@ public abstract class ESM_Question extends DialogFragment {
             if (Aware.DEBUG)
                 Log.d(Aware.TAG, "ESM was visible but not answered, go back to notification bar");
 
-            //Revert to NEW state
-            ContentValues rowData = new ContentValues();
-            rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, 0);
-            rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_NEW);
-            getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + _id, null);
+            try {
+                //Revert to NEW state
+                ContentValues rowData = new ContentValues();
+                rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, 0);
+                rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_NEW);
+                getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
 
             //Update notification
             ESM.notifyESM(getActivity().getApplicationContext());

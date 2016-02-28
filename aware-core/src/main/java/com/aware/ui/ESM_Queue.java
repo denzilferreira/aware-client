@@ -74,19 +74,18 @@ public class ESM_Queue extends FragmentActivity {
                 //Fixed: set the esm as VISIBLE, to avoid displaying the same ESM twice due to changes in orientation
                 ContentValues update_state = new ContentValues();
                 update_state.put(ESM_Data.STATUS, ESM.STATUS_VISIBLE);
-                getContentResolver().update(ESM_Data.CONTENT_URI, update_state, ESM_Data._ID +"="+ _id, null);
+                getContentResolver().update(ESM_Data.CONTENT_URI, update_state, ESM_Data._ID + "=" + _id, null);
                 //--
 
                 //Load esm question JSON from database
                 JSONObject esm_question = new JSONObject(current_esm.getString(current_esm.getColumnIndex(ESM_Data.JSON)));
-
-                ESM_Question esm = esmFactory.getESM(esm_question.getInt(ESM_Question.esm_type), esm_question, _id);
-                if( esm != null ) {
+                ESM_Question esm = esmFactory.getESM(esm_question.getInt(ESM_Question.esm_type), esm_question);
+                if (esm != null) {
                     esm.show(fragmentManager, TAG);
                 }
             }
             if (current_esm != null && !current_esm.isClosed()) current_esm.close();
-        } catch (JSONException e){
+        } catch (JSONException e) {
             e.printStackTrace();
         }
     }
@@ -94,6 +93,10 @@ public class ESM_Queue extends FragmentActivity {
     public class ESM_State extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE)) {
+                //Clean-up trials from database
+                getContentResolver().delete(ESM_Data.CONTENT_URI, ESM_Data.TRIGGER + " LIKE 'TRIAL'", null);
+            }
             finish();
         }
     }

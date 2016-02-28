@@ -211,23 +211,24 @@ public class ESM_Scale extends ESM_Question {
 
                     try {
                         if (getExpirationThreshold() > 0 && expire_monitor != null) expire_monitor.cancel(true);
+
+                        ContentValues rowData = new ContentValues();
+                        rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
+                        rowData.put(ESM_Provider.ESM_Data.ANSWER, selected_scale_progress);
+                        rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_ANSWERED);
+
+                        getContext().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
+
+                        Intent answer = new Intent(ESM.ACTION_AWARE_ESM_ANSWERED);
+                        getActivity().sendBroadcast(answer);
+
+                        if (Aware.DEBUG) Log.d(Aware.TAG, "Answer:" + rowData.toString());
+
+                        esm_dialog.dismiss();
+
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-
-                    ContentValues rowData = new ContentValues();
-                    rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
-                    rowData.put(ESM_Provider.ESM_Data.ANSWER, selected_scale_progress);
-                    rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_ANSWERED);
-
-                    getContext().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
-
-                    Intent answer = new Intent(ESM.ACTION_AWARE_ESM_ANSWERED);
-                    getActivity().sendBroadcast(answer);
-
-                    if (Aware.DEBUG) Log.d(Aware.TAG, "Answer:" + rowData.toString());
-
-                    esm_dialog.dismiss();
                 }
             });
         } catch (JSONException e) {

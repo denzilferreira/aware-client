@@ -83,7 +83,7 @@ public class ESM_Freetext extends ESM_Question {
                         rowData.put(ESM_Provider.ESM_Data.ANSWER, feedback.getText().toString());
                         rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_ANSWERED);
 
-                        getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + _id, null);
+                        getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
 
                         Intent answer = new Intent(ESM.ACTION_AWARE_ESM_ANSWERED);
                         getActivity().sendBroadcast(answer);

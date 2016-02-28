@@ -153,28 +153,28 @@ public class ESM_Radio extends ESM_Question {
                     try {
                         if (getExpirationThreshold() > 0 && expire_monitor != null)
                             expire_monitor.cancel(true);
+
+                        ContentValues rowData = new ContentValues();
+                        rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
+
+                        RadioGroup radioOptions = (RadioGroup) ui.findViewById(R.id.esm_radio);
+                        if (radioOptions.getCheckedRadioButtonId() != -1) {
+                            RadioButton selected = (RadioButton) radioOptions.getChildAt(radioOptions.getCheckedRadioButtonId());
+                            rowData.put(ESM_Provider.ESM_Data.ANSWER, selected.getText().toString());
+                        }
+                        rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_ANSWERED);
+
+                        getContext().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
+
+                        Intent answer = new Intent(ESM.ACTION_AWARE_ESM_ANSWERED);
+                        getActivity().sendBroadcast(answer);
+
+                        if (Aware.DEBUG) Log.d(Aware.TAG, "Answer:" + rowData.toString());
+
+                        esm_dialog.dismiss();
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-
-                    ContentValues rowData = new ContentValues();
-                    rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
-
-                    RadioGroup radioOptions = (RadioGroup) ui.findViewById(R.id.esm_radio);
-                    if (radioOptions.getCheckedRadioButtonId() != -1) {
-                        RadioButton selected = (RadioButton) radioOptions.getChildAt(radioOptions.getCheckedRadioButtonId());
-                        rowData.put(ESM_Provider.ESM_Data.ANSWER, selected.getText().toString());
-                    }
-                    rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_ANSWERED);
-
-                    getContext().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
-
-                    Intent answer = new Intent(ESM.ACTION_AWARE_ESM_ANSWERED);
-                    getActivity().sendBroadcast(answer);
-
-                    if (Aware.DEBUG) Log.d(Aware.TAG, "Answer:" + rowData.toString());
-
-                    esm_dialog.dismiss();
                 }
             });
         } catch (JSONException e) {

@@ -20,11 +20,15 @@ import android.util.Log;
 import com.aware.providers.ESM_Provider;
 import com.aware.providers.ESM_Provider.ESM_Data;
 import com.aware.ui.ESM_Queue;
+import com.aware.ui.esms.ESMFactory;
+import com.aware.ui.esms.ESM_Question;
 import com.aware.utils.Aware_Sensor;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.HashMap;
 
 /**
  * AWARE ESM module
@@ -43,9 +47,15 @@ public class ESM extends Aware_Sensor {
 
     /**
      * Received event: queue the specified ESM
-     * Extras: (String) esm
+     * Extras: (JSONArray as String) esm
      */
     public static final String ACTION_AWARE_QUEUE_ESM = "ACTION_AWARE_QUEUE_ESM";
+
+    /**
+     * Received event: try the specified ESM
+     * Extras: (JSONArray as String) esm
+     */
+    public static final String ACTION_AWARE_TRY_ESM = "ACTION_AWARE_TRY_ESM";
 
     /**
      * Broadcasted event: the user has answered one answer from ESM queue
@@ -162,6 +172,7 @@ public class ESM extends Aware_Sensor {
         CONTEXT_URIS = new Uri[]{ESM_Data.CONTENT_URI};
 
         IntentFilter filter = new IntentFilter();
+        filter.addAction(ESM.ACTION_AWARE_TRY_ESM);
         filter.addAction(ESM.ACTION_AWARE_QUEUE_ESM);
         filter.addAction(ESM.ACTION_AWARE_ESM_ANSWERED);
         filter.addAction(ESM.ACTION_AWARE_ESM_DISMISSED);
@@ -292,6 +303,13 @@ public class ESM extends Aware_Sensor {
         public void onReceive(Context context, Intent intent) {
             if (Aware.getSetting(context, Aware_Preferences.STATUS_ESM).equals("false")) return;
 
+            if (intent.getAction().equals(ESM.ACTION_AWARE_TRY_ESM)) {
+                Intent backgroundService = new Intent(context, BackgroundService.class);
+                backgroundService.setAction(ESM.ACTION_AWARE_TRY_ESM);
+                backgroundService.putExtra(EXTRA_ESM, intent.getStringExtra(ESM.EXTRA_ESM));
+                context.startService(backgroundService);
+            }
+
             if (intent.getAction().equals(ESM.ACTION_AWARE_QUEUE_ESM)) {
                 Intent backgroundService = new Intent(context, BackgroundService.class);
                 backgroundService.setAction(ESM.ACTION_AWARE_QUEUE_ESM);
@@ -312,7 +330,7 @@ public class ESM extends Aware_Sensor {
             }
 
             if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_DISMISSED)) {
-                if (Aware.DEBUG) Log.d(TAG, "Rest of ESM Queue is dismissed!");
+
                 Cursor esm = context.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
                 if (esm != null && esm.moveToFirst()) {
                     do {
@@ -323,6 +341,8 @@ public class ESM extends Aware_Sensor {
                     } while (esm.moveToNext());
                 }
                 if (esm != null && !esm.isClosed()) esm.close();
+
+                if (Aware.DEBUG) Log.d(TAG, "Rest of ESM Queue is dismissed!");
 
                 Intent esm_done = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
                 context.sendBroadcast(esm_done);
@@ -357,6 +377,49 @@ public class ESM extends Aware_Sensor {
 
         @Override
         protected void onHandleIntent(Intent intent) {
+            if (intent.getAction().equals(ESM.ACTION_AWARE_TRY_ESM) && intent.getStringExtra(EXTRA_ESM) != null && intent.getStringExtra(EXTRA_ESM).length() > 0) {
+                try {
+                    JSONArray esms = new JSONArray(intent.getStringExtra(EXTRA_ESM));
+
+                    long esm_timestamp = System.currentTimeMillis();
+                    boolean is_persistent = false;
+
+                    for (int i = 0; i < esms.length(); i++) {
+                        JSONObject esm = esms.getJSONObject(i).getJSONObject(EXTRA_ESM);
+
+                        ContentValues rowData = new ContentValues();
+                        rowData.put(ESM_Data.TIMESTAMP, esm_timestamp + i); //fix issue with synching
+                        rowData.put(ESM_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                        rowData.put(ESM_Data.JSON, esm.getString(ESM_Data.JSON));
+                        rowData.put(ESM_Data.EXPIRATION_THRESHOLD, esm.optInt(ESM_Data.EXPIRATION_THRESHOLD)); //optional, defaults to 0
+                        rowData.put(ESM_Data.STATUS, ESM.STATUS_NEW);
+                        rowData.put(ESM_Data.TRIGGER, "TRIAL"); //we use the trigger to remove trials from database at the end
+
+                        if (rowData.getAsInteger(ESM_Data.EXPIRATION_THRESHOLD) == 0) {
+                            is_persistent = true;
+                        }
+
+                        try {
+                            getContentResolver().insert(ESM_Data.CONTENT_URI, rowData);
+                            if (Aware.DEBUG) Log.d(TAG, "ESM: " + rowData.toString());
+                        } catch (SQLiteException e) {
+                            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                        }
+                    }
+
+                    if (is_persistent) {
+                        notifyESM(getApplicationContext());
+                    } else {
+                        Intent intent_ESM = new Intent(getApplicationContext(), ESM_Queue.class);
+                        intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent_ESM);
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
             if (intent.getAction().equals(ESM.ACTION_AWARE_QUEUE_ESM) && intent.getStringExtra(EXTRA_ESM) != null && intent.getStringExtra(EXTRA_ESM).length() > 0) {
                 try {
                     JSONArray esms = new JSONArray(intent.getStringExtra(EXTRA_ESM));
