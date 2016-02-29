@@ -2,6 +2,7 @@ package com.aware.ui.esms;
 
 import com.aware.ESM;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -9,6 +10,26 @@ import org.json.JSONObject;
  * Created by denzilferreira on 22/02/16.
  */
 public class ESMFactory {
+
+    private JSONArray queue;
+
+    public ESMFactory() {
+        this.queue = new JSONArray();
+    }
+
+    public ESMFactory addESM(ESM_Question esm) {
+        try {
+            queue.put(esm.build());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return this;
+    }
+
+    public String build() {
+        return this.queue.toString();
+    }
+
     public ESM_Question getESM(int esmType, JSONObject esm) throws JSONException {
         switch (esmType){
             case ESM.TYPE_ESM_TEXT:

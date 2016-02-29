@@ -44,19 +44,19 @@ public class ESM_Radio extends ESM_Question {
         return this.esm.getJSONArray(esm_radios);
     }
 
-    public ESM_Question setRadios(JSONArray radios) throws JSONException {
-        this.esm.put(this.esm_radios, radios);
+    public ESM_Radio setRadios(JSONArray radios) throws JSONException {
+        this.esm.put(esm_radios, radios);
         return this;
     }
 
-    public ESM_Question addRadio(String option) throws JSONException {
+    public ESM_Radio addRadio(String option) throws JSONException {
         JSONArray radios = getRadios();
         radios.put(option);
         this.setRadios(radios);
         return this;
     }
 
-    public ESM_Question removeRadio(String option) throws JSONException {
+    public ESM_Radio removeRadio(String option) throws JSONException {
         JSONArray radios = getRadios();
         JSONArray newRadios = new JSONArray();
         for (int i = 0; i < radios.length(); i++) {
@@ -65,11 +65,6 @@ public class ESM_Radio extends ESM_Question {
         }
         this.setRadios(newRadios);
         return this;
-    }
-
-    @Override
-    public void show(FragmentManager fragmentManager, String tag) {
-        super.show(fragmentManager, tag);
     }
 
     @NonNull

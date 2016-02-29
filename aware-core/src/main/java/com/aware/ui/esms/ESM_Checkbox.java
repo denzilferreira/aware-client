@@ -48,19 +48,19 @@ public class ESM_Checkbox extends ESM_Question {
         return this.esm.getJSONArray(esm_checkboxes);
     }
 
-    public ESM_Question setCheckboxes(JSONArray checkboxes) throws JSONException {
+    public ESM_Checkbox setCheckboxes(JSONArray checkboxes) throws JSONException {
         this.esm.put(this.esm_checkboxes, checkboxes);
         return this;
     }
 
-    public ESM_Question addCheck(String option) throws JSONException {
+    public ESM_Checkbox addCheck(String option) throws JSONException {
         JSONArray checks = getCheckboxes();
         checks.put(option);
         this.setCheckboxes(checks);
         return this;
     }
 
-    public ESM_Question removeCheck(String option) throws JSONException {
+    public ESM_Checkbox removeCheck(String option) throws JSONException {
         JSONArray checks = getCheckboxes();
         JSONArray newChecks = new JSONArray();
         for(int i=0; i<checks.length();i++) {

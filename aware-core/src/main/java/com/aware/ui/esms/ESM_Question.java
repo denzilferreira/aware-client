@@ -18,6 +18,7 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Window;
 
 import com.aware.Aware;
 import com.aware.ESM;
@@ -63,7 +64,7 @@ public abstract class ESM_Question extends DialogFragment {
      * @return
      * @throws JSONException
      */
-    public ESM_Question setType(int esm_type) throws JSONException {
+    protected ESM_Question setType(int esm_type) throws JSONException {
         this.esm.put(this.esm_type, esm_type);
         return this;
     }
@@ -251,7 +252,7 @@ public abstract class ESM_Question extends DialogFragment {
      * @throws JSONException
      */
     public ESM_Question rebuild(JSONObject esm) throws JSONException {
-        this.esm = esm.getJSONObject("esm");
+        this.esm = esm;
         return this;
     }
 

@@ -40,19 +40,19 @@ public class ESM_QuickAnswer extends ESM_Question {
         return this.esm.getJSONArray(esm_quick_answers);
     }
 
-    public ESM_Question setQuickAnswers(JSONArray quickAnswers) throws JSONException {
+    public ESM_QuickAnswer setQuickAnswers(JSONArray quickAnswers) throws JSONException {
         this.esm.put(this.esm_quick_answers, quickAnswers);
         return this;
     }
 
-    public ESM_Question addQuickAnswer(String answer) throws JSONException {
+    public ESM_QuickAnswer addQuickAnswer(String answer) throws JSONException {
         JSONArray quicks = getQuickAnswers();
         quicks.put(answer);
         this.setQuickAnswers(quicks);
         return this;
     }
 
-    public ESM_Question removeQuickAnswer(String answer) throws JSONException {
+    public ESM_QuickAnswer removeQuickAnswer(String answer) throws JSONException {
         JSONArray quick = getQuickAnswers();
         JSONArray newQuick = new JSONArray();
         for(int i=0; i<quick.length(); i++) {

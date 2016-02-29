@@ -108,6 +108,11 @@ public class ESM extends Aware_Sensor {
     public static final int STATUS_VISIBLE = 4;
 
     /**
+     * ESM status: esm was not visible because of flow condition, branching to another esm
+     */
+    public static final int STATUS_BRANCHED = 5;
+
+    /**
      * ESM Dialog with free text
      * Example: [{'esm':{'esm_type':1,'esm_title':'ESM Freetext','esm_instructions':'The user can answer an open ended question.','esm_submit':'Next','esm_expiration_threshold':20,'esm_trigger':'esm trigger example'}}]
      */
@@ -388,9 +393,9 @@ public class ESM extends Aware_Sensor {
                         JSONObject esm = esms.getJSONObject(i).getJSONObject(EXTRA_ESM);
 
                         ContentValues rowData = new ContentValues();
-                        rowData.put(ESM_Data.TIMESTAMP, esm_timestamp + i); //fix issue with synching
+                        rowData.put(ESM_Data.TIMESTAMP, esm_timestamp + i); //fix issue with synching and support ordering
                         rowData.put(ESM_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-                        rowData.put(ESM_Data.JSON, esm.getString(ESM_Data.JSON));
+                        rowData.put(ESM_Data.JSON, esm.toString());
                         rowData.put(ESM_Data.EXPIRATION_THRESHOLD, esm.optInt(ESM_Data.EXPIRATION_THRESHOLD)); //optional, defaults to 0
                         rowData.put(ESM_Data.STATUS, ESM.STATUS_NEW);
                         rowData.put(ESM_Data.TRIGGER, "TRIAL"); //we use the trigger to remove trials from database at the end
@@ -431,9 +436,9 @@ public class ESM extends Aware_Sensor {
                         JSONObject esm = esms.getJSONObject(i).getJSONObject(EXTRA_ESM);
 
                         ContentValues rowData = new ContentValues();
-                        rowData.put(ESM_Data.TIMESTAMP, esm_timestamp + i); //fix issue with synching
+                        rowData.put(ESM_Data.TIMESTAMP, esm_timestamp + i); //fix issue with synching and support ordering
                         rowData.put(ESM_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-                        rowData.put(ESM_Data.JSON, esm.getString(ESM_Data.JSON));
+                        rowData.put(ESM_Data.JSON, esm.toString());
                         rowData.put(ESM_Data.EXPIRATION_THRESHOLD, esm.optInt(ESM_Data.EXPIRATION_THRESHOLD)); //optional, defaults to 0
                         rowData.put(ESM_Data.STATUS, ESM.STATUS_NEW);
                         rowData.put(ESM_Data.TRIGGER, esm.optString(ESM_Data.TRIGGER)); //optional, defaults to ""

@@ -46,7 +46,7 @@ public class ESM_Scale extends ESM_Question {
         return this.esm.getInt(esm_scale_start);
     }
 
-    public ESM_Question setScaleStart(int start) throws JSONException {
+    public ESM_Scale setScaleStart(int start) throws JSONException {
         this.esm.put(esm_scale_start, start);
         return this;
     }
@@ -58,7 +58,7 @@ public class ESM_Scale extends ESM_Question {
         return this.esm.getInt(esm_scale_step);
     }
 
-    public ESM_Question setScaleStep(int step) throws JSONException {
+    public ESM_Scale setScaleStep(int step) throws JSONException {
         this.esm.put(esm_scale_step, step);
         return this;
     }
@@ -70,7 +70,7 @@ public class ESM_Scale extends ESM_Question {
         return this.esm.getInt(esm_scale_min);
     }
 
-    public ESM_Question setScaleMin(int min) throws JSONException {
+    public ESM_Scale setScaleMin(int min) throws JSONException {
         this.esm.put(esm_scale_min, min);
         return this;
     }
@@ -82,7 +82,7 @@ public class ESM_Scale extends ESM_Question {
         return this.esm.getString(esm_scale_min_label);
     }
 
-    public ESM_Question setScaleMinLabel(String label) throws JSONException {
+    public ESM_Scale setScaleMinLabel(String label) throws JSONException {
         this.esm.put(esm_scale_min_label, label);
         return this;
     }
@@ -94,7 +94,7 @@ public class ESM_Scale extends ESM_Question {
         return this.esm.getInt(esm_scale_max);
     }
 
-    public ESM_Question setScaleMax(int max) throws JSONException {
+    public ESM_Scale setScaleMax(int max) throws JSONException {
         this.esm.put(esm_scale_max, max);
         return this;
     }
@@ -106,7 +106,7 @@ public class ESM_Scale extends ESM_Question {
         return this.esm.getString(esm_scale_max_label);
     }
 
-    public ESM_Question setScaleMaxLabel(String label) throws JSONException {
+    public ESM_Scale setScaleMaxLabel(String label) throws JSONException {
         this.esm.put(esm_scale_max_label, label);
         return this;
     }

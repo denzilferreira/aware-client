@@ -42,7 +42,7 @@ public class ESM_Likert extends ESM_Question {
         return this.esm.getInt(esm_likert_max);
     }
 
-    public ESM_Question setLikertMax(int max) throws JSONException {
+    public ESM_Likert setLikertMax(int max) throws JSONException {
         this.esm.put(esm_likert_max, max);
         return this;
     }
@@ -54,7 +54,7 @@ public class ESM_Likert extends ESM_Question {
         return this.esm.getString(esm_likert_max_label);
     }
 
-    public ESM_Question setLikertMaxLabel(String label) throws JSONException {
+    public ESM_Likert setLikertMaxLabel(String label) throws JSONException {
         this.esm.put(esm_likert_max_label, label);
         return this;
     }
@@ -66,7 +66,7 @@ public class ESM_Likert extends ESM_Question {
         return this.esm.getString(esm_likert_min_label);
     }
 
-    public ESM_Question setLikertMinLabel(String label) throws JSONException {
+    public ESM_Likert setLikertMinLabel(String label) throws JSONException {
         this.esm.put(esm_likert_min_label, label);
         return this;
     }
@@ -78,7 +78,7 @@ public class ESM_Likert extends ESM_Question {
         return this.esm.getDouble(esm_likert_step);
     }
 
-    public ESM_Question setLikertStep(double step) throws JSONException {
+    public ESM_Likert setLikertStep(double step) throws JSONException {
         this.esm.put(esm_likert_step, step);
         return this;
     }

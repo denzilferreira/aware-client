@@ -133,6 +133,7 @@
         <service android:name="com.aware.utils.Scheduler" android:exported="true" />
         <service android:name="com.aware.Aware$JoinStudy" android:exported="true" />
         <service android:name="com.aware.utils.SSLManager" android:exported="true" />
+        <service android:name="com.aware.utils.PluginsManager" android:exported="true" />
 
         <service
             android:name="com.aware.Applications$BackgroundService"
