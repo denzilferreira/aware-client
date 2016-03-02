@@ -82,9 +82,6 @@ public class ESM_Queue extends FragmentActivity {
                 JSONObject esm_question = new JSONObject(current_esm.getString(current_esm.getColumnIndex(ESM_Data.JSON)));
                 ESM_Question esm = esmFactory.getESM(esm_question.getInt(ESM_Question.esm_type), esm_question);
                 if (esm != null) {
-
-                    getWindow().requestFeature(Window.FEATURE_CUSTOM_TITLE);
-
                     esm.show(fragmentManager, TAG);
                 }
             }

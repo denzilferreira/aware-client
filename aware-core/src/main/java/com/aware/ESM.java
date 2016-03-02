@@ -185,6 +185,11 @@ public class ESM extends Aware_Sensor {
         registerReceiver(esmMonitor, filter);
 
         if (Aware.DEBUG) Log.d(TAG, "ESM service created!");
+
+        //Restore missing ESMs back on service creation
+        if (isESMWaiting(getApplicationContext()) || isESMVisible(getApplicationContext())) {
+            notifyESM(getApplicationContext());
+        }
     }
 
     @Override

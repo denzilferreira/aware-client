@@ -1,5 +1,6 @@
 package com.aware.ui.esms;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.Context;
@@ -88,9 +89,14 @@ public class ESM_Likert extends ESM_Question {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         super.onCreateDialog(savedInstanceState);
 
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+
         LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View ui = inflater.inflate(R.layout.esm_likert, null);
-        esm_dialog.setContentView(ui);
+        builder.setView(ui);
+
+        esm_dialog = builder.create();
+        esm_dialog.setCanceledOnTouchOutside(false);
 
         try {
             final RatingBar ratingBar = (RatingBar) ui.findViewById(R.id.esm_likert);

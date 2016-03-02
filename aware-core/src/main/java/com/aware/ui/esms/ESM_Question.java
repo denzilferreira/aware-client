@@ -277,10 +277,6 @@ public abstract class ESM_Question extends DialogFragment {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        esm_dialog = builder.create();
-        esm_dialog.setCanceledOnTouchOutside(false);
         return esm_dialog;
     }
 

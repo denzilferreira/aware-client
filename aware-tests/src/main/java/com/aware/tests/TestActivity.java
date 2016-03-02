@@ -1,8 +1,8 @@
-package com.aware.phone;
+package com.aware.tests;
 
-import android.app.Application;
+import android.app.Activity;
 import android.content.Intent;
-import android.test.ApplicationTestCase;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.aware.ESM;
@@ -12,15 +12,13 @@ import com.aware.ui.esms.ESM_Freetext;
 import org.json.JSONException;
 
 /**
- * <a href="http://d.android.com/tools/testing/testing_android.html">Testing Fundamentals</a>
- * Created by denzil on 02/03/16.
+ * Created by denzilferreira on 02/03/16.
  */
-public class AwareTest extends ApplicationTestCase<Application> {
-    public AwareTest() {
-        super(Application.class);
-    }
+public class TestActivity extends Activity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-    public void testEsmRequest() {
         ESMFactory factory = new ESMFactory();
 
         try {
@@ -37,7 +35,7 @@ public class AwareTest extends ApplicationTestCase<Application> {
 
             Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
             queue.putExtra(ESM.EXTRA_ESM, factory.build());
-            getApplication().sendBroadcast(queue);
+            sendBroadcast(queue);
 
         } catch (JSONException e) {
             e.printStackTrace();
