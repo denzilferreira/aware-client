@@ -398,7 +398,7 @@ public class ESM extends Aware_Sensor {
                         rowData.put(ESM_Data.JSON, esm.toString());
                         rowData.put(ESM_Data.EXPIRATION_THRESHOLD, esm.optInt(ESM_Data.EXPIRATION_THRESHOLD)); //optional, defaults to 0
                         rowData.put(ESM_Data.STATUS, ESM.STATUS_NEW);
-                        rowData.put(ESM_Data.TRIGGER, "TRIAL"); //we use the trigger to remove trials from database at the end
+                        rowData.put(ESM_Data.TRIGGER, "TRIAL"); //we use this TRIAL trigger to remove trials from database at the end of the trial
 
                         if (rowData.getAsInteger(ESM_Data.EXPIRATION_THRESHOLD) == 0) {
                             is_persistent = true;

@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.view.Window;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
@@ -81,6 +82,9 @@ public class ESM_Queue extends FragmentActivity {
                 JSONObject esm_question = new JSONObject(current_esm.getString(current_esm.getColumnIndex(ESM_Data.JSON)));
                 ESM_Question esm = esmFactory.getESM(esm_question.getInt(ESM_Question.esm_type), esm_question);
                 if (esm != null) {
+
+                    getWindow().requestFeature(Window.FEATURE_CUSTOM_TITLE);
+
                     esm.show(fragmentManager, TAG);
                 }
             }
