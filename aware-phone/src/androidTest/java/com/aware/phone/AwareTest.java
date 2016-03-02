@@ -1,26 +1,26 @@
-package com.awareframework.aware_tests;
+package com.aware.phone;
 
+import android.app.Application;
 import android.content.Intent;
-import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import android.test.ApplicationTestCase;
 import android.util.Log;
 
 import com.aware.ESM;
 import com.aware.ui.esms.ESMFactory;
 import com.aware.ui.esms.ESM_Freetext;
-import com.aware.ui.esms.ESM_Radio;
 
 import org.json.JSONException;
 
 /**
- * Created by denzilferreira on 29/02/16.
+ * <a href="http://d.android.com/tools/testing/testing_android.html">Testing Fundamentals</a>
+ * Created by denzil on 02/03/16.
  */
-public class TestActivity extends AppCompatActivity {
+public class AwareTest extends ApplicationTestCase<Application> {
+    public AwareTest() {
+        super(Application.class);
+    }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
+    public void testEsmRequest() {
         ESMFactory factory = new ESMFactory();
 
         try {
@@ -33,30 +33,14 @@ public class TestActivity extends AppCompatActivity {
 
             factory.addESM(q1);
 
-            ESM_Radio q2 = new ESM_Radio();
-            q2.addRadio("Option 2");
-            q2.setTitle("Question 2").setTrigger("test").setExpirationThreshold(0).setNextButton("OK").setInstructions("This is question 2");
-
-            factory.addESM(q2);
-
             Log.d("DENZIL", factory.build());
 
             Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
             queue.putExtra(ESM.EXTRA_ESM, factory.build());
-            sendBroadcast(queue);
+            getApplication().sendBroadcast(queue);
 
         } catch (JSONException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 }

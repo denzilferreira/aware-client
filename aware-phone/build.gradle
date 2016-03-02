@@ -46,6 +46,8 @@ dependencies {
     compile files('libs/mqtt-client-0.4.0.jar')
     compile project(':aware-core')
 
+    testCompile 'junit:junit:4.12'
+
     compile 'com.koushikdutta.ion:ion:2.1.6'
     compile "com.android.support:appcompat-v7:${version_google_services}"
     compile "com.android.support:design:${version_google_services}"
