@@ -186,7 +186,7 @@ public class ESM extends Aware_Sensor {
 
         if (Aware.DEBUG) Log.d(TAG, "ESM service created!");
 
-        //Restore missing ESMs back on service creation
+        //Restore pending ESMs back upon service creation. This may happen on rebooting the phone
         if (isESMWaiting(getApplicationContext()) || isESMVisible(getApplicationContext())) {
             notifyESM(getApplicationContext());
         }

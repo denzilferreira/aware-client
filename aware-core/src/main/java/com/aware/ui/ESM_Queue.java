@@ -80,7 +80,7 @@ public class ESM_Queue extends FragmentActivity {
 
                 //Load esm question JSON from database
                 JSONObject esm_question = new JSONObject(current_esm.getString(current_esm.getColumnIndex(ESM_Data.JSON)));
-                ESM_Question esm = esmFactory.getESM(esm_question.getInt(ESM_Question.esm_type), esm_question);
+                ESM_Question esm = esmFactory.getESM(esm_question.getInt(ESM_Question.esm_type), esm_question, current_esm.getInt(current_esm.getColumnIndex(ESM_Data._ID)));
                 if (esm != null) {
                     esm.show(fragmentManager, TAG);
                 }

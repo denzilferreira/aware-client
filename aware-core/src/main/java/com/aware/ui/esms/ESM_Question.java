@@ -4,10 +4,8 @@ package com.aware.ui.esms;
  * Created by denzilferreira on 21/02/16.
  */
 
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -15,10 +13,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentManager;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.Window;
 
 import com.aware.Aware;
 import com.aware.ESM;
@@ -35,7 +30,8 @@ public abstract class ESM_Question extends DialogFragment {
 
     public JSONObject esm = new JSONObject();
 
-    public static final String esm_id = "_id";
+    public int _id;
+
     public static final String esm_type = "esm_type";
     public static final String esm_title = "esm_title";
     public static final String esm_instructions = "esm_instructions";
@@ -45,6 +41,15 @@ public abstract class ESM_Question extends DialogFragment {
     public static final String esm_flows = "esm_flows";
     public static final String flow_user_answer = "user_answer";
     public static final String flow_next_esm_id = "next_esm_id";
+
+    protected ESM_Question setID(int id) {
+        _id = id;
+        return this;
+    }
+
+    public int getID() {
+        return _id;
+    }
 
     public int getType() throws JSONException {
         if (!this.esm.has(esm_type)) return -1;
@@ -60,12 +65,12 @@ public abstract class ESM_Question extends DialogFragment {
      * com.aware.ESM#TYPE_ESM_QUICK_ANSWERS
      * com.aware.ESM#TYPE_ESM_SCALE
      *
-     * @param esm_type
+     * @param type
      * @return
      * @throws JSONException
      */
-    protected ESM_Question setType(int esm_type) throws JSONException {
-        this.esm.put(this.esm_type, esm_type);
+    protected ESM_Question setType(int type) throws JSONException {
+        this.esm.put(esm_type, type);
         return this;
     }
 
@@ -79,12 +84,12 @@ public abstract class ESM_Question extends DialogFragment {
     /**
      * Set ESM title, limited to about 50 characters due to phone's screen size when in portrait.
      *
-     * @param esm_title
+     * @param title
      * @return
      * @throws JSONException
      */
-    public ESM_Question setTitle(String esm_title) throws JSONException {
-        this.esm.put(this.esm_title, esm_title);
+    public ESM_Question setTitle(String title) throws JSONException {
+        this.esm.put(esm_title, title);
         return this;
     }
 
@@ -95,67 +100,58 @@ public abstract class ESM_Question extends DialogFragment {
         return this.esm.getString(esm_instructions);
     }
 
-    public ESM_Question setInstructions(String esm_instructions) throws JSONException {
-        this.esm.put(this.esm_instructions, esm_instructions);
+    public ESM_Question setInstructions(String instructions) throws JSONException {
+        this.esm.put(esm_instructions, instructions);
         return this;
     }
 
     public String getNextButton() throws JSONException {
         if (!this.esm.has(esm_submit)) {
-            this.esm.put(this.esm_submit, "OK");
+            this.esm.put(esm_submit, "OK");
         }
-        return this.esm.getString(this.esm_submit);
+        return this.esm.getString(esm_submit);
     }
 
-    public ESM_Question setNextButton(String esm_submit) throws JSONException {
-        this.esm.put(this.esm_submit, esm_submit);
+    public ESM_Question setNextButton(String submit) throws JSONException {
+        this.esm.put(esm_submit, submit);
         return this;
     }
 
     public int getExpirationThreshold() throws JSONException {
-        if (!this.esm.has(this.esm_expiration_threshold)) {
-            this.esm.put(this.esm_expiration_threshold, 0);
+        if (!this.esm.has(esm_expiration_threshold)) {
+            this.esm.put(esm_expiration_threshold, 0);
         }
-        return this.esm.getInt(this.esm_expiration_threshold);
+        return this.esm.getInt(esm_expiration_threshold);
     }
 
     /**
      * For how long this question is visible waiting for the users' interaction
      *
-     * @param esm_expiration_threshold
+     * @param expiration_threshold
      * @return
      * @throws JSONException
      */
-    public ESM_Question setExpirationThreshold(int esm_expiration_threshold) throws JSONException {
-        this.esm.put(this.esm_expiration_threshold, esm_expiration_threshold);
+    public ESM_Question setExpirationThreshold(int expiration_threshold) throws JSONException {
+        this.esm.put(esm_expiration_threshold, expiration_threshold);
         return this;
     }
 
     public String getTrigger() throws JSONException {
-        if (!this.esm.has(this.esm_trigger)) {
-            this.esm.put(this.esm_trigger, "");
+        if (!this.esm.has(esm_trigger)) {
+            this.esm.put(esm_trigger, "");
         }
-        return this.esm.getString(this.esm_trigger);
-    }
-
-    public ESM_Question setID(int id) throws JSONException {
-        this.esm.put(this.esm_id, id);
-        return this;
-    }
-
-    public int getID() throws JSONException{
-        return this.esm.getInt(this.esm_id);
+        return this.esm.getString(esm_trigger);
     }
 
     /**
      * A label for what triggered this ESM
      *
-     * @param esm_trigger
+     * @param trigger
      * @return
      * @throws JSONException
      */
-    public ESM_Question setTrigger(String esm_trigger) throws JSONException {
-        this.esm.put(this.esm_trigger, esm_trigger);
+    public ESM_Question setTrigger(String trigger) throws JSONException {
+        this.esm.put(esm_trigger, trigger);
         return this;
     }
 
@@ -166,10 +162,10 @@ public abstract class ESM_Question extends DialogFragment {
      * @throws JSONException
      */
     public JSONArray getFlows() throws JSONException {
-        if (!this.esm.has(this.esm_flows)) {
-            this.esm.put(this.esm_flows, new JSONArray());
+        if (!this.esm.has(esm_flows)) {
+            this.esm.put(esm_flows, new JSONArray());
         }
-        return this.esm.getJSONArray(this.esm_flows);
+        return this.esm.getJSONArray(esm_flows);
     }
 
     /**
@@ -180,7 +176,7 @@ public abstract class ESM_Question extends DialogFragment {
      * @throws JSONException
      */
     public ESM_Question setFlows(JSONArray esm_flow) throws JSONException {
-        this.esm.put(this.esm_flows, esm_flow);
+        this.esm.put(esm_flows, esm_flow);
         return this;
     }
 
@@ -264,6 +260,7 @@ public abstract class ESM_Question extends DialogFragment {
 
     /**
      * Extended on sub-classes
+     *
      * @param savedInstanceState
      * @return
      */
@@ -338,19 +335,15 @@ public abstract class ESM_Question extends DialogFragment {
      */
     private void dismissESM() {
 
-        try {
-            ContentValues rowData = new ContentValues();
-            rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
-            rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_DISMISSED);
-            getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        ContentValues rowData = new ContentValues();
+        rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
+        rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_DISMISSED);
+        getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
 
         Cursor esm = getActivity().getContentResolver().query(ESM_Provider.ESM_Data.CONTENT_URI, null, ESM_Provider.ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
         if (esm != null && esm.moveToFirst()) {
             do {
-                ContentValues rowData = new ContentValues();
+                rowData = new ContentValues();
                 rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
                 rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_DISMISSED);
                 getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, null, null);
@@ -394,15 +387,11 @@ public abstract class ESM_Question extends DialogFragment {
             if (Aware.DEBUG)
                 Log.d(Aware.TAG, "ESM was visible but not answered, go back to notification bar");
 
-            try {
-                //Revert to NEW state
-                ContentValues rowData = new ContentValues();
-                rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, 0);
-                rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_NEW);
-                getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            //Revert to NEW state
+            ContentValues rowData = new ContentValues();
+            rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, 0);
+            rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_NEW);
+            getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
 
             //Update notification
             ESM.notifyESM(getActivity().getApplicationContext());
