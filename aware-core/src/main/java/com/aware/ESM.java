@@ -28,6 +28,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -164,7 +165,14 @@ public class ESM extends Aware_Sensor {
      */
     public static final String EXTRA_ESM = "esm";
 
+    /**
+     * Extra for ACTION_AWARE_ESM_ANSWERED as String
+     */
+    public static final String EXTRA_ANSWER = "answer";
+
     public static final int ESM_NOTIFICATION_ID = 777;
+
+    private static ArrayList<Long> esm_queue = new ArrayList<>();
 
     @Override
     public void onCreate() {
@@ -329,6 +337,9 @@ public class ESM extends Aware_Sensor {
 
             if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_ANSWERED)) {
                 if (ESM_Queue.getQueueSize(context) > 0) {
+
+                    processFlow(context, intent.getStringExtra(EXTRA_ANSWER));
+
                     Intent intent_ESM = new Intent(context, ESM_Queue.class);
                     intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     context.startActivity(intent_ESM);
@@ -360,6 +371,9 @@ public class ESM extends Aware_Sensor {
 
             if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_EXPIRED)) {
                 if (ESM_Queue.getQueueSize(context) > 0) {
+
+                    processFlow(context, intent.getStringExtra(EXTRA_ANSWER));
+
                     Intent intent_ESM = new Intent(context, ESM_Queue.class);
                     intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     context.startActivity(intent_ESM);
@@ -369,6 +383,49 @@ public class ESM extends Aware_Sensor {
                     context.sendBroadcast(esm_done);
                 }
             }
+        }
+    }
+
+    private static void processFlow(Context context, String current_answer) {
+        ESMFactory esmFactory = new ESMFactory();
+        try {
+            //Check flow
+            Cursor last_esm = context.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_ANSWERED + "," + ESM.STATUS_DISMISSED + ")", null, ESM_Data.TIMESTAMP + " DESC LIMIT 1");
+            if (last_esm != null && last_esm.moveToFirst()) {
+
+                JSONObject esm_question = new JSONObject(last_esm.getString(last_esm.getColumnIndex(ESM_Data.JSON)));
+                ESM_Question esm = esmFactory.getESM(esm_question.getInt(ESM_Question.esm_type), esm_question, last_esm.getInt(last_esm.getColumnIndex(ESM_Data._ID)));
+
+                if (esm.getFlow(current_answer) != -1) {
+                    long next_db_id = esm_queue.get(esm.getFlow(current_answer) - 1); //zero based index, while flow is first based
+
+                    //Set this esm as the next one to be shown
+                    ContentValues esmData = new ContentValues();
+                    esmData.put(ESM_Data.STATUS, ESM.STATUS_VISIBLE);
+                    context.getContentResolver().update(ESM_Data.CONTENT_URI, esmData, ESM_Data._ID + "=" + next_db_id, null);
+                }
+
+                //Set as branched the rest of flow rules that were not triggered
+                JSONArray flows = esm.getFlows();
+                for (int i = 0; i < flows.length(); i++) {
+                    JSONObject flow = flows.getJSONObject(i);
+
+                    String flowAnswer = flow.getString(ESM_Question.flow_user_answer);
+                    if (flowAnswer.equals(current_answer)) continue;
+
+                    if(Aware.DEBUG) {
+                        Log.d(ESM.TAG, "Skipping: " + flowAnswer);
+                    }
+                    ContentValues esmBranched = new ContentValues();
+                    esmBranched.put(ESM_Data.STATUS, ESM.STATUS_BRANCHED);
+                    context.getContentResolver().update(ESM_Data.CONTENT_URI, esmBranched, ESM_Data._ID + "=" + esm_queue.get(esm.getFlow(flowAnswer)-1), null);
+                }
+
+            }
+            if (last_esm != null && !last_esm.isClosed()) last_esm.close();
+
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 
@@ -388,6 +445,9 @@ public class ESM extends Aware_Sensor {
         @Override
         protected void onHandleIntent(Intent intent) {
             if (intent.getAction().equals(ESM.ACTION_AWARE_TRY_ESM) && intent.getStringExtra(EXTRA_ESM) != null && intent.getStringExtra(EXTRA_ESM).length() > 0) {
+
+                esm_queue.clear();
+
                 try {
                     JSONArray esms = new JSONArray(intent.getStringExtra(EXTRA_ESM));
 
@@ -410,7 +470,10 @@ public class ESM extends Aware_Sensor {
                         }
 
                         try {
-                            getContentResolver().insert(ESM_Data.CONTENT_URI, rowData);
+
+                            Uri lastUri = getContentResolver().insert(ESM_Data.CONTENT_URI, rowData);
+                            esm_queue.add(Long.valueOf(lastUri.getLastPathSegment()));
+
                             if (Aware.DEBUG) Log.d(TAG, "ESM: " + rowData.toString());
                         } catch (SQLiteException e) {
                             if (Aware.DEBUG) Log.d(TAG, e.getMessage());
@@ -431,6 +494,9 @@ public class ESM extends Aware_Sensor {
             }
 
             if (intent.getAction().equals(ESM.ACTION_AWARE_QUEUE_ESM) && intent.getStringExtra(EXTRA_ESM) != null && intent.getStringExtra(EXTRA_ESM).length() > 0) {
+
+                esm_queue.clear();
+
                 try {
                     JSONArray esms = new JSONArray(intent.getStringExtra(EXTRA_ESM));
 
@@ -453,7 +519,10 @@ public class ESM extends Aware_Sensor {
                         }
 
                         try {
-                            getContentResolver().insert(ESM_Data.CONTENT_URI, rowData);
+
+                            Uri lastUri = getContentResolver().insert(ESM_Data.CONTENT_URI, rowData);
+                            esm_queue.add(Long.valueOf(lastUri.getLastPathSegment()));
+
                             if (Aware.DEBUG) Log.d(TAG, "ESM: " + rowData.toString());
                         } catch (SQLiteException e) {
                             if (Aware.DEBUG) Log.d(TAG, e.getMessage());

@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -18,6 +17,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.aware.Aware;
 import com.aware.ESM;
@@ -87,6 +87,12 @@ public class ESM_Checkbox extends ESM_Question {
         esm_dialog.setCanceledOnTouchOutside(false);
 
         try {
+
+            esm_dialog.setTitle(getTitle());
+
+            TextView esm_instructions = (TextView) ui.findViewById(R.id.esm_instructions);
+            esm_instructions.setText(getInstructions());
+
             final LinearLayout checkboxes = (LinearLayout) ui.findViewById(R.id.esm_checkboxes);
             checkboxes.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -167,7 +173,7 @@ public class ESM_Checkbox extends ESM_Question {
                 }
             });
             Button submit_checkbox = (Button) ui.findViewById(R.id.esm_submit);
-            submit_checkbox.setText(getNextButton());
+            submit_checkbox.setText(getSubmitButton());
             submit_checkbox.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -185,6 +191,7 @@ public class ESM_Checkbox extends ESM_Question {
                         selected_options.clear();
 
                         Intent answer = new Intent(ESM.ACTION_AWARE_ESM_ANSWERED);
+                        answer.putExtra(ESM.EXTRA_ANSWER, rowData.getAsString(ESM_Provider.ESM_Data.ANSWER));
                         getActivity().sendBroadcast(answer);
 
                         if(Aware.DEBUG) Log.d(Aware.TAG, "Answer: " + rowData.toString());

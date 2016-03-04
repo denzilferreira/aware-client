@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -99,6 +98,12 @@ public class ESM_Likert extends ESM_Question {
         esm_dialog.setCanceledOnTouchOutside(false);
 
         try {
+
+            esm_dialog.setTitle(getTitle());
+
+            TextView esm_instructions = (TextView) ui.findViewById(R.id.esm_instructions);
+            esm_instructions.setText(getInstructions());
+
             final RatingBar ratingBar = (RatingBar) ui.findViewById(R.id.esm_likert);
             ratingBar.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -129,7 +134,7 @@ public class ESM_Likert extends ESM_Question {
                 }
             });
             Button submit = (Button) ui.findViewById(R.id.esm_submit);
-            submit.setText(getNextButton());
+            submit.setText(getSubmitButton());
             submit.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -145,6 +150,7 @@ public class ESM_Likert extends ESM_Question {
                         getContext().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
 
                         Intent answer = new Intent(ESM.ACTION_AWARE_ESM_ANSWERED);
+                        answer.putExtra(ESM.EXTRA_ANSWER, rowData.getAsString(ESM_Provider.ESM_Data.ANSWER));
                         getActivity().sendBroadcast(answer);
 
                         if (Aware.DEBUG) Log.d(Aware.TAG, "Answer:" + rowData.toString());

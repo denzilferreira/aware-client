@@ -12,11 +12,9 @@ import org.json.JSONObject;
 public class ESMFactory {
 
     private JSONArray queue;
-
     public ESMFactory() {
         this.queue = new JSONArray();
     }
-
     public ESMFactory addESM(ESM_Question esm) {
         try {
             queue.put(esm.build());
@@ -33,17 +31,17 @@ public class ESMFactory {
     public ESM_Question getESM(int esmType, JSONObject esm, int _id) throws JSONException {
         switch (esmType){
             case ESM.TYPE_ESM_TEXT:
-                return new ESM_Freetext().setID(_id).setType(esmType).rebuild(esm);
+                return new ESM_Freetext().rebuild(esm).setID(_id);
             case ESM.TYPE_ESM_CHECKBOX:
-                return new ESM_Checkbox().setID(_id).setType(esmType).rebuild(esm);
+                return new ESM_Checkbox().rebuild(esm).setID(_id);
             case ESM.TYPE_ESM_LIKERT:
-                return new ESM_Likert().setID(_id).setType(esmType).rebuild(esm);
+                return new ESM_Likert().rebuild(esm).setID(_id);
             case ESM.TYPE_ESM_QUICK_ANSWERS:
-                return new ESM_QuickAnswer().setID(_id).setType(esmType).rebuild(esm);
+                return new ESM_QuickAnswer().rebuild(esm).setID(_id);
             case ESM.TYPE_ESM_RADIO:
-                return new ESM_Radio().setID(_id).setType(esmType).rebuild(esm);
+                return new ESM_Radio().rebuild(esm).setID(_id);
             case ESM.TYPE_ESM_SCALE:
-                return new ESM_Scale().setID(_id).setType(esmType).rebuild(esm);
+                return new ESM_Scale().rebuild(esm).setID(_id);
             default:
                 return null;
         }

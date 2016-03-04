@@ -7,13 +7,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.aware.Aware;
 import com.aware.ESM;
@@ -35,7 +35,7 @@ public class ESM_QuickAnswer extends ESM_Question {
     }
 
     public JSONArray getQuickAnswers() throws JSONException {
-        if(!this.esm.has(esm_quick_answers)) {
+        if (!this.esm.has(esm_quick_answers)) {
             this.esm.put(esm_quick_answers, new JSONArray());
         }
         return this.esm.getJSONArray(esm_quick_answers);
@@ -56,8 +56,8 @@ public class ESM_QuickAnswer extends ESM_Question {
     public ESM_QuickAnswer removeQuickAnswer(String answer) throws JSONException {
         JSONArray quick = getQuickAnswers();
         JSONArray newQuick = new JSONArray();
-        for(int i=0; i<quick.length(); i++) {
-            if(quick.getString(i).equals(answer)) continue;
+        for (int i = 0; i < quick.length(); i++) {
+            if (quick.getString(i).equals(answer)) continue;
             newQuick.put(quick.getString(i));
         }
         this.setQuickAnswers(newQuick);
@@ -79,17 +79,23 @@ public class ESM_QuickAnswer extends ESM_Question {
         esm_dialog.setCanceledOnTouchOutside(false);
 
         try {
+
+            esm_dialog.setTitle(getTitle());
+
+            TextView esm_instructions = (TextView) ui.findViewById(R.id.esm_instructions);
+            esm_instructions.setText(getInstructions());
+
             final JSONArray answers = getQuickAnswers();
             final LinearLayout answersHolder = (LinearLayout) ui.findViewById(R.id.esm_answers);
 
             //If we have more than 3 possibilities, use a vertical layout for UX
-            if( answers.length() > 3 ) {
+            if (answers.length() > 3) {
                 answersHolder.setOrientation(LinearLayout.VERTICAL);
             }
 
-            for(int i=0; i<answers.length(); i++) {
+            for (int i = 0; i < answers.length(); i++) {
                 final Button answer = new Button(getActivity());
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT, 1.0f );
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT, 1.0f);
                 //Fixed: buttons now of the same height regardless of content.
                 params.height = WindowManager.LayoutParams.MATCH_PARENT;
                 answer.setLayoutParams(params);
@@ -109,6 +115,7 @@ public class ESM_QuickAnswer extends ESM_Question {
                             getContext().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
 
                             Intent answer = new Intent(ESM.ACTION_AWARE_ESM_ANSWERED);
+                            answer.putExtra(ESM.EXTRA_ANSWER, rowData.getAsString(ESM_Provider.ESM_Data.ANSWER));
                             getActivity().sendBroadcast(answer);
 
                             if (Aware.DEBUG) Log.d(Aware.TAG, "Answer:" + rowData.toString());

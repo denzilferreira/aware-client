@@ -76,7 +76,7 @@ public class ESM_Freetext extends ESM_Question {
             });
 
             Button submit_text = (Button) ui.findViewById(R.id.esm_submit);
-            submit_text.setText(getNextButton());
+            submit_text.setText(getSubmitButton());
             submit_text.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -92,6 +92,7 @@ public class ESM_Freetext extends ESM_Question {
                         getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
 
                         Intent answer = new Intent(ESM.ACTION_AWARE_ESM_ANSWERED);
+                        answer.putExtra(ESM.EXTRA_ANSWER, rowData.getAsString(ESM_Provider.ESM_Data.ANSWER));
                         getActivity().sendBroadcast(answer);
 
                         if (Aware.DEBUG) Log.d(Aware.TAG, "Answer:" + rowData.toString());

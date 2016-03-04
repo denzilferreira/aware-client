@@ -26,7 +26,7 @@ import org.json.JSONObject;
 /**
  * Builder class for ESM questions. Any new ESM type needs to extend this class.
  */
-public abstract class ESM_Question extends DialogFragment {
+public class ESM_Question extends DialogFragment {
 
     public JSONObject esm = new JSONObject();
 
@@ -40,7 +40,7 @@ public abstract class ESM_Question extends DialogFragment {
     public static final String esm_trigger = "esm_trigger";
     public static final String esm_flows = "esm_flows";
     public static final String flow_user_answer = "user_answer";
-    public static final String flow_next_esm_id = "next_esm_id";
+    public static final String flow_next_esm = "next_esm";
 
     protected ESM_Question setID(int id) {
         _id = id;
@@ -105,14 +105,14 @@ public abstract class ESM_Question extends DialogFragment {
         return this;
     }
 
-    public String getNextButton() throws JSONException {
+    public String getSubmitButton() throws JSONException {
         if (!this.esm.has(esm_submit)) {
             this.esm.put(esm_submit, "OK");
         }
         return this.esm.getString(esm_submit);
     }
 
-    public ESM_Question setNextButton(String submit) throws JSONException {
+    public ESM_Question setSubmitButton(String submit) throws JSONException {
         this.esm.put(esm_submit, submit);
         return this;
     }
@@ -184,15 +184,15 @@ public abstract class ESM_Question extends DialogFragment {
      * Add a flow condition to this ESM
      *
      * @param user_answer
-     * @param nextEsmID
+     * @param nextEsm
      * @return
      * @throws JSONException
      */
-    public ESM_Question addFlow(String user_answer, String nextEsmID) throws JSONException {
+    public ESM_Question addFlow(String user_answer, int nextEsm) throws JSONException {
         JSONArray flows = getFlows();
         flows.put(new JSONObject()
                 .put(flow_user_answer, user_answer)
-                .put(flow_next_esm_id, nextEsmID));
+                .put(flow_next_esm, nextEsm));
 
         this.setFlows(flows);
         return this;
@@ -205,14 +205,14 @@ public abstract class ESM_Question extends DialogFragment {
      * @return
      * @throws JSONException
      */
-    public String getFlow(String user_answer) throws JSONException {
+    public int getFlow(String user_answer) throws JSONException {
         JSONArray flows = getFlows();
         for (int i = 0; i < flows.length(); i++) {
             JSONObject flow = flows.getJSONObject(i);
             if (flow.getString(flow_user_answer).equals(user_answer))
-                return flow.getString(flow_next_esm_id);
+                return flow.getInt(flow_next_esm);
         }
-        return null;
+        return -1;
     }
 
     /**
@@ -383,21 +383,21 @@ public abstract class ESM_Question extends DialogFragment {
     public void onPause() {
         super.onPause();
 
-        if (ESM.isESMVisible(getActivity().getApplicationContext())) {
-            if (Aware.DEBUG)
-                Log.d(Aware.TAG, "ESM was visible but not answered, go back to notification bar");
-
-            //Revert to NEW state
-            ContentValues rowData = new ContentValues();
-            rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, 0);
-            rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_NEW);
-            getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
-
-            //Update notification
-            ESM.notifyESM(getActivity().getApplicationContext());
-
-            esm_dialog.dismiss();
-            getActivity().finish();
-        }
+//        if (ESM.isESMVisible(getActivity().getApplicationContext())) {
+//            if (Aware.DEBUG)
+//                Log.d(Aware.TAG, "ESM was visible but not answered, go back to notification bar");
+//
+//            //Revert to NEW state
+//            ContentValues rowData = new ContentValues();
+//            rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, 0);
+//            rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_NEW);
+//            getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
+//
+//            //Update notification
+//            ESM.notifyESM(getActivity().getApplicationContext());
+//
+//            esm_dialog.dismiss();
+//            getActivity().finish();
+//        }
     }
 }

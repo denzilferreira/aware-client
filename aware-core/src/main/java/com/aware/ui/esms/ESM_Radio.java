@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -18,6 +17,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 
 import com.aware.Aware;
 import com.aware.ESM;
@@ -83,6 +83,12 @@ public class ESM_Radio extends ESM_Question {
         esm_dialog.setCanceledOnTouchOutside(false);
 
         try {
+
+            esm_dialog.setTitle(getTitle());
+
+            TextView esm_instructions = (TextView) ui.findViewById(R.id.esm_instructions);
+            esm_instructions.setText(getInstructions());
+
             final RadioGroup radioOptions = (RadioGroup) ui.findViewById(R.id.esm_radio);
             radioOptions.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -147,7 +153,7 @@ public class ESM_Radio extends ESM_Question {
                 }
             });
             Button submit_radio = (Button) ui.findViewById(R.id.esm_submit);
-            submit_radio.setText(getNextButton());
+            submit_radio.setText(getSubmitButton());
             submit_radio.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -161,13 +167,14 @@ public class ESM_Radio extends ESM_Question {
                         RadioGroup radioOptions = (RadioGroup) ui.findViewById(R.id.esm_radio);
                         if (radioOptions.getCheckedRadioButtonId() != -1) {
                             RadioButton selected = (RadioButton) radioOptions.getChildAt(radioOptions.getCheckedRadioButtonId());
-                            rowData.put(ESM_Provider.ESM_Data.ANSWER, selected.getText().toString());
+                            rowData.put(ESM_Provider.ESM_Data.ANSWER, String.valueOf(selected.getText()).trim());
                         }
                         rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_ANSWERED);
 
                         getContext().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
 
                         Intent answer = new Intent(ESM.ACTION_AWARE_ESM_ANSWERED);
+                        answer.putExtra(ESM.EXTRA_ANSWER, rowData.getAsString(ESM_Provider.ESM_Data.ANSWER));
                         getActivity().sendBroadcast(answer);
 
                         if (Aware.DEBUG) Log.d(Aware.TAG, "Answer:" + rowData.toString());
