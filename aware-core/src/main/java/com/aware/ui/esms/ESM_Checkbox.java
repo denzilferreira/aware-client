@@ -34,8 +34,6 @@ import java.util.ArrayList;
  */
 public class ESM_Checkbox extends ESM_Question {
 
-    private static ArrayList<String> selected_options = new ArrayList<>();
-
     public static final String esm_checkboxes = "esm_checkboxes";
 
     public ESM_Checkbox() throws JSONException {
@@ -43,7 +41,7 @@ public class ESM_Checkbox extends ESM_Question {
     }
 
     public JSONArray getCheckboxes() throws JSONException {
-        if(!this.esm.has(esm_checkboxes)) {
+        if (!this.esm.has(esm_checkboxes)) {
             this.esm.put(esm_checkboxes, new JSONArray());
         }
         return this.esm.getJSONArray(esm_checkboxes);
@@ -64,8 +62,8 @@ public class ESM_Checkbox extends ESM_Question {
     public ESM_Checkbox removeCheck(String option) throws JSONException {
         JSONArray checks = getCheckboxes();
         JSONArray newChecks = new JSONArray();
-        for(int i=0; i<checks.length();i++) {
-            if(checks.getString(i).equals(option)) continue;
+        for (int i = 0; i < checks.length(); i++) {
+            if (checks.getString(i).equals(option)) continue;
             newChecks.put(checks.getString(i));
         }
         this.setCheckboxes(newChecks);
@@ -76,6 +74,8 @@ public class ESM_Checkbox extends ESM_Question {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         super.onCreateDialog(savedInstanceState);
+
+        final ArrayList<String> selected_options = new ArrayList<>();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
@@ -98,19 +98,20 @@ public class ESM_Checkbox extends ESM_Question {
                 @Override
                 public void onClick(View v) {
                     try {
-                        if( getExpirationThreshold() > 0 && expire_monitor != null ) expire_monitor.cancel(true);
-                    }catch (JSONException e) {
+                        if (getExpirationThreshold() > 0 && expire_monitor != null)
+                            expire_monitor.cancel(true);
+                    } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 }
             });
 
             final JSONArray checks = getCheckboxes();
-            for(int i=0; i<checks.length(); i++) {
+            for (int i = 0; i < checks.length(); i++) {
                 final CheckBox checked = new CheckBox(getActivity());
 
                 final int current_position = i;
-                checked.setText(" " + checks.getString(i));
+                checked.setText(checks.getString(i));
                 checked.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(final CompoundButton buttonView, boolean isChecked) {
@@ -158,7 +159,7 @@ public class ESM_Checkbox extends ESM_Question {
                             } else {
                                 selected_options.remove(buttonView.getText().toString());
                             }
-                        }catch (JSONException e) {
+                        } catch (JSONException e) {
                             e.printStackTrace();
                         }
                     }
@@ -178,12 +179,16 @@ public class ESM_Checkbox extends ESM_Question {
                 @Override
                 public void onClick(View v) {
                     try {
-                        if( getExpirationThreshold() > 0 && expire_monitor != null ) expire_monitor.cancel(true);
+                        if (getExpirationThreshold() > 0 && expire_monitor != null)
+                            expire_monitor.cancel(true);
 
                         ContentValues rowData = new ContentValues();
                         rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
-                        if( selected_options.size() > 0 ){
-                            rowData.put(ESM_Provider.ESM_Data.ANSWER, selected_options.toString());
+                        if (selected_options.size() > 0) {
+                            rowData.put(ESM_Provider.ESM_Data.ANSWER,
+                                    selected_options.toString()
+                                            .replace("[", "").replace("]", "")
+                            );
                         }
                         rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_ANSWERED);
 
@@ -194,7 +199,7 @@ public class ESM_Checkbox extends ESM_Question {
                         answer.putExtra(ESM.EXTRA_ANSWER, rowData.getAsString(ESM_Provider.ESM_Data.ANSWER));
                         getActivity().sendBroadcast(answer);
 
-                        if(Aware.DEBUG) Log.d(Aware.TAG, "Answer: " + rowData.toString());
+                        if (Aware.DEBUG) Log.d(Aware.TAG, "Answer: " + rowData.toString());
                         esm_dialog.dismiss();
 
                     } catch (JSONException e) {

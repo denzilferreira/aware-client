@@ -12,11 +12,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-AWARE Framework Client source code (http://awareframework.com)
-============
+AWARE Framework Client
+======================
 AWARE is an Android framework dedicated to instrument, infer, log and share mobile context information, 
 for application developers, researchers and smartphone users. AWARE captures hardware-, software-, and human-based data. 
-The data is then analyzed using AWARE plugins. They transform data into information you can understand.
+The platform is scalable with plugins and can be integrated with other platforms using JSON, MQTT or MySQL.
 
 Individuals: Record your own data
 =================================

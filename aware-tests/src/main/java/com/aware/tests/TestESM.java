@@ -23,7 +23,6 @@ public class TestESM implements AwareTest {
     public void test(Context context) {
 //        testESMS(context);
 //        trialESMS(context);
-
         testFlow(context);
     }
 
@@ -31,38 +30,47 @@ public class TestESM implements AwareTest {
         ESMFactory factory = new ESMFactory();
 
         try {
-            ESM_Radio q1 = new ESM_Radio();
-            q1.addRadio("Goto 2")
-                    .addRadio("Goto 3")
-                    .addRadio("End")
+            ESM_Checkbox q1 = new ESM_Checkbox();
+            q1.addCheck("Goto 2")
+                    .addCheck("Goto 3")
                     .addFlow("Goto 2", 2)
                     .addFlow("Goto 3", 3)
-                    .setTitle("Flow test")
-                    .setInstructions("This tests the flow functionality")
+                    .setTitle("Question 1")
                     .setSubmitButton("Next")
-                    .setExpirationThreshold(0);
+                    .setInstructions("This is question 1");
 
             ESM_Freetext q2 = new ESM_Freetext();
             q2.setTitle("Question 2")
                     .setSubmitButton("Next")
                     .setInstructions("This is question 2");
 
-            ESM_Freetext q3 = new ESM_Freetext();
-            q3.setTitle("Question 3")
-                    .setSubmitButton("Next")
-                    .setInstructions("This is question 3");
+            ESM_Scale q3 = new ESM_Scale();
+            q3.setScaleMax(100)
+                    .setScaleMin(0)
+                    .setScaleStart(50)
+                    .setScaleMaxLabel("Perfect")
+                    .setScaleMinLabel("Poor")
+                    .setScaleStep(10)
+                    .setTitle("Question 3")
+                    .setInstructions("Scale ESM")
+                    .setSubmitButton("Next");
 
-            ESM_QuickAnswer end = new ESM_QuickAnswer();
-            end.addQuickAnswer("Yes")
-                    .addQuickAnswer("No")
-                    .setInstructions("The end is here?");
+            ESM_Likert q4 = new ESM_Likert();
+            q4.setLikertMax(5)
+                    .setLikertMaxLabel("Great")
+                    .setLikertMinLabel("Poor")
+                    .setLikertStep(1)
+                    .setTitle("Question 4")
+                    .setInstructions("Likert ESM")
+                    .setTrigger("test")
+                    .setSubmitButton("Finish");
 
             factory.addESM(q1);
             factory.addESM(q2);
             factory.addESM(q3);
-            factory.addESM(end);
+            factory.addESM(q4);
 
-            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
+            Intent queue = new Intent(ESM.ACTION_AWARE_TRY_ESM);
             queue.putExtra(ESM.EXTRA_ESM, factory.build());
             context.sendBroadcast(queue);
 

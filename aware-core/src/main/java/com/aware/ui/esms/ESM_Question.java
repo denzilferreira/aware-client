@@ -383,21 +383,21 @@ public class ESM_Question extends DialogFragment {
     public void onPause() {
         super.onPause();
 
-//        if (ESM.isESMVisible(getActivity().getApplicationContext())) {
-//            if (Aware.DEBUG)
-//                Log.d(Aware.TAG, "ESM was visible but not answered, go back to notification bar");
-//
-//            //Revert to NEW state
-//            ContentValues rowData = new ContentValues();
-//            rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, 0);
-//            rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_NEW);
-//            getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
-//
-//            //Update notification
-//            ESM.notifyESM(getActivity().getApplicationContext());
-//
-//            esm_dialog.dismiss();
-//            getActivity().finish();
-//        }
+        if (ESM.isESMVisible(getActivity().getApplicationContext())) {
+            if (Aware.DEBUG)
+                Log.d(Aware.TAG, "ESM was visible but not answered, go back to notification bar");
+
+            //Revert to NEW state
+            ContentValues rowData = new ContentValues();
+            rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, 0);
+            rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_NEW);
+            getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
+
+            //Update notification
+            ESM.notifyESM(getActivity().getApplicationContext());
+
+            esm_dialog.dismiss();
+            getActivity().finish();
+        }
     }
 }

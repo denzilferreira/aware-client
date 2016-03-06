@@ -29,7 +29,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * AWARE ESM module
@@ -387,6 +386,9 @@ public class ESM extends Aware_Sensor {
     }
 
     private static void processFlow(Context context, String current_answer) {
+
+        Log.d(ESM.TAG, "Current answer: " + current_answer);
+
         ESMFactory esmFactory = new ESMFactory();
         try {
             //Check flow
@@ -396,29 +398,31 @@ public class ESM extends Aware_Sensor {
                 JSONObject esm_question = new JSONObject(last_esm.getString(last_esm.getColumnIndex(ESM_Data.JSON)));
                 ESM_Question esm = esmFactory.getESM(esm_question.getInt(ESM_Question.esm_type), esm_question, last_esm.getInt(last_esm.getColumnIndex(ESM_Data._ID)));
 
-                if (esm.getFlow(current_answer) != -1) {
-                    long next_db_id = esm_queue.get(esm.getFlow(current_answer) - 1); //zero based index, while flow is first based
-
-                    //Set this esm as the next one to be shown
-                    ContentValues esmData = new ContentValues();
-                    esmData.put(ESM_Data.STATUS, ESM.STATUS_VISIBLE);
-                    context.getContentResolver().update(ESM_Data.CONTENT_URI, esmData, ESM_Data._ID + "=" + next_db_id, null);
-                }
-
-                //Set as branched the rest of flow rules that were not triggered
+                //Set as branched the flow rules that are not triggered
                 JSONArray flows = esm.getFlows();
                 for (int i = 0; i < flows.length(); i++) {
                     JSONObject flow = flows.getJSONObject(i);
 
                     String flowAnswer = flow.getString(ESM_Question.flow_user_answer);
+
+                    boolean is_checks_flow = false;
+                    if (esm.getType() == ESM.TYPE_ESM_CHECKBOX) {
+                        //This is multiple choice. Check if we are triggering multiple flows
+                        String[] multiple = current_answer.split(",");
+                        for (String m : multiple) {
+                            if (m.trim().equals(flowAnswer)) is_checks_flow = true;
+                        }
+                        if (is_checks_flow) continue;
+                    }
+
                     if (flowAnswer.equals(current_answer)) continue;
 
-                    if(Aware.DEBUG) {
-                        Log.d(ESM.TAG, "Skipping: " + flowAnswer);
+                    if (Aware.DEBUG) {
+                        Log.d(ESM.TAG, "Branched split: " + flowAnswer);
                     }
                     ContentValues esmBranched = new ContentValues();
                     esmBranched.put(ESM_Data.STATUS, ESM.STATUS_BRANCHED);
-                    context.getContentResolver().update(ESM_Data.CONTENT_URI, esmBranched, ESM_Data._ID + "=" + esm_queue.get(esm.getFlow(flowAnswer)-1), null);
+                    context.getContentResolver().update(ESM_Data.CONTENT_URI, esmBranched, ESM_Data._ID + "=" + esm_queue.get(esm.getFlow(flowAnswer) - 1), null);
                 }
 
             }

@@ -106,7 +106,7 @@ public class ESM_Radio extends ESM_Question {
             for (int i = 0; i < radios.length(); i++) {
                 final RadioButton radioOption = new RadioButton(getActivity());
                 radioOption.setId(i);
-                radioOption.setText(" " + radios.getString(i));
+                radioOption.setText(radios.getString(i));
                 radioOptions.addView(radioOption);
 
                 if (radios.getString(i).equals(getResources().getString(R.string.aware_esm_other))) {
