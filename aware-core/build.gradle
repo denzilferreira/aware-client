@@ -7,7 +7,7 @@ android {
 
     defaultConfig {
         versionCode version_code
-        versionName version_readable + "." + versionCode
+        versionName version_readable
         targetSdkVersion 23
         minSdkVersion 10 //Android 2.3.3
     }

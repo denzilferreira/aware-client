@@ -1,5 +1,5 @@
 
-apply plugin: 'com.android.application' //AWARE is an application
+apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23

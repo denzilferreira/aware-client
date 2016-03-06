@@ -1,9 +1,9 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 project.ext {
-    version_readable = "4.0"
     support_libs = "23.2.0"
     google_libs = "8.4.0"
     version_code = System.getenv("BUILD_NUMBER") as Integer ?: 0
+    version_readable = "4.0."+version_code
 }
 
 buildscript {
