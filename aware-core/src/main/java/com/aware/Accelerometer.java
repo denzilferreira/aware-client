@@ -198,6 +198,8 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
             Aware.setSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER, SAMPLING_RATE);
         }
 
+        Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, true);
+
         DATABASE_TABLES = Accelerometer_Provider.DATABASE_TABLES;
     	TABLES_FIELDS = Accelerometer_Provider.TABLES_FIELDS;
     	CONTEXT_URIS = new Uri[]{ Accelerometer_Sensor.CONTENT_URI, Accelerometer_Data.CONTENT_URI };
@@ -238,6 +240,8 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         wakeLock.release();
 
         unregisterReceiver(dataLabeler);
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, false);
         
         if(Aware.DEBUG) Log.d(TAG,"Accelerometer service terminated...");
     }
@@ -260,7 +264,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
         if(Aware.DEBUG) Log.d(TAG,"Accelerometer service active at " + SAMPLING_RATE + " microseconds...");
         
-        return START_STICKY;
+        return super.onStartCommand(intent, flags, startId);
     }
 
     //Singleton instance of this service

@@ -23,8 +23,6 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
@@ -112,7 +110,7 @@ public class Aware extends Service {
     public static final String ACTION_AWARE_REFRESH = "ACTION_AWARE_REFRESH";
 
     /**
-     * Received broadcast: plugins must implement awareContext broadcast receiver to share their current status.
+     * Received broadcast: this broadcast will trigger plugins that implement the CONTEXT_PRODUCER callback.
      */
     public static final String ACTION_AWARE_CURRENT_CONTEXT = "ACTION_AWARE_CURRENT_CONTEXT";
 
@@ -242,7 +240,6 @@ public class Aware extends Service {
         filter.addAction(Aware.ACTION_AWARE_REFRESH);
         filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
         filter.addAction(Aware.ACTION_QUIT_STUDY);
-        filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
         filter.addAction(Aware.ACTION_AWARE_CHECK_UPDATE);
         awareContext.registerReceiver(aware_BR, filter);
 
@@ -399,6 +396,7 @@ public class Aware extends Service {
             if (enabled_plugins != null && !enabled_plugins.isClosed()) enabled_plugins.close();
 
             //The official client takes care of staying updated to avoid compromising studies
+            //TODO: move to somewhere else - triggered by the user on demand - make it remotely triggered by server
 //            if (getPackageName().equals("com.aware")) {
 //                //Check if there are updates on the plugins
 //                if (active_plugins.size() > 0) {
@@ -431,7 +429,8 @@ public class Aware extends Service {
                 } else if (frequency_webservice > 0) {
 
                     //Checks if study is still active
-                    new Study_Check().execute();
+                    //TODO: move to somewhere else - this should be sent by the server when closing study as an MQTT message
+//                    new Study_Check().execute();
 
                     //Fixed: set alarm only once if not set yet.
                     if (aware_preferences.getLong(PREF_LAST_SYNC, 0) == 0 || (aware_preferences.getLong(PREF_LAST_SYNC, 0) > 0 && System.currentTimeMillis() - aware_preferences.getLong(PREF_LAST_SYNC, 0) > frequency_webservice * 60 * 1000)) {
@@ -1233,7 +1232,7 @@ public class Aware extends Service {
                 e.printStackTrace();
             }
 
-            //Send data to server
+            //Send data to server for the first time, so that this device is immediately visible on the GUI
             Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
             sendBroadcast(sync);
 
@@ -1723,21 +1722,6 @@ public class Aware extends Service {
                 context.startService(webserviceHelper);
             }
 
-            //Monitor if the user just connected to Wi-Fi and the client is supposed to sync the data to a study when he does
-            if (intent.getAction().equals(WifiManager.WIFI_STATE_CHANGED_ACTION)) {
-                int wifi_state = intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE, WifiManager.WIFI_STATE_UNKNOWN);
-                if (wifi_state == WifiManager.WIFI_STATE_ENABLED) {
-                    if (Aware.getSetting(context, Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true") && Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
-                        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(CONNECTIVITY_SERVICE);
-                        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-                        if (activeNetwork != null && activeNetwork.isConnectedOrConnecting() && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI) {
-                            if (Aware.DEBUG) Log.d(Aware.TAG, "Internet is available, let's sync!");
-                            context.sendBroadcast(new Intent(Aware.ACTION_AWARE_SYNC_DATA));
-                        }
-                    }
-                }
-            }
-
             if (intent.getAction().equals(Aware.ACTION_AWARE_CLEAR_DATA)) {
                 context.getContentResolver().delete(Aware_Provider.Aware_Device.CONTENT_URI, null, null);
                 if (Aware.DEBUG) Log.d(TAG, "Cleared " + CONTEXT_URIS[0]);
@@ -1945,6 +1929,7 @@ public class Aware extends Service {
         awareContext.stopService(pluginsManager);
     }
 
+    //TODO: Make all the sensors track their own statuses
     /**
      * Start keyboard module
      */
