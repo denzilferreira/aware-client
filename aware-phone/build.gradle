@@ -1,9 +1,5 @@
-apply plugin: 'com.android.application' //AWARE is an application
 
-ext.version_readable = "4.0"
-ext.version_code = 432
-ext.version_support_libs = "23.2.0"
-ext.version_google_libs = "8.4.0"
+apply plugin: 'com.android.application' //AWARE is an application
 
 android {
     compileSdkVersion 23
@@ -46,9 +42,9 @@ dependencies {
     compile files('libs/mqtt-client-0.4.0.jar')
     compile project(':aware-core')
     compile 'com.koushikdutta.ion:ion:2.1.6'
-    compile "com.android.support:appcompat-v7:${version_support_libs}"
-    compile "com.android.support:design:${version_support_libs}"
-    compile "com.android.support:cardview-v7:${version_support_libs}"
-    compile "com.google.android.gms:play-services-vision:${version_google_libs}"
+    compile "com.android.support:appcompat-v7:$support_libs"
+    compile "com.android.support:design:$support_libs"
+    compile "com.android.support:cardview-v7:$support_libs"
+    compile "com.google.android.gms:play-services-vision:$google_libs"
 }
 

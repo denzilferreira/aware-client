@@ -70,7 +70,7 @@ public class TestESM implements AwareTest {
             factory.addESM(q3);
             factory.addESM(q4);
 
-            Intent queue = new Intent(ESM.ACTION_AWARE_TRY_ESM);
+            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
             queue.putExtra(ESM.EXTRA_ESM, factory.build());
             context.sendBroadcast(queue);
 

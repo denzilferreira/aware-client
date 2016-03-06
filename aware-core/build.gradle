@@ -1,17 +1,13 @@
 
 apply plugin: 'com.android.library'
 
-ext.version_readable = "4.0"
-ext.version_code = 432
-ext.version_support_libs = "23.2.0"
-
 android {
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
 
     defaultConfig {
         versionCode version_code
-        versionName version_readable
+        versionName version_readable + "." + versionCode
         targetSdkVersion 23
         minSdkVersion 10 //Android 2.3.3
     }
@@ -42,10 +38,10 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile files('libs/mqtt-client-0.4.0.jar')
     compile "com.koushikdutta.ion:ion:2.1.6"
-    compile "com.android.support:appcompat-v7:${version_support_libs}"
-    compile "com.android.support:design:${version_support_libs}"
+    compile "com.android.support:appcompat-v7:$support_libs"
+    compile "com.android.support:design:$support_libs"
 }
 
 //Update AWARE's library in Maven Central
-apply from: 'maven-publish.gradle'
+//apply from: 'maven-publish.gradle'
 
