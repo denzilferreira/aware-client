@@ -1,5 +1,6 @@
 
 apply plugin: 'com.android.application'
+apply plugin: 'com.jfrog.bintray'
 
 android {
     compileSdkVersion 23
@@ -34,6 +35,32 @@ android {
 
     lintOptions {
         abortOnError false
+    }
+
+    bintray {
+        user = bintrayUsername
+        key = bintrayKey
+        configurations = ['archives']
+
+        publish = true
+
+        pkg {
+            repo = 'com.awareframework'
+            name = 'com.aware.phone'
+            licenses = ['Apache-2.0']
+            userOrg = 'AWARE Framework'
+            websiteUrl = 'http://www.awareframework.com'
+            issueTrackerUrl = 'https://github.com/denzilferreira/aware-client/issues'
+            publicDownloadNumbers = true
+            githubRepo = 'https://github.com/denzilferreira/aware-client.git'
+            githubReleaseNotesFile = 'README.md'
+            version {
+                name = 'aware-phone-' + version_readable
+                desc = 'AWARE Phone Client'
+                released = new Date()
+                vcsTag = version_readable
+            }
+        }
     }
 }
 

@@ -1,5 +1,6 @@
 
 apply plugin: 'com.android.library'
+apply plugin: 'com.jfrog.bintray'
 
 android {
     compileSdkVersion 23
@@ -34,6 +35,32 @@ android {
     }
 }
 
+bintray {
+    user = bintrayUsername
+    key = bintrayKey
+    configurations = ['archives']
+
+    publish = true
+
+    pkg {
+        repo = 'com.awareframework'
+        name = 'com.aware.core'
+        licenses = ['Apache-2.0']
+        userOrg = 'AWARE Framework'
+        websiteUrl = 'http://www.awareframework.com'
+        issueTrackerUrl = 'https://github.com/denzilferreira/aware-client/issues'
+        publicDownloadNumbers = true
+        githubRepo = 'https://github.com/denzilferreira/aware-client.git'
+        githubReleaseNotesFile = 'README.md'
+        version {
+            name = 'aware-core-' + version_readable
+            desc = 'AWARE core library'
+            released = new Date()
+            vcsTag = version_readable
+        }
+    }
+}
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile files('libs/mqtt-client-0.4.0.jar')
@@ -41,7 +68,4 @@ dependencies {
     compile "com.android.support:appcompat-v7:$support_libs"
     compile "com.android.support:design:$support_libs"
 }
-
-//Update AWARE's library in Maven Central
-//apply from: 'maven-publish.gradle'
 
