@@ -51,6 +51,7 @@ bintray {
         websiteUrl = 'http://www.awareframework.com'
         issueTrackerUrl = 'https://github.com/denzilferreira/aware-client/issues'
         publicDownloadNumbers = true
+        vcsUrl = 'https://github.com/denzilferreira/aware-client.git'
         githubRepo = 'https://github.com/denzilferreira/aware-client.git'
         githubReleaseNotesFile = 'README.md'
         version {
