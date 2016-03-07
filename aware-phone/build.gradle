@@ -48,7 +48,6 @@ bintray {
         repo = 'com.awareframework'
         name = 'com.aware.phone'
         licenses = ['Apache-2.0']
-        userOrg = 'AWARE Framework'
         websiteUrl = 'http://www.awareframework.com'
         issueTrackerUrl = 'https://github.com/denzilferreira/aware-client/issues'
         publicDownloadNumbers = true
