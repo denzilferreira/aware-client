@@ -24,7 +24,6 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
 import android.net.Uri;
-import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Build;
@@ -402,7 +401,7 @@ public class Aware extends Service {
 //                if (active_plugins.size() > 0) {
 //                    //the phone takes care of updating the watch packages
 //                    if (!Aware.is_watch(this)) {
-//                        new CheckPlugins().execute(active_plugins);
+//                        new AwarePluginsUpdateCheck().execute(active_plugins);
 //                    }
 //                }
 //
@@ -410,7 +409,7 @@ public class Aware extends Service {
 //                    if (aware_preferences.getLong(PREF_LAST_UPDATE, 0) == 0 || (aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 0 && System.currentTimeMillis() - aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 6 * 60 * 60 * 1000)) { //check every 6h
 //                        //Check if there are updates to the client
 //                        if (!Aware.is_watch(this)) {
-//                            new Update_Check().execute();
+//                            new AwareUpdateCheck().execute();
 //                        }
 //                        SharedPreferences.Editor editor = aware_preferences.edit();
 //                        editor.putLong(PREF_LAST_UPDATE, System.currentTimeMillis());
@@ -1350,7 +1349,7 @@ public class Aware extends Service {
         c.sendBroadcast(applyNew);
     }
 
-    private class CheckPlugins extends AsyncTask<ArrayList<String>, Void, Boolean> {
+    private class AwarePluginsUpdateCheck extends AsyncTask<ArrayList<String>, Void, Boolean> {
         private ArrayList<String> updated = new ArrayList<>();
 
         @Override
@@ -1397,7 +1396,7 @@ public class Aware extends Service {
                 mBuilder.setContentText("Found " + updated.size() + " updated plugin(s). Install?");
                 mBuilder.setAutoCancel(true);
 
-                Intent updateIntent = new Intent(getApplicationContext(), UpdatePlugins.class);
+                Intent updateIntent = new Intent(getApplicationContext(), DowloadUpdatedPlugins.class);
                 updateIntent.putExtra("updated", updated);
 
                 PendingIntent clickIntent = PendingIntent.getService(getApplicationContext(), 0, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -1411,7 +1410,7 @@ public class Aware extends Service {
     /**
      * Client: check if there is an update to the client.
      */
-    public static class Update_Check extends AsyncTask<Void, Void, Boolean> {
+    public static class AwareUpdateCheck extends AsyncTask<Void, Void, Boolean> {
         String filename = "", whats_new = "";
         int version = 0;
         PackageInfo awarePkg = null;
@@ -1469,7 +1468,7 @@ public class Aware extends Service {
                 mBuilder.setContentText("Version: " + version + ". Install?");
                 mBuilder.setAutoCancel(true);
 
-                Intent updateIntent = new Intent(awareContext, UpdateFrameworkService.class);
+                Intent updateIntent = new Intent(awareContext, AwareClientUpdateDownloader.class);
                 updateIntent.putExtra("filename", filename);
 
                 PendingIntent clickIntent = PendingIntent.getService(awareContext, 0, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -1481,13 +1480,12 @@ public class Aware extends Service {
     }
 
     /**
-     * Client's plugin monitor
-     * - Installs a plugin that was just downloaded
-     * - Checks if a package is a plugin or not
-     *
+     * AWARE Android Package Monitor
+     * 1) Checks if a package is a plugin or not
+     * 2) Installs a plugin that was just downloaded
      * @author denzilferreira
      */
-    public static class PluginMonitor extends BroadcastReceiver {
+    public static class AndroidPackageMonitor extends BroadcastReceiver {
         private static PackageManager mPkgManager;
 
         @Override
@@ -1535,7 +1533,7 @@ public class Aware extends Service {
                 try {
                     ApplicationInfo appInfo = mPkgManager.getApplicationInfo(packageName, PackageManager.GET_ACTIVITIES);
                     //Check if this is a package for which we have more info from the server
-                    new Plugin_Info_Async().execute(appInfo);
+                    new AwarePluginOnlineInfo().execute(appInfo);
                 } catch (final NameNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -1560,7 +1558,7 @@ public class Aware extends Service {
      *
      * @author denzilferreira
      */
-    private static class Plugin_Info_Async extends AsyncTask<ApplicationInfo, Void, JSONObject> {
+    private static class AwarePluginOnlineInfo extends AsyncTask<ApplicationInfo, Void, JSONObject> {
 
         private ApplicationInfo app;
 
@@ -1642,8 +1640,8 @@ public class Aware extends Service {
         }
     }
 
-    public static class UpdatePlugins extends IntentService {
-        public UpdatePlugins() {
+    public static class DowloadUpdatedPlugins extends IntentService {
+        public DowloadUpdatedPlugins() {
             super("Update Plugins service");
         }
 
@@ -1661,8 +1659,8 @@ public class Aware extends Service {
      *
      * @author denzilferreira
      */
-    public static class UpdateFrameworkService extends IntentService {
-        public UpdateFrameworkService() {
+    public static class AwareClientUpdateDownloader extends IntentService {
+        public AwareClientUpdateDownloader() {
             super("Update Framework service");
         }
 
@@ -1704,6 +1702,7 @@ public class Aware extends Service {
      *
      * @author denzil
      */
+    private static final Aware_Broadcaster aware_BR = new Aware_Broadcaster();
     public static class Aware_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -1738,7 +1737,7 @@ public class Aware extends Service {
             if (intent.getAction().equals(Aware.ACTION_AWARE_CHECK_UPDATE)) {
                 //Check if there are updates to the client
                 if (!Aware.is_watch(context)) {
-                    new Update_Check().execute();
+                    new AwareUpdateCheck().execute();
                 }
                 SharedPreferences.Editor editor = aware_preferences.edit();
                 editor.putLong(PREF_LAST_UPDATE, System.currentTimeMillis());
@@ -1756,11 +1755,10 @@ public class Aware extends Service {
         }
     }
 
-    private static final Aware_Broadcaster aware_BR = new Aware_Broadcaster();
-
     /**
      * Checks if we have access to the storage of the device. Turns off AWARE when we don't, turns it back on when available again.
      */
+    private static final Storage_Broadcaster storage_BR = new Storage_Broadcaster();
     public static class Storage_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -1775,8 +1773,6 @@ public class Aware extends Service {
             context.startService(aware);
         }
     }
-
-    private static final Storage_Broadcaster storage_BR = new Storage_Broadcaster();
 
     /**
      * Start active services

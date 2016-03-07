@@ -161,8 +161,8 @@
             </intent-filter>
         </service>
 
-        <service android:name="com.aware.Aware$UpdateFrameworkService" android:exported="true"/>
-        <service android:name="com.aware.Aware$UpdatePlugins" android:exported="true"/>
+        <service android:name="com.aware.Aware$AwareClientUpdateDownloader" android:exported="true"/>
+        <service android:name="com.aware.Aware$DowloadUpdatedPlugins" android:exported="true"/>
 
         <service android:name="com.aware.utils.DownloadPluginService" android:exported="true" />
         <service android:name="com.aware.utils.StudyUtils" android:exported="true"/>
@@ -187,7 +187,7 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.aware.Aware$PluginMonitor" android:exported="true">
+        <receiver android:name="com.aware.Aware$AndroidPackageMonitor" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_ADDED" />
                 <action android:name="android.intent.action.PACKAGE_REMOVED" />
