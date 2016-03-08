@@ -52,8 +52,6 @@ bintray {
         issueTrackerUrl = 'https://github.com/denzilferreira/aware-client/issues'
         publicDownloadNumbers = true
         vcsUrl = 'https://github.com/denzilferreira/aware-client.git'
-        githubRepo = 'https://github.com/denzilferreira/aware-client.git'
-        githubReleaseNotesFile = 'README.md'
         version {
             name = 'aware-phone-' + version_readable
             desc = 'AWARE Phone Client'
