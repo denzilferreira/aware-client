@@ -51,10 +51,10 @@ bintray {
         publicDownloadNumbers = true
         vcsUrl = 'https://github.com/denzilferreira/aware-client.git'
         version {
-            name = 'aware-core-' + version_readable
+            name = "aware-core-$version_readable-$version_code"
             desc = 'AWARE core library'
             released = new Date()
-            vcsTag = version_readable
+            vcsTag = "$version_readable-$version_code"
         }
     }
 }

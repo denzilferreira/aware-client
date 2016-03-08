@@ -53,10 +53,10 @@ bintray {
         publicDownloadNumbers = true
         vcsUrl = 'https://github.com/denzilferreira/aware-client.git'
         version {
-            name = 'aware-phone-' + version_readable
+            name = "aware-phone-$version_readable-$version_code"
             desc = 'AWARE Phone Client'
             released = new Date()
-            vcsTag = version_readable
+            vcsTag = "$version_readable-$version_code"
         }
     }
 }
