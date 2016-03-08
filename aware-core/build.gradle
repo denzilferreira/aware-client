@@ -44,7 +44,7 @@ bintray {
 
     pkg {
         repo = 'com.awareframework'
-        name = 'com.aware.core'
+        name = 'com.aware'
         licenses = ['Apache-2.0']
         websiteUrl = 'http://www.awareframework.com'
         issueTrackerUrl = 'https://github.com/denzilferreira/aware-client/issues'
