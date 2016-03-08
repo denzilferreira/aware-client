@@ -2,6 +2,9 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.jfrog.bintray'
 
+version = version_readable
+group = "com.awareframework"
+
 android {
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
@@ -48,13 +51,17 @@ bintray {
         licenses = ['Apache-2.0']
         websiteUrl = 'http://www.awareframework.com'
         issueTrackerUrl = 'https://github.com/denzilferreira/aware-client/issues'
+        labels = ['aar','android','framework','aware']
         publicDownloadNumbers = true
         vcsUrl = 'https://github.com/denzilferreira/aware-client.git'
+        desc = "AWARE core library"
+        userOrg = bintrayUsername
         version {
-            name = 'aware-core-' + version_readable
-            desc = 'AWARE core library'
+            name = "$version_readable"
+            desc = "AWARE core library"
             released = new Date()
-            vcsTag = version_readable
+            vcsTag = "$version_readable"
+            attributes = ['gradle-plugin': 'com.use.less:com.use.less.gradle:gradle-useless-plugin']
         }
     }
 }
