@@ -3,7 +3,7 @@ project.ext {
     support_libs = "23.2.0"
     google_libs = "8.4.0"
     version_code = 500 + (System.getenv("BUILD_NUMBER") as Integer ?: 0)
-    version_readable = "4.0"
+    version_readable = "4.0." + version_code
 }
 
 buildscript {

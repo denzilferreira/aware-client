@@ -39,8 +39,8 @@ android {
 }
 
 bintray {
-    user = bintrayUsername
-    key = bintrayKey
+    user = (System.getenv("bintrayUsername") as String ?: "")
+    key = (System.getenv("bintrayKey") as String ?: "")
     configurations = ['archives']
 
     publish = true
@@ -55,7 +55,7 @@ bintray {
         publicDownloadNumbers = true
         vcsUrl = 'https://github.com/denzilferreira/aware-client.git'
         desc = "AWARE core library"
-        userOrg = bintrayUsername
+        userOrg = user
         version {
             name = "$version_readable"
             desc = "AWARE core library"

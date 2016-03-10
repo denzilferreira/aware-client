@@ -1925,7 +1925,6 @@ public class Aware extends Service {
         awareContext.stopService(pluginsManager);
     }
 
-    //TODO: Make all the sensors track their own statuses
     /**
      * Start keyboard module
      */
