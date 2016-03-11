@@ -19,7 +19,6 @@ import android.os.AsyncTask;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
-import android.view.View;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
@@ -82,7 +81,7 @@ public class PluginsManager extends Service {
         super.onCreate();
 
         IntentFilter filter = new IntentFilter();
-        filter.addAction(Aware.ACTION_AWARE_PLUGIN_MANAGER_REFRESH);
+        filter.addAction(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO);
         registerReceiver(plugins_listener, filter);
     }
 
@@ -91,7 +90,7 @@ public class PluginsManager extends Service {
     public class Plugins_Listener extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(Aware.ACTION_AWARE_PLUGIN_MANAGER_REFRESH)) {
+            if (intent.getAction().equals(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)) {
                 new Async_PluginUpdater().execute();
             }
         }

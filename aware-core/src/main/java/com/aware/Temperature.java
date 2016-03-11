@@ -231,6 +231,8 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
             saveSensorDevice(mTemperature);
         }
 
+        Aware.setSetting(this, Aware_Preferences.STATUS_TEMPERATURE, true);
+
         if(Aware.DEBUG) Log.d(TAG,"Temperature service created!");
     }
     
@@ -245,6 +247,8 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
         wakeLock.release();
 
         unregisterReceiver(dataLabeler);
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_TEMPERATURE, false);
         
         if(Aware.DEBUG) Log.d(TAG,"Temperature service terminated...");
     }

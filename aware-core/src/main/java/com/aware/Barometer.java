@@ -192,8 +192,6 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
         
         mPressure = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
 
-        Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_BAROMETER, true);
-
         TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
         if( Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_BAROMETER).length() > 0 ) {
             SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_BAROMETER));
@@ -226,6 +224,8 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
         } else {
             saveSensorDevice(mPressure);
         }
+
+        Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_BAROMETER, true);
 
         if(Aware.DEBUG) Log.d(TAG,"Barometer service created!");
     }

@@ -198,8 +198,6 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
             Aware.setSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER, SAMPLING_RATE);
         }
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, true);
-
         DATABASE_TABLES = Accelerometer_Provider.DATABASE_TABLES;
     	TABLES_FIELDS = Accelerometer_Provider.TABLES_FIELDS;
     	CONTEXT_URIS = new Uri[]{ Accelerometer_Sensor.CONTENT_URI, Accelerometer_Data.CONTENT_URI };
@@ -225,6 +223,8 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         } else {
             saveAccelerometerDevice(mAccelerometer);
         }
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, true);
 
         if(Aware.DEBUG) Log.d(TAG,"Accelerometer service created!");
     }

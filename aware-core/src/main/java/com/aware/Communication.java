@@ -359,7 +359,11 @@ public class Communication extends Aware_Sensor {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_CALLS, false);
+        Aware.setSetting(this, Aware_Preferences.STATUS_MESSAGES, false);
+        Aware.setSetting(this, Aware_Preferences.STATUS_COMMUNICATION_EVENTS, false);
+
 		getContentResolver().unregisterContentObserver(callsObs);
 		getContentResolver().unregisterContentObserver(msgsObs);
 		telephonyManager.listen(phoneState, PhoneStateListener.LISTEN_NONE);

@@ -23,7 +23,7 @@ import java.io.File;
 import java.util.HashMap;
 
 /**
- * AWARE TimeZone Content Provider Allows you to access recorded timezone changes from the database Database is located at the SDCard:
+ * AWARE Timezone Content Provider Allows you to access recorded timezone changes from the database Database is located at the SDCard:
  * /AWARE/timezone.db
  * 
  * @author Nikola
@@ -42,7 +42,7 @@ public class TimeZone_Provider extends ContentProvider {
 	private static final int TIMEZONE_ID = 2;
 
 	/**
-	 * TimeZone data representation
+	 * Timezone data representation
 	 * 
 	 * @author Nikola
 	 * 

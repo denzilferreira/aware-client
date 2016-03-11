@@ -227,6 +227,8 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
             saveSensorDevice(mProximity);
         }
 
+        Aware.setSetting(this, Aware_Preferences.STATUS_PROXIMITY, true);
+
         if(Aware.DEBUG) Log.d(TAG,"Proximity service created!");
     }
     
@@ -241,6 +243,8 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
         wakeLock.release();
 
         unregisterReceiver(dataLabeler);
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_PROXIMITY, false);
         
         if(Aware.DEBUG) Log.d(TAG,"Proximity service terminated...");
     }

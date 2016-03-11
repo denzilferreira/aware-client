@@ -132,7 +132,7 @@ public class Aware extends Service {
     /**
      * Used by Plugin Manager to refresh UI
      */
-    public static final String ACTION_AWARE_PLUGIN_MANAGER_REFRESH = "ACTION_AWARE_PLUGIN_MANAGER_REFRESH";
+    public static final String ACTION_AWARE_UPDATE_PLUGINS_INFO = "ACTION_AWARE_UPDATE_PLUGINS_INFO";
 
     /**
      * Used when quitting a study. This will reset the device to default settings.
@@ -381,7 +381,7 @@ public class Aware extends Service {
             if (Aware.DEBUG) Log.d(TAG, "AWARE framework is active...");
 
             //Boot AWARE services
-            startAllServices();
+            startAWARE();
 
             //Get the active plugins
             ArrayList<String> active_plugins = new ArrayList<>();
@@ -457,7 +457,7 @@ public class Aware extends Service {
 
         } else { //Turn off all enabled plugins and services
 
-            stopAllServices();
+            stopAWARE();
 
             ArrayList<String> active_plugins = new ArrayList<>();
             Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
@@ -637,7 +637,7 @@ public class Aware extends Service {
                 //Check if plugin has settings. Add button if it does.
                 if (isClassAvailable(context, package_name, "Settings")) {
                     RelativeLayout info = new RelativeLayout(context);
-                    info.setGravity(android.view.Gravity.RIGHT | android.view.Gravity.BOTTOM);
+                    info.setGravity(android.view.Gravity.RIGHT | android.view.Gravity.TOP);
 
                     ImageView infoSettings = new ImageView(context);
                     infoSettings.setBackgroundResource(R.drawable.ic_action_plugin_settings);
@@ -893,178 +893,6 @@ public class Aware extends Service {
             }
         }
         if (qry != null && !qry.isClosed()) qry.close();
-    }
-
-    /**
-     * Ask AWARE to start the sensor, AFTER the settings have been defined
-     *
-     * @param sensor
-     */
-    public static void startSensor(Context context, String sensor) {
-        if (sensor.equals(Aware_Preferences.STATUS_ESM)) {
-            startESM(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_APPLICATIONS)) {
-            startApplications(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_ACCELEROMETER)) {
-            startAccelerometer(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_INSTALLATIONS)) {
-            startInstallations(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_LOCATION_GPS) || sensor.equals(Aware_Preferences.STATUS_LOCATION_NETWORK)) {
-            startLocations(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_BLUETOOTH)) {
-            startBluetooth(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_SCREEN)) {
-            startScreen(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_BATTERY)) {
-            startBattery(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_NETWORK_EVENTS)) {
-            startNetwork(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_NETWORK_TRAFFIC)) {
-            startTraffic(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_COMMUNICATION_EVENTS) || sensor.equals(Aware_Preferences.STATUS_CALLS) || sensor.equals(Aware_Preferences.STATUS_MESSAGES)) {
-            startCommunication(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_PROCESSOR)) {
-            startProcessor(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_TIMEZONE)) {
-            startTimeZone(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_MQTT)) {
-            startMQTT(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_GYROSCOPE)) {
-            startGyroscope(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_WIFI)) {
-            startWiFi(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_TELEPHONY)) {
-            startTelephony(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_ROTATION)) {
-            startRotation(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_LIGHT)) {
-            startLight(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_PROXIMITY)) {
-            startProximity(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_MAGNETOMETER)) {
-            startMagnetometer(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_BAROMETER)) {
-            startBarometer(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_GRAVITY)) {
-            startGravity(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_LINEAR_ACCELEROMETER)) {
-            startLinearAccelerometer(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_TEMPERATURE)) {
-            startTemperature(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_KEYBOARD)) {
-            startKeyboard(context);
-        }
-    }
-
-    /**
-     * Ask AWARE to stop a sensor
-     *
-     * @param sensor
-     */
-    public static void stopSensor(Context context, String sensor) {
-        if (sensor.equals(Aware_Preferences.STATUS_ESM)) {
-            stopESM(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_APPLICATIONS)) {
-            stopApplications(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_ACCELEROMETER)) {
-            stopAccelerometer(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_INSTALLATIONS)) {
-            stopInstallations(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_LOCATION_GPS) || sensor.equals(Aware_Preferences.STATUS_LOCATION_NETWORK)) {
-            stopLocations(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_BLUETOOTH)) {
-            stopBluetooth(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_SCREEN)) {
-            stopScreen(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_BATTERY)) {
-            stopBattery(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_NETWORK_EVENTS)) {
-            stopNetwork(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_NETWORK_TRAFFIC)) {
-            stopTraffic(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_COMMUNICATION_EVENTS) || sensor.equals(Aware_Preferences.STATUS_CALLS) || sensor.equals(Aware_Preferences.STATUS_MESSAGES)) {
-            stopCommunication(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_PROCESSOR)) {
-            stopProcessor(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_TIMEZONE)) {
-            stopTimeZone(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_MQTT)) {
-            stopMQTT(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_GYROSCOPE)) {
-            stopGyroscope(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_WIFI)) {
-            stopWiFi(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_TELEPHONY)) {
-            stopTelephony(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_ROTATION)) {
-            stopRotation(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_LIGHT)) {
-            stopLight(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_PROXIMITY)) {
-            stopProximity(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_MAGNETOMETER)) {
-            stopMagnetometer(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_BAROMETER)) {
-            stopBarometer(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_GRAVITY)) {
-            stopGravity(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_LINEAR_ACCELEROMETER)) {
-            stopLinearAccelerometer(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_TEMPERATURE)) {
-            stopTemperature(context);
-        }
-        if (sensor.equals(Aware_Preferences.STATUS_KEYBOARD)) {
-            stopKeyboard(context);
-        }
     }
 
     /**
@@ -1777,7 +1605,7 @@ public class Aware extends Service {
     /**
      * Start active services
      */
-    public void startAllServices() {
+    public void startAWARE() {
         if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true")) {
             startESM(awareContext);
         } else stopESM(awareContext);
@@ -1894,7 +1722,7 @@ public class Aware extends Service {
     /**
      * Stop all services
      */
-    public void stopAllServices() {
+    public void stopAWARE() {
         stopApplications(awareContext);
         stopAccelerometer(awareContext);
         stopBattery(awareContext);
@@ -2331,16 +2159,16 @@ public class Aware extends Service {
     }
 
     /**
-     * Start the TimeZone module
+     * Start the Timezone module
      */
     public static void startTimeZone(Context context) {
         awareContext = context;
-        if (timeZoneSrv == null) timeZoneSrv = new Intent(awareContext, TimeZone.class);
+        if (timeZoneSrv == null) timeZoneSrv = new Intent(awareContext, Timezone.class);
         awareContext.startService(timeZoneSrv);
     }
 
     /**
-     * Stop the TimeZone module
+     * Stop the Timezone module
      */
     public static void stopTimeZone(Context context) {
         awareContext = context;

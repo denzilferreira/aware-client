@@ -237,6 +237,8 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
             saveAccelerometerDevice(mLinearAccelerator);
         }
 
+        Aware.setSetting(this, Aware_Preferences.STATUS_LINEAR_ACCELEROMETER, true);
+
         if(Aware.DEBUG) Log.d(TAG,"Linear-accelerometer service created!");
     }
     
@@ -251,6 +253,8 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
         wakeLock.release();
 
         unregisterReceiver(dataLabeler);
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_LINEAR_ACCELEROMETER, false);
         
         if(Aware.DEBUG) Log.d(TAG,"Linear-accelerometer service terminated...");
     }

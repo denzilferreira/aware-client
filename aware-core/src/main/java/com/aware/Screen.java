@@ -111,6 +111,8 @@ public class Screen extends Aware_Sensor {
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         filter.addAction(Intent.ACTION_USER_PRESENT);
         registerReceiver(screenMonitor, filter);
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_SCREEN, true);
         
 		if(Aware.DEBUG) Log.d(TAG, "Screen service created!");
 	}
@@ -120,6 +122,8 @@ public class Screen extends Aware_Sensor {
 		super.onDestroy();
 		
 		unregisterReceiver(screenMonitor);
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_SCREEN, false);
 		
 		if(Aware.DEBUG) Log.d(TAG,"Screen service terminated...");
 	}

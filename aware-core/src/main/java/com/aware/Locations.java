@@ -26,398 +26,407 @@ import com.aware.utils.Aware_Sensor;
  */
 public class Locations extends Aware_Sensor implements LocationListener {
 
-	private static LocationManager locationManager = null;
+    private static LocationManager locationManager = null;
 
-	/**
-	 * This listener will keep track for failed GPS location requests
-	 * TODO: extend to log satellite information
-	 */
-	private final GpsStatus.Listener gps_status_listener = new GpsStatus.Listener() {
-		@Override
-		public void onGpsStatusChanged(int event) {
-			switch(event) {
-				case GpsStatus.GPS_EVENT_FIRST_FIX:
-					break;
-				case GpsStatus.GPS_EVENT_SATELLITE_STATUS:
-					break;
-				case GpsStatus.GPS_EVENT_STARTED:
-					break;
-				case GpsStatus.GPS_EVENT_STOPPED:
-					//Save best location, could be GPS or network
-					//This covers the case when the GPS stopped and we did not get a location fix.
-					Location lastGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+    /**
+     * This listener will keep track for failed GPS location requests
+     * TODO: extend to log satellite information
+     */
+    private final GpsStatus.Listener gps_status_listener = new GpsStatus.Listener() {
+        @Override
+        public void onGpsStatusChanged(int event) {
+            switch (event) {
+                case GpsStatus.GPS_EVENT_FIRST_FIX:
+                    break;
+                case GpsStatus.GPS_EVENT_SATELLITE_STATUS:
+                    break;
+                case GpsStatus.GPS_EVENT_STARTED:
+                    break;
+                case GpsStatus.GPS_EVENT_STOPPED:
+                    //Save best location, could be GPS or network
+                    //This covers the case when the GPS stopped and we did not get a location fix.
+                    Location lastGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
-					Location lastNetwork = null;
-					//Do a quick check on the network provider
-					if( locationManager.getProvider(LocationManager.NETWORK_PROVIDER) != null) {
-						locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, Locations.this, getMainLooper());
-						lastNetwork = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-					}
+                    Location lastNetwork = null;
+                    //Do a quick check on the network provider
+                    if (locationManager.getProvider(LocationManager.NETWORK_PROVIDER) != null) {
+                        locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, Locations.this, getMainLooper());
+                        lastNetwork = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                    }
 
-					Location bestLocation;
-					if( isBetterLocation(lastNetwork, lastGPS) ) {
-						bestLocation = lastNetwork;
-					}else{
-						bestLocation = lastGPS;
-					}
+                    Location bestLocation;
+                    if (isBetterLocation(lastNetwork, lastGPS)) {
+                        bestLocation = lastNetwork;
+                    } else {
+                        bestLocation = lastGPS;
+                    }
 
-					if( bestLocation != null ) {
-						ContentValues rowData = new ContentValues();
-						rowData.put(Locations_Data.TIMESTAMP, System.currentTimeMillis());
-						rowData.put(Locations_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(),Aware_Preferences.DEVICE_ID));
-						rowData.put(Locations_Data.LATITUDE, bestLocation.getLatitude());
-						rowData.put(Locations_Data.LONGITUDE, bestLocation.getLongitude());
-						rowData.put(Locations_Data.BEARING, bestLocation.getBearing());
-						rowData.put(Locations_Data.SPEED, bestLocation.getSpeed());
-						rowData.put(Locations_Data.ALTITUDE, bestLocation.getAltitude());
-						rowData.put(Locations_Data.PROVIDER, bestLocation.getProvider());
-						rowData.put(Locations_Data.ACCURACY, bestLocation.getAccuracy());
+                    if (bestLocation != null) {
+                        ContentValues rowData = new ContentValues();
+                        rowData.put(Locations_Data.TIMESTAMP, System.currentTimeMillis());
+                        rowData.put(Locations_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                        rowData.put(Locations_Data.LATITUDE, bestLocation.getLatitude());
+                        rowData.put(Locations_Data.LONGITUDE, bestLocation.getLongitude());
+                        rowData.put(Locations_Data.BEARING, bestLocation.getBearing());
+                        rowData.put(Locations_Data.SPEED, bestLocation.getSpeed());
+                        rowData.put(Locations_Data.ALTITUDE, bestLocation.getAltitude());
+                        rowData.put(Locations_Data.PROVIDER, bestLocation.getProvider());
+                        rowData.put(Locations_Data.ACCURACY, bestLocation.getAccuracy());
 
-						try {
-							getContentResolver().insert(Locations_Data.CONTENT_URI, rowData);
-						}catch( SQLException e ) {
-							if(Aware.DEBUG) Log.d(TAG,e.getMessage());
-						}
+                        try {
+                            getContentResolver().insert(Locations_Data.CONTENT_URI, rowData);
+                        } catch (SQLException e) {
+                            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                        }
 
-						Intent locationEvent = new Intent(ACTION_AWARE_LOCATIONS);
-						sendBroadcast(locationEvent);
-					}
-					break;
-			}
-		}
-	};
+                        Intent locationEvent = new Intent(ACTION_AWARE_LOCATIONS);
+                        sendBroadcast(locationEvent);
+                    }
+                    break;
+            }
+        }
+    };
 
-	/**
-	 * Broadcasted event: New location available
-	 */
-	public static final String ACTION_AWARE_LOCATIONS = "ACTION_AWARE_LOCATIONS";
+    /**
+     * Broadcasted event: New location available
+     */
+    public static final String ACTION_AWARE_LOCATIONS = "ACTION_AWARE_LOCATIONS";
 
-	/**
-	 * Broadcasted event: GPS location is active
-	 */
-	public static final String ACTION_AWARE_GPS_LOCATION_ENABLED = "ACTION_AWARE_GPS_LOCATION_ENABLED";
+    /**
+     * Broadcasted event: GPS location is active
+     */
+    public static final String ACTION_AWARE_GPS_LOCATION_ENABLED = "ACTION_AWARE_GPS_LOCATION_ENABLED";
 
-	/**
-	 * Broadcasted event: Network location is active
-	 */
-	public static final String ACTION_AWARE_NETWORK_LOCATION_ENABLED = "ACTION_AWARE_NETWORK_LOCATION_ENABLED";
+    /**
+     * Broadcasted event: Network location is active
+     */
+    public static final String ACTION_AWARE_NETWORK_LOCATION_ENABLED = "ACTION_AWARE_NETWORK_LOCATION_ENABLED";
 
-	/**
-	 * Broadcasted event: GPS location disabled
-	 */
-	public static final String ACTION_AWARE_GPS_LOCATION_DISABLED = "ACTION_AWARE_GPS_LOCATION_DISABLED";
+    /**
+     * Broadcasted event: GPS location disabled
+     */
+    public static final String ACTION_AWARE_GPS_LOCATION_DISABLED = "ACTION_AWARE_GPS_LOCATION_DISABLED";
 
-	/**
-	 * Broadcasted event: Network location disabled
-	 */
-	public static final String ACTION_AWARE_NETWORK_LOCATION_DISABLED = "ACTION_AWARE_NETWORK_LOCATION_DISABLED";
+    /**
+     * Broadcasted event: Network location disabled
+     */
+    public static final String ACTION_AWARE_NETWORK_LOCATION_DISABLED = "ACTION_AWARE_NETWORK_LOCATION_DISABLED";
 
-	/**
-	 * Update interval for GPS, in seconds (default = 180)
-	 * 0 = realtime updates
-	 */
-	public static int UPDATE_TIME_GPS = 180;
+    /**
+     * Update interval for GPS, in seconds (default = 180)
+     * 0 = realtime updates
+     */
+    public static int UPDATE_TIME_GPS = 180;
 
-	/**
-	 * Update interval for Network, in seconds (default = 300)
-	 * 0 = realtime updates
-	 */
-	public static int UPDATE_TIME_NETWORK = 300;
+    /**
+     * Update interval for Network, in seconds (default = 300)
+     * 0 = realtime updates
+     */
+    public static int UPDATE_TIME_NETWORK = 300;
 
-	/**
-	 * Minimum accuracy value acceptable for GPS, in meters (default = 150)
-	 */
-	public static int UPDATE_DISTANCE_GPS = 150;
+    /**
+     * Minimum accuracy value acceptable for GPS, in meters (default = 150)
+     */
+    public static int UPDATE_DISTANCE_GPS = 150;
 
-	/**
-	 * Minimum accuracy value acceptable for Network location, in meters (default = 1500)
-	 */
-	public static int UPDATE_DISTANCE_NETWORK = 1500;
+    /**
+     * Minimum accuracy value acceptable for Network location, in meters (default = 1500)
+     */
+    public static int UPDATE_DISTANCE_NETWORK = 1500;
 
-	/**
-	 * For how long is the last best location considered valid, in seconds ( default = 300 )
-	 */
-	public static int EXPIRATION_TIME = 300;
+    /**
+     * For how long is the last best location considered valid, in seconds ( default = 300 )
+     */
+    public static int EXPIRATION_TIME = 300;
 
-	private static Locations locationSrv = Locations.getService();
-	/**
-	 * Singleton instance of Locations service
-	 * @return Locations obj
-	 */
-	public static Locations getService() {
-		if(locationSrv == null) locationSrv = new Locations();
-		return locationSrv;
-	}
+    private static Locations locationSrv = Locations.getService();
 
-	/**
-	 * Service binder
-	 */
-	private LocationBinder locationBinder = new LocationBinder();
-	public class LocationBinder extends Binder {
-		public Locations getService() {
-			return Locations.getService();
-		}
-	}
+    /**
+     * Singleton instance of Locations service
+     *
+     * @return Locations obj
+     */
+    public static Locations getService() {
+        if (locationSrv == null) locationSrv = new Locations();
+        return locationSrv;
+    }
 
-	@Override
-	public IBinder onBind(Intent intent) {
-		return locationBinder;
-	}
+    /**
+     * Service binder
+     */
+    private LocationBinder locationBinder = new LocationBinder();
 
-	/** Determines whether one Location reading is better than the current Location fix
-	 * @param newLocation  The new Location that you want to evaluate
-	 * @param lastLocation  The last location fix, to which you want to compare the new one
-	 */
-	private boolean isBetterLocation(Location newLocation, Location lastLocation) {
-		if( newLocation == null && lastLocation == null ) return false;
+    public class LocationBinder extends Binder {
+        public Locations getService() {
+            return Locations.getService();
+        }
+    }
 
-		if( newLocation != null && lastLocation == null) {
-			return true;
-		}
+    @Override
+    public IBinder onBind(Intent intent) {
+        return locationBinder;
+    }
 
-		if( lastLocation != null && newLocation == null ) {
-			return false;
-		}
+    /**
+     * Determines whether one Location reading is better than the current Location fix
+     *
+     * @param newLocation  The new Location that you want to evaluate
+     * @param lastLocation The last location fix, to which you want to compare the new one
+     */
+    private boolean isBetterLocation(Location newLocation, Location lastLocation) {
+        if (newLocation == null && lastLocation == null) return false;
 
-		long timeDelta = newLocation.getTime() - lastLocation.getTime();
-		boolean isSignificantlyNewer = timeDelta > 1000 * EXPIRATION_TIME;
-		boolean isSignificantlyOlder = timeDelta < -( 1000 * EXPIRATION_TIME );
-		boolean isNewer = timeDelta > 0;
+        if (newLocation != null && lastLocation == null) {
+            return true;
+        }
 
-		if (isSignificantlyNewer) {
-			return true;
-		} else if (isSignificantlyOlder) {
-			return false;
-		}
+        if (lastLocation != null && newLocation == null) {
+            return false;
+        }
 
-		int accuracyDelta = (int) (newLocation.getAccuracy() - lastLocation.getAccuracy());
-		boolean isLessAccurate = accuracyDelta > 0;
-		boolean isMoreAccurate = accuracyDelta < 0;
-		boolean isSignificantlyLessAccurate = accuracyDelta > 200;
-		boolean isFromSameProvider = isSameProvider(newLocation.getProvider(),lastLocation.getProvider());
+        long timeDelta = newLocation.getTime() - lastLocation.getTime();
+        boolean isSignificantlyNewer = timeDelta > 1000 * EXPIRATION_TIME;
+        boolean isSignificantlyOlder = timeDelta < -(1000 * EXPIRATION_TIME);
+        boolean isNewer = timeDelta > 0;
 
-		if (isMoreAccurate) {
-			return true;
-		} else if (isNewer && !isLessAccurate) {
-			return true;
-		} else if (isNewer && !isSignificantlyLessAccurate && isFromSameProvider) {
-			return true;
-		}
-		return false;
-	}
+        if (isSignificantlyNewer) {
+            return true;
+        } else if (isSignificantlyOlder) {
+            return false;
+        }
 
-	/**
-	 * Checks whether two providers are the same 
-	 */
-	private static boolean isSameProvider(String provider1, String provider2) {
-		if (provider1 == null) {
-			return provider2 == null;
-		}
-		return provider1.equals(provider2);
-	}
+        int accuracyDelta = (int) (newLocation.getAccuracy() - lastLocation.getAccuracy());
+        boolean isLessAccurate = accuracyDelta > 0;
+        boolean isMoreAccurate = accuracyDelta < 0;
+        boolean isSignificantlyLessAccurate = accuracyDelta > 200;
+        boolean isFromSameProvider = isSameProvider(newLocation.getProvider(), lastLocation.getProvider());
 
-	@Override
-	public void onCreate() {
-		super.onCreate();
+        if (isMoreAccurate) {
+            return true;
+        } else if (isNewer && !isLessAccurate) {
+            return true;
+        } else if (isNewer && !isSignificantlyLessAccurate && isFromSameProvider) {
+            return true;
+        }
+        return false;
+    }
 
-		locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+    /**
+     * Checks whether two providers are the same
+     */
+    private static boolean isSameProvider(String provider1, String provider2) {
+        if (provider1 == null) {
+            return provider2 == null;
+        }
+        return provider1.equals(provider2);
+    }
 
-		TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):"AWARE::Locations";
+    @Override
+    public void onCreate() {
+        super.onCreate();
 
-		if(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_GPS).length() > 0 ) {
-			UPDATE_TIME_GPS = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LOCATION_GPS));
-		}
-		if(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_NETWORK).length() > 0 ) {
-			UPDATE_TIME_NETWORK = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LOCATION_NETWORK));
-		}
-		if( Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_GPS_ACCURACY).length() > 0 ) {
-			UPDATE_DISTANCE_GPS = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.MIN_LOCATION_GPS_ACCURACY));
-		}
-		if( Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY).length() > 0 ) {
-			UPDATE_DISTANCE_NETWORK = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY));
-		}
-		if( Aware.getSetting(getApplicationContext(), Aware_Preferences.LOCATION_EXPIRATION_TIME).length() > 0 ) {
-			EXPIRATION_TIME = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.LOCATION_EXPIRATION_TIME));
-		}
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-		DATABASE_TABLES = Locations_Provider.DATABASE_TABLES;
-		TABLES_FIELDS = Locations_Provider.TABLES_FIELDS;
-		CONTEXT_URIS = new Uri[]{ Locations_Data.CONTENT_URI };
+        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG) : "AWARE::Locations";
 
-		if( Aware.getSetting(getApplicationContext(),Aware_Preferences.STATUS_LOCATION_GPS).equals("true") ) {
-			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, UPDATE_TIME_GPS * 1000, UPDATE_DISTANCE_GPS, this);
-			locationManager.addGpsStatusListener(gps_status_listener);
-			if( Aware.DEBUG ) Log.d(TAG,"Location tracking with GPS is active");
-		}
-		if( Aware.getSetting(getApplicationContext(),Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true") ) {
-			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, UPDATE_TIME_NETWORK * 1000, UPDATE_DISTANCE_NETWORK, this);
-			if( Aware.DEBUG ) Log.d(TAG,"Location tracking with Network is active");
-		}
-	}
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_GPS).length() > 0) {
+            UPDATE_TIME_GPS = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_GPS));
+        }
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_NETWORK).length() > 0) {
+            UPDATE_TIME_NETWORK = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_NETWORK));
+        }
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_GPS_ACCURACY).length() > 0) {
+            UPDATE_DISTANCE_GPS = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_GPS_ACCURACY));
+        }
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY).length() > 0) {
+            UPDATE_DISTANCE_NETWORK = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY));
+        }
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.LOCATION_EXPIRATION_TIME).length() > 0) {
+            EXPIRATION_TIME = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.LOCATION_EXPIRATION_TIME));
+        }
 
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
+        DATABASE_TABLES = Locations_Provider.DATABASE_TABLES;
+        TABLES_FIELDS = Locations_Provider.TABLES_FIELDS;
+        CONTEXT_URIS = new Uri[]{Locations_Data.CONTENT_URI};
 
-		locationManager.removeUpdates(this);
-		locationManager.removeGpsStatusListener(gps_status_listener);
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_LOCATION_GPS).equals("true")) {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, UPDATE_TIME_GPS * 1000, UPDATE_DISTANCE_GPS, this);
+            locationManager.addGpsStatusListener(gps_status_listener);
+            if (Aware.DEBUG) Log.d(TAG, "Location tracking with GPS is active");
+        }
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true")) {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, UPDATE_TIME_NETWORK * 1000, UPDATE_DISTANCE_NETWORK, this);
+            if (Aware.DEBUG) Log.d(TAG, "Location tracking with Network is active");
+        }
+    }
 
-		if(Aware.DEBUG) Log.d(TAG, "Locations service terminated...");
-	}
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
 
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
-		super.onStartCommand(intent, flags, startId);
+        locationManager.removeUpdates(this);
+        locationManager.removeGpsStatusListener(gps_status_listener);
 
-		TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):"AWARE::Locations";
+        Aware.setSetting(this, Aware_Preferences.STATUS_LOCATION_GPS, false);
+        Aware.setSetting(this, Aware_Preferences.STATUS_LOCATION_NETWORK, false);
 
-		if(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_GPS).length() > 0 ) {
-			UPDATE_TIME_GPS = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LOCATION_GPS));
-		}
-		if(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_NETWORK).length() > 0 ) {
-			UPDATE_TIME_NETWORK = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_LOCATION_NETWORK));
-		}
-		if( Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_GPS_ACCURACY).length() > 0 ) {
-			UPDATE_DISTANCE_GPS = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.MIN_LOCATION_GPS_ACCURACY));
-		}
-		if( Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY).length() > 0 ) {
-			UPDATE_DISTANCE_NETWORK = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY));
-		}
-		if( Aware.getSetting(getApplicationContext(), Aware_Preferences.LOCATION_EXPIRATION_TIME).length() > 0 ) {
-			EXPIRATION_TIME = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.LOCATION_EXPIRATION_TIME));
-		}
+        if (Aware.DEBUG) Log.d(TAG, "Locations service terminated...");
+    }
 
-		locationManager.removeUpdates(this);
-		if( Aware.getSetting(getApplicationContext(),Aware_Preferences.STATUS_LOCATION_GPS).equals("true") ) {
-			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, UPDATE_TIME_GPS * 1000, UPDATE_DISTANCE_GPS, this);
-			if( Aware.DEBUG ) Log.d(TAG,"Location tracking with GPS is active");
-		}
-		if( Aware.getSetting(getApplicationContext(),Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true") ) {
-			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, UPDATE_TIME_NETWORK * 1000, UPDATE_DISTANCE_NETWORK, this);
-			if( Aware.DEBUG ) Log.d(TAG,"Location tracking with Network is active");
-		}
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
 
-		return START_STICKY;
-	}
+        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG) : "AWARE::Locations";
 
-	@Override
-	public void onLocationChanged(Location newLocation) {
-		Location bestLocation = null;
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_GPS).length() > 0) {
+            UPDATE_TIME_GPS = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_GPS));
+        }
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_NETWORK).length() > 0) {
+            UPDATE_TIME_NETWORK = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_NETWORK));
+        }
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_GPS_ACCURACY).length() > 0) {
+            UPDATE_DISTANCE_GPS = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_GPS_ACCURACY));
+        }
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY).length() > 0) {
+            UPDATE_DISTANCE_NETWORK = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY));
+        }
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.LOCATION_EXPIRATION_TIME).length() > 0) {
+            EXPIRATION_TIME = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.LOCATION_EXPIRATION_TIME));
+        }
 
-		//If we have both GPS and Network active, check if we got a better location. Otherwise always keep the latest.
-		if( Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_LOCATION_GPS).equals("true")  && Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true")) {
-			Location lastGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-			Location lastNetwork = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-			if(isBetterLocation(lastNetwork, lastGPS)) {
-				if(isBetterLocation(newLocation, lastNetwork)) {
-					bestLocation = newLocation;
-				}else{
-					bestLocation = lastNetwork;
-				}
-			}else{
-				if(isBetterLocation(newLocation, lastGPS)){
-					bestLocation = newLocation;
-				}else{
-					bestLocation = lastGPS;
-				}
-			}
-		} else {
-			bestLocation = newLocation;
-		}
+        locationManager.removeUpdates(this);
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_LOCATION_GPS).equals("true")) {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, UPDATE_TIME_GPS * 1000, UPDATE_DISTANCE_GPS, this);
+            if (Aware.DEBUG) Log.d(TAG, "Location tracking with GPS is active");
+        }
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true")) {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, UPDATE_TIME_NETWORK * 1000, UPDATE_DISTANCE_NETWORK, this);
+            if (Aware.DEBUG) Log.d(TAG, "Location tracking with Network is active");
+        }
 
-		ContentValues rowData = new ContentValues();
-		rowData.put(Locations_Data.TIMESTAMP, System.currentTimeMillis());
-		rowData.put(Locations_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(),Aware_Preferences.DEVICE_ID));
-		rowData.put(Locations_Data.LATITUDE, bestLocation.getLatitude());
-		rowData.put(Locations_Data.LONGITUDE, bestLocation.getLongitude());
-		rowData.put(Locations_Data.BEARING, bestLocation.getBearing());
-		rowData.put(Locations_Data.SPEED, bestLocation.getSpeed());
-		rowData.put(Locations_Data.ALTITUDE, bestLocation.getAltitude());
-		rowData.put(Locations_Data.PROVIDER, bestLocation.getProvider());
-		rowData.put(Locations_Data.ACCURACY, bestLocation.getAccuracy());
+        return START_STICKY;
+    }
 
-		try {
-			getContentResolver().insert(Locations_Data.CONTENT_URI, rowData);
-		}catch( SQLiteException e ) {
-			if(Aware.DEBUG) Log.d(TAG,e.getMessage());
-		}catch( SQLException e ) {
-			if(Aware.DEBUG) Log.d(TAG,e.getMessage());
-		}
+    @Override
+    public void onLocationChanged(Location newLocation) {
+        Location bestLocation = null;
 
-		Intent locationEvent = new Intent(ACTION_AWARE_LOCATIONS);
-		sendBroadcast(locationEvent);
-	}
+        //If we have both GPS and Network active, check if we got a better location. Otherwise always keep the latest.
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_LOCATION_GPS).equals("true") && Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true")) {
+            Location lastGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            Location lastNetwork = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            if (isBetterLocation(lastNetwork, lastGPS)) {
+                if (isBetterLocation(newLocation, lastNetwork)) {
+                    bestLocation = newLocation;
+                } else {
+                    bestLocation = lastNetwork;
+                }
+            } else {
+                if (isBetterLocation(newLocation, lastGPS)) {
+                    bestLocation = newLocation;
+                } else {
+                    bestLocation = lastGPS;
+                }
+            }
+        } else {
+            bestLocation = newLocation;
+        }
 
-	@Override
-	public void onProviderDisabled(String provider) {
-		if(provider.equals(LocationManager.GPS_PROVIDER)) {
-			if(Aware.DEBUG) Log.d(TAG,ACTION_AWARE_GPS_LOCATION_DISABLED);
-			Intent gps = new Intent(ACTION_AWARE_GPS_LOCATION_DISABLED);
-			sendBroadcast(gps);
-		}
-		if(provider.equals(LocationManager.NETWORK_PROVIDER)) {
-			if(Aware.DEBUG) Log.d(TAG,ACTION_AWARE_NETWORK_LOCATION_DISABLED);
-			Intent network = new Intent(ACTION_AWARE_NETWORK_LOCATION_DISABLED);
-			sendBroadcast(network);
-		}
-	}
+        ContentValues rowData = new ContentValues();
+        rowData.put(Locations_Data.TIMESTAMP, System.currentTimeMillis());
+        rowData.put(Locations_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+        rowData.put(Locations_Data.LATITUDE, bestLocation.getLatitude());
+        rowData.put(Locations_Data.LONGITUDE, bestLocation.getLongitude());
+        rowData.put(Locations_Data.BEARING, bestLocation.getBearing());
+        rowData.put(Locations_Data.SPEED, bestLocation.getSpeed());
+        rowData.put(Locations_Data.ALTITUDE, bestLocation.getAltitude());
+        rowData.put(Locations_Data.PROVIDER, bestLocation.getProvider());
+        rowData.put(Locations_Data.ACCURACY, bestLocation.getAccuracy());
 
-	@Override
-	public void onProviderEnabled(String provider) {
-		if(provider.equals(LocationManager.GPS_PROVIDER)) {
-			if(Aware.DEBUG) Log.d(TAG,ACTION_AWARE_GPS_LOCATION_ENABLED);
-			Intent gps = new Intent(ACTION_AWARE_GPS_LOCATION_ENABLED);
-			sendBroadcast(gps);
-		}
-		if(provider.equals(LocationManager.NETWORK_PROVIDER)) {
-			if(Aware.DEBUG) Log.d(TAG,ACTION_AWARE_NETWORK_LOCATION_ENABLED);
-			Intent network = new Intent(ACTION_AWARE_NETWORK_LOCATION_ENABLED);
-			sendBroadcast(network);
-		}
-	}
+        try {
+            getContentResolver().insert(Locations_Data.CONTENT_URI, rowData);
+        } catch (SQLiteException e) {
+            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+        } catch (SQLException e) {
+            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+        }
 
-	@Override
-	public void onStatusChanged(String provider, int status, Bundle extras) {
-		if(Aware.DEBUG) Log.d(TAG,"onStatusChanged: "+provider+ " Status:"+status+" Extras:"+extras.toString());
+        Intent locationEvent = new Intent(ACTION_AWARE_LOCATIONS);
+        sendBroadcast(locationEvent);
+    }
 
-		//Save best location, could be GPS or network
-		//This covers the case when the GPS stopped and we did not get a location fix.
-		Location lastGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+    @Override
+    public void onProviderDisabled(String provider) {
+        if (provider.equals(LocationManager.GPS_PROVIDER)) {
+            if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_GPS_LOCATION_DISABLED);
+            Intent gps = new Intent(ACTION_AWARE_GPS_LOCATION_DISABLED);
+            sendBroadcast(gps);
+        }
+        if (provider.equals(LocationManager.NETWORK_PROVIDER)) {
+            if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_NETWORK_LOCATION_DISABLED);
+            Intent network = new Intent(ACTION_AWARE_NETWORK_LOCATION_DISABLED);
+            sendBroadcast(network);
+        }
+    }
 
-		Location lastNetwork = null;
-		//Do a quick check on the network provider
-		if( locationManager.getProvider(LocationManager.NETWORK_PROVIDER) != null) {
-			locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, Locations.this, getMainLooper());
-			lastNetwork = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-		}
+    @Override
+    public void onProviderEnabled(String provider) {
+        if (provider.equals(LocationManager.GPS_PROVIDER)) {
+            if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_GPS_LOCATION_ENABLED);
+            Intent gps = new Intent(ACTION_AWARE_GPS_LOCATION_ENABLED);
+            sendBroadcast(gps);
+        }
+        if (provider.equals(LocationManager.NETWORK_PROVIDER)) {
+            if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_NETWORK_LOCATION_ENABLED);
+            Intent network = new Intent(ACTION_AWARE_NETWORK_LOCATION_ENABLED);
+            sendBroadcast(network);
+        }
+    }
 
-		Location bestLocation = null;
-		if(isBetterLocation(lastNetwork, lastGPS)) {
-			bestLocation = lastNetwork;
-		}else{
-			bestLocation = lastGPS;
-		}
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+        if (Aware.DEBUG)
+            Log.d(TAG, "onStatusChanged: " + provider + " Status:" + status + " Extras:" + extras.toString());
 
-		ContentValues rowData = new ContentValues();
-		rowData.put(Locations_Data.TIMESTAMP, System.currentTimeMillis());
-		rowData.put(Locations_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(),Aware_Preferences.DEVICE_ID));
-		rowData.put(Locations_Data.LATITUDE, bestLocation.getLatitude());
-		rowData.put(Locations_Data.LONGITUDE, bestLocation.getLongitude());
-		rowData.put(Locations_Data.BEARING, bestLocation.getBearing());
-		rowData.put(Locations_Data.SPEED, bestLocation.getSpeed());
-		rowData.put(Locations_Data.ALTITUDE, bestLocation.getAltitude());
-		rowData.put(Locations_Data.PROVIDER, bestLocation.getProvider());
-		rowData.put(Locations_Data.ACCURACY, bestLocation.getAccuracy());
+        //Save best location, could be GPS or network
+        //This covers the case when the GPS stopped and we did not get a location fix.
+        Location lastGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
-		try {
-			getContentResolver().insert(Locations_Data.CONTENT_URI, rowData);
-		}catch( SQLiteException e ) {
-			if(Aware.DEBUG) Log.d(TAG,e.getMessage());
-		}catch( SQLException e ) {
-			if(Aware.DEBUG) Log.d(TAG,e.getMessage());
-		}
+        Location lastNetwork = null;
+        //Do a quick check on the network provider
+        if (locationManager.getProvider(LocationManager.NETWORK_PROVIDER) != null) {
+            locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, Locations.this, getMainLooper());
+            lastNetwork = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        }
 
-		Intent locationEvent = new Intent(ACTION_AWARE_LOCATIONS);
-		sendBroadcast(locationEvent);
-	}
+        Location bestLocation = null;
+        if (isBetterLocation(lastNetwork, lastGPS)) {
+            bestLocation = lastNetwork;
+        } else {
+            bestLocation = lastGPS;
+        }
+
+        ContentValues rowData = new ContentValues();
+        rowData.put(Locations_Data.TIMESTAMP, System.currentTimeMillis());
+        rowData.put(Locations_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+        rowData.put(Locations_Data.LATITUDE, bestLocation.getLatitude());
+        rowData.put(Locations_Data.LONGITUDE, bestLocation.getLongitude());
+        rowData.put(Locations_Data.BEARING, bestLocation.getBearing());
+        rowData.put(Locations_Data.SPEED, bestLocation.getSpeed());
+        rowData.put(Locations_Data.ALTITUDE, bestLocation.getAltitude());
+        rowData.put(Locations_Data.PROVIDER, bestLocation.getProvider());
+        rowData.put(Locations_Data.ACCURACY, bestLocation.getAccuracy());
+
+        try {
+            getContentResolver().insert(Locations_Data.CONTENT_URI, rowData);
+        } catch (SQLiteException e) {
+            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+        } catch (SQLException e) {
+            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+        }
+
+        Intent locationEvent = new Intent(ACTION_AWARE_LOCATIONS);
+        sendBroadcast(locationEvent);
+    }
 }

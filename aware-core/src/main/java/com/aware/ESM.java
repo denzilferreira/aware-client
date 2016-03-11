@@ -193,6 +193,8 @@ public class ESM extends Aware_Sensor {
 
         if (Aware.DEBUG) Log.d(TAG, "ESM service created!");
 
+        Aware.setSetting(this, Aware_Preferences.STATUS_ESM, true);
+
         //Restore pending ESMs back upon service creation. This may happen on rebooting the phone
         if (isESMWaiting(getApplicationContext()) || isESMVisible(getApplicationContext())) {
             notifyESM(getApplicationContext());
@@ -204,6 +206,8 @@ public class ESM extends Aware_Sensor {
         super.onDestroy();
 
         unregisterReceiver(esmMonitor);
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_ESM, false);
 
         if (Aware.DEBUG) Log.d(TAG, "ESM service terminated...");
     }

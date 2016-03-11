@@ -318,10 +318,13 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         registerReceiver(mqttReceiver, filter);
 
         if( Aware.is_watch(this) ) {
-            Log.d(TAG,"This is an Android Wear device, we can't connect to MQTT. Disabling it!");
+            Log.d(TAG, "This is an Android Wear device, we can't connect to MQTT. Disabling it!");
             Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, false);
             stopSelf();
+            return;
         }
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, true);
     }
 
     @Override
@@ -345,6 +348,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                 if( Aware.DEBUG ) Log.e(TAG, e.getMessage());
             } 
 	    }
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, false);
 		if(Aware.DEBUG) Log.d(TAG,"MQTT service terminated...");
 	}
 

@@ -333,6 +333,8 @@ public class Battery extends Aware_Sensor {
         filter.addAction(Intent.ACTION_POWER_CONNECTED);
         filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
         registerReceiver(batteryMonitor, filter);
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_BATTERY, true);
         
 		if(Aware.DEBUG) Log.d(TAG, "Battery service created!");
 	}
@@ -342,7 +344,9 @@ public class Battery extends Aware_Sensor {
 		super.onDestroy();
 		
 		unregisterReceiver(batteryMonitor);
-		
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_BATTERY, false);
+
 		if(Aware.DEBUG) Log.d(TAG,"Battery service terminated...");
 	}
 	

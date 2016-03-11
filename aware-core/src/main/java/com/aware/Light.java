@@ -230,6 +230,8 @@ public class Light extends Aware_Sensor implements SensorEventListener {
             saveSensorDevice(mLight);
         }
 
+        Aware.setSetting(this, Aware_Preferences.STATUS_LIGHT, true);
+
         if(Aware.DEBUG) Log.d(TAG,"Light service created!");
     }
     
@@ -244,6 +246,8 @@ public class Light extends Aware_Sensor implements SensorEventListener {
         wakeLock.release();
 
         unregisterReceiver(dataLabeler);
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_LIGHT, false);
 
         if(Aware.DEBUG) Log.d(TAG,"Light service terminated...");
     }

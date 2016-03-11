@@ -88,7 +88,10 @@ public class Bluetooth extends Aware_Sensor {
 		
 		alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 		TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-		
+
+        if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_BLUETOOTH).length() == 0) {
+            Aware.setSetting(this, Aware_Preferences.FREQUENCY_BLUETOOTH, UPDATE_BLUETOOTH_INTERVAL);
+        }
 		UPDATE_BLUETOOTH_INTERVAL = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_BLUETOOTH));
         
 		if( bluetoothAdapter == null ) {
@@ -119,6 +122,8 @@ public class Bluetooth extends Aware_Sensor {
         Intent backgroundService = new Intent(ACTION_AWARE_BLUETOOTH_REQUEST_SCAN);
         bluetoothScan = PendingIntent.getBroadcast(this, 0, backgroundService, 0);
         alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+1000, UPDATE_BLUETOOTH_INTERVAL * 1000, bluetoothScan);
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_BLUETOOTH, true);
         
         if( Aware.DEBUG ) Log.d(TAG, "Bluetooth service created!");
 	}
@@ -150,6 +155,8 @@ public class Bluetooth extends Aware_Sensor {
 		
 		unregisterReceiver(bluetoothMonitor);
 		alarmManager.cancel(bluetoothScan);
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_BLUETOOTH, false);
 		
 		if( Aware.DEBUG ) Log.d(TAG,"Bluetooth service terminated...");
 	}

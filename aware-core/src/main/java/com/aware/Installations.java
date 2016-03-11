@@ -138,7 +138,9 @@ public class Installations extends Aware_Sensor {
         filter.addAction(Intent.ACTION_PACKAGE_REPLACED);
         filter.addDataScheme("package");
         registerReceiver(installationsMonitor, filter);
-        
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_INSTALLATIONS, true);
+
         if( Aware.DEBUG ) Log.d(TAG,"Installations service created!");
     }
     
@@ -154,6 +156,8 @@ public class Installations extends Aware_Sensor {
         super.onDestroy();
         
         unregisterReceiver(installationsMonitor);
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_INSTALLATIONS, false);
         
         if( Aware.DEBUG ) Log.d(TAG,"Installations service terminated...");
     }
