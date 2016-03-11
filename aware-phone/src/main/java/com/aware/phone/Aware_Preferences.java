@@ -553,7 +553,7 @@ public class Aware_Preferences extends Aware_Activity {
                 Intent aware = new Intent(getApplicationContext(), Aware.class);
 
                 stopService(aware);
-                framework.stopAllServices();
+                framework.stopAWARE();
                 framework.stopSelf();
                 finish();
             } else {
@@ -1522,7 +1522,7 @@ public class Aware_Preferences extends Aware_Activity {
     }
 
     /**
-     * TimeZone module settings UI
+     * Timezone module settings UI
      */
     private void timeZone() {
         final PreferenceScreen timezones = (PreferenceScreen) findPreference("timezone");

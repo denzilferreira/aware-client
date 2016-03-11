@@ -16,13 +16,13 @@ import com.aware.providers.TimeZone_Provider.TimeZone_Data;
 import com.aware.utils.Aware_Sensor;
 
 /**
-* TimeZone module. Keeps track of changes in the device TimeZone.
+* Timezone module. Keeps track of changes in the device Timezone.
 * @author Nikola
 * Changes log:
 * 17 June 2013
 * - Added copyright notice, AWARE device ID to timezone context provider (@author Denzil Ferreira <denzil.ferreira@ee.oulu.fi>)
 */
-public class TimeZone extends Aware_Sensor {
+public class Timezone extends Aware_Sensor {
 
 	/**
      * Frequency of update of timeZone information. (default = 3600) seconds (=1 hour)
@@ -70,8 +70,8 @@ public class TimeZone extends Aware_Sensor {
      * Activity-Service binder
      */
     public class ServiceBinder extends Binder {
-        TimeZone getService() {
-            return TimeZone.getService();
+        Timezone getService() {
+            return Timezone.getService();
         }
     }
     
@@ -80,23 +80,26 @@ public class TimeZone extends Aware_Sensor {
         return serviceBinder;
     }
     
-    private static TimeZone timeZoneSrv = TimeZone.getService();
+    private static Timezone timezoneSrv = Timezone.getService();
     
     /**
      * Singleton instance of this service
-     * @return {@link TimeZone} obj
+     * @return {@link Timezone} obj
      */
-    public static TimeZone getService() {
-        if( timeZoneSrv == null ) timeZoneSrv = new TimeZone();
-        return timeZoneSrv;
+    public static Timezone getService() {
+        if( timezoneSrv == null ) timezoneSrv = new Timezone();
+        return timezoneSrv;
     }
     
     @Override
     public void onCreate() {
         super.onCreate();
         
-        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):"AWARE::TimeZone";
-        
+        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):"AWARE::Timezone";
+
+        if( Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE).length() == 0) {
+            Aware.setSetting(this, Aware_Preferences.FREQUENCY_TIMEZONE, TIMEZONE_UPDATE);
+        }
         TIMEZONE_UPDATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_TIMEZONE));
         
         DATABASE_TABLES = TimeZone_Provider.DATABASE_TABLES;
@@ -111,19 +114,22 @@ public class TimeZone extends Aware_Sensor {
 			}
 		};
         
-        mHandler.postDelayed(mRunnable, 1000);
-        if(Aware.DEBUG) Log.d(TAG,"TimeZone service created");
+        mHandler.post(mRunnable);
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_TIMEZONE, true);
+
+        if(Aware.DEBUG) Log.d(TAG,"Timezone service created");
     }
     
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):"AWARE::TimeZone";
+        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):"AWARE::Timezone";
         
         if( Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_TIMEZONE)) != TIMEZONE_UPDATE ) {
             TIMEZONE_UPDATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_TIMEZONE));
         }
         
-        if(Aware.DEBUG) Log.d(TAG,"TimeZone service active...");
+        if(Aware.DEBUG) Log.d(TAG,"Timezone service active...");
         
         return START_STICKY;
     }
@@ -133,7 +139,9 @@ public class TimeZone extends Aware_Sensor {
         super.onDestroy();
         
         mHandler.removeCallbacks(mRunnable);
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_TIMEZONE, false);
         
-        if(Aware.DEBUG) Log.d(TAG,"TimeZone service terminated...");
+        if(Aware.DEBUG) Log.d(TAG,"Timezone service terminated...");
     }
 }

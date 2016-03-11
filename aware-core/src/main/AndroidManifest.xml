@@ -47,6 +47,10 @@
             android:exported="true" />
 
         <service
+            android:name="com.aware.utils.PluginsManager"
+            android:exported="true" />
+
+        <service
             android:name="com.aware.Applications"
             android:enabled="@bool/accessibility_access"
             android:exported="true"
@@ -62,89 +66,89 @@
 
         <service
             android:name="com.aware.Applications$BackgroundService"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Locations"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Bluetooth"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Screen"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Battery"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Network"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Communication"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Processor"
-            android:exported="true"/>
+            android:exported="true" />
         <service
-            android:name="com.aware.TimeZone"
-            android:exported="true"/>
+            android:name=".Timezone"
+            android:exported="true" />
         <service
             android:name="com.aware.Mqtt"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Traffic"
-            android:exported="true"/>
+            android:exported="true" />
 
         <service
             android:name="com.aware.Accelerometer"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Gyroscope"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Bluetooth$BackgroundService"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.WiFi"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.WiFi$BackgroundService"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Telephony"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Rotation"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Light"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Proximity"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Magnetometer"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Barometer"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Gravity"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.LinearAccelerometer"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Temperature"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.ESM"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.ESM$BackgroundService"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.Installations"
-            android:exported="true"/>
+            android:exported="true" />
         <service
             android:name="com.aware.utils.WebserviceHelper"
             android:exported="true">

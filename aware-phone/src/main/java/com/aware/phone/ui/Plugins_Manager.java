@@ -119,7 +119,7 @@ public class Plugins_Manager extends Aware_Activity {
         bootRefresh();
 
         IntentFilter filter = new IntentFilter();
-        filter.addAction(Aware.ACTION_AWARE_PLUGIN_MANAGER_REFRESH);
+        filter.addAction(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO);
         registerReceiver(plugins_listener, filter);
     }
 
@@ -139,7 +139,7 @@ public class Plugins_Manager extends Aware_Activity {
     public class Plugins_Listener extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(Aware.ACTION_AWARE_PLUGIN_MANAGER_REFRESH)) {
+            if (intent.getAction().equals(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)) {
                 //Update grid
                 updateGrid();
             }
