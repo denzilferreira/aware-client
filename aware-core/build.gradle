@@ -39,8 +39,9 @@ android {
 }
 
 bintray {
-    user = (System.getenv("bintrayUsername") as String ?: "")
-    key = (System.getenv("bintrayKey") as String ?: "")
+    user = (bintrayUsername != null ? bintrayUsername : "")
+    key = (bintrayKey != null ? bintrayKey : "")
+
     configurations = ['archives']
 
     publish = true
