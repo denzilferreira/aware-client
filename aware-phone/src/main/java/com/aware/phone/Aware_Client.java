@@ -38,6 +38,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.aware.Applications;
+import com.aware.Aware_Preferences;
 import com.aware.Aware;
 import com.aware.phone.ui.Aware_Activity;
 import com.aware.phone.ui.Plugins_Manager;
@@ -62,405 +63,7 @@ import java.util.UUID;
  *
  * @author df
  */
-public class Aware_Preferences extends Aware_Activity {
-
-    /**
-     * Activate/deactive AWARE debug messages (boolean)
-     */
-    public static final String DEBUG_FLAG = "debug_flag";
-
-    /**
-     * Debug tag on Logcat
-     */
-    public static final String DEBUG_TAG = "debug_tag";
-
-    /**
-     * Disables database writing
-     */
-    public static final String DEBUG_DB_SLOW = "debug_db_slow";
-
-    /**
-     * AWARE Device ID (UUID)
-     */
-    public static final String DEVICE_ID = "device_id";
-
-    /**
-     * AWARE Group ID, used for assigning clients to a specific research group upon deployment
-     */
-    public static final String GROUP_ID = "group_id";
-
-    /**
-     * Automatically check for updates on the client
-     */
-    public static final String AWARE_AUTO_UPDATE = "aware_auto_update";
-
-    /**
-     * Activate/deactivate accelerometer log (boolean)
-     */
-    public static final String STATUS_ACCELEROMETER = "status_accelerometer";
-
-    /**
-     * Accelerometer frequency in milliseconds: e.g.,
-     * 0 - fastest
-     * 20000 - game
-     * 60000 - UI
-     * 200000 - normal (default)
-     */
-    public static final String FREQUENCY_ACCELEROMETER = "frequency_accelerometer";
-
-    /**
-     * Activate/deactivate application usage log (boolean)
-     */
-    public static final String STATUS_APPLICATIONS = "status_applications";
-
-    /**
-     * Background applications update frequency (default = 30) seconds
-     */
-    public static final String FREQUENCY_APPLICATIONS = "frequency_applications";
-
-    /**
-     * Activate/deactivate application installation log (boolean)
-     */
-    public static final String STATUS_INSTALLATIONS = "status_installations";
-
-    /**
-     * Activate/deactivate device notifications log (boolean)
-     */
-    public static final String STATUS_NOTIFICATIONS = "status_notifications";
-
-    /**
-     * Activate/deactivate application crashes (boolean)
-     */
-    public static final String STATUS_CRASHES = "status_crashes";
-
-    /**
-     * Activate/deactivate battery log (boolean)
-     */
-    public static final String STATUS_BATTERY = "status_battery";
-
-    /**
-     * Activate/deactivate bluetooth scan log (boolean)
-     */
-    public static final String STATUS_BLUETOOTH = "status_bluetooth";
-
-    /**
-     * Frequency of bluetooth scans, in seconds (default = 60)
-     */
-    public static final String FREQUENCY_BLUETOOTH = "frequency_bluetooth";
-
-    /**
-     * Activate/deactivate communication events (boolean)
-     */
-    public static final String STATUS_COMMUNICATION_EVENTS = "status_communication_events";
-
-    /**
-     * Activate/deactivate calls log (boolean)
-     */
-    public static final String STATUS_CALLS = "status_calls";
-
-    /**
-     * Activate/deactivate messages log (boolean)
-     */
-    public static final String STATUS_MESSAGES = "status_messages";
-
-    /**
-     * Activate/deactivate gravity log (boolean)
-     */
-    public static final String STATUS_GRAVITY = "status_gravity";
-
-    /**
-     * Gravity frequency in milliseconds: e.g.,
-     * 0 - fastest
-     * 20000 - game
-     * 60000 - UI
-     * 200000 - normal (default)
-     */
-    public static final String FREQUENCY_GRAVITY = "frequency_gravity";
-
-    /**
-     * Activate/deactivate gyroscope log (boolean)
-     */
-    public static final String STATUS_GYROSCOPE = "status_gyroscope";
-
-    /**
-     * Gyroscope frequency in milliseconds: e.g.,
-     * 0 - fastest
-     * 20000 - game
-     * 60000 - UI
-     * 200000 - normal (default)
-     */
-    public static final String FREQUENCY_GYROSCOPE = "frequency_gyroscope";
-
-    /**
-     * Activate/deactivate GPS location log (boolean)
-     */
-    public static final String STATUS_LOCATION_GPS = "status_location_gps";
-
-    /**
-     * GPS location frequency in seconds (default = 180). 0 is always on.
-     */
-    public static final String FREQUENCY_LOCATION_GPS = "frequency_location_gps";
-
-    /**
-     * GPS location minimum acceptable accuracy (default = 150), in meters
-     */
-    public static final String MIN_LOCATION_GPS_ACCURACY = "min_location_gps_accuracy";
-
-    /**
-     * Activate/deactivate network location log (boolean)
-     */
-    public static final String STATUS_LOCATION_NETWORK = "status_location_network";
-
-    /**
-     * Network location frequency in seconds (default = 300). 0 is always on.
-     */
-    public static final String FREQUENCY_LOCATION_NETWORK = "frequency_location_network";
-
-    /**
-     * Network location minimum acceptable accuracy (default = 1500), in meters
-     */
-    public static final String MIN_LOCATION_NETWORK_ACCURACY = "min_location_network_accuracy";
-
-    /**
-     * Location expiration time (default = 300), in seconds
-     */
-    public static final String LOCATION_EXPIRATION_TIME = "location_expiration_time";
-
-    /**
-     * Activate/deactivate light sensor log (boolean)
-     */
-    public static final String STATUS_LIGHT = "status_light";
-
-    /**
-     * Light frequency in milliseconds: e.g.,
-     * 0 - fastest
-     * 20000 - game
-     * 60000 - UI
-     * 200000 - normal (default)
-     */
-    public static final String FREQUENCY_LIGHT = "frequency_light";
-
-    /**
-     * Activate/deactivate linear accelerometer log (boolean)
-     */
-    public static final String STATUS_LINEAR_ACCELEROMETER = "status_linear_accelerometer";
-
-    /**
-     * Linear accelerometer frequency in milliseconds: e.g.,
-     * 0 - fastest
-     * 20000 - game
-     * 60000 - UI
-     * 200000 - normal (default)
-     */
-    public static final String FREQUENCY_LINEAR_ACCELEROMETER = "frequency_linear_accelerometer";
-
-    /**
-     * Activate/deactivate network usage events (boolean)
-     */
-    public static final String STATUS_NETWORK_EVENTS = "status_network_events";
-
-    /**
-     * Activate/deactivate network traffic log (boolean)
-     */
-    public static final String STATUS_NETWORK_TRAFFIC = "status_network_traffic";
-
-    /**
-     * Network traffic frequency (default = 60), in seconds
-     */
-    public static final String FREQUENCY_NETWORK_TRAFFIC = "frequency_network_traffic";
-
-    /**
-     * Activate/deactivate magnetometer log (boolean)
-     */
-    public static final String STATUS_MAGNETOMETER = "status_magnetometer";
-
-    /**
-     * Magnetometer frequency in milliseconds: e.g.,
-     * 0 - fastest
-     * 20000 - game
-     * 60000 - UI
-     * 200000 - normal (default)
-     */
-    public static final String FREQUENCY_MAGNETOMETER = "frequency_magnetometer";
-
-    /**
-     * Activate/deactivate barometer log (boolean)
-     */
-    public static final String STATUS_BAROMETER = "status_barometer";
-
-    /**
-     * Barometer frequency in milliseconds: e.g.,
-     * 0 - fastest
-     * 20000 - game
-     * 60000 - UI
-     * 200000 - normal (default)
-     */
-    public static final String FREQUENCY_BAROMETER = "frequency_barometer";
-
-    /**
-     * Activate/deactivate processor log (boolean)
-     */
-    public static final String STATUS_PROCESSOR = "status_processor";
-
-    /**
-     * Processor frequency (default = 10), in seconds
-     */
-    public static final String FREQUENCY_PROCESSOR = "frequency_processor";
-
-    /**
-     * Activate/deactivate timezone log (boolean)
-     */
-    public static final String STATUS_TIMEZONE = "status_timezone";
-
-    /**
-     * Timezone frequency (default = 3600) in seconds
-     */
-    public static final String FREQUENCY_TIMEZONE = "frequency_timezone";
-
-    /**
-     * Activate/deactivate proximity log (boolean)
-     */
-    public static final String STATUS_PROXIMITY = "status_proximity";
-
-    /**
-     * Proximity frequency in milliseconds: e.g.,
-     * 0 - fastest
-     * 20000 - game
-     * 60000 - UI
-     * 200000 - normal (default)
-     */
-    public static final String FREQUENCY_PROXIMITY = "frequency_proximity";
-
-    /**
-     * Activate/deactivate rotation log (boolean)
-     */
-    public static final String STATUS_ROTATION = "status_rotation";
-
-    /**
-     * Rotation frequency in milliseconds: e.g.,
-     * 0 - fastest
-     * 20000 - game
-     * 60000 - UI
-     * 200000 - normal (default)
-     */
-    public static final String FREQUENCY_ROTATION = "frequency_rotation";
-
-    /**
-     * Activate/deactivate screen usage log (boolean)
-     */
-    public static final String STATUS_SCREEN = "status_screen";
-
-    /**
-     * Activate/deactivate temperature sensor log (boolean)
-     */
-    public static final String STATUS_TEMPERATURE = "status_temperature";
-
-    /**
-     * Temperature frequency in milliseconds: e.g.,
-     * 0 - fastest
-     * 20000 - game
-     * 60000 - UI
-     * 200000 - normal (default)
-     */
-    public static final String FREQUENCY_TEMPERATURE = "frequency_temperature";
-
-    /**
-     * Activate/deactivate telephony log (boolean)
-     */
-    public static final String STATUS_TELEPHONY = "status_telephony";
-
-    /**
-     * Activate/deactivate wifi scanning log (boolean)
-     */
-    public static final String STATUS_WIFI = "status_wifi";
-
-    /**
-     * Wifi scan frequency (default = 60), in seconds.
-     */
-    public static final String FREQUENCY_WIFI = "frequency_wifi";
-
-    /**
-     * Activate/deactivate mobile ESM (boolean)
-     */
-    public static final String STATUS_ESM = "status_esm";
-
-    /**
-     * Activate/deactivate MQTT client (boolean)
-     */
-    public static final String STATUS_MQTT = "status_mqtt";
-
-    /**
-     * MQTT Server IP/URL
-     */
-    public static final String MQTT_SERVER = "mqtt_server";
-
-    /**
-     * MQTT Server port (default = 1883)
-     */
-    public static final String MQTT_PORT = "mqtt_port";
-
-    /**
-     * MQTT Client username
-     */
-    public static final String MQTT_USERNAME = "mqtt_username";
-
-    /**
-     * MQTT Client password
-     */
-    public static final String MQTT_PASSWORD = "mqtt_password";
-
-    /**
-     * MQTT Client keep alive (default = 600), in seconds
-     */
-    public static final String MQTT_KEEP_ALIVE = "mqtt_keep_alive";
-
-    /**
-     * MQTT QoS (default = 2)
-     * 0 - no guarantee
-     * 1 - at least once
-     * 2 - exactly once
-     */
-    public static final String MQTT_QOS = "mqtt_qos";
-
-    /**
-     * MQTT Connection protocol (default = tcp)
-     * tcp - unsecure
-     * ssl - secure
-     */
-    public static final String MQTT_PROTOCOL = "mqtt_protocol";
-
-    /**
-     * Activate/deactivate AWARE webservice (boolean)
-     */
-    public static final String STATUS_WEBSERVICE = "status_webservice";
-
-    /**
-     * AWARE webservice URL
-     */
-    public static final String WEBSERVICE_SERVER = "webservice_server";
-
-    /**
-     * AWARE webservice sync only over Wi-Fi connection
-     */
-    public static final String WEBSERVICE_WIFI_ONLY = "webservice_wifi_only";
-
-    /**
-     * AWARE webservice frequency (default = 30), in minutes
-     */
-    public static final String FREQUENCY_WEBSERVICE = "frequency_webservice";
-
-    /**
-     * How frequently to clean old data?
-     * 0 - never
-     * 1 - weekly
-     * 2 - monthly
-     */
-    public static final String FREQUENCY_CLEAN_OLD_DATA = "frequency_clean_old_data";
-
-    /**
-     * Activate/deactivate keyboard logging
-     */
-    public static final String STATUS_KEYBOARD = "status_keyboard";
+public class Aware_Client extends Aware_Activity {
 
     private static final int DIALOG_ERROR_MISSING_PARAMETERS = 2;
     private static final int DIALOG_ERROR_MISSING_SENSOR = 3;
@@ -470,15 +73,9 @@ public class Aware_Preferences extends Aware_Activity {
      */
     private static boolean is_watch = false;
 
-    /**
-     * Callback ID for joining a study
-     */
-    public static final int REQUEST_JOIN_STUDY = 1;
-
-    private static final Aware framework = Aware.getService();
     private static SensorManager mSensorMgr;
-    private static Context sContext;
-    private static PreferenceActivity sPreferences;
+    private static Context awareContext;
+    private static PreferenceActivity clientUI;
 
     final private int REQUEST_CODE_PERMISSIONS = 999;
 
@@ -550,11 +147,7 @@ public class Aware_Preferences extends Aware_Activity {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (grantResults.length > 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "AWARE external storage access required!", Toast.LENGTH_SHORT).show();
-                Intent aware = new Intent(getApplicationContext(), Aware.class);
-
-                stopService(aware);
-                framework.stopAWARE();
-                framework.stopSelf();
+                Aware.stopAWARE();
                 finish();
             } else {
                 //Restart AWARE client now that we have the permission to write to external storage
@@ -571,20 +164,23 @@ public class Aware_Preferences extends Aware_Activity {
 
         mSensorMgr = (SensorManager) getSystemService(SENSOR_SERVICE);
         is_watch = Aware.is_watch(this);
-        sContext = getApplicationContext();
-        sPreferences = this;
+        awareContext = getApplicationContext();
+        clientUI = this;
 
-        int storage = ContextCompat.checkSelfPermission(Aware_Preferences.this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        int camera = ContextCompat.checkSelfPermission(Aware_Preferences.this, Manifest.permission.CAMERA);
-        int phone_state = ContextCompat.checkSelfPermission(Aware_Preferences.this, Manifest.permission.READ_PHONE_STATE);
-        int phone_log = ContextCompat.checkSelfPermission(Aware_Preferences.this, Manifest.permission.READ_CALL_LOG);
-        int contacts = ContextCompat.checkSelfPermission(Aware_Preferences.this, Manifest.permission.READ_CONTACTS);
-        int sms = ContextCompat.checkSelfPermission(Aware_Preferences.this, Manifest.permission.READ_SMS);
-        int location_network = ContextCompat.checkSelfPermission(Aware_Preferences.this, Manifest.permission.ACCESS_COARSE_LOCATION);
-        int location_gps = ContextCompat.checkSelfPermission(Aware_Preferences.this, Manifest.permission.ACCESS_FINE_LOCATION);
+        //Start the Aware
+        Intent startAware = new Intent(awareContext, Aware.class);
+        startService(startAware);
+
+        int storage = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int camera = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.CAMERA);
+        int phone_state = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.READ_PHONE_STATE);
+        int phone_log = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.READ_CALL_LOG);
+        int contacts = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.READ_CONTACTS);
+        int sms = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.READ_SMS);
+        int location_network = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.ACCESS_COARSE_LOCATION);
+        int location_gps = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.ACCESS_FINE_LOCATION);
 
         ArrayList<String> missing_permissions = new ArrayList<>();
-
         if (storage != PackageManager.PERMISSION_GRANTED) {
             missing_permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
@@ -613,10 +209,6 @@ public class Aware_Preferences extends Aware_Activity {
         if (missing_permissions.size() > 0) {
             requestPermissions(missing_permissions.toArray(new String[missing_permissions.size()]), REQUEST_CODE_PERMISSIONS);
         }
-
-        //Start the Aware
-        Intent startAware = new Intent(getApplicationContext(), Aware.class);
-        startService(startAware);
 
         SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
@@ -647,8 +239,8 @@ public class Aware_Preferences extends Aware_Activity {
         defaultSettings();
 
         //Check if AWARE is active on the accessibility services
-        if (!Aware.is_watch(sContext)) {
-            Applications.isAccessibilityServiceActive(sContext);
+        if (!Aware.is_watch(awareContext)) {
+            Applications.isAccessibilityServiceActive(awareContext);
         }
     }
 
@@ -690,16 +282,16 @@ public class Aware_Preferences extends Aware_Activity {
             return;
         }
         final CheckBoxPreference esm = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_ESM);
-        esm.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_ESM).equals("true"));
+        esm.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true"));
         esm.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_ESM, esm.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_ESM, esm.isChecked());
                 if (esm.isChecked()) {
-                    framework.startESM(sContext);
+                    Aware.startESM(awareContext);
                     mobile_esm.setIcon(getResources().getDrawable(R.drawable.ic_action_esm_active));
                 } else {
-                    framework.stopESM(sContext);
+                    Aware.stopESM(awareContext);
                     mobile_esm.setIcon(getResources().getDrawable(R.drawable.ic_action_esm));
                 }
                 return true;
@@ -722,41 +314,41 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         final CheckBoxPreference temperature = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_TEMPERATURE);
-        temperature.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_TEMPERATURE).equals("true"));
+        temperature.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_TEMPERATURE).equals("true"));
         temperature.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 if (mSensorMgr.getDefaultSensor(Sensor.TYPE_TEMPERATURE) == null) {
-                    sPreferences.showDialog(DIALOG_ERROR_MISSING_SENSOR);
+                    clientUI.showDialog(DIALOG_ERROR_MISSING_SENSOR);
                     temperature.setChecked(false);
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_TEMPERATURE, false);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_TEMPERATURE, false);
                     return false;
                 }
 
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_TEMPERATURE, temperature.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_TEMPERATURE, temperature.isChecked());
                 if (temperature.isChecked()) {
-                    framework.startTemperature(sContext);
+                    Aware.startTemperature(awareContext);
                     temp_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_temperature_active));
                 } else {
-                    framework.stopTemperature(sContext);
+                    Aware.stopTemperature(awareContext);
                     temp_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_temperature));
                 }
                 return true;
             }
         });
 
-        final ListPreference frequency_temperature = (ListPreference) findPreference(FREQUENCY_TEMPERATURE);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_TEMPERATURE).length() > 0) {
-            String freq = Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_TEMPERATURE);
+        final ListPreference frequency_temperature = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_TEMPERATURE);
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_TEMPERATURE).length() > 0) {
+            String freq = Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_TEMPERATURE);
             frequency_temperature.setSummary(freq);
         }
-        frequency_temperature.setDefaultValue(Aware.getSetting(sContext, FREQUENCY_TEMPERATURE));
+        frequency_temperature.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_TEMPERATURE));
         frequency_temperature.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, FREQUENCY_TEMPERATURE, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_TEMPERATURE, newValue);
                 frequency_temperature.setSummary((String) newValue);
-                framework.startTemperature(sContext);
+                Aware.startTemperature(awareContext);
                 return true;
             }
         });
@@ -778,42 +370,42 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         final CheckBoxPreference accelerometer = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_ACCELEROMETER);
-        accelerometer.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_ACCELEROMETER).equals("true"));
+        accelerometer.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_ACCELEROMETER).equals("true"));
         accelerometer.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
 
                 if (mSensorMgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) == null) {
-                    sPreferences.showDialog(DIALOG_ERROR_MISSING_SENSOR);
+                    clientUI.showDialog(DIALOG_ERROR_MISSING_SENSOR);
                     accelerometer.setChecked(false);
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_ACCELEROMETER, false);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_ACCELEROMETER, false);
                     return false;
                 }
 
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_ACCELEROMETER, accelerometer.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_ACCELEROMETER, accelerometer.isChecked());
                 if (accelerometer.isChecked()) {
-                    framework.startAccelerometer(sContext);
+                    Aware.startAccelerometer(awareContext);
                     accel_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_accelerometer_active));
                 } else {
-                    framework.stopAccelerometer(sContext);
+                    Aware.stopAccelerometer(awareContext);
                     accel_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_accelerometer));
                 }
                 return true;
             }
         });
 
-        final ListPreference frequency_accelerometer = (ListPreference) findPreference(FREQUENCY_ACCELEROMETER);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_ACCELEROMETER).length() > 0) {
-            String freq = Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_ACCELEROMETER);
+        final ListPreference frequency_accelerometer = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_ACCELEROMETER);
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_ACCELEROMETER).length() > 0) {
+            String freq = Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_ACCELEROMETER);
             frequency_accelerometer.setSummary(freq);
         }
-        frequency_accelerometer.setDefaultValue(Aware.getSetting(sContext, FREQUENCY_ACCELEROMETER));
+        frequency_accelerometer.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_ACCELEROMETER));
         frequency_accelerometer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, FREQUENCY_ACCELEROMETER, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_ACCELEROMETER, (String) newValue);
                 frequency_accelerometer.setSummary((String) newValue);
-                framework.startAccelerometer(sContext);
+                Aware.startAccelerometer(awareContext);
                 return true;
             }
         });
@@ -835,41 +427,41 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         final CheckBoxPreference linear_accelerometer = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_LINEAR_ACCELEROMETER);
-        linear_accelerometer.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_LINEAR_ACCELEROMETER).equals("true"));
+        linear_accelerometer.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_LINEAR_ACCELEROMETER).equals("true"));
         linear_accelerometer.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
 
                 if (mSensorMgr.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) == null) {
-                    sPreferences.showDialog(DIALOG_ERROR_MISSING_SENSOR);
+                    clientUI.showDialog(DIALOG_ERROR_MISSING_SENSOR);
                     linear_accelerometer.setChecked(false);
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_LINEAR_ACCELEROMETER, false);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_LINEAR_ACCELEROMETER, false);
                     return false;
                 }
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_LINEAR_ACCELEROMETER, linear_accelerometer.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_LINEAR_ACCELEROMETER, linear_accelerometer.isChecked());
                 if (linear_accelerometer.isChecked()) {
-                    framework.startLinearAccelerometer(sContext);
+                    Aware.startLinearAccelerometer(awareContext);
                     linear_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_linear_acceleration_active));
                 } else {
-                    framework.stopLinearAccelerometer(sContext);
+                    Aware.stopLinearAccelerometer(awareContext);
                     linear_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_linear_acceleration_active));
                 }
                 return true;
             }
         });
 
-        final ListPreference frequency_linear_accelerometer = (ListPreference) findPreference(FREQUENCY_LINEAR_ACCELEROMETER);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER).length() > 0) {
-            String freq = Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER);
+        final ListPreference frequency_linear_accelerometer = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER);
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER).length() > 0) {
+            String freq = Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER);
             frequency_linear_accelerometer.setSummary(freq);
         }
-        frequency_linear_accelerometer.setDefaultValue(Aware.getSetting(sContext, FREQUENCY_LINEAR_ACCELEROMETER));
+        frequency_linear_accelerometer.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER));
         frequency_linear_accelerometer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, FREQUENCY_LINEAR_ACCELEROMETER, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER, (String) newValue);
                 frequency_linear_accelerometer.setSummary((String) newValue);
-                framework.startLinearAccelerometer(sContext);
+                Aware.startLinearAccelerometer(awareContext);
                 return true;
             }
         });
@@ -881,90 +473,90 @@ public class Aware_Preferences extends Aware_Activity {
     private void applications() {
         final PreferenceScreen apps_pref = (PreferenceScreen) findPreference("applications");
         final CheckBoxPreference notifications = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_NOTIFICATIONS);
-        notifications.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_NOTIFICATIONS).equals("true"));
+        notifications.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_NOTIFICATIONS).equals("true"));
         notifications.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                if (Applications.isAccessibilityServiceActive(sContext) && notifications.isChecked()) {
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_NOTIFICATIONS, notifications.isChecked());
+                if (Applications.isAccessibilityServiceActive(awareContext) && notifications.isChecked()) {
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_NOTIFICATIONS, notifications.isChecked());
                     notifications.setChecked(true);
-                    framework.startApplications(sContext);
+                    Aware.startApplications(awareContext);
                     apps_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_applications_active));
                     return true;
                 }
-                Applications.isAccessibilityServiceActive(sContext);
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_NOTIFICATIONS, false);
+                Applications.isAccessibilityServiceActive(awareContext);
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_NOTIFICATIONS, false);
                 notifications.setChecked(false);
                 return false;
             }
         });
         final CheckBoxPreference keyboard = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_KEYBOARD);
-        keyboard.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_KEYBOARD).equals("true"));
+        keyboard.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_KEYBOARD).equals("true"));
         keyboard.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                if (Applications.isAccessibilityServiceActive(sContext) && keyboard.isChecked()) {
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_KEYBOARD, keyboard.isChecked());
+                if (Applications.isAccessibilityServiceActive(awareContext) && keyboard.isChecked()) {
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_KEYBOARD, keyboard.isChecked());
                     keyboard.setChecked(true);
-                    framework.startApplications(sContext);
-                    framework.startKeyboard(sContext);
+                    Aware.startApplications(awareContext);
+                    Aware.startKeyboard(awareContext);
                     apps_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_applications_active));
                     return true;
                 }
-                Applications.isAccessibilityServiceActive(sContext);
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_KEYBOARD, false);
+                Applications.isAccessibilityServiceActive(awareContext);
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_KEYBOARD, false);
                 keyboard.setChecked(false);
-                framework.stopKeyboard(sContext);
+                Aware.stopKeyboard(awareContext);
                 return false;
             }
         });
         final CheckBoxPreference crashes = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_CRASHES);
-        crashes.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_CRASHES).equals("true"));
+        crashes.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_CRASHES).equals("true"));
         crashes.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                if (Applications.isAccessibilityServiceActive(sContext) && crashes.isChecked()) {
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_CRASHES, crashes.isChecked());
+                if (Applications.isAccessibilityServiceActive(awareContext) && crashes.isChecked()) {
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_CRASHES, crashes.isChecked());
                     crashes.setChecked(true);
-                    framework.startApplications(sContext);
+                    Aware.startApplications(awareContext);
                     apps_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_applications_active));
                     return true;
                 }
-                Applications.isAccessibilityServiceActive(sContext);
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_CRASHES, false);
+                Applications.isAccessibilityServiceActive(awareContext);
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_CRASHES, false);
                 crashes.setChecked(false);
                 return false;
             }
         });
         final CheckBoxPreference applications = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_APPLICATIONS);
-        if (Aware.getSetting(sContext, Aware_Preferences.STATUS_APPLICATIONS).equals("true") && !Applications.isAccessibilityServiceActive(sContext)) {
-            Aware.setSetting(sContext, Aware_Preferences.STATUS_APPLICATIONS, false);
-            framework.stopApplications(sContext);
+        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_APPLICATIONS).equals("true") && !Applications.isAccessibilityServiceActive(awareContext)) {
+            Aware.setSetting(awareContext, Aware_Preferences.STATUS_APPLICATIONS, false);
+            Aware.stopApplications(awareContext);
             apps_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_applications));
         }
-        applications.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_APPLICATIONS).equals("true"));
+        applications.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_APPLICATIONS).equals("true"));
         applications.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                if (Applications.isAccessibilityServiceActive(sContext) && applications.isChecked()) {
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_APPLICATIONS, true);
+                if (Applications.isAccessibilityServiceActive(awareContext) && applications.isChecked()) {
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_APPLICATIONS, true);
                     applications.setChecked(true);
-                    framework.startApplications(sContext);
+                    Aware.startApplications(awareContext);
                     apps_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_applications_active));
                     return true;
                 } else {
-                    Applications.isAccessibilityServiceActive(sContext);
+                    Applications.isAccessibilityServiceActive(awareContext);
 
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_APPLICATIONS, false);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_APPLICATIONS, false);
                     applications.setChecked(false);
 
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_NOTIFICATIONS, false);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_NOTIFICATIONS, false);
                     notifications.setChecked(false);
 
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_CRASHES, false);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_CRASHES, false);
                     crashes.setChecked(false);
 
-                    framework.stopApplications(sContext);
+                    Aware.stopApplications(awareContext);
                     apps_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_applications));
                     return false;
                 }
@@ -972,31 +564,31 @@ public class Aware_Preferences extends Aware_Activity {
         });
 
         final EditTextPreference frequency_applications = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_APPLICATIONS);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_APPLICATIONS).length() > 0) {
-            frequency_applications.setSummary(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_APPLICATIONS) + " seconds");
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_APPLICATIONS).length() > 0) {
+            frequency_applications.setSummary(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_APPLICATIONS) + " seconds");
         }
-        frequency_applications.setText(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_APPLICATIONS));
+        frequency_applications.setText(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_APPLICATIONS));
         frequency_applications.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.FREQUENCY_APPLICATIONS, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_APPLICATIONS, (String) newValue);
                 frequency_applications.setSummary((String) newValue + " seconds");
-                framework.startApplications(sContext);
+                Aware.startApplications(awareContext);
                 return true;
             }
         });
 
         final CheckBoxPreference installations = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_INSTALLATIONS);
-        installations.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_INSTALLATIONS).equals("true"));
+        installations.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_INSTALLATIONS).equals("true"));
         installations.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_INSTALLATIONS, installations.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_INSTALLATIONS, installations.isChecked());
                 if (installations.isChecked()) {
-                    framework.startInstallations(sContext);
+                    Aware.startInstallations(awareContext);
                     apps_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_applications_active));
                 } else {
-                    framework.stopInstallations(sContext);
+                    Aware.stopInstallations(awareContext);
                     apps_pref.setIcon(getResources().getDrawable(R.drawable.ic_action_applications));
                 }
                 return true;
@@ -1009,15 +601,15 @@ public class Aware_Preferences extends Aware_Activity {
      */
     private void battery() {
         final CheckBoxPreference battery = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_BATTERY);
-        battery.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_BATTERY).equals("true"));
+        battery.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_BATTERY).equals("true"));
         battery.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_BATTERY, battery.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_BATTERY, battery.isChecked());
                 if (battery.isChecked()) {
-                    framework.startBattery(sContext);
+                    Aware.startBattery(awareContext);
                 } else {
-                    framework.stopBattery(sContext);
+                    Aware.stopBattery(awareContext);
                 }
                 return true;
             }
@@ -1029,39 +621,39 @@ public class Aware_Preferences extends Aware_Activity {
      */
     private void bluetooth() {
         final CheckBoxPreference bluetooth = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_BLUETOOTH);
-        bluetooth.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_BLUETOOTH).equals("true"));
+        bluetooth.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_BLUETOOTH).equals("true"));
         bluetooth.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
                 if (btAdapter == null) {
-                    sPreferences.showDialog(DIALOG_ERROR_MISSING_SENSOR);
+                    clientUI.showDialog(DIALOG_ERROR_MISSING_SENSOR);
                     bluetooth.setChecked(false);
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_BLUETOOTH, false);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_BLUETOOTH, false);
                     return false;
                 }
 
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_BLUETOOTH, bluetooth.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_BLUETOOTH, bluetooth.isChecked());
                 if (bluetooth.isChecked()) {
-                    framework.startBluetooth(sContext);
+                    Aware.startBluetooth(awareContext);
                 } else {
-                    framework.stopBluetooth(sContext);
+                    Aware.stopBluetooth(awareContext);
                 }
                 return true;
             }
         });
 
         final EditTextPreference bluetoothInterval = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_BLUETOOTH);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_BLUETOOTH).length() > 0) {
-            bluetoothInterval.setSummary(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_BLUETOOTH) + " seconds");
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_BLUETOOTH).length() > 0) {
+            bluetoothInterval.setSummary(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_BLUETOOTH) + " seconds");
         }
-        bluetoothInterval.setText(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_BLUETOOTH));
+        bluetoothInterval.setText(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_BLUETOOTH));
         bluetoothInterval.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.FREQUENCY_BLUETOOTH, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_BLUETOOTH, (String) newValue);
                 bluetoothInterval.setSummary((String) newValue + " seconds");
-                framework.startBluetooth(sContext);
+                Aware.startBluetooth(awareContext);
                 return true;
             }
         });
@@ -1078,45 +670,45 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         final CheckBoxPreference calls = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_CALLS);
-        calls.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_CALLS).equals("true"));
+        calls.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_CALLS).equals("true"));
         calls.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_CALLS, calls.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_CALLS, calls.isChecked());
                 if (calls.isChecked()) {
-                    framework.startCommunication(sContext);
+                    Aware.startCommunication(awareContext);
                 } else {
-                    framework.stopCommunication(sContext);
+                    Aware.stopCommunication(awareContext);
                 }
                 return true;
             }
         });
 
         final CheckBoxPreference messages = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_MESSAGES);
-        messages.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_MESSAGES).equals("true"));
+        messages.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_MESSAGES).equals("true"));
         messages.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_MESSAGES, messages.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_MESSAGES, messages.isChecked());
                 if (messages.isChecked()) {
-                    framework.startCommunication(sContext);
+                    Aware.startCommunication(awareContext);
                 } else {
-                    framework.stopCommunication(sContext);
+                    Aware.stopCommunication(awareContext);
                 }
                 return true;
             }
         });
 
         final CheckBoxPreference communication = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_COMMUNICATION_EVENTS);
-        communication.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_COMMUNICATION_EVENTS).equals("true"));
+        communication.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_COMMUNICATION_EVENTS).equals("true"));
         communication.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_COMMUNICATION_EVENTS, communication.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_COMMUNICATION_EVENTS, communication.isChecked());
                 if (communication.isChecked()) {
-                    framework.startCommunication(sContext);
+                    Aware.startCommunication(awareContext);
                 } else {
-                    framework.stopCommunication(sContext);
+                    Aware.stopCommunication(awareContext);
                 }
                 return true;
             }
@@ -1138,39 +730,39 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         final CheckBoxPreference gravity = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_GRAVITY);
-        gravity.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_GRAVITY).equals("true"));
+        gravity.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_GRAVITY).equals("true"));
         gravity.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
 
                 if (mSensorMgr.getDefaultSensor(Sensor.TYPE_GRAVITY) == null) {
-                    sPreferences.showDialog(DIALOG_ERROR_MISSING_SENSOR);
+                    clientUI.showDialog(DIALOG_ERROR_MISSING_SENSOR);
                     gravity.setChecked(false);
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_GRAVITY, false);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_GRAVITY, false);
                     return false;
                 }
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_GRAVITY, gravity.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_GRAVITY, gravity.isChecked());
                 if (gravity.isChecked()) {
-                    framework.startGravity(sContext);
+                    Aware.startGravity(awareContext);
                 } else {
-                    framework.stopGravity(sContext);
+                    Aware.stopGravity(awareContext);
                 }
                 return true;
             }
         });
 
-        final ListPreference frequency_gravity = (ListPreference) findPreference(FREQUENCY_GRAVITY);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_GRAVITY).length() > 0) {
-            String freq = Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_GRAVITY);
+        final ListPreference frequency_gravity = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_GRAVITY);
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_GRAVITY).length() > 0) {
+            String freq = Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_GRAVITY);
             frequency_gravity.setSummary(freq);
         }
-        frequency_gravity.setDefaultValue(Aware.getSetting(sContext, FREQUENCY_GRAVITY));
+        frequency_gravity.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_GRAVITY));
         frequency_gravity.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, FREQUENCY_GRAVITY, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_GRAVITY, (String) newValue);
                 frequency_gravity.setSummary((String) newValue);
-                framework.startGravity(sContext);
+                Aware.startGravity(awareContext);
                 return true;
             }
         });
@@ -1191,39 +783,39 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         final CheckBoxPreference gyroscope = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_GYROSCOPE);
-        gyroscope.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_GYROSCOPE).equals("true"));
+        gyroscope.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_GYROSCOPE).equals("true"));
         gyroscope.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
 
                 if (mSensorMgr.getDefaultSensor(Sensor.TYPE_GYROSCOPE) == null) {
-                    sPreferences.showDialog(DIALOG_ERROR_MISSING_SENSOR);
+                    clientUI.showDialog(DIALOG_ERROR_MISSING_SENSOR);
                     gyroscope.setChecked(false);
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_GYROSCOPE, false);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_GYROSCOPE, false);
                     return false;
                 }
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_GYROSCOPE, gyroscope.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_GYROSCOPE, gyroscope.isChecked());
                 if (gyroscope.isChecked()) {
-                    framework.startGyroscope(sContext);
+                    Aware.startGyroscope(awareContext);
                 } else {
-                    framework.stopGyroscope(sContext);
+                    Aware.stopGyroscope(awareContext);
                 }
                 return true;
             }
         });
 
-        final ListPreference frequency_gyroscope = (ListPreference) findPreference(FREQUENCY_GYROSCOPE);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_GYROSCOPE).length() > 0) {
-            String freq = Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_GYROSCOPE);
+        final ListPreference frequency_gyroscope = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_GYROSCOPE);
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_GYROSCOPE).length() > 0) {
+            String freq = Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_GYROSCOPE);
             frequency_gyroscope.setSummary(freq);
         }
-        frequency_gyroscope.setDefaultValue(Aware.getSetting(sContext, FREQUENCY_GYROSCOPE));
+        frequency_gyroscope.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_GYROSCOPE));
         frequency_gyroscope.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, FREQUENCY_GYROSCOPE, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_GYROSCOPE, (String) newValue);
                 frequency_gyroscope.setSummary((String) newValue);
-                framework.startGyroscope(sContext);
+                Aware.startGyroscope(awareContext);
                 return true;
             }
         });
@@ -1240,128 +832,128 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         final CheckBoxPreference location_gps = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_LOCATION_GPS);
-        location_gps.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_LOCATION_GPS).equals("true"));
+        location_gps.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_GPS).equals("true"));
         location_gps.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
 
-                LocationManager localMng = (LocationManager) sContext.getSystemService(LOCATION_SERVICE);
+                LocationManager localMng = (LocationManager) awareContext.getSystemService(LOCATION_SERVICE);
                 List<String> providers = localMng.getAllProviders();
 
                 if (!providers.contains(LocationManager.GPS_PROVIDER)) {
-                    sPreferences.showDialog(DIALOG_ERROR_MISSING_SENSOR);
+                    clientUI.showDialog(DIALOG_ERROR_MISSING_SENSOR);
                     location_gps.setChecked(false);
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_LOCATION_GPS, false);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_LOCATION_GPS, false);
                     return false;
                 }
 
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_LOCATION_GPS, location_gps.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_LOCATION_GPS, location_gps.isChecked());
                 if (location_gps.isChecked()) {
-                    framework.startLocations(sContext);
+                    Aware.startLocations(awareContext);
                 } else {
-                    framework.stopLocations(sContext);
+                    Aware.stopLocations(awareContext);
                 }
                 return true;
             }
         });
 
         final CheckBoxPreference location_network = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_LOCATION_NETWORK);
-        location_network.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true"));
+        location_network.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true"));
         location_network.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
 
-                LocationManager localMng = (LocationManager) sContext.getSystemService(LOCATION_SERVICE);
+                LocationManager localMng = (LocationManager) awareContext.getSystemService(LOCATION_SERVICE);
                 List<String> providers = localMng.getAllProviders();
 
                 if (!providers.contains(LocationManager.NETWORK_PROVIDER)) {
-                    sPreferences.showDialog(DIALOG_ERROR_MISSING_SENSOR);
+                    clientUI.showDialog(DIALOG_ERROR_MISSING_SENSOR);
                     location_gps.setChecked(false);
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_LOCATION_NETWORK, false);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_LOCATION_NETWORK, false);
                     return false;
                 }
 
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_LOCATION_NETWORK, location_network.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_LOCATION_NETWORK, location_network.isChecked());
                 if (location_network.isChecked()) {
-                    framework.startLocations(sContext);
+                    Aware.startLocations(awareContext);
                 } else {
-                    framework.stopLocations(sContext);
+                    Aware.stopLocations(awareContext);
                 }
                 return true;
             }
         });
 
         final EditTextPreference gpsInterval = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_LOCATION_GPS);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_LOCATION_GPS).length() > 0) {
-            gpsInterval.setSummary(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_LOCATION_GPS) + " seconds");
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_LOCATION_GPS).length() > 0) {
+            gpsInterval.setSummary(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_LOCATION_GPS) + " seconds");
         }
-        gpsInterval.setText(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_LOCATION_GPS));
+        gpsInterval.setText(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_LOCATION_GPS));
         gpsInterval.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.FREQUENCY_LOCATION_GPS, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_LOCATION_GPS, (String) newValue);
                 gpsInterval.setSummary((String) newValue + " seconds");
-                framework.startLocations(sContext);
+                Aware.startLocations(awareContext);
                 return true;
             }
         });
 
         final EditTextPreference networkInterval = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_LOCATION_NETWORK);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_LOCATION_NETWORK).length() > 0) {
-            networkInterval.setSummary(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_LOCATION_NETWORK) + " seconds");
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_LOCATION_NETWORK).length() > 0) {
+            networkInterval.setSummary(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_LOCATION_NETWORK) + " seconds");
         }
-        networkInterval.setText(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_LOCATION_NETWORK));
+        networkInterval.setText(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_LOCATION_NETWORK));
         networkInterval.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.FREQUENCY_LOCATION_NETWORK, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_LOCATION_NETWORK, (String) newValue);
                 networkInterval.setSummary((String) newValue + " seconds");
-                framework.startLocations(sContext);
+                Aware.startLocations(awareContext);
                 return true;
             }
         });
 
         final EditTextPreference gpsAccuracy = (EditTextPreference) findPreference(Aware_Preferences.MIN_LOCATION_GPS_ACCURACY);
-        if (Aware.getSetting(sContext, Aware_Preferences.MIN_LOCATION_GPS_ACCURACY).length() > 0) {
-            gpsAccuracy.setSummary(Aware.getSetting(sContext, Aware_Preferences.MIN_LOCATION_GPS_ACCURACY) + " meters");
+        if (Aware.getSetting(awareContext, Aware_Preferences.MIN_LOCATION_GPS_ACCURACY).length() > 0) {
+            gpsAccuracy.setSummary(Aware.getSetting(awareContext, Aware_Preferences.MIN_LOCATION_GPS_ACCURACY) + " meters");
         }
-        gpsAccuracy.setText(Aware.getSetting(sContext, Aware_Preferences.MIN_LOCATION_GPS_ACCURACY));
+        gpsAccuracy.setText(Aware.getSetting(awareContext, Aware_Preferences.MIN_LOCATION_GPS_ACCURACY));
         gpsAccuracy.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.MIN_LOCATION_GPS_ACCURACY, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.MIN_LOCATION_GPS_ACCURACY, (String) newValue);
                 gpsAccuracy.setSummary((String) newValue + " meters");
-                framework.startLocations(sContext);
+                Aware.startLocations(awareContext);
                 return true;
             }
         });
 
         final EditTextPreference networkAccuracy = (EditTextPreference) findPreference(Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY);
-        if (Aware.getSetting(sContext, Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY).length() > 0) {
-            networkAccuracy.setSummary(Aware.getSetting(sContext, Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY) + " meters");
+        if (Aware.getSetting(awareContext, Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY).length() > 0) {
+            networkAccuracy.setSummary(Aware.getSetting(awareContext, Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY) + " meters");
         }
-        networkAccuracy.setText(Aware.getSetting(sContext, Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY));
+        networkAccuracy.setText(Aware.getSetting(awareContext, Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY));
         networkAccuracy.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY, (String) newValue);
                 networkAccuracy.setSummary((String) newValue + " meters");
-                framework.startLocations(sContext);
+                Aware.startLocations(awareContext);
                 return true;
             }
         });
 
         final EditTextPreference expirateTime = (EditTextPreference) findPreference(Aware_Preferences.LOCATION_EXPIRATION_TIME);
-        if (Aware.getSetting(sContext, Aware_Preferences.LOCATION_EXPIRATION_TIME).length() > 0) {
-            expirateTime.setSummary(Aware.getSetting(sContext, Aware_Preferences.LOCATION_EXPIRATION_TIME) + " seconds");
+        if (Aware.getSetting(awareContext, Aware_Preferences.LOCATION_EXPIRATION_TIME).length() > 0) {
+            expirateTime.setSummary(Aware.getSetting(awareContext, Aware_Preferences.LOCATION_EXPIRATION_TIME) + " seconds");
         }
-        expirateTime.setText(Aware.getSetting(sContext, Aware_Preferences.LOCATION_EXPIRATION_TIME));
+        expirateTime.setText(Aware.getSetting(awareContext, Aware_Preferences.LOCATION_EXPIRATION_TIME));
         expirateTime.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.LOCATION_EXPIRATION_TIME, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.LOCATION_EXPIRATION_TIME, (String) newValue);
                 expirateTime.setSummary((String) newValue + " seconds");
-                framework.startLocations(sContext);
+                Aware.startLocations(awareContext);
                 return true;
             }
         });
@@ -1378,47 +970,47 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         final CheckBoxPreference network_traffic = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_NETWORK_TRAFFIC);
-        network_traffic.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_NETWORK_TRAFFIC).equals("true"));
+        network_traffic.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_NETWORK_TRAFFIC).equals("true"));
         network_traffic.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_NETWORK_TRAFFIC, network_traffic.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_NETWORK_TRAFFIC, network_traffic.isChecked());
                 if (network_traffic.isChecked()) {
-                    framework.startTraffic(sContext);
+                    Aware.startTraffic(awareContext);
                 } else {
-                    framework.stopTraffic(sContext);
+                    Aware.stopTraffic(awareContext);
                 }
                 return true;
             }
         });
 
         final EditTextPreference frequencyTraffic = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC).length() > 0) {
-            frequencyTraffic.setSummary(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC) + " seconds");
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC).length() > 0) {
+            frequencyTraffic.setSummary(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC) + " seconds");
         }
-        frequencyTraffic.setText(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC));
+        frequencyTraffic.setText(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC));
         frequencyTraffic.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC, (String) newValue);
                 frequencyTraffic.setSummary((String) newValue + " seconds");
                 if (network_traffic.isChecked()) {
-                    framework.startTraffic(sContext);
+                    Aware.startTraffic(awareContext);
                 }
                 return true;
             }
         });
 
         final CheckBoxPreference network = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_NETWORK_EVENTS);
-        network.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_NETWORK_EVENTS).equals("true"));
+        network.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_NETWORK_EVENTS).equals("true"));
         network.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_NETWORK_EVENTS, network.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_NETWORK_EVENTS, network.isChecked());
                 if (network.isChecked()) {
-                    framework.startNetwork(sContext);
+                    Aware.startNetwork(awareContext);
                 } else {
-                    framework.stopNetwork(sContext);
+                    Aware.stopNetwork(awareContext);
                 }
                 return true;
             }
@@ -1430,15 +1022,15 @@ public class Aware_Preferences extends Aware_Activity {
      */
     private void screen() {
         final CheckBoxPreference screen = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_SCREEN);
-        screen.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_SCREEN).equals("true"));
+        screen.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_SCREEN).equals("true"));
         screen.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_SCREEN, screen.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_SCREEN, screen.isChecked());
                 if (screen.isChecked()) {
-                    framework.startScreen(sContext);
+                    Aware.startScreen(awareContext);
                 } else {
-                    framework.stopScreen(sContext);
+                    Aware.stopScreen(awareContext);
                 }
                 return true;
             }
@@ -1456,31 +1048,31 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         final CheckBoxPreference wifi = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_WIFI);
-        wifi.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_WIFI).equals("true"));
+        wifi.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_WIFI).equals("true"));
         wifi.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_WIFI, wifi.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_WIFI, wifi.isChecked());
                 if (wifi.isChecked()) {
-                    framework.startWiFi(sContext);
+                    Aware.startWiFi(awareContext);
                 } else {
-                    framework.stopWiFi(sContext);
+                    Aware.stopWiFi(awareContext);
                 }
                 return true;
             }
         });
 
         final EditTextPreference wifiInterval = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_WIFI);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_WIFI).length() > 0) {
-            wifiInterval.setSummary(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_WIFI) + " seconds");
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_WIFI).length() > 0) {
+            wifiInterval.setSummary(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_WIFI) + " seconds");
         }
-        wifiInterval.setText(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_WIFI));
+        wifiInterval.setText(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_WIFI));
         wifiInterval.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.FREQUENCY_WIFI, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_WIFI, (String) newValue);
                 wifiInterval.setSummary((String) newValue + " seconds");
-                framework.startWiFi(sContext);
+                Aware.startWiFi(awareContext);
                 return true;
             }
         });
@@ -1491,31 +1083,31 @@ public class Aware_Preferences extends Aware_Activity {
      */
     private void processor() {
         final CheckBoxPreference processor = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_PROCESSOR);
-        processor.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_PROCESSOR).equals("true"));
+        processor.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_PROCESSOR).equals("true"));
         processor.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_PROCESSOR, processor.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_PROCESSOR, processor.isChecked());
                 if (processor.isChecked()) {
-                    framework.startProcessor(sContext);
+                    Aware.startProcessor(awareContext);
                 } else {
-                    framework.stopProcessor(sContext);
+                    Aware.stopProcessor(awareContext);
                 }
                 return true;
             }
         });
 
         final EditTextPreference frequencyProcessor = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_PROCESSOR);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_PROCESSOR).length() > 0) {
-            frequencyProcessor.setSummary(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_PROCESSOR) + " seconds");
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_PROCESSOR).length() > 0) {
+            frequencyProcessor.setSummary(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_PROCESSOR) + " seconds");
         }
-        frequencyProcessor.setText(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_PROCESSOR));
+        frequencyProcessor.setText(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_PROCESSOR));
         frequencyProcessor.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.FREQUENCY_PROCESSOR, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_PROCESSOR, (String) newValue);
                 frequencyProcessor.setSummary((String) newValue + " seconds");
-                framework.startProcessor(sContext);
+                Aware.startProcessor(awareContext);
                 return true;
             }
         });
@@ -1532,31 +1124,31 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         final CheckBoxPreference timeZone = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_TIMEZONE);
-        timeZone.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_TIMEZONE).equals("true"));
+        timeZone.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_TIMEZONE).equals("true"));
         timeZone.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_TIMEZONE, timeZone.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_TIMEZONE, timeZone.isChecked());
                 if (timeZone.isChecked()) {
-                    framework.startTimeZone(sContext);
+                    Aware.startTimeZone(awareContext);
                 } else {
-                    framework.stopTimeZone(sContext);
+                    Aware.stopTimeZone(awareContext);
                 }
                 return true;
             }
         });
 
         final EditTextPreference frequencyTimeZone = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_TIMEZONE);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_TIMEZONE).length() > 0) {
-            frequencyTimeZone.setSummary(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_TIMEZONE) + " seconds");
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_TIMEZONE).length() > 0) {
+            frequencyTimeZone.setSummary(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_TIMEZONE) + " seconds");
         }
-        frequencyTimeZone.setText(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_TIMEZONE));
+        frequencyTimeZone.setText(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_TIMEZONE));
         frequencyTimeZone.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.FREQUENCY_TIMEZONE, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_TIMEZONE, (String) newValue);
                 frequencyTimeZone.setSummary((String) newValue + " seconds");
-                framework.startTimeZone(sContext);
+                Aware.startTimeZone(awareContext);
                 return true;
             }
         });
@@ -1578,39 +1170,39 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         final CheckBoxPreference light = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_LIGHT);
-        light.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_LIGHT).equals("true"));
+        light.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_LIGHT).equals("true"));
         light.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 if (mSensorMgr.getDefaultSensor(Sensor.TYPE_LIGHT) == null) {
-                    sPreferences.showDialog(DIALOG_ERROR_MISSING_SENSOR);
+                    clientUI.showDialog(DIALOG_ERROR_MISSING_SENSOR);
                     light.setChecked(false);
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_LIGHT, false);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_LIGHT, false);
                     return false;
                 }
 
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_LIGHT, light.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_LIGHT, light.isChecked());
                 if (light.isChecked()) {
-                    framework.startLight(sContext);
+                    Aware.startLight(awareContext);
                 } else {
-                    framework.stopLight(sContext);
+                    Aware.stopLight(awareContext);
                 }
                 return true;
             }
         });
 
-        final ListPreference frequency_light = (ListPreference) findPreference(FREQUENCY_LIGHT);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_LIGHT).length() > 0) {
-            String freq = Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_LIGHT);
+        final ListPreference frequency_light = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_LIGHT);
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_LIGHT).length() > 0) {
+            String freq = Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_LIGHT);
             frequency_light.setSummary(freq);
         }
-        frequency_light.setDefaultValue(Aware.getSetting(sContext, FREQUENCY_LIGHT));
+        frequency_light.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_LIGHT));
         frequency_light.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, FREQUENCY_LIGHT, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_LIGHT, (String) newValue);
                 frequency_light.setSummary((String) newValue);
-                framework.startLight(sContext);
+                Aware.startLight(awareContext);
                 return true;
             }
         });
@@ -1631,40 +1223,40 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         final CheckBoxPreference magnetometer = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_MAGNETOMETER);
-        magnetometer.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_MAGNETOMETER).equals("true"));
+        magnetometer.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_MAGNETOMETER).equals("true"));
         magnetometer.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
 
                 if (mSensorMgr.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) == null) {
-                    sPreferences.showDialog(DIALOG_ERROR_MISSING_SENSOR);
+                    clientUI.showDialog(DIALOG_ERROR_MISSING_SENSOR);
                     magnetometer.setChecked(false);
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_MAGNETOMETER, false);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_MAGNETOMETER, false);
                     return false;
                 }
 
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_MAGNETOMETER, magnetometer.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_MAGNETOMETER, magnetometer.isChecked());
                 if (magnetometer.isChecked()) {
-                    framework.startMagnetometer(sContext);
+                    Aware.startMagnetometer(awareContext);
                 } else {
-                    framework.stopMagnetometer(sContext);
+                    Aware.stopMagnetometer(awareContext);
                 }
                 return true;
             }
         });
 
-        final ListPreference frequency_magnetometer = (ListPreference) findPreference(FREQUENCY_MAGNETOMETER);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_MAGNETOMETER).length() > 0) {
-            String freq = Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_MAGNETOMETER);
+        final ListPreference frequency_magnetometer = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_MAGNETOMETER);
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_MAGNETOMETER).length() > 0) {
+            String freq = Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_MAGNETOMETER);
             frequency_magnetometer.setSummary(freq);
         }
-        frequency_magnetometer.setDefaultValue(Aware.getSetting(sContext, FREQUENCY_MAGNETOMETER));
+        frequency_magnetometer.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_MAGNETOMETER));
         frequency_magnetometer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, FREQUENCY_MAGNETOMETER, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_MAGNETOMETER, (String) newValue);
                 frequency_magnetometer.setSummary((String) newValue);
-                framework.startMagnetometer(sContext);
+                Aware.startMagnetometer(awareContext);
                 return true;
             }
         });
@@ -1685,40 +1277,40 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         final CheckBoxPreference pressure = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_BAROMETER);
-        pressure.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_BAROMETER).equals("true"));
+        pressure.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_BAROMETER).equals("true"));
         pressure.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
 
                 if (mSensorMgr.getDefaultSensor(Sensor.TYPE_PRESSURE) == null) {
-                    sPreferences.showDialog(DIALOG_ERROR_MISSING_SENSOR);
+                    clientUI.showDialog(DIALOG_ERROR_MISSING_SENSOR);
                     pressure.setChecked(false);
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_BAROMETER, false);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_BAROMETER, false);
                     return false;
                 }
 
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_BAROMETER, pressure.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_BAROMETER, pressure.isChecked());
                 if (pressure.isChecked()) {
-                    framework.startBarometer(sContext);
+                    Aware.startBarometer(awareContext);
                 } else {
-                    framework.stopBarometer(sContext);
+                    Aware.stopBarometer(awareContext);
                 }
                 return true;
             }
         });
 
-        final ListPreference frequency_pressure = (ListPreference) findPreference(FREQUENCY_BAROMETER);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_BAROMETER).length() > 0) {
-            String freq = Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_BAROMETER);
+        final ListPreference frequency_pressure = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_BAROMETER);
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_BAROMETER).length() > 0) {
+            String freq = Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_BAROMETER);
             frequency_pressure.setSummary(freq);
         }
-        frequency_pressure.setDefaultValue(Aware.getSetting(sContext, FREQUENCY_BAROMETER));
+        frequency_pressure.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_BAROMETER));
         frequency_pressure.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, FREQUENCY_BAROMETER, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_BAROMETER, (String) newValue);
                 frequency_pressure.setSummary((String) newValue);
-                framework.startBarometer(sContext);
+                Aware.startBarometer(awareContext);
                 return true;
             }
         });
@@ -1740,40 +1332,40 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         final CheckBoxPreference proximity = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_PROXIMITY);
-        proximity.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_PROXIMITY).equals("true"));
+        proximity.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_PROXIMITY).equals("true"));
         proximity.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
 
                 if (mSensorMgr.getDefaultSensor(Sensor.TYPE_PROXIMITY) == null) {
-                    sPreferences.showDialog(DIALOG_ERROR_MISSING_SENSOR);
+                    clientUI.showDialog(DIALOG_ERROR_MISSING_SENSOR);
                     proximity.setChecked(false);
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_PROXIMITY, false);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_PROXIMITY, false);
                     return false;
                 }
 
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_PROXIMITY, proximity.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_PROXIMITY, proximity.isChecked());
                 if (proximity.isChecked()) {
-                    framework.startProximity(sContext);
+                    Aware.startProximity(awareContext);
                 } else {
-                    framework.stopProximity(sContext);
+                    Aware.stopProximity(awareContext);
                 }
                 return true;
             }
         });
 
-        final ListPreference frequency_proximity = (ListPreference) findPreference(FREQUENCY_PROXIMITY);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_PROXIMITY).length() > 0) {
-            String freq = Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_PROXIMITY);
+        final ListPreference frequency_proximity = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_PROXIMITY);
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_PROXIMITY).length() > 0) {
+            String freq = Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_PROXIMITY);
             frequency_proximity.setSummary(freq);
         }
-        frequency_proximity.setDefaultValue(Aware.getSetting(sContext, FREQUENCY_PROXIMITY));
+        frequency_proximity.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_PROXIMITY));
         frequency_proximity.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, FREQUENCY_PROXIMITY, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_PROXIMITY, (String) newValue);
                 frequency_proximity.setSummary((String) newValue);
-                framework.startProximity(sContext);
+                Aware.startProximity(awareContext);
                 return true;
             }
         });
@@ -1795,39 +1387,39 @@ public class Aware_Preferences extends Aware_Activity {
         }
 
         final CheckBoxPreference rotation = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_ROTATION);
-        rotation.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_ROTATION).equals("true"));
+        rotation.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_ROTATION).equals("true"));
         rotation.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 if (mSensorMgr.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) == null) {
-                    sPreferences.showDialog(DIALOG_ERROR_MISSING_SENSOR);
+                    clientUI.showDialog(DIALOG_ERROR_MISSING_SENSOR);
                     rotation.setChecked(false);
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_ROTATION, false);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_ROTATION, false);
                     return false;
                 }
 
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_ROTATION, rotation.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_ROTATION, rotation.isChecked());
                 if (rotation.isChecked()) {
-                    framework.startRotation(sContext);
+                    Aware.startRotation(awareContext);
                 } else {
-                    framework.stopRotation(sContext);
+                    Aware.stopRotation(awareContext);
                 }
                 return true;
             }
         });
 
-        final ListPreference frequency_rotation = (ListPreference) findPreference(FREQUENCY_ROTATION);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_ROTATION).length() > 0) {
-            String freq = Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_ROTATION);
+        final ListPreference frequency_rotation = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_ROTATION);
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_ROTATION).length() > 0) {
+            String freq = Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_ROTATION);
             frequency_rotation.setSummary(freq);
         }
-        frequency_rotation.setDefaultValue(Aware.getSetting(sContext, FREQUENCY_ROTATION));
+        frequency_rotation.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_ROTATION));
         frequency_rotation.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, FREQUENCY_ROTATION, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_ROTATION, (String) newValue);
                 frequency_rotation.setSummary((String) newValue);
-                framework.startRotation(sContext);
+                Aware.startRotation(awareContext);
                 return true;
             }
         });
@@ -1843,15 +1435,15 @@ public class Aware_Preferences extends Aware_Activity {
             return;
         }
         final CheckBoxPreference telephony = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_TELEPHONY);
-        telephony.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_TELEPHONY).equals("true"));
+        telephony.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_TELEPHONY).equals("true"));
         telephony.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext, Aware_Preferences.STATUS_TELEPHONY, telephony.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_TELEPHONY, telephony.isChecked());
                 if (telephony.isChecked()) {
-                    framework.startTelephony(sContext);
+                    Aware.startTelephony(awareContext);
                 } else {
-                    framework.stopTelephony(sContext);
+                    Aware.stopTelephony(awareContext);
                 }
                 return true;
             }
@@ -1871,23 +1463,23 @@ public class Aware_Preferences extends Aware_Activity {
      */
     private void webservices() {
         final CheckBoxPreference webservice = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_WEBSERVICE);
-        webservice.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_WEBSERVICE).equals("true"));
+        webservice.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_WEBSERVICE).equals("true"));
         webservice.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
 
-                if (Aware.getSetting(sContext, Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
-                    sPreferences.showDialog(DIALOG_ERROR_MISSING_PARAMETERS);
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_WEBSERVICE, false);
+                if (Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
+                    clientUI.showDialog(DIALOG_ERROR_MISSING_PARAMETERS);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_WEBSERVICE, false);
                     webservice.setChecked(false);
                     return false;
                 } else {
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_WEBSERVICE, webservice.isChecked());
-                    if (webservice.isChecked() && Aware.getSetting(sContext, WEBSERVICE_SERVER).length() > 0) {
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_WEBSERVICE, webservice.isChecked());
+                    if (webservice.isChecked() && Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER).length() > 0) {
                         //setup and send data
-                        Intent study_config = new Intent(sContext, StudyConfig.class);
-                        study_config.putExtra("study_url", Aware.getSetting(sContext, WEBSERVICE_SERVER));
-                        sContext.startService(study_config);
+                        Intent study_config = new Intent(awareContext, StudyConfig.class);
+                        study_config.putExtra("study_url", Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER));
+                        awareContext.startService(study_config);
                     }
                     return true;
                 }
@@ -1895,46 +1487,46 @@ public class Aware_Preferences extends Aware_Activity {
         });
 
         final EditTextPreference webservice_server = (EditTextPreference) findPreference(Aware_Preferences.WEBSERVICE_SERVER);
-        webservice_server.setText(Aware.getSetting(sContext, Aware_Preferences.WEBSERVICE_SERVER));
-        if (Aware.getSetting(sContext, Aware_Preferences.WEBSERVICE_SERVER).length() > 0) {
-            webservice_server.setSummary("Server: " + Aware.getSetting(sContext, Aware_Preferences.WEBSERVICE_SERVER));
+        webservice_server.setText(Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER));
+        if (Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER).length() > 0) {
+            webservice_server.setSummary("Server: " + Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER));
         }
         webservice_server.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.WEBSERVICE_SERVER, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER, (String) newValue);
                 webservice_server.setSummary("Server: " + (String) newValue);
                 return true;
             }
         });
 
         final CheckBoxPreference webservice_wifi_only = (CheckBoxPreference) findPreference(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
-        webservice_wifi_only.setChecked(Aware.getSetting(sContext, Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true"));
+        webservice_wifi_only.setChecked(Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true"));
         webservice_wifi_only.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext, Aware_Preferences.WEBSERVICE_WIFI_ONLY, webservice_wifi_only.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.WEBSERVICE_WIFI_ONLY, webservice_wifi_only.isChecked());
                 return true;
             }
         });
 
         final EditTextPreference frequency_webservice = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_WEBSERVICE);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_WEBSERVICE).length() > 0) {
-            frequency_webservice.setSummary(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_WEBSERVICE) + " minutes");
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_WEBSERVICE).length() > 0) {
+            frequency_webservice.setSummary(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_WEBSERVICE) + " minutes");
         }
-        frequency_webservice.setText(Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_WEBSERVICE));
+        frequency_webservice.setText(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_WEBSERVICE));
         frequency_webservice.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.FREQUENCY_WEBSERVICE, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_WEBSERVICE, (String) newValue);
                 frequency_webservice.setSummary((String) newValue + " minutes");
                 return true;
             }
         });
 
-        final ListPreference clean_old_data = (ListPreference) findPreference(FREQUENCY_CLEAN_OLD_DATA);
-        if (Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0) {
-            String freq = Aware.getSetting(sContext, Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA);
+        final ListPreference clean_old_data = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA);
+        if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0) {
+            String freq = Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA);
             if (freq.equals("0")) {
                 clean_old_data.setSummary("Never");
             } else if (freq.equals("1")) {
@@ -1943,11 +1535,11 @@ public class Aware_Preferences extends Aware_Activity {
                 clean_old_data.setSummary("Monthly");
             }
         }
-        clean_old_data.setDefaultValue(Aware.getSetting(sContext, FREQUENCY_CLEAN_OLD_DATA));
+        clean_old_data.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA));
         clean_old_data.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, FREQUENCY_CLEAN_OLD_DATA, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA, (String) newValue);
                 if (((String) newValue).equals("0")) {
                     clean_old_data.setSummary("Never");
                 } else if (((String) newValue).equals("1")) {
@@ -1965,21 +1557,21 @@ public class Aware_Preferences extends Aware_Activity {
      */
     private void mqtt() {
         final CheckBoxPreference mqtt = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_MQTT);
-        mqtt.setChecked(Aware.getSetting(sContext, Aware_Preferences.STATUS_MQTT).equals("true"));
+        mqtt.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_MQTT).equals("true"));
         mqtt.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                if (Aware.getSetting(sContext, Aware_Preferences.MQTT_SERVER).length() == 0) {
-                    sPreferences.showDialog(DIALOG_ERROR_MISSING_PARAMETERS);
+                if (Aware.getSetting(awareContext, Aware_Preferences.MQTT_SERVER).length() == 0) {
+                    clientUI.showDialog(DIALOG_ERROR_MISSING_PARAMETERS);
                     mqtt.setChecked(false);
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_MQTT, false);
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_MQTT, false);
                     return false;
                 } else {
-                    Aware.setSetting(sContext, Aware_Preferences.STATUS_MQTT, mqtt.isChecked());
+                    Aware.setSetting(awareContext, Aware_Preferences.STATUS_MQTT, mqtt.isChecked());
                     if (mqtt.isChecked()) {
-                        framework.startMQTT(sContext);
+                        Aware.startMQTT(awareContext);
                     } else {
-                        framework.stopMQTT(sContext);
+                        Aware.stopMQTT(awareContext);
                     }
                     return true;
                 }
@@ -1987,85 +1579,85 @@ public class Aware_Preferences extends Aware_Activity {
         });
 
         final EditTextPreference mqttServer = (EditTextPreference) findPreference(Aware_Preferences.MQTT_SERVER);
-        mqttServer.setText(Aware.getSetting(sContext, Aware_Preferences.MQTT_SERVER));
-        if (Aware.getSetting(sContext, Aware_Preferences.MQTT_SERVER).length() > 0) {
-            mqttServer.setSummary("Server: " + Aware.getSetting(sContext, Aware_Preferences.MQTT_SERVER));
+        mqttServer.setText(Aware.getSetting(awareContext, Aware_Preferences.MQTT_SERVER));
+        if (Aware.getSetting(awareContext, Aware_Preferences.MQTT_SERVER).length() > 0) {
+            mqttServer.setSummary("Server: " + Aware.getSetting(awareContext, Aware_Preferences.MQTT_SERVER));
         }
         mqttServer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.MQTT_SERVER, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.MQTT_SERVER, (String) newValue);
                 mqttServer.setSummary("Server: " + (String) newValue);
                 return true;
             }
         });
 
         final EditTextPreference mqttPort = (EditTextPreference) findPreference(Aware_Preferences.MQTT_PORT);
-        if (Aware.getSetting(sContext, Aware_Preferences.MQTT_PORT).length() > 0) {
-            mqttPort.setSummary(Aware.getSetting(sContext, Aware_Preferences.MQTT_PORT));
+        if (Aware.getSetting(awareContext, Aware_Preferences.MQTT_PORT).length() > 0) {
+            mqttPort.setSummary(Aware.getSetting(awareContext, Aware_Preferences.MQTT_PORT));
         }
-        mqttPort.setText(Aware.getSetting(sContext, Aware_Preferences.MQTT_PORT));
+        mqttPort.setText(Aware.getSetting(awareContext, Aware_Preferences.MQTT_PORT));
         mqttPort.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.MQTT_PORT, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.MQTT_PORT, (String) newValue);
                 return true;
             }
         });
 
         final EditTextPreference mqttUsername = (EditTextPreference) findPreference(Aware_Preferences.MQTT_USERNAME);
-        if (Aware.getSetting(sContext, Aware_Preferences.MQTT_USERNAME).length() > 0) {
-            mqttUsername.setSummary(Aware.getSetting(sContext, Aware_Preferences.MQTT_USERNAME));
+        if (Aware.getSetting(awareContext, Aware_Preferences.MQTT_USERNAME).length() > 0) {
+            mqttUsername.setSummary(Aware.getSetting(awareContext, Aware_Preferences.MQTT_USERNAME));
         }
-        mqttUsername.setText(Aware.getSetting(sContext, Aware_Preferences.MQTT_USERNAME));
+        mqttUsername.setText(Aware.getSetting(awareContext, Aware_Preferences.MQTT_USERNAME));
         mqttUsername.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.MQTT_USERNAME, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.MQTT_USERNAME, (String) newValue);
                 return true;
             }
         });
 
         final EditTextPreference mqttPassword = (EditTextPreference) findPreference(Aware_Preferences.MQTT_PASSWORD);
-        mqttPassword.setText(Aware.getSetting(sContext, Aware_Preferences.MQTT_PASSWORD));
+        mqttPassword.setText(Aware.getSetting(awareContext, Aware_Preferences.MQTT_PASSWORD));
         mqttPassword.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.MQTT_PASSWORD, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.MQTT_PASSWORD, (String) newValue);
                 return true;
             }
         });
 
         final EditTextPreference mqttKeepAlive = (EditTextPreference) findPreference(Aware_Preferences.MQTT_KEEP_ALIVE);
-        if (Aware.getSetting(sContext, Aware_Preferences.MQTT_KEEP_ALIVE).length() > 0) {
-            mqttKeepAlive.setSummary(Aware.getSetting(sContext, Aware_Preferences.MQTT_KEEP_ALIVE) + " seconds");
+        if (Aware.getSetting(awareContext, Aware_Preferences.MQTT_KEEP_ALIVE).length() > 0) {
+            mqttKeepAlive.setSummary(Aware.getSetting(awareContext, Aware_Preferences.MQTT_KEEP_ALIVE) + " seconds");
         }
-        mqttKeepAlive.setText(Aware.getSetting(sContext, Aware_Preferences.MQTT_KEEP_ALIVE));
+        mqttKeepAlive.setText(Aware.getSetting(awareContext, Aware_Preferences.MQTT_KEEP_ALIVE));
         mqttKeepAlive.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.MQTT_KEEP_ALIVE, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.MQTT_KEEP_ALIVE, (String) newValue);
                 mqttKeepAlive.setSummary((String) newValue + " seconds");
                 return true;
             }
         });
 
         final EditTextPreference mqttQoS = (EditTextPreference) findPreference(Aware_Preferences.MQTT_QOS);
-        mqttQoS.setText(Aware.getSetting(sContext, Aware_Preferences.MQTT_QOS));
+        mqttQoS.setText(Aware.getSetting(awareContext, Aware_Preferences.MQTT_QOS));
         mqttQoS.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.MQTT_QOS, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.MQTT_QOS, (String) newValue);
                 return true;
             }
         });
 
         final EditTextPreference mqttProtocol = (EditTextPreference) findPreference(Aware_Preferences.MQTT_PROTOCOL);
-        mqttProtocol.setText(Aware.getSetting(sContext, Aware_Preferences.MQTT_PROTOCOL));
+        mqttProtocol.setText(Aware.getSetting(awareContext, Aware_Preferences.MQTT_PROTOCOL));
         mqttProtocol.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.MQTT_PROTOCOL, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.MQTT_PROTOCOL, (String) newValue);
                 return true;
             }
         });
@@ -2080,33 +1672,33 @@ public class Aware_Preferences extends Aware_Activity {
      */
     public void developerOptions() {
         final CheckBoxPreference debug_flag = (CheckBoxPreference) findPreference(Aware_Preferences.DEBUG_FLAG);
-        debug_flag.setChecked(Aware.getSetting(sContext, Aware_Preferences.DEBUG_FLAG).equals("true"));
+        debug_flag.setChecked(Aware.getSetting(awareContext, Aware_Preferences.DEBUG_FLAG).equals("true"));
         debug_flag.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 Aware.DEBUG = debug_flag.isChecked();
-                Aware.setSetting(sContext, Aware_Preferences.DEBUG_FLAG, debug_flag.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.DEBUG_FLAG, debug_flag.isChecked());
                 return true;
             }
         });
 
         final EditTextPreference debug_tag = (EditTextPreference) findPreference(Aware_Preferences.DEBUG_TAG);
-        debug_tag.setText(Aware.getSetting(sContext, Aware_Preferences.DEBUG_TAG));
+        debug_tag.setText(Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG));
         debug_tag.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 Aware.TAG = (String) newValue;
-                Aware.setSetting(sContext, Aware_Preferences.DEBUG_TAG, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.DEBUG_TAG, (String) newValue);
                 return true;
             }
         });
 
         final CheckBoxPreference auto_update = (CheckBoxPreference) findPreference(Aware_Preferences.AWARE_AUTO_UPDATE);
-        auto_update.setChecked(Aware.getSetting(sContext, Aware_Preferences.AWARE_AUTO_UPDATE).equals("true"));
+        auto_update.setChecked(Aware.getSetting(awareContext, Aware_Preferences.AWARE_AUTO_UPDATE).equals("true"));
 
         PackageInfo awareInfo = null;
         try {
-            awareInfo = sContext.getPackageManager().getPackageInfo(sContext.getPackageName(), PackageManager.GET_ACTIVITIES);
+            awareInfo = awareContext.getPackageManager().getPackageInfo(awareContext.getPackageName(), PackageManager.GET_ACTIVITIES);
         } catch (NameNotFoundException e) {
             e.printStackTrace();
         }
@@ -2114,7 +1706,7 @@ public class Aware_Preferences extends Aware_Activity {
         auto_update.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext, Aware_Preferences.AWARE_AUTO_UPDATE, auto_update.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.AWARE_AUTO_UPDATE, auto_update.isChecked());
                 if (auto_update.isChecked()) {
                     sendBroadcast(new Intent(Aware.ACTION_AWARE_CHECK_UPDATE));
                 }
@@ -2123,35 +1715,35 @@ public class Aware_Preferences extends Aware_Activity {
         });
 
         final CheckBoxPreference debug_db_slow = (CheckBoxPreference) findPreference(Aware_Preferences.DEBUG_DB_SLOW);
-        debug_db_slow.setChecked(Aware.getSetting(sContext, Aware_Preferences.DEBUG_DB_SLOW).equals("true"));
+        debug_db_slow.setChecked(Aware.getSetting(awareContext, Aware_Preferences.DEBUG_DB_SLOW).equals("true"));
         debug_db_slow.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(sContext, Aware_Preferences.DEBUG_DB_SLOW, debug_db_slow.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.DEBUG_DB_SLOW, debug_db_slow.isChecked());
                 return true;
             }
         });
 
         final EditTextPreference device_id = (EditTextPreference) findPreference(Aware_Preferences.DEVICE_ID);
-        device_id.setSummary("UUID: " + Aware.getSetting(sContext, DEVICE_ID));
-        device_id.setText(Aware.getSetting(sContext, Aware_Preferences.DEVICE_ID));
+        device_id.setSummary("UUID: " + Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID));
+        device_id.setText(Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID));
         device_id.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.DEVICE_ID, (String) newValue);
-                device_id.setSummary("UUID: " + Aware.getSetting(sContext, Aware_Preferences.DEVICE_ID));
+                Aware.setSetting(awareContext, Aware_Preferences.DEVICE_ID, (String) newValue);
+                device_id.setSummary("UUID: " + Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID));
                 return true;
             }
         });
 
         final EditTextPreference group_id = (EditTextPreference) findPreference(Aware_Preferences.GROUP_ID);
-        group_id.setSummary("Group: " + Aware.getSetting(sContext, GROUP_ID));
-        group_id.setText(Aware.getSetting(sContext, Aware_Preferences.GROUP_ID));
+        group_id.setSummary("Group: " + Aware.getSetting(awareContext, Aware_Preferences.GROUP_ID));
+        group_id.setText(Aware.getSetting(awareContext, Aware_Preferences.GROUP_ID));
         group_id.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(sContext, Aware_Preferences.GROUP_ID, (String) newValue);
-                group_id.setSummary("Group: " + Aware.getSetting(sContext, Aware_Preferences.GROUP_ID));
+                Aware.setSetting(awareContext, Aware_Preferences.GROUP_ID, (String) newValue);
+                group_id.setSummary("Group: " + Aware.getSetting(awareContext, Aware_Preferences.GROUP_ID));
                 return true;
             }
         });

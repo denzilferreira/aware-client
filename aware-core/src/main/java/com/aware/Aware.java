@@ -34,6 +34,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
@@ -631,7 +632,8 @@ public class Aware extends Service {
             if (ui != null) {
                 //Set card look-n-feel
                 ui.setBackgroundColor(Color.WHITE);
-                ui.setPadding(20, 20, 20, 20);
+                ui.setPadding(0, 0, 0, 10);
+                ui.setMinimumWidth(ViewGroup.LayoutParams.MATCH_PARENT);
                 card.addView(ui);
 
                 //Check if plugin has settings. Add button if it does.
@@ -1605,7 +1607,7 @@ public class Aware extends Service {
     /**
      * Start active services
      */
-    public void startAWARE() {
+    public static void startAWARE() {
         if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true")) {
             startESM(awareContext);
         } else stopESM(awareContext);
@@ -1722,7 +1724,7 @@ public class Aware extends Service {
     /**
      * Stop all services
      */
-    public void stopAWARE() {
+    public static void stopAWARE() {
         stopApplications(awareContext);
         stopAccelerometer(awareContext);
         stopBattery(awareContext);

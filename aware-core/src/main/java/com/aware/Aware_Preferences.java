@@ -9,6 +9,11 @@ package com.aware;
 public class Aware_Preferences {
 
     /**
+     * Callback ID for joining a study
+     */
+    public static final int REQUEST_JOIN_STUDY = 1;
+
+    /**
      * Activate/deactive AWARE debug messages (boolean)
      */
     public static final String DEBUG_FLAG = "debug_flag";

@@ -17,6 +17,6 @@ public class About extends Aware_Activity {
         WebView about_us = (WebView) findViewById(R.id.about_us);
         WebSettings settings = about_us.getSettings();
         settings.setJavaScriptEnabled(true);
-        about_us.loadUrl("http://www.awareframework.com/contact-us/");
+        about_us.loadUrl("http://www.awareframework.com/team/");
     }
 }

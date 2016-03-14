@@ -16,17 +16,17 @@
             android:layout_height="fill_parent"
             android:padding="0dp"
             android:layout_margin="0dp"
-            android:background="@color/grey_background"
+            android:background="@android:color/white"
             >
             <ListView
                 android:id="@+id/stream_container"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@color/grey_background"
+                android:background="@android:color/white"
                 android:orientation="vertical"
-                android:dividerHeight="10dp"
+                android:dividerHeight="0dp"
                 android:divider="@null"
-                android:padding="10dp" />
+                android:padding="0dp" />
             <ImageButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

@@ -24,7 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.aware.Aware;
-import com.aware.phone.Aware_Preferences;
+import com.aware.Aware_Preferences;
 import com.aware.phone.R;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
