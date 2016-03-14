@@ -39,6 +39,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.aware.providers.Aware_Provider;
@@ -606,12 +607,6 @@ public class Aware extends Service {
         }
 
         String ui_class = package_name + ".ContextCard";
-
-        RelativeLayout card = new RelativeLayout(context);
-        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        params.setMargins(0, 0, 0, 10);
-        card.setLayoutParams(params);
-
         try {
             Context packageContext = context.createPackageContext(package_name, Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY);
 
@@ -630,22 +625,30 @@ public class Aware extends Service {
 
             View ui = (View) m.invoke(fragment, packageContext);
             if (ui != null) {
-                //Set card look-n-feel
                 ui.setBackgroundColor(Color.WHITE);
                 ui.setPadding(0, 0, 0, 10);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    ui.setElevation(5);
-                }
 
-                card.addView(ui);
+                LinearLayout card = new LinearLayout(context);
+                LinearLayout.LayoutParams card_params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                card.setLayoutParams(card_params);
+                card.setOrientation(LinearLayout.VERTICAL);
+
+                LinearLayout info = new LinearLayout(context);
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+                info.setLayoutParams(params);
+                info.setOrientation(LinearLayout.HORIZONTAL);
+                info.setBackgroundColor(Color.parseColor("#33B5E5"));
+
+                TextView plugin_header = new TextView(context);
+                plugin_header.setText(Aware.getPluginName(context, package_name));
+                plugin_header.setTextColor(Color.WHITE);
+                plugin_header.setPadding(10, 0, 0, 0);
+                params.gravity = android.view.Gravity.CENTER_VERTICAL;
+                plugin_header.setLayoutParams(params);
+                info.addView(plugin_header);
 
                 //Check if plugin has settings. Add button if it does.
                 if (isClassAvailable(context, package_name, "Settings")) {
-                    RelativeLayout info = new RelativeLayout(context);
-                    info.setBackgroundColor(Color.WHITE);
-                    info.setPadding(0, 0, 0, 10);
-                    info.setGravity(android.view.Gravity.RIGHT | android.view.Gravity.TOP);
-
                     ImageView infoSettings = new ImageView(context);
                     infoSettings.setBackgroundResource(R.drawable.ic_action_plugin_settings);
                     infoSettings.setAdjustViewBounds(true);
@@ -659,10 +662,14 @@ public class Aware extends Service {
                             context.startActivity(open_settings);
                         }
                     });
-
                     info.addView(infoSettings);
-                    card.addView(info, params);
+
+                    //Add settings shortcut to card
+                    card.addView(info);
                 }
+
+                //Add inflated UI to card
+                card.addView(ui);
 
                 return card;
             } else {

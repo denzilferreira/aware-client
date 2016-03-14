@@ -379,7 +379,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         } catch (MqttPersistenceException e ) { e.printStackTrace(); }
 
         MqttConnectOptions MQTT_OPTIONS = new MqttConnectOptions();
-        MQTT_OPTIONS.setCleanSession( true );
+        MQTT_OPTIONS.setCleanSession( false ); //resume pending messages from server
         MQTT_OPTIONS.setConnectionTimeout( Integer.parseInt(MQTT_KEEPALIVE) + 10 ); //add 10 seconds to keep alive as options timeout
         MQTT_OPTIONS.setKeepAliveInterval( Integer.parseInt(MQTT_KEEPALIVE) );
         if( MQTT_USERNAME.length() > 0 ) MQTT_OPTIONS.setUserName( MQTT_USERNAME );
@@ -473,13 +473,13 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	 */
 	private static boolean publish(String topicName, byte[] payload) {
 	    if( MQTT_CLIENT != null && MQTT_CLIENT.isConnected() ) {
-            MqttTopic topic = MQTT_CLIENT.getTopic(topicName);
-            MqttMessage message = new MqttMessage();
-            message.setPayload(payload);
-            message.setQos( Integer.parseInt(MQTT_QoS) );
-            message.setRetained(true);
             try {
-                topic.publish( message );
+                MqttMessage message = new MqttMessage();
+                message.setPayload(payload);
+                message.setQos( Integer.parseInt(MQTT_QoS) );
+                message.setRetained(true);
+
+                MQTT_CLIENT.publish(topicName, message);
             } catch (MqttPersistenceException e) {
                 if(Aware.DEBUG) Log.e(TAG, e.getMessage());
                 return false;

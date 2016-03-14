@@ -71,11 +71,10 @@ bintray {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile files('libs/mqtt-client-0.4.0.jar')
     compile project(':aware-core')
-    compile 'com.koushikdutta.ion:ion:2.1.6'
-    compile "com.android.support:appcompat-v7:$support_libs"
-    compile "com.android.support:design:$support_libs"
+//    compile 'com.koushikdutta.ion:ion:2.1.6'
+//    compile "com.android.support:appcompat-v7:$support_libs"
+//    compile "com.android.support:design:$support_libs"
     compile "com.android.support:cardview-v7:$support_libs"
     compile "com.google.android.gms:play-services-vision:$google_libs"
 }

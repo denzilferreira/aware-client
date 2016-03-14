@@ -25,6 +25,7 @@ import android.widget.Toast;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
+import com.aware.phone.Aware_Client;
 import com.aware.phone.R;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
@@ -140,7 +141,7 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                             startActivity(stream_ui);
                             break;
                         case 1: //Sensors
-                            Intent sensors_ui = new Intent(getApplicationContext(), Aware_Preferences.class);
+                            Intent sensors_ui = new Intent(getApplicationContext(), Aware_Client.class);
                             startActivity(sensors_ui);
                             break;
                         case 2: //Plugins
