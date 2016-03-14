@@ -32,7 +32,7 @@
                         android:id="@+id/plugins_store_grid"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:background="@color/grey_background"
+                        android:background="@android:color/white"
                         android:columnWidth="80dp"
                         android:padding="5dp"
                         android:numColumns="auto_fit"

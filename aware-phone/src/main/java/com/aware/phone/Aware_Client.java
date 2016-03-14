@@ -151,7 +151,7 @@ public class Aware_Client extends Aware_Activity {
                 finish();
             } else {
                 //Restart AWARE client now that we have the permission to write to external storage
-                Intent preferences = new Intent(this, Aware_Preferences.class);
+                Intent preferences = new Intent(this, Aware_Client.class);
                 preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(preferences);
             }

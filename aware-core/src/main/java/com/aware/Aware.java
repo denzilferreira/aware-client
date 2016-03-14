@@ -607,8 +607,8 @@ public class Aware extends Service {
 
         String ui_class = package_name + ".ContextCard";
 
-        LinearLayout card = new LinearLayout(context);
-        LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        RelativeLayout card = new RelativeLayout(context);
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         params.setMargins(0, 0, 0, 10);
         card.setLayoutParams(params);
 
@@ -633,12 +633,17 @@ public class Aware extends Service {
                 //Set card look-n-feel
                 ui.setBackgroundColor(Color.WHITE);
                 ui.setPadding(0, 0, 0, 10);
-                ui.setMinimumWidth(ViewGroup.LayoutParams.MATCH_PARENT);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    ui.setElevation(5);
+                }
+
                 card.addView(ui);
 
                 //Check if plugin has settings. Add button if it does.
                 if (isClassAvailable(context, package_name, "Settings")) {
                     RelativeLayout info = new RelativeLayout(context);
+                    info.setBackgroundColor(Color.WHITE);
+                    info.setPadding(0, 0, 0, 10);
                     info.setGravity(android.view.Gravity.RIGHT | android.view.Gravity.TOP);
 
                     ImageView infoSettings = new ImageView(context);
@@ -656,8 +661,9 @@ public class Aware extends Service {
                     });
 
                     info.addView(infoSettings);
-                    card.addView(info);
+                    card.addView(info, params);
                 }
+
                 return card;
             } else {
                 return null;
@@ -1313,6 +1319,7 @@ public class Aware extends Service {
      * AWARE Android Package Monitor
      * 1) Checks if a package is a plugin or not
      * 2) Installs a plugin that was just downloaded
+     *
      * @author denzilferreira
      */
     public static class AndroidPackageMonitor extends BroadcastReceiver {
@@ -1361,7 +1368,7 @@ public class Aware extends Service {
 
                 //Installing new
                 try {
-                    ApplicationInfo appInfo = mPkgManager.getApplicationInfo(packageName, PackageManager.GET_ACTIVITIES);
+                    ApplicationInfo appInfo = mPkgManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
                     //Check if this is a package for which we have more info from the server
                     new AwarePluginOnlineInfo().execute(appInfo);
                 } catch (final NameNotFoundException e) {
@@ -1533,6 +1540,7 @@ public class Aware extends Service {
      * @author denzil
      */
     private static final Aware_Broadcaster aware_BR = new Aware_Broadcaster();
+
     public static class Aware_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -1589,6 +1597,7 @@ public class Aware extends Service {
      * Checks if we have access to the storage of the device. Turns off AWARE when we don't, turns it back on when available again.
      */
     private static final Storage_Broadcaster storage_BR = new Storage_Broadcaster();
+
     public static class Storage_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
