@@ -1,4 +1,4 @@
-package com.aware.phone.ui;
+package com.aware.ui;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -15,7 +15,7 @@ import android.widget.ListView;
 
 import com.aware.Aware;
 
-import com.aware.phone.R;
+import com.aware.R;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.utils.Aware_Plugin;
 

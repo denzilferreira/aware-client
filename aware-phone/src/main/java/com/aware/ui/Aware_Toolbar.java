@@ -1,4 +1,4 @@
-package com.aware.phone.ui;
+package com.aware.ui;
 
 import android.content.Context;
 import android.preference.Preference;
@@ -9,7 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.aware.phone.R;
+import com.aware.R;
 
 /**
  * Created by denzil on 29/05/15.

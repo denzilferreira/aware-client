@@ -1,4 +1,4 @@
-package com.aware.phone.ui.qrcode;
+package com.aware.ui.qrcode;
 
 import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.Tracker;

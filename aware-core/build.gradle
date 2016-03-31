@@ -33,6 +33,11 @@ android {
         }
     }
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
     lintOptions {
         abortOnError false
     }
@@ -55,11 +60,11 @@ bintray {
         labels = ['aar','android','framework','aware']
         publicDownloadNumbers = true
         vcsUrl = 'https://github.com/denzilferreira/aware-client.git'
-        desc = "AWARE core library"
+        desc = "AWARE Framework library"
         userOrg = user
         version {
             name = "$version_readable"
-            desc = "AWARE core library"
+            desc = "AWARE Framework"
             released = new Date()
             vcsTag = "$version_readable"
             attributes = ['gradle-plugin': 'com.use.less:com.use.less.gradle:gradle-useless-plugin']

@@ -1,4 +1,4 @@
-package com.aware.phone.ui.qrcode;
+package com.aware.ui.qrcode;
 
 import android.Manifest;
 import android.annotation.SuppressLint;

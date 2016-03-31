@@ -1,4 +1,4 @@
-package com.aware.phone.ui;
+package com.aware.ui;
 
 import android.content.res.Configuration;
 import android.os.Bundle;

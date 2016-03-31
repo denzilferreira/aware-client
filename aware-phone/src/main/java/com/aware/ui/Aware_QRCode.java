@@ -1,4 +1,4 @@
-package com.aware.phone.ui;
+package com.aware.ui;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -25,12 +25,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.aware.Aware;
-import com.aware.phone.R;
-import com.aware.phone.ui.qrcode.BarcodeGraphic;
-import com.aware.phone.ui.qrcode.BarcodeTrackerFactory;
-import com.aware.phone.ui.qrcode.CameraSource;
-import com.aware.phone.ui.qrcode.CameraSourcePreview;
-import com.aware.phone.ui.qrcode.GraphicOverlay;
+import com.aware.R;
+import com.aware.ui.qrcode.BarcodeGraphic;
+import com.aware.ui.qrcode.BarcodeTrackerFactory;
+import com.aware.ui.qrcode.CameraSource;
+import com.aware.ui.qrcode.CameraSourcePreview;
+import com.aware.ui.qrcode.GraphicOverlay;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
 import com.aware.utils.SSLManager;

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.aware">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.aware">
 
     <uses-permission android:name="com.aware.READ_CONTEXT_DATA" />
     <uses-permission android:name="com.aware.WRITE_CONTEXT_DATA" />
