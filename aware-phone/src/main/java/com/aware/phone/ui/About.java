@@ -1,10 +1,10 @@
-package com.aware.ui;
+package com.aware.phone.ui;
 
 import android.os.Bundle;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
-import com.aware.R;
+import com.aware.phone.R;
 
 public class About extends Aware_Activity {
 

@@ -1,4 +1,4 @@
-package com.aware.ui.qrcode;
+package com.aware.phone.ui.qrcode;
 
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.Tracker;

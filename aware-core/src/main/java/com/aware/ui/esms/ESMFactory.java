@@ -15,6 +15,11 @@ public class ESMFactory {
     public ESMFactory() {
         this.queue = new JSONArray();
     }
+
+    public JSONArray getQueue() {
+        return this.queue;
+    }
+
     public ESMFactory addESM(ESM_Question esm) {
         try {
             queue.put(esm.build());
@@ -24,8 +29,18 @@ public class ESMFactory {
         return this;
     }
 
+    public ESMFactory removeESM(int position) {
+        queue.remove(position);
+        return this;
+    }
+
     public String build() {
         return this.queue.toString();
+    }
+
+    public ESMFactory rebuild(JSONArray queue) throws JSONException {
+        this.queue = queue;
+        return this;
     }
 
     public ESM_Question getESM(int esmType, JSONObject esm, int _id) throws JSONException {

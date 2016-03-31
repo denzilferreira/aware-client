@@ -1,4 +1,4 @@
-package com.aware.ui.qrcode;
+package com.aware.phone.ui.qrcode;
 
 import android.Manifest;
 import android.content.Context;

@@ -1,5 +1,5 @@
 
-package com.aware.ui;
+package com.aware.phone.ui;
 
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -34,7 +34,7 @@ import android.widget.Toast;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
 
-import com.aware.R;
+import com.aware.phone.R;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.utils.Http;
 import com.aware.utils.Https;

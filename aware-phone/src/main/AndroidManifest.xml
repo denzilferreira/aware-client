@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.aware">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.aware.phone">
 
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
@@ -58,7 +58,7 @@
         <!-- Activities -->
 
         <activity
-            android:name="com.aware.Aware_Client"
+            android:name="com.aware.phone.Aware_Client"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
             android:icon="@drawable/ic_launcher_aware"
@@ -71,14 +71,14 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.aware.ui.Stream_UI"
+            android:name="com.aware.phone.ui.Stream_UI"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
             android:icon="@drawable/ic_launcher_aware"
             android:label="@string/aware_stream"
             android:launchMode="singleTop"
             android:noHistory="true"
-            android:parentActivityName="com.aware.Aware_Client"
+            android:parentActivityName="com.aware.phone.Aware_Client"
             android:theme="@style/Theme.Aware">
             <intent-filter>
                 <action android:name="android.intent.action.ASSIST" />
@@ -92,43 +92,43 @@
                 android:resource="@drawable/ic_launcher_aware" />
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.aware.Aware_Client" />
+                android:value="com.aware.phone.Aware_Client" />
         </activity>
         <activity
-            android:name="com.aware.ui.Aware_QRCode"
+            android:name="com.aware.phone.ui.Aware_QRCode"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="@string/aware_studies"
             android:launchMode="singleTop"
-            android:parentActivityName="com.aware.Aware_Client"
+            android:parentActivityName="com.aware.phone.Aware_Client"
             android:theme="@style/Theme.Aware">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.aware.Aware_Client" />
+                android:value="com.aware.phone.Aware_Client" />
         </activity>
         <activity
-            android:name="com.aware.ui.Plugins_Manager"
+            android:name="com.aware.phone.ui.Plugins_Manager"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
             android:icon="@drawable/ic_launcher_settings"
             android:label="@string/aware_plugins"
             android:launchMode="singleTop"
-            android:parentActivityName="com.aware.Aware_Client"
+            android:parentActivityName="com.aware.phone.Aware_Client"
             android:theme="@style/Theme.Aware">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.aware.Aware_Client" />
+                android:value="com.aware.phone.Aware_Client" />
         </activity>
         <activity
-            android:name="com.aware.ui.About"
+            android:name="com.aware.phone.ui.About"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
             android:label="@string/aware_team"
             android:launchMode="singleTop"
-            android:parentActivityName="com.aware.Aware_Client"
+            android:parentActivityName="com.aware.phone.Aware_Client"
             android:theme="@style/Theme.Aware">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.aware.Aware_Client" />
+                android:value="com.aware.phone.Aware_Client" />
         </activity>
 
         <activity

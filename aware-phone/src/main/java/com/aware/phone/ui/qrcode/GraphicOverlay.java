@@ -1,4 +1,4 @@
-package com.aware.ui.qrcode;
+package com.aware.phone.ui.qrcode;
 
 import android.content.Context;
 import android.graphics.Canvas;

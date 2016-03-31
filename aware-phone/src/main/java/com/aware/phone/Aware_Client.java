@@ -1,5 +1,5 @@
 
-package com.aware;
+package com.aware.phone;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -37,8 +37,11 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.aware.ui.Aware_Activity;
-import com.aware.ui.Plugins_Manager;
+import com.aware.Applications;
+import com.aware.Aware;
+import com.aware.Aware_Preferences;
+import com.aware.phone.ui.Aware_Activity;
+import com.aware.phone.ui.Plugins_Manager;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
 import com.aware.utils.SSLManager;
