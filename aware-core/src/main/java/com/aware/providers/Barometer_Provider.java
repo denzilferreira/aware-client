@@ -53,7 +53,7 @@ public class Barometer_Provider extends ContentProvider {
 	 */
 	public static final class Barometer_Sensor implements BaseColumns {
 		private Barometer_Sensor() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Barometer_Provider.AUTHORITY + "/sensor_barometer");
@@ -81,7 +81,7 @@ public class Barometer_Provider extends ContentProvider {
 	 */
 	public static final class Barometer_Data implements BaseColumns {
 		private Barometer_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Barometer_Provider.AUTHORITY + "/barometer");
@@ -313,7 +313,7 @@ public class Barometer_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.barometer";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Barometer_Provider.AUTHORITY, DATABASE_TABLES[0],
                 SENSOR_DEV);

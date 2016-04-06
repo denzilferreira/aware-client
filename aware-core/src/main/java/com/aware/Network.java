@@ -509,8 +509,6 @@ public class Network extends Aware_Sensor {
 		unregisterReceiver(networkMonitor);
 		teleManager.listen(phoneListener, PhoneStateListener.LISTEN_NONE);
 
-		Aware.setSetting(this, Aware_Preferences.STATUS_NETWORK_EVENTS, false);
-		
 		if(Aware.DEBUG) Log.d(TAG,"Network service terminated...");
 	}
 	

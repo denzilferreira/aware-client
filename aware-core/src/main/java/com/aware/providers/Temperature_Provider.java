@@ -53,7 +53,7 @@ public class Temperature_Provider extends ContentProvider {
 	 */
 	public static final class Temperature_Sensor implements BaseColumns {
 		private Temperature_Sensor() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Temperature_Provider.AUTHORITY + "/sensor_temperature");
@@ -81,7 +81,7 @@ public class Temperature_Provider extends ContentProvider {
 	 */
 	public static final class Temperature_Data implements BaseColumns {
 		private Temperature_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Temperature_Provider.AUTHORITY + "/temperature");
@@ -315,7 +315,7 @@ public class Temperature_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.temperature";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Temperature_Provider.AUTHORITY, DATABASE_TABLES[0],
                 SENSOR_DEV);

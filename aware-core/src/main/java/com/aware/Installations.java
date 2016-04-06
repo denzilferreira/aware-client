@@ -156,8 +156,6 @@ public class Installations extends Aware_Sensor {
         super.onDestroy();
         
         unregisterReceiver(installationsMonitor);
-
-        Aware.setSetting(this, Aware_Preferences.STATUS_INSTALLATIONS, false);
         
         if( Aware.DEBUG ) Log.d(TAG,"Installations service terminated...");
     }

@@ -247,8 +247,6 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
 
         unregisterReceiver(dataLabeler);
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_MAGNETOMETER, false);
-
         if(Aware.DEBUG) Log.d(TAG,"Magnetometer service terminated...");
     }
     

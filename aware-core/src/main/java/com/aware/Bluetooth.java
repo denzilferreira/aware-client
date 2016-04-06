@@ -156,9 +156,7 @@ public class Bluetooth extends Aware_Sensor {
 		unregisterReceiver(bluetoothMonitor);
 		alarmManager.cancel(bluetoothScan);
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_BLUETOOTH, false);
-		
-		if( Aware.DEBUG ) Log.d(TAG,"Bluetooth service terminated...");
+        if( Aware.DEBUG ) Log.d(TAG,"Bluetooth service terminated...");
 	}
 	
 	private final IBinder bluetoothBinder = new BluetoothBinder();

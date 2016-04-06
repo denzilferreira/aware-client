@@ -53,7 +53,7 @@ public class Light_Provider extends ContentProvider {
 	 */
 	public static final class Light_Sensor implements BaseColumns {
 		private Light_Sensor() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Light_Provider.AUTHORITY + "/sensor_light");
@@ -81,7 +81,7 @@ public class Light_Provider extends ContentProvider {
 	 */
 	public static final class Light_Data implements BaseColumns {
 		private Light_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Light_Provider.AUTHORITY + "/light");
@@ -311,7 +311,7 @@ public class Light_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.light";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Light_Provider.AUTHORITY, DATABASE_TABLES[0],
                 SENSOR_DEV);

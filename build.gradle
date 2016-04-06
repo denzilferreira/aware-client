@@ -4,7 +4,7 @@ project.ext {
     google_libs = "8.4.0"
     version_code = 500 + (System.getenv("BUILD_NUMBER") as Integer ?: 0)
     version_readable = "4.0." + version_code
-    aware_libs = (System.getenv("aware_libs") as String ?: "4.0.541")
+    aware_libs = (System.getenv("aware_libs") as String ?: "4.0.+")
 }
 
 buildscript {
@@ -12,7 +12,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.5.0'
+        classpath 'com.android.tools.build:gradle:2.0.0-rc3'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
     }
 }

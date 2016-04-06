@@ -255,8 +255,6 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
 
         unregisterReceiver(dataLabeler);
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_ROTATION, false);
-        
         if(Aware.DEBUG) Log.d(TAG,"Rotation service terminated...");
     }
     

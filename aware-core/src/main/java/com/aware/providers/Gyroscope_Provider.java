@@ -54,7 +54,7 @@ public class Gyroscope_Provider extends ContentProvider {
 	 */
 	public static final class Gyroscope_Sensor implements BaseColumns {
 		private Gyroscope_Sensor() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Gyroscope_Provider.AUTHORITY + "/sensor_gyroscope");
@@ -76,7 +76,7 @@ public class Gyroscope_Provider extends ContentProvider {
 
 	public static final class Gyroscope_Data implements BaseColumns {
 		private Gyroscope_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Gyroscope_Provider.AUTHORITY + "/gyroscope");
@@ -315,7 +315,7 @@ public class Gyroscope_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.gyroscope";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Gyroscope_Provider.AUTHORITY, DATABASE_TABLES[0],
                 GYRO_DEV);

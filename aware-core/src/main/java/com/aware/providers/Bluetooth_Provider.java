@@ -54,7 +54,7 @@ public class Bluetooth_Provider extends ContentProvider {
 	 */
 	public static final class Bluetooth_Sensor implements BaseColumns {
 		private Bluetooth_Sensor() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Bluetooth_Provider.AUTHORITY + "/sensor_bluetooth");
@@ -76,7 +76,7 @@ public class Bluetooth_Provider extends ContentProvider {
 	 */
 	public static final class Bluetooth_Data implements BaseColumns {
 		private Bluetooth_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse( "content://" + Bluetooth_Provider.AUTHORITY + "/bluetooth" );
 		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.aware.bluetooth.data";
@@ -247,7 +247,7 @@ public class Bluetooth_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.bluetooth";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Bluetooth_Provider.AUTHORITY, DATABASE_TABLES[0],
                 BT_DEV);

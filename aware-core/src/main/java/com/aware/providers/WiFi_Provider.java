@@ -52,7 +52,7 @@ public class WiFi_Provider extends ContentProvider {
 	 */
 	public static final class WiFi_Sensor implements BaseColumns {
 		private WiFi_Sensor() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"+ WiFi_Provider.AUTHORITY + "/sensor_wifi");
 		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.aware.wifi.sensor";
@@ -74,7 +74,7 @@ public class WiFi_Provider extends ContentProvider {
 	 */
 	public static final class WiFi_Data implements BaseColumns {
 		private WiFi_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"+ WiFi_Provider.AUTHORITY + "/wifi");
 		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.aware.wifi.data";
@@ -247,7 +247,7 @@ public class WiFi_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.wifi";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(WiFi_Provider.AUTHORITY, DATABASE_TABLES[0],
                 WIFI_DATA);

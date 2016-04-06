@@ -345,9 +345,7 @@ public class Battery extends Aware_Sensor {
 		
 		unregisterReceiver(batteryMonitor);
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_BATTERY, false);
-
-		if(Aware.DEBUG) Log.d(TAG,"Battery service terminated...");
+        if(Aware.DEBUG) Log.d(TAG,"Battery service terminated...");
 	}
 	
 	@Override

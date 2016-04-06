@@ -7,7 +7,7 @@ group = "com.awareframework"
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    buildToolsVersion "23.0.3"
 
     defaultConfig {
         applicationId "com.aware.phone"
@@ -20,10 +20,10 @@ android {
     signingConfigs {
         release {
             //set values in ~/.gradle/gradle.properties to sign with your own keystore and certificate
-            storeFile file(KEYSTORE_FILE)
-            storePassword KEYSTORE_PASSWORD
-            keyAlias KEY
-            keyPassword KEY_PASSWORD
+            storeFile file(project.hasProperty("KEYSTORE_FILE") ? KEYSTORE_FILE : "/")
+            storePassword project.hasProperty("KEYSTORE_PASSWORD") ? KEYSTORE_PASSWORD : ""
+            keyAlias project.hasProperty("KEY") ? KEY : ""
+            keyPassword project.hasProperty("KEY_PASSWORD") ? KEY_PASSWORD : ""
         }
     }
 
@@ -35,19 +35,14 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
-    }
-
     lintOptions {
         abortOnError false
     }
 }
 
 bintray {
-    user = (bintrayUsername != null ? bintrayUsername : "")
-    key = (bintrayKey != null ? bintrayKey : "")
+    user = project.hasProperty("bintrayUsername") ? bintrayUsername : ""
+    key = project.hasProperty("bintrayKey") ? bintrayKey : ""
 
     configurations = ['archives']
 

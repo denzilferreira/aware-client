@@ -51,7 +51,7 @@ public class Installations_Provider extends ContentProvider {
 	 */
 	public static final class Installations_Data implements BaseColumns {
 		private Installations_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Installations_Provider.AUTHORITY + "/installations");
@@ -185,7 +185,7 @@ public class Installations_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.installations";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Installations_Provider.AUTHORITY,
                 DATABASE_TABLES[0], INSTALLATIONS);

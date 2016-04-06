@@ -242,8 +242,6 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
 
         unregisterReceiver(dataLabeler);
 
-        Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_BAROMETER, false);
-        
         if(Aware.DEBUG) Log.d(TAG,"Barometer service terminated...");
     }
     

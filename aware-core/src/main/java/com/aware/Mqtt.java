@@ -349,7 +349,6 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
             } 
 	    }
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, false);
 		if(Aware.DEBUG) Log.d(TAG,"MQTT service terminated...");
 	}
 

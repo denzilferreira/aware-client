@@ -130,8 +130,6 @@ public class Telephony extends Aware_Sensor {
         
         telephonyManager.listen(telephonyState, PhoneStateListener.LISTEN_NONE);
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_TELEPHONY, false);
-        
         if(Aware.DEBUG) Log.d(TAG,"Telephony service terminated...");
     }
     

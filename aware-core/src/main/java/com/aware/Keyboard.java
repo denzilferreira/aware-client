@@ -27,10 +27,4 @@ public class Keyboard extends Aware_Sensor {
 
         Aware.setSetting(this, Aware_Preferences.STATUS_KEYBOARD, true);
     }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Aware.setSetting(this, Aware_Preferences.STATUS_KEYBOARD, false);
-    }
 }

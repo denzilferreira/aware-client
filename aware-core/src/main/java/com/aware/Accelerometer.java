@@ -241,8 +241,6 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
         unregisterReceiver(dataLabeler);
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, false);
-        
         if(Aware.DEBUG) Log.d(TAG,"Accelerometer service terminated...");
     }
 

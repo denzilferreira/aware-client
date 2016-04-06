@@ -244,8 +244,6 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
 
         unregisterReceiver(dataLabeler);
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_PROXIMITY, false);
-        
         if(Aware.DEBUG) Log.d(TAG,"Proximity service terminated...");
     }
     

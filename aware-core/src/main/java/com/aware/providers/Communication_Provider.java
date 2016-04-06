@@ -53,7 +53,7 @@ public class Communication_Provider extends ContentProvider {
 	 */
 	public static final class Calls_Data implements BaseColumns {
 		private Calls_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Communication_Provider.AUTHORITY + "/calls");
@@ -76,7 +76,7 @@ public class Communication_Provider extends ContentProvider {
 	 */
 	public static final class Messages_Data implements BaseColumns {
 		private Messages_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Communication_Provider.AUTHORITY + "/messages");
@@ -244,7 +244,7 @@ public class Communication_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.communication";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Communication_Provider.AUTHORITY,
                 DATABASE_TABLES[0], CALLS);

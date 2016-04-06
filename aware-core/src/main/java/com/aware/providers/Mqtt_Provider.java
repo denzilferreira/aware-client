@@ -47,7 +47,7 @@ public class Mqtt_Provider extends ContentProvider {
 
 	public static final class Mqtt_Messages implements BaseColumns {
 		private Mqtt_Messages() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Mqtt_Provider.AUTHORITY + "/mqtt_messages");
@@ -64,7 +64,7 @@ public class Mqtt_Provider extends ContentProvider {
 
 	public static final class Mqtt_Subscriptions implements BaseColumns {
 		private Mqtt_Subscriptions() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Mqtt_Provider.AUTHORITY + "/mqtt_subscriptions");
@@ -232,7 +232,7 @@ public class Mqtt_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.mqtt";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Mqtt_Provider.AUTHORITY, DATABASE_TABLES[0], MQTT);
         sUriMatcher.addURI(Mqtt_Provider.AUTHORITY, DATABASE_TABLES[0] + "/#",

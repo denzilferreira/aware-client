@@ -183,7 +183,6 @@ public class Processor extends Aware_Sensor {
         
         mHandler.removeCallbacks(mRunnable);
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_PROCESSOR, false);
         if(Aware.DEBUG) Log.d(TAG,"Processor service terminated...");
     }
     

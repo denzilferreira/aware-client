@@ -203,8 +203,7 @@ public class Traffic extends Aware_Sensor {
 		super.onDestroy();
 		
 		mHandler.removeCallbacks(mRunnable);
-		Aware.setSetting(this, Aware_Preferences.STATUS_NETWORK_TRAFFIC, false);
-		
+
 		if(Aware.DEBUG) Log.d(TAG,"Traffic service terminated...");
 	}
 }

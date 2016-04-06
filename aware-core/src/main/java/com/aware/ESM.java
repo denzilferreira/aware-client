@@ -207,8 +207,6 @@ public class ESM extends Aware_Sensor {
 
         unregisterReceiver(esmMonitor);
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_ESM, false);
-
         if (Aware.DEBUG) Log.d(TAG, "ESM service terminated...");
     }
 

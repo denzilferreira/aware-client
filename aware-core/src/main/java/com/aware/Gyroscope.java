@@ -248,8 +248,6 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
 
         unregisterReceiver(dataLabeler);
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_GYROSCOPE, false);
-
         if(Aware.DEBUG) Log.d(TAG,"Gyroscope service terminated...");
     }
     

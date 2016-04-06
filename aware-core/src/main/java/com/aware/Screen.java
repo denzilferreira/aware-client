@@ -123,9 +123,7 @@ public class Screen extends Aware_Sensor {
 		
 		unregisterReceiver(screenMonitor);
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_SCREEN, false);
-		
-		if(Aware.DEBUG) Log.d(TAG,"Screen service terminated...");
+        if(Aware.DEBUG) Log.d(TAG,"Screen service terminated...");
 	}
 	
 	@Override

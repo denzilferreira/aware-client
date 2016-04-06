@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.aware">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.aware">
 
     <uses-permission android:name="com.aware.READ_CONTEXT_DATA" />
     <uses-permission android:name="com.aware.WRITE_CONTEXT_DATA" />
@@ -167,6 +168,10 @@
             android:name="com.aware.utils.Aware_TTS"
             android:exported="true" />
 
+        <service
+            android:name="com.aware.Aware$DowloadUpdatedPlugins"
+            android:exported="true" />
+
         <!-- BroadcastReceivers -->
 
         <receiver
@@ -185,6 +190,28 @@
                 <action android:name="ACTION_AWARE_CLEAR_DATA" />
                 <action android:name="ACTION_AWARE_CONFIGURATION" />
                 <action android:name="ACTION_AWARE_REFRESH" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="com.aware.Aware$Storage_Broadcaster"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_MOUNTED" />
+                <action android:name="android.intent.action.MEDIA_UNMOUNTED" />
+
+                <data android:scheme="file" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="com.aware.Aware$AndroidPackageMonitor"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_ADDED" />
+                <action android:name="android.intent.action.PACKAGE_REMOVED" />
+
+                <data android:scheme="package" />
             </intent-filter>
         </receiver>
 

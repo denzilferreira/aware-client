@@ -138,9 +138,7 @@ public class WiFi extends Aware_Sensor {
 		if( wifiMonitor != null ) unregisterReceiver(wifiMonitor);
 		if( wifiScan != null ) alarmManager.cancel(wifiScan);
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_WIFI, false);
-		
-		if( Aware.DEBUG ) Log.d(TAG,"WiFi service terminated...");
+        if( Aware.DEBUG ) Log.d(TAG,"WiFi service terminated...");
 	}
 	
 	private final IBinder wifiBinder = new WiFiBinder();

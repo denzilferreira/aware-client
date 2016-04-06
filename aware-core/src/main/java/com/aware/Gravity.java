@@ -251,8 +251,6 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
 
         unregisterReceiver(dataLabeler);
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_GRAVITY, false);
-        
         if(Aware.DEBUG) Log.d(TAG,"Gravity service terminated...");
     }
     

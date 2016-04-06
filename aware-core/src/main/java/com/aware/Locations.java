@@ -267,9 +267,6 @@ public class Locations extends Aware_Sensor implements LocationListener {
         locationManager.removeUpdates(this);
         locationManager.removeGpsStatusListener(gps_status_listener);
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_LOCATION_GPS, false);
-        Aware.setSetting(this, Aware_Preferences.STATUS_LOCATION_NETWORK, false);
-
         if (Aware.DEBUG) Log.d(TAG, "Locations service terminated...");
     }
 

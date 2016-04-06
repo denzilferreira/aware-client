@@ -247,8 +247,6 @@ public class Light extends Aware_Sensor implements SensorEventListener {
 
         unregisterReceiver(dataLabeler);
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_LIGHT, false);
-
         if(Aware.DEBUG) Log.d(TAG,"Light service terminated...");
     }
     

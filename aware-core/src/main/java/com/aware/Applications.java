@@ -328,12 +328,6 @@ public class Applications extends AccessibilityService {
     }
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-        Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS, true);
-    }
-
-    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
@@ -355,10 +349,6 @@ public class Applications extends AccessibilityService {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS, false);
-        Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_NOTIFICATIONS, false);
-        Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_KEYBOARD, false);
-        Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_CRASHES, false);
         alarmManager.cancel(repeatingIntent);
         try {
             unregisterReceiver(awareMonitor);

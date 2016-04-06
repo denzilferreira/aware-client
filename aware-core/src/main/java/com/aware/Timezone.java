@@ -140,8 +140,6 @@ public class Timezone extends Aware_Sensor {
         
         mHandler.removeCallbacks(mRunnable);
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_TIMEZONE, false);
-        
         if(Aware.DEBUG) Log.d(TAG,"Timezone service terminated...");
     }
 }

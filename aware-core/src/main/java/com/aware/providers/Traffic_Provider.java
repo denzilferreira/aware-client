@@ -51,7 +51,7 @@ public class Traffic_Provider extends ContentProvider {
 	 */
 	public static final class Traffic_Data implements BaseColumns {
 		private Traffic_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Traffic_Provider.AUTHORITY + "/network_traffic");
@@ -190,7 +190,7 @@ public class Traffic_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.traffic";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Traffic_Provider.AUTHORITY, DATABASE_TABLES[0],
                 TRAFFIC);

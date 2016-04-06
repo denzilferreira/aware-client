@@ -49,7 +49,7 @@ public class TimeZone_Provider extends ContentProvider {
 	 */
 	public static final class TimeZone_Data implements BaseColumns {
 		private TimeZone_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ TimeZone_Provider.AUTHORITY + "/timezone");
@@ -179,7 +179,7 @@ public class TimeZone_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.timezone";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(TimeZone_Provider.AUTHORITY, DATABASE_TABLES[0],
                 TIMEZONE);
