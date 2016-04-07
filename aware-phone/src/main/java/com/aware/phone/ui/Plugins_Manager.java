@@ -3,6 +3,7 @@ package com.aware.phone.ui;
 
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -200,7 +201,7 @@ public class Plugins_Manager extends Aware_Activity {
                                         public void onClick(DialogInterface dialog, int which) {
                                             dialog.dismiss();
                                             Intent open_settings = new Intent();
-                                            open_settings.setClassName(package_name, package_name + ".Settings");
+                                            open_settings.setComponent(new ComponentName(package_name, package_name + ".Settings"));
                                             startActivity(open_settings);
                                         }
                                     });
@@ -229,7 +230,7 @@ public class Plugins_Manager extends Aware_Activity {
                                         public void onClick(DialogInterface dialog, int which) {
                                             dialog.dismiss();
                                             Intent open_settings = new Intent();
-                                            open_settings.setClassName(package_name, package_name + ".Settings");
+                                            open_settings.setComponent(new ComponentName(package_name, package_name + ".Settings"));
                                             startActivity(open_settings);
                                         }
                                     });

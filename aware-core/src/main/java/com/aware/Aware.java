@@ -557,7 +557,6 @@ public class Aware extends Service {
                     Log.d(TAG, "Added self-package " + package_name + " to " + context.getPackageName());
             }
             if (cached != null && !cached.isClosed()) cached.close();
-
         }
 
         //Check if plugin is cached
@@ -566,7 +565,7 @@ public class Aware extends Service {
             //Installed on the phone
             if (isClassAvailable(context, package_name, "Plugin")) {
                 Intent plugin = new Intent();
-                plugin.setClassName(package_name, package_name + ".Plugin");
+                plugin.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
                 ComponentName cachedResult = context.startService(plugin);
                 if (cachedResult != null) {
                     if (Aware.DEBUG) Log.d(TAG, package_name + " started...");
@@ -657,7 +656,7 @@ public class Aware extends Service {
                         @Override
                         public void onClick(View v) {
                             Intent open_settings = new Intent();
-                            open_settings.setClassName(package_name, package_name + ".Settings");
+                            open_settings.setComponent(new ComponentName(package_name, package_name + ".Settings"));
                             open_settings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                             context.startActivity(open_settings);
                         }
