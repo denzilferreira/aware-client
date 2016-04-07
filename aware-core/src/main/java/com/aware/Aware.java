@@ -64,13 +64,17 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+
+import dalvik.system.DexFile;
 
 /**
  * Main AWARE framework service. awareContext will start and manage all the services and settings.
@@ -708,13 +712,15 @@ public class Aware extends Service {
     public static boolean isClassAvailable(Context context, String package_name, String class_name) {
         try {
             Context package_context = context.createPackageContext(package_name, Context.CONTEXT_IGNORE_SECURITY + Context.CONTEXT_INCLUDE_CODE);
-            package_context.getClassLoader().loadClass(package_name + "." + class_name);
-        } catch (ClassNotFoundException e) {
+            DexFile df = new DexFile(package_context.getPackageCodePath());
+            for(Enumeration<String> iter = df.entries(); iter.hasMoreElements();) {
+                String className = iter.nextElement();
+                if( className.contains(class_name)) return true;
+            }
             return false;
-        } catch (NameNotFoundException e) {
+        } catch (IOException | NameNotFoundException e) {
             return false;
         }
-        return true;
     }
 
     /**
