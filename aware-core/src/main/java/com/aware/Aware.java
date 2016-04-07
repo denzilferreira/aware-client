@@ -492,12 +492,10 @@ public class Aware extends Service {
 
         //Check if plugin is bundled within an application/plugin
         Intent bundled = new Intent();
-        bundled.setClassName(context.getPackageName(), package_name + ".Plugin");
+        bundled.setComponent(new ComponentName(context.getPackageName(), package_name + ".Plugin"));
         boolean result = context.stopService(bundled);
 
         if (result) {
-            if (Aware.DEBUG) Log.d(TAG, "Bundled " + package_name + ".Plugin stopped...");
-
             ContentValues rowData = new ContentValues();
             rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
             context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
@@ -513,10 +511,8 @@ public class Aware extends Service {
 
         if (is_installed) {
             Intent plugin = new Intent();
-            plugin.setClassName(package_name, package_name + ".Plugin");
+            plugin.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
             context.stopService(plugin);
-
-            if (Aware.DEBUG) Log.d(TAG, package_name + " stopped...");
         }
 
         ContentValues rowData = new ContentValues();
@@ -536,7 +532,7 @@ public class Aware extends Service {
 
         //Check if plugin is bundled within an application/plugin
         Intent bundled = new Intent();
-        bundled.setClassName(context.getPackageName(), package_name + ".Plugin");
+        bundled.setComponent(new ComponentName(context.getPackageName(), package_name + ".Plugin"));
         ComponentName bundledResult = context.startService(bundled);
         if (bundledResult != null) {
             if (Aware.DEBUG) Log.d(TAG, "Bundled " + package_name + ".Plugin started...");
@@ -602,13 +598,13 @@ public class Aware extends Service {
     public static View getContextCard(final Context context, final String package_name) {
 
         if (!isClassAvailable(context, package_name, "ContextCard")) {
+            Log.d(TAG, "No ContextCard: " + package_name);
             return null;
         }
 
         String ui_class = package_name + ".ContextCard";
         try {
-            Context packageContext = context.createPackageContext(package_name, Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY);
-
+            Context packageContext = context.createPackageContext(package_name, Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
             Class<?> fragment_loader = packageContext.getClassLoader().loadClass(ui_class);
             Object fragment = fragment_loader.newInstance();
             Method[] allMethods = fragment_loader.getDeclaredMethods();
@@ -709,9 +705,9 @@ public class Aware extends Service {
      * @param class_name
      * @return true if exists, false otherwise
      */
-    private static boolean isClassAvailable(Context context, String package_name, String class_name) {
+    public static boolean isClassAvailable(Context context, String package_name, String class_name) {
         try {
-            Context package_context = context.createPackageContext(package_name, Context.CONTEXT_IGNORE_SECURITY | Context.CONTEXT_INCLUDE_CODE);
+            Context package_context = context.createPackageContext(package_name, Context.CONTEXT_IGNORE_SECURITY + Context.CONTEXT_INCLUDE_CODE);
             package_context.getClassLoader().loadClass(package_name + "." + class_name);
         } catch (ClassNotFoundException e) {
             return false;

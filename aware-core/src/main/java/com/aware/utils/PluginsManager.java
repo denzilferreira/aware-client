@@ -188,25 +188,6 @@ public class PluginsManager extends Service {
     }
 
     /**
-     * Given a package and class name, check if the class exists or not on the device, needed for reflection instantiations
-     *
-     * @param package_name
-     * @param class_name
-     * @return boolean
-     */
-    private boolean isClassAvailable(String package_name, String class_name) {
-        try {
-            Context package_context = createPackageContext(package_name, Context.CONTEXT_IGNORE_SECURITY | Context.CONTEXT_INCLUDE_CODE);
-            package_context.getClassLoader().loadClass(package_name + "." + class_name);
-        } catch (ClassNotFoundException e) {
-            return false;
-        } catch (NameNotFoundException e) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
      * Checks if a plugin is installed on the device
      *
      * @param context

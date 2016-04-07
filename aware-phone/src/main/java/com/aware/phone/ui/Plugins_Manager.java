@@ -195,7 +195,7 @@ public class Plugins_Manager extends Aware_Activity {
                             @Override
                             public void onClick(View v) {
                                 AlertDialog.Builder builder = getPluginInfoDialog(name, version, description, developer);
-                                if (isClassAvailable(package_name, "Settings")) {
+                                if (Aware.isClassAvailable(getApplicationContext(), package_name, "Settings")) {
                                     builder.setNegativeButton("Settings", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
@@ -224,7 +224,7 @@ public class Plugins_Manager extends Aware_Activity {
                             @Override
                             public void onClick(View v) {
                                 AlertDialog.Builder builder = getPluginInfoDialog(name, version, description, developer);
-                                if (isClassAvailable(package_name, "Settings")) {
+                                if (Aware.isClassAvailable(getApplicationContext(), package_name, "Settings")) {
                                     builder.setNegativeButton("Settings", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
@@ -253,13 +253,13 @@ public class Plugins_Manager extends Aware_Activity {
                             @Override
                             public void onClick(View v) {
                                 AlertDialog.Builder builder = getPluginInfoDialog(name, version, description, developer);
-                                if (isClassAvailable(package_name, "Settings")) {
+                                if (Aware.isClassAvailable(getApplicationContext(), package_name, "Settings")) {
                                     builder.setNegativeButton("Settings", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
                                             dialog.dismiss();
                                             Intent open_settings = new Intent();
-                                            open_settings.setClassName(package_name, package_name + ".Settings");
+                                            open_settings.setComponent(new ComponentName(package_name, package_name + ".Settings"));
                                             startActivity(open_settings);
                                         }
                                     });
@@ -446,25 +446,6 @@ public class Plugins_Manager extends Aware_Activity {
             }
         }
         return null;
-    }
-
-    /**
-     * Given a package and class name, check if the class exists or not on the device, needed for reflection instantiations
-     *
-     * @param package_name
-     * @param class_name
-     * @return boolean
-     */
-    private boolean isClassAvailable(String package_name, String class_name) {
-        try {
-            Context package_context = createPackageContext(package_name, Context.CONTEXT_IGNORE_SECURITY | Context.CONTEXT_INCLUDE_CODE);
-            package_context.getClassLoader().loadClass(package_name + "." + class_name);
-        } catch (ClassNotFoundException e) {
-            return false;
-        } catch (NameNotFoundException e) {
-            return false;
-        }
-        return true;
     }
 
     /**
