@@ -263,7 +263,7 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                         Toast.makeText(getApplicationContext(), "Clearing settings... please wait", Toast.LENGTH_LONG).show();
                         Aware.reset(getApplicationContext());
 
-                        Intent preferences = new Intent(getApplicationContext(), Aware_Preferences.class);
+                        Intent preferences = new Intent(getApplicationContext(), Aware_Client.class);
                         preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(preferences);
                     }
@@ -290,7 +290,7 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                         Toast.makeText(getApplicationContext(), "Clearing settings... please wait", Toast.LENGTH_LONG).show();
                         Aware.reset(getApplicationContext());
 
-                        Intent preferences = new Intent(getApplicationContext(), Aware_Preferences.class);
+                        Intent preferences = new Intent(getApplicationContext(), Aware_Client.class);
                         preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(preferences);
                     }

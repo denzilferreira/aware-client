@@ -1476,10 +1476,7 @@ public class Aware_Client extends Aware_Activity {
                 } else {
                     Aware.setSetting(awareContext, Aware_Preferences.STATUS_WEBSERVICE, webservice.isChecked());
                     if (webservice.isChecked() && Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER).length() > 0) {
-                        //setup and send data
-                        Intent study_config = new Intent(awareContext, StudyConfig.class);
-                        study_config.putExtra("study_url", Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER));
-                        awareContext.startService(study_config);
+                        Aware.joinStudy(awareContext, Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER));
                     }
                     return true;
                 }
@@ -1912,79 +1909,6 @@ public class Aware_Client extends Aware_Activity {
                 }
             }
             return null;
-        }
-    }
-
-    /**
-     * Service that allows plugins/applications to send data to AWARE's dashboard study
-     */
-    public static class StudyConfig extends IntentService {
-
-        /**
-         * Received broadcast to join a study
-         */
-        public static final String EXTRA_JOIN_STUDY = "study_url";
-
-        public StudyConfig() {
-            super("Study Config Service");
-        }
-
-        @Override
-        protected void onHandleIntent(Intent intent) {
-            String study_url = intent.getStringExtra(EXTRA_JOIN_STUDY);
-
-            if (Aware.DEBUG) Log.d(Aware.TAG, "Joining: " + study_url);
-
-            //Load server SSL certificates
-            Intent aware_SSL = new Intent(this, SSLManager.class);
-            aware_SSL.putExtra(SSLManager.EXTRA_SERVER, study_url);
-            startService(aware_SSL);
-
-            //Request study settings
-            Hashtable<String, String> data = new Hashtable<>();
-            data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-
-            String protocol = study_url.substring(0, study_url.indexOf(":"));
-            String answer;
-            if (protocol.equals("https")) {
-                try {
-                    answer = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataPOST(study_url, data, true);
-                } catch (FileNotFoundException e) {
-                    answer = null;
-                }
-            } else {
-                answer = new Http(getApplicationContext()).dataPOST(study_url, data, true);
-            }
-
-            if (answer == null) {
-                Toast.makeText(getApplicationContext(), "Failed to connect to server... try again.", Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            try {
-                JSONArray configs_study = new JSONArray(answer);
-                if (configs_study.getJSONObject(0).has("message")) {
-                    Toast.makeText(getApplicationContext(), "This study is no longer available.", Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
-                mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
-                mBuilder.setContentTitle("AWARE");
-                mBuilder.setContentText("Thanks for joining the study!");
-                mBuilder.setAutoCancel(true);
-
-                NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                notManager.notify(33, mBuilder.build());
-
-                if (Aware.DEBUG) Log.d(Aware.TAG, "Study configs: " + configs_study.toString(5));
-
-                //Apply new configurations in AWARE Client
-                applySettings(getApplicationContext(), configs_study);
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
         }
     }
 }
