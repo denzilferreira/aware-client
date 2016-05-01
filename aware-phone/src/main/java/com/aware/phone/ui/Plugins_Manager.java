@@ -117,21 +117,9 @@ public class Plugins_Manager extends Aware_Activity {
             }
         });
 
-        bootRefresh();
-
         IntentFilter filter = new IntentFilter();
         filter.addAction(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO);
         registerReceiver(plugins_listener, filter);
-    }
-
-    private void bootRefresh() {
-        new Handler().post(new Runnable() {
-            @Override
-            public void run() {
-                swipeToRefresh.setRefreshing(true);
-                new Async_PluginUpdater().execute();
-            }
-        });
     }
 
     //Monitors for external changes in plugin's states and refresh the UI

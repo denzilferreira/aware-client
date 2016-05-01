@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven'
 
 version = version_readable
 group = "com.awareframework"
@@ -62,7 +63,46 @@ bintray {
             desc = bintray.pkg.desc
             released = new Date()
             vcsTag = "$version_readable"
-//            attributes = ['gradle-plugin': 'com.use.less:com.use.less.gradle:gradle-useless-plugin']
+        }
+    }
+}
+
+configurations {
+    archives {
+        extendsFrom configurations.default
+    }
+}
+
+uploadArchives {
+    configuration = configurations.archives
+    repositories.mavenDeployer {
+        pom.project {
+            name 'AWARE'
+            packaging 'aar'
+            description 'AWARE library for plugins and applications'
+            url 'http://www.awareframework.com'
+
+            scm {
+                url 'scm:git@github.com:denzilferreira/aware-client.git'
+                connection 'scm:git@github.com:denzilferreira/aware-client.git'
+                developerConnection 'scm:git@github.com:denzilferreira/aware-client.git'
+            }
+
+            licenses {
+                license {
+                    name 'The Apache Software License, Version 2.0'
+                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    distribution 'repo'
+                }
+            }
+
+            developers {
+                developer {
+                    id 'denzilferreira'
+                    name 'Denzil Ferreira'
+                    email 'ferreiradenzil@gmail.com'
+                }
+            }
         }
     }
 }

@@ -57,14 +57,13 @@ bintray {
         labels = ['aar','android','framework','aware']
         publicDownloadNumbers = true
         vcsUrl = 'https://github.com/denzilferreira/aware-client.git'
-        desc = "AWARE Framework"
+        desc = "AWARE Framework Phone Client"
         userOrg = user
         version {
             name = "$version_readable"
             desc = bintray.pkg.desc
             released = new Date()
             vcsTag = "$version_readable"
-//            attributes = ['gradle-plugin': 'com.use.less:com.use.less.gradle:gradle-useless-plugin']
         }
     }
 }
