@@ -1,6 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.jfrog.bintray'
-apply plugin: 'maven'
+apply plugin: 'com.github.dcendents.android-maven'
 
 version = version_readable
 group = "com.awareframework"
@@ -67,44 +67,26 @@ bintray {
     }
 }
 
-configurations {
-    archives {
-        extendsFrom configurations.default
-    }
+task generateSourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier 'sources'
 }
 
-uploadArchives {
-    configuration = configurations.archives
-    repositories.mavenDeployer {
-        pom.project {
-            name 'AWARE'
-            packaging 'aar'
-            description 'AWARE library for plugins and applications'
-            url 'http://www.awareframework.com'
+task generateJavadocs(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
 
-            scm {
-                url 'scm:git@github.com:denzilferreira/aware-client.git'
-                connection 'scm:git@github.com:denzilferreira/aware-client.git'
-                developerConnection 'scm:git@github.com:denzilferreira/aware-client.git'
-            }
+task generateJavadocsJar(type: Jar) {
+    from generateJavadocs.destinationDir
+    classifier 'javadoc'
+}
 
-            licenses {
-                license {
-                    name 'The Apache Software License, Version 2.0'
-                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    distribution 'repo'
-                }
-            }
+generateJavadocsJar.dependsOn generateJavadocs
 
-            developers {
-                developer {
-                    id 'denzilferreira'
-                    name 'Denzil Ferreira'
-                    email 'ferreiradenzil@gmail.com'
-                }
-            }
-        }
-    }
+artifacts {
+    archives generateJavaDocsJar
+    archives generateSourcesJar
 }
 
 dependencies {
