@@ -61,10 +61,10 @@ bintray {
         userOrg = user
         version {
             name = "$version_readable"
-            desc = "AWARE for Android"
+            desc = bintray.pkg.desc
             released = new Date()
             vcsTag = "$version_readable"
-            attributes = ['gradle-plugin': 'com.use.less:com.use.less.gradle:gradle-useless-plugin']
+//            attributes = ['gradle-plugin': 'com.use.less:com.use.less.gradle:gradle-useless-plugin']
         }
     }
 }
