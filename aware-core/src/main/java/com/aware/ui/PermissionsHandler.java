@@ -15,62 +15,23 @@ import java.util.ArrayList;
  */
 public class PermissionsHandler extends Activity {
 
+    /**
+     * String[] with Manifest.permission that require explicit users' permission on Android API 23+
+     */
     public static String EXTRA_REQUIRED_PERMISSIONS = "required_permissions";
-    private final int CODE_PERMISSION_REQUEST = 999;
-
-    private ArrayList<String> missing = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if( getIntent() != null && getIntent().getExtras() != null && getIntent().getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS) != null ) {
             String[] permissions = getIntent().getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS);
-            for( String p : permissions ) {
-                int ok = ContextCompat.checkSelfPermission(this, p);
-                if( ok != PackageManager.PERMISSION_GRANTED && ! is_missing(p) ) missing.add(p);
-            }
-        }
-    }
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        if( intent != null && intent.getExtras() != null && intent.getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS) != null ) {
-            String[] permissions = intent.getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS);
-            //Check if we have requested this permission already
-            for( String p : permissions ) {
-                int ok = ContextCompat.checkSelfPermission(this, p);
-                if( ok != PackageManager.PERMISSION_GRANTED && ! is_missing(p) ) missing.add(p);
-            }
+            ActivityCompat.requestPermissions(PermissionsHandler.this, permissions, 999);
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        //Done with the requested permissions
         finish();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if( missing.size() > 0 ) {
-            ActivityCompat.requestPermissions(PermissionsHandler.this, missing.toArray(new String[missing.size()]), CODE_PERMISSION_REQUEST);
-        } else {
-            finish();
-        }
-    }
-
-    /**
-     * Check if we are already asking this permission
-     * @param p
-     * @return
-     */
-    private boolean is_missing( String p ) {
-        for( String pp : missing ) {
-            if( pp.equals(p) ) return true;
-        }
-        return false;
     }
 }

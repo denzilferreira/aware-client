@@ -125,7 +125,6 @@ public class Aware_Sensor extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        //Ask the user all required permissions
         final ArrayList<String> missing = new ArrayList<>();
         for (String p : REQUIRED_PERMISSIONS) {
             int permission_access = ContextCompat.checkSelfPermission(getApplicationContext(), p);
@@ -196,11 +195,7 @@ public class Aware_Sensor extends Service {
                 stopSelf();
             }
 
-            String frequency_old = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA);
-            if (frequency_old.length() == 0)
-                Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA, 0);
-
-            if (intent.getAction().equals(Aware.ACTION_AWARE_SPACE_MAINTENANCE) && !Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).equals("0")) {
+            if (intent.getAction().equals(Aware.ACTION_AWARE_SPACE_MAINTENANCE) && Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0 ) {
                 Calendar cal = Calendar.getInstance();
                 cal.setTimeInMillis(System.currentTimeMillis());
 

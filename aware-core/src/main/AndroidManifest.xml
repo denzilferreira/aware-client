@@ -20,6 +20,7 @@
             android:launchMode="singleTop"
             android:noHistory="true"
             android:theme="@style/Theme.AppCompat.Translucent" />
+
         <activity
             android:name="com.aware.ui.PermissionsHandler"
             android:configChanges="keyboardHidden|orientation|screenSize"

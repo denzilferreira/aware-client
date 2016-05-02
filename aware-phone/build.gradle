@@ -59,6 +59,10 @@ bintray {
         vcsUrl = 'https://github.com/denzilferreira/aware-client.git'
         desc = "AWARE Framework Phone Client"
         userOrg = user
+
+        githubRepo = "denzilferreira/aware-client"
+        githubReleaseNotesFile = "README.md"
+
         version {
             name = "$version_readable"
             desc = bintray.pkg.desc
