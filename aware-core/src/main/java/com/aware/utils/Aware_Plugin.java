@@ -117,23 +117,23 @@ public class Aware_Plugin extends Service {
         if(DEBUG) Log.d(TAG, TAG + " plugin terminated...");
     }
     
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        final ArrayList<String> missing = new ArrayList<>();
-        for( String p : REQUIRED_PERMISSIONS ) {
-            int permission_access = ContextCompat.checkSelfPermission(getApplicationContext(), p);
-            if( permission_access != PackageManager.PERMISSION_GRANTED ) {
-                missing.add(p);
-            }
-        }
-        if( missing.size() > 0 ) {
-            Intent permissionRequest = new Intent(this, PermissionsHandler.class);
-            permissionRequest.putStringArrayListExtra( PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, missing );
-            permissionRequest.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(permissionRequest);
-        }
-        return super.onStartCommand(intent, flags, startId);
-    }
+//    @Override
+//    public int onStartCommand(Intent intent, int flags, int startId) {
+//        final ArrayList<String> missing = new ArrayList<>();
+//        for( String p : REQUIRED_PERMISSIONS ) {
+//            int permission_access = ContextCompat.checkSelfPermission(getApplicationContext(), p);
+//            if( permission_access != PackageManager.PERMISSION_GRANTED ) {
+//                missing.add(p);
+//            }
+//        }
+//        if( missing.size() > 0 ) {
+//            Intent permissionRequest = new Intent(this, PermissionsHandler.class);
+//            permissionRequest.putStringArrayListExtra( PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, missing );
+//            permissionRequest.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+//            startActivity(permissionRequest);
+//        }
+//        return super.onStartCommand(intent, flags, startId);
+//    }
 
     /**
      * Interface to share context with other applications/plugins<br/>

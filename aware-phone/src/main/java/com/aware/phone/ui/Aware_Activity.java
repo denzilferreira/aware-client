@@ -1,5 +1,6 @@
 package com.aware.phone.ui;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -27,6 +28,7 @@ import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.phone.Aware_Client;
 import com.aware.phone.R;
+import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
 import com.aware.utils.SSLManager;
@@ -55,8 +57,18 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                 startService(study_config);
 
                 Toast.makeText(this, "Joining study...", Toast.LENGTH_LONG).show();
+                finish();
+            }
+        }
+        if (requestCode == PermissionsHandler.RC_PERMISSIONS) {
+            if (resultCode == Activity.RESULT_OK) {
+
+                Aware_Client.missing_permissions.clear();
 
                 finish();
+
+                Intent preferences = new Intent(this, Aware_Client.class);
+                startActivity(preferences);
             }
         }
     }

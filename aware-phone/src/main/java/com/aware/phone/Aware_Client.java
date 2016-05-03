@@ -2,6 +2,7 @@
 package com.aware.phone;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.IntentService;
@@ -42,6 +43,7 @@ import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.phone.ui.Aware_Activity;
 import com.aware.phone.ui.Plugins_Manager;
+import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
 import com.aware.utils.SSLManager;
@@ -76,8 +78,7 @@ public class Aware_Client extends Aware_Activity {
     private static SensorManager mSensorMgr;
     private static Context awareContext;
     private static PreferenceActivity clientUI;
-
-    final private int REQUEST_CODE_PERMISSIONS = 999;
+    public static ArrayList<String> missing_permissions = new ArrayList<>();
 
     @Override
     protected Dialog onCreateDialog(int id) {
@@ -142,23 +143,6 @@ public class Aware_Client extends Aware_Activity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (grantResults.length > 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "AWARE external storage access required!", Toast.LENGTH_SHORT).show();
-                Aware.stopAWARE();
-                finish();
-            } else {
-                //Restart AWARE client now that we have the permission to write to external storage
-                Intent preferences = new Intent(this, Aware_Client.class);
-                preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(preferences);
-            }
-        }
-    }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -166,10 +150,6 @@ public class Aware_Client extends Aware_Activity {
         is_watch = Aware.is_watch(this);
         awareContext = getApplicationContext();
         clientUI = this;
-
-        //Start the Aware
-        Intent startAware = new Intent(awareContext, Aware.class);
-        startService(startAware);
 
         int storage = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         int camera = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.CAMERA);
@@ -180,7 +160,7 @@ public class Aware_Client extends Aware_Activity {
         int location_network = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.ACCESS_COARSE_LOCATION);
         int location_gps = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.ACCESS_FINE_LOCATION);
 
-        ArrayList<String> missing_permissions = new ArrayList<>();
+
         if (storage != PackageManager.PERMISSION_GRANTED) {
             missing_permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
@@ -207,41 +187,15 @@ public class Aware_Client extends Aware_Activity {
         }
 
         if (missing_permissions.size() > 0) {
-            requestPermissions(missing_permissions.toArray(new String[missing_permissions.size()]), REQUEST_CODE_PERMISSIONS);
-        }
-
-        SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-        if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
-            PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
-            prefs.edit().commit(); //commit changes
-        } else {
-            PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, false);
-        }
-
-        Map<String, ?> defaults = prefs.getAll();
-        for (Map.Entry<String, ?> entry : defaults.entrySet()) {
-            if (Aware.getSetting(getApplicationContext(), entry.getKey(), "com.aware").length() == 0) {
-                Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue(), "com.aware");
-            }
-        }
-
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
-            UUID uuid = UUID.randomUUID();
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString());
-        }
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php");
+            Intent permissionsHandler = new Intent(this, PermissionsHandler.class);
+            permissionsHandler.putStringArrayListExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, missing_permissions);
+            startActivityForResult(permissionsHandler, PermissionsHandler.RC_PERMISSIONS);
         }
 
         addPreferencesFromResource(R.xml.aware_preferences);
         setContentView(R.layout.aware_ui);
 
         defaultSettings();
-
-        //Check if AWARE is active on the accessibility services
-        if (!Aware.is_watch(awareContext)) {
-            Applications.isAccessibilityServiceActive(awareContext);
-        }
     }
 
     /**
@@ -1750,25 +1704,43 @@ public class Aware_Client extends Aware_Activity {
     protected void onResume() {
         super.onResume();
 
-        if ((Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") || Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_KEYBOARD).equals("true")) && !Applications.isAccessibilityServiceActive(getApplicationContext())) {
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
-            mBuilder.setSmallIcon(R.drawable.ic_stat_aware_accessibility);
-            mBuilder.setContentTitle("AWARE configuration");
-            mBuilder.setContentText(getResources().getString(R.string.aware_activate_accessibility));
-            mBuilder.setDefaults(Notification.DEFAULT_ALL);
-            mBuilder.setAutoCancel(true);
+        if (missing_permissions.size() == 0) {
+            //Start the Aware
+            Intent startAware = new Intent(awareContext, Aware.class);
+            startService(startAware);
 
-            Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
-            accessibilitySettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+            if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
+                PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
+                prefs.edit().commit(); //commit changes
+            } else {
+                PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, false);
+            }
 
-            PendingIntent clickIntent = PendingIntent.getActivity(getApplicationContext(), 0, accessibilitySettings, PendingIntent.FLAG_UPDATE_CURRENT);
-            mBuilder.setContentIntent(clickIntent);
-            NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            notManager.notify(Applications.ACCESSIBILITY_NOTIFICATION_ID, mBuilder.build());
-        }
+            Map<String, ?> defaults = prefs.getAll();
+            for (Map.Entry<String, ?> entry : defaults.entrySet()) {
+                if (Aware.getSetting(getApplicationContext(), entry.getKey(), "com.aware").length() == 0) {
+                    Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue(), "com.aware");
+                }
+            }
 
-        if (Aware.getSetting(getApplicationContext(), "study_id").length() > 0) {
-            new Aware_Activity.Async_StudyData().execute(Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
+                UUID uuid = UUID.randomUUID();
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString());
+            }
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php");
+            }
+
+            //Check if AWARE is active on the accessibility services
+            if (!Aware.is_watch(awareContext)) {
+                Applications.isAccessibilityServiceActive(awareContext);
+            }
+
+            //Lock interface if in a study
+            if (Aware.getSetting(getApplicationContext(), "study_id").length() > 0) {
+                new Aware_Activity.Async_StudyData().execute(Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
+            }
         }
     }
 
