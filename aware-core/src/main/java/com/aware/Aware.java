@@ -1378,7 +1378,7 @@ public class Aware extends Service {
                 try {
                     ApplicationInfo appInfo = mPkgManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
                     //Check if this is a package for which we have more info from the server
-                    new AwarePluginOnlineInfo().execute(appInfo);
+                    new AwarePluginOnlineInfo(context).execute(appInfo);
                 } catch (final NameNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -1406,6 +1406,11 @@ public class Aware extends Service {
     private static class AwarePluginOnlineInfo extends AsyncTask<ApplicationInfo, Void, JSONObject> {
 
         private ApplicationInfo app;
+        private Context appContext;
+
+        public AwarePluginOnlineInfo(Context c) {
+            this.appContext = c;
+        }
 
         @Override
         protected JSONObject doInBackground(ApplicationInfo... params) {
@@ -1414,19 +1419,19 @@ public class Aware extends Service {
 
             JSONObject json_package = null;
 
-            String study_url = Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER);
+            String study_url = Aware.getSetting(appContext, Aware_Preferences.WEBSERVICE_SERVER);
             String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
             String protocol = study_url.substring(0, study_url.indexOf(":"));
 
             String http_request;
             if (protocol.equals("https")) {
                 try {
-                    http_request = new Https(awareContext, SSLManager.getHTTPS(awareContext, study_url)).dataGET(study_host + "/index.php/plugins/get_plugin/" + app.packageName, true);
+                    http_request = new Https(appContext, SSLManager.getHTTPS(appContext, study_url)).dataGET(study_host + "/index.php/plugins/get_plugin/" + app.packageName, true);
                 } catch (FileNotFoundException e) {
                     http_request = null;
                 }
             } else {
-                http_request = new Http(awareContext).dataGET(study_host + "/index.php/plugins/get_plugin/" + app.packageName, true);
+                http_request = new Http(appContext).dataGET(study_host + "/index.php/plugins/get_plugin/" + app.packageName, true);
             }
             if (http_request != null) {
                 try {
@@ -1447,10 +1452,10 @@ public class Aware extends Service {
             ContentValues rowData = new ContentValues();
             rowData.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, app.packageName);
             rowData.put(Aware_Plugins.PLUGIN_NAME, app.loadLabel(awareContext.getPackageManager()).toString());
-            rowData.put(Aware_Plugins.PLUGIN_VERSION, PluginsManager.getVersion(awareContext, app.packageName));
+            rowData.put(Aware_Plugins.PLUGIN_VERSION, PluginsManager.getVersion(appContext, app.packageName));
             rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
             try {
-                rowData.put(Aware_Plugins.PLUGIN_ICON, PluginsManager.getPluginIcon(awareContext, awareContext.getPackageManager().getPackageInfo(app.packageName, PackageManager.GET_ACTIVITIES)));
+                rowData.put(Aware_Plugins.PLUGIN_ICON, PluginsManager.getPluginIcon(appContext, appContext.getPackageManager().getPackageInfo(app.packageName, PackageManager.GET_ACTIVITIES)));
             } catch (NameNotFoundException e) {
                 e.printStackTrace();
             }
@@ -1466,22 +1471,22 @@ public class Aware extends Service {
 
             //If we already have cached information for this package, just update it
             boolean is_cached = false;
-            Cursor plugin_cached = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + app.packageName + "'", null, null);
+            Cursor plugin_cached = appContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + app.packageName + "'", null, null);
             if (plugin_cached != null && plugin_cached.moveToFirst()) {
                 is_cached = true;
             }
             if (plugin_cached != null && !plugin_cached.isClosed()) plugin_cached.close();
 
             if (!is_cached) {
-                awareContext.getContentResolver().insert(Aware_Plugins.CONTENT_URI, rowData);
+                appContext.getContentResolver().insert(Aware_Plugins.CONTENT_URI, rowData);
             } else {
-                awareContext.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + app.packageName + "'", null);
+                appContext.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + app.packageName + "'", null);
             }
 
             if (Aware.DEBUG) Log.d(TAG, "AWARE plugin added and activated:" + app.packageName);
 
             //Start plugin
-            Aware.startPlugin(awareContext, app.packageName);
+            Aware.startPlugin(appContext, app.packageName);
         }
     }
 
