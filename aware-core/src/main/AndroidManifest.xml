@@ -202,17 +202,6 @@
             </intent-filter>
         </receiver>
 
-        <receiver
-            android:name="com.aware.Aware$AndroidPackageMonitor"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.PACKAGE_ADDED" />
-                <action android:name="android.intent.action.PACKAGE_REMOVED" />
-
-                <data android:scheme="package" />
-            </intent-filter>
-        </receiver>
-
         <!-- Core providers -->
 
         <provider
