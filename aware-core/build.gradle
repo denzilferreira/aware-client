@@ -93,6 +93,12 @@ artifacts {
     archives generateSourcesJar
 }
 
+repositories {
+    maven {
+        url  "http://dl.bintray.com/jfrog/bintray-tools"
+    }
+}
+
 dependencies {
     compile "org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2"
     compile "com.koushikdutta.ion:ion:2.1.6"

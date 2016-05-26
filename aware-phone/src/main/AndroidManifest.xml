@@ -66,6 +66,7 @@
             android:theme="@style/Theme.Aware">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -73,25 +74,15 @@
             android:name="com.aware.phone.ui.Stream_UI"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
-            android:icon="@drawable/ic_launcher_aware"
+            android:icon="@mipmap/ic_launcher_stream"
             android:label="@string/aware_stream"
             android:launchMode="singleTop"
             android:noHistory="true"
             android:theme="@style/Theme.Aware">
             <intent-filter>
-                <action android:name="android.intent.action.ASSIST" />
                 <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
-            <meta-data
-                android:name="com.android.systemui.action_assist_icon"
-                android:resource="@drawable/ic_launcher_aware" />
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.aware.phone.Aware_Client" />
         </activity>
         <activity
             android:name="com.aware.phone.ui.Aware_QRCode"
