@@ -1739,8 +1739,10 @@ public class Aware extends Service {
         awareContext.startService(scheduler);
 
         //Start plugin manager
-        pluginsManager = new Intent(awareContext, PluginsManager.class);
-        awareContext.startService(pluginsManager);
+        if (awareContext.getPackageName().equalsIgnoreCase("com.aware.phone")) {
+            pluginsManager = new Intent(awareContext, PluginsManager.class);
+            awareContext.startService(pluginsManager);
+        }
     }
 
     /**
@@ -1774,7 +1776,10 @@ public class Aware extends Service {
         stopInstallations(awareContext);
         stopKeyboard(awareContext);
         awareContext.stopService(scheduler);
-        awareContext.stopService(pluginsManager);
+
+        if (awareContext.getPackageName().equalsIgnoreCase("com.aware.phone")) {
+            awareContext.stopService(pluginsManager);
+        }
     }
 
     /**
