@@ -2,13 +2,8 @@
 package com.aware.phone;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.IntentService;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -29,14 +24,12 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import com.aware.Applications;
 import com.aware.Aware;
@@ -54,7 +47,6 @@ import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -1484,6 +1476,10 @@ public class Aware_Client extends Aware_Activity {
                 clean_old_data.setSummary("Weekly");
             } else if (freq.equals("2")) {
                 clean_old_data.setSummary("Monthly");
+            } else if (freq.equals("3")) {
+                clean_old_data.setSummary("Daily");
+            } else if (freq.equals("4")) {
+                clean_old_data.setSummary("Always");
             }
         }
         clean_old_data.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA));
@@ -1491,12 +1487,16 @@ public class Aware_Client extends Aware_Activity {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA, (String) newValue);
-                if (((String) newValue).equals("0")) {
+                if (newValue.equals("0")) {
                     clean_old_data.setSummary("Never");
                 } else if (((String) newValue).equals("1")) {
                     clean_old_data.setSummary("Weekly");
                 } else if (((String) newValue).equals("2")) {
                     clean_old_data.setSummary("Monthly");
+                } else if (((String) newValue).equals("3")) {
+                    clean_old_data.setSummary("Daily");
+                } else if (((String) newValue).equals("4")) {
+                    clean_old_data.setSummary("Always");
                 }
                 return true;
             }
@@ -1644,26 +1644,14 @@ public class Aware_Client extends Aware_Activity {
             }
         });
 
-        final CheckBoxPreference auto_update = (CheckBoxPreference) findPreference(Aware_Preferences.AWARE_AUTO_UPDATE);
-        auto_update.setChecked(Aware.getSetting(awareContext, Aware_Preferences.AWARE_AUTO_UPDATE).equals("true"));
-
+        final EditTextPreference aware_version = (EditTextPreference) findPreference(Aware_Preferences.AWARE_VERSION);
         PackageInfo awareInfo = null;
         try {
             awareInfo = awareContext.getPackageManager().getPackageInfo(awareContext.getPackageName(), PackageManager.GET_ACTIVITIES);
         } catch (NameNotFoundException e) {
             e.printStackTrace();
         }
-        auto_update.setSummary("Current version is " + ((awareInfo != null) ? awareInfo.versionCode : "???"));
-        auto_update.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(awareContext, Aware_Preferences.AWARE_AUTO_UPDATE, auto_update.isChecked());
-                if (auto_update.isChecked()) {
-                    sendBroadcast(new Intent(Aware.ACTION_AWARE_CHECK_UPDATE));
-                }
-                return true;
-            }
-        });
+        aware_version.setSummary((awareInfo!=null)?""+awareInfo.versionCode:"???");
 
         final CheckBoxPreference debug_db_slow = (CheckBoxPreference) findPreference(Aware_Preferences.DEBUG_DB_SLOW);
         debug_db_slow.setChecked(Aware.getSetting(awareContext, Aware_Preferences.DEBUG_DB_SLOW).equals("true"));
@@ -1687,14 +1675,14 @@ public class Aware_Client extends Aware_Activity {
             }
         });
 
-        final EditTextPreference group_id = (EditTextPreference) findPreference(Aware_Preferences.GROUP_ID);
-        group_id.setSummary("Group: " + Aware.getSetting(awareContext, Aware_Preferences.GROUP_ID));
-        group_id.setText(Aware.getSetting(awareContext, Aware_Preferences.GROUP_ID));
+        final EditTextPreference group_id = (EditTextPreference) findPreference(Aware_Preferences.DEVICE_LABEL);
+        group_id.setSummary(Aware.getSetting(awareContext, Aware_Preferences.DEVICE_LABEL));
+        group_id.setText(Aware.getSetting(awareContext, Aware_Preferences.DEVICE_LABEL));
         group_id.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(awareContext, Aware_Preferences.GROUP_ID, (String) newValue);
-                group_id.setSummary("Group: " + Aware.getSetting(awareContext, Aware_Preferences.GROUP_ID));
+                Aware.setSetting(awareContext, Aware_Preferences.DEVICE_LABEL, (String) newValue);
+                group_id.setSummary(Aware.getSetting(awareContext, Aware_Preferences.DEVICE_LABEL));
                 return true;
             }
         });

@@ -90,8 +90,8 @@ public class Http {
             }
 
             if (Aware.DEBUG) {
-                Log.i(TAG,"Request: GET, URL: " + url);
-                Log.i(TAG,"Answer:" + page_content );
+//                Log.i(TAG,"Request: GET, URL: " + url);
+//                Log.i(TAG,"Answer:" + page_content );
             }
 
             return page_content;
@@ -162,8 +162,8 @@ public class Http {
             }
 
             if (Aware.DEBUG) {
-                Log.d(TAG, "Request: POST, URL: " + url + "\nData:" + builder.build().getEncodedQuery());
-                Log.i(TAG,"Answer:" + page_content );
+//                Log.d(TAG, "Request: POST, URL: " + url + "\nData:" + builder.build().getEncodedQuery());
+//                Log.i(TAG,"Answer:" + page_content );
             }
 
             return page_content;

@@ -37,8 +37,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.LinearLayout.LayoutParams;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -68,6 +66,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
@@ -145,10 +144,8 @@ public class Aware extends Service {
      */
     public static final String ACTION_QUIT_STUDY = "ACTION_QUIT_STUDY";
 
-    /**
-     * Ask the client to check if there are any updates on the server
-     */
-    public static final String ACTION_AWARE_CHECK_UPDATE = "ACTION_AWARE_CHECK_UPDATE";
+    private static final String SCHEDULE_SPACE_MAINTENANCE = "schedule_aware_space_maintenance";
+    private static final String SCHEDULE_SYNC_DATA = "schedule_aware_sync_data";
 
     public static String STUDY_ID = "study_id";
     public static String STUDY_START = "study_start";
@@ -156,7 +153,6 @@ public class Aware extends Service {
     private static AlarmManager alarmManager = null;
     private static PendingIntent repeatingIntent = null;
     private static Context awareContext = null;
-    private static PendingIntent webserviceUploadIntent = null;
 
     private static Intent awareStatusMonitor = null;
     private static Intent applicationsSrv = null;
@@ -190,7 +186,6 @@ public class Aware extends Service {
 
     private final static String PREF_FREQUENCY_WATCHDOG = "frequency_watchdog";
     private final static String PREF_LAST_UPDATE = "last_update";
-    private final static String PREF_LAST_SYNC = "last_sync";
     private final static int CONST_FREQUENCY_WATCHDOG = 5 * 60; //5 minutes check
 
     private static SharedPreferences aware_preferences;
@@ -245,11 +240,8 @@ public class Aware extends Service {
         filter.addAction(Aware.ACTION_AWARE_REFRESH);
         filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
         filter.addAction(Aware.ACTION_QUIT_STUDY);
-        filter.addAction(Aware.ACTION_AWARE_CHECK_UPDATE);
-        awareContext.registerReceiver(aware_BR, filter);
 
-        Intent synchronise = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
-        webserviceUploadIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, synchronise, 0);
+        awareContext.registerReceiver(aware_BR, filter);
 
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             stopSelf();
@@ -260,7 +252,6 @@ public class Aware extends Service {
         if (aware_preferences.getAll().isEmpty()) {
             SharedPreferences.Editor editor = aware_preferences.edit();
             editor.putInt(PREF_FREQUENCY_WATCHDOG, CONST_FREQUENCY_WATCHDOG);
-            editor.putLong(PREF_LAST_SYNC, 0);
             editor.putLong(PREF_LAST_UPDATE, 0);
             editor.commit();
         }
@@ -319,6 +310,7 @@ public class Aware extends Service {
             try {
                 new Https(awareContext, SSLManager.getHTTPS(getApplicationContext(), "https://api.awareframework.com/index.php")).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
             } catch (FileNotFoundException e) {
+                e.printStackTrace();
             }
             return true;
         }
@@ -342,9 +334,7 @@ public class Aware extends Service {
             rowData.put(Aware_Device.RELEASE, Build.VERSION.RELEASE);
             rowData.put(Aware_Device.RELEASE_TYPE, Build.TYPE);
             rowData.put(Aware_Device.SDK, Build.VERSION.SDK_INT);
-
-            //Added research group as label
-            rowData.put(Aware_Device.LABEL, Aware.getSetting(awareContext, Aware_Preferences.GROUP_ID));
+            rowData.put(Aware_Device.LABEL, Aware.getSetting(awareContext, Aware_Preferences.DEVICE_LABEL));
 
             try {
                 awareContext.getContentResolver().insert(Aware_Device.CONTENT_URI, rowData);
@@ -410,49 +400,95 @@ public class Aware extends Service {
 //                        new AwarePluginsUpdateCheck().execute(active_plugins);
 //                    }
 //                }
-//
-//                if (Aware.getSetting(getApplicationContext(), Aware_Preferences.AWARE_AUTO_UPDATE).equals("true")) {
-//                    if (aware_preferences.getLong(PREF_LAST_UPDATE, 0) == 0 || (aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 0 && System.currentTimeMillis() - aware_preferences.getLong(PREF_LAST_UPDATE, 0) > 6 * 60 * 60 * 1000)) { //check every 6h
-//                        //Check if there are updates to the client
-//                        if (!Aware.is_watch(this)) {
-//                            new AwareUpdateCheck().execute();
-//                        }
-//                        SharedPreferences.Editor editor = aware_preferences.edit();
-//                        editor.putLong(PREF_LAST_UPDATE, System.currentTimeMillis());
-//                        editor.commit();
-//                    }
-//                }
 //            }
 
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                 int frequency_webservice = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_WEBSERVICE));
                 if (frequency_webservice == 0) {
-                    if (DEBUG) {
+                    if (DEBUG)
                         Log.d(TAG, "Data sync is disabled.");
+
+                    Scheduler.removeSchedule(getApplicationContext(), SCHEDULE_SYNC_DATA);
+
+                } else {
+                    if (DEBUG) {
+                        Log.d(TAG, "Data sync every " + frequency_webservice + " minute(s)");
                     }
-                    alarmManager.cancel(webserviceUploadIntent);
-                } else if (frequency_webservice > 0) {
+
+                    //Set sync schedule
+                    try {
+                        Scheduler.Schedule schedule = new Scheduler.Schedule(SCHEDULE_SYNC_DATA)
+                                .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
+                                .setActionClass(Aware.ACTION_AWARE_SYNC_DATA);
+
+                        int i = frequency_webservice;
+                        while (i<60) {
+                            schedule.addMinute(i); //add minute intervals
+                            i+=frequency_webservice;
+                        }
+                        Scheduler.saveSchedule(getApplicationContext(), schedule);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
 
                     //Checks if study is still active
                     //TODO: move to somewhere else - this should be sent by the server when closing study as an MQTT message
 //                    new Study_Check().execute();
-
-                    //Fixed: set alarm only once if not set yet.
-                    if (aware_preferences.getLong(PREF_LAST_SYNC, 0) == 0 || (aware_preferences.getLong(PREF_LAST_SYNC, 0) > 0 && System.currentTimeMillis() - aware_preferences.getLong(PREF_LAST_SYNC, 0) > frequency_webservice * 60 * 1000)) {
-                        if (DEBUG) {
-                            Log.d(TAG, "Data sync every " + frequency_webservice + " minute(s)");
-                        }
-                        SharedPreferences.Editor editor = aware_preferences.edit();
-                        editor.putLong(PREF_LAST_SYNC, System.currentTimeMillis());
-                        editor.commit();
-                        alarmManager.setInexactRepeating(AlarmManager.RTC, aware_preferences.getLong(PREF_LAST_SYNC, 0), frequency_webservice * 60 * 1000, webserviceUploadIntent);
-                    }
                 }
             }
 
-            if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).equals("0")) {
-                Intent dataCleaning = new Intent(ACTION_AWARE_SPACE_MAINTENANCE);
-                awareContext.sendBroadcast(dataCleaning);
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0) {
+                String[] frequency = new String[]{"never", "weekly", "monthly", "daily", "always"};
+                int frequency_space_maintenance = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA));
+
+                if (DEBUG && frequency_space_maintenance != 0)
+                    Log.d(TAG, "Space maintenance is: " + frequency[frequency_space_maintenance]);
+
+                try {
+                    if (frequency_space_maintenance == 0 || frequency_space_maintenance == 4) { //if always, we clear old data as soon as we upload to server
+                        Scheduler.removeSchedule(getApplicationContext(), SCHEDULE_SPACE_MAINTENANCE);
+                    } else {
+                        Scheduler.Schedule cleanup = new Scheduler.Schedule(SCHEDULE_SPACE_MAINTENANCE);
+                        switch (frequency_space_maintenance) {
+                            case 1: //weekly, by default every Friday
+                                cleanup.addWeekday("Sunday")
+                                .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
+                                .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
+                                break;
+                            case 2: //monthly
+                                cleanup.addMonth("January")
+                                        .addMonth("February")
+                                        .addMonth("March")
+                                        .addMonth("April")
+                                        .addMonth("May")
+                                        .addMonth("June")
+                                        .addMonth("July")
+                                        .addMonth("August")
+                                        .addMonth("September")
+                                        .addMonth("October")
+                                        .addMonth("November")
+                                        .addMonth("December")
+                                .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
+                                .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
+                                break;
+                            case 3: //daily
+                                cleanup.addWeekday("Monday")
+                                        .addWeekday("Tuesday")
+                                        .addWeekday("Wednesday")
+                                        .addWeekday("Thursday")
+                                        .addWeekday("Friday")
+                                        .addWeekday("Saturday")
+                                        .addWeekday("Sunday")
+                                .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
+                                .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
+                                break;
+                        }
+                        Scheduler.saveSchedule(getApplicationContext(), cleanup);
+                    }
+                } catch (JSONException e){
+                    e.printStackTrace();
+                }
             }
 
             if (active_plugins.size() > 0) {
@@ -739,7 +775,7 @@ public class Aware extends Service {
         global_settings.add(Aware.STUDY_ID);
         global_settings.add(Aware.STUDY_START);
         global_settings.add(Aware_Preferences.DEVICE_ID);
-        global_settings.add(Aware_Preferences.GROUP_ID);
+        global_settings.add(Aware_Preferences.DEVICE_LABEL);
         global_settings.add(Aware_Preferences.STATUS_WEBSERVICE);
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
@@ -801,7 +837,7 @@ public class Aware extends Service {
         global_settings.add(Aware.STUDY_ID);
         global_settings.add(Aware.STUDY_START);
         global_settings.add(Aware_Preferences.DEVICE_ID);
-        global_settings.add(Aware_Preferences.GROUP_ID);
+        global_settings.add(Aware_Preferences.DEVICE_LABEL);
         global_settings.add(Aware_Preferences.STATUS_WEBSERVICE);
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
@@ -826,7 +862,7 @@ public class Aware extends Service {
         //We already have a Device ID or Group ID, bail-out!
         if (key.equals(Aware_Preferences.DEVICE_ID) && Aware.getSetting(context, Aware_Preferences.DEVICE_ID).length() > 0)
             return;
-        if (key.equals(Aware_Preferences.GROUP_ID) && Aware.getSetting(context, Aware_Preferences.GROUP_ID).length() > 0)
+        if (key.equals(Aware_Preferences.DEVICE_LABEL) && Aware.getSetting(context, Aware_Preferences.DEVICE_LABEL).length() > 0)
             return;
 
         ContentValues setting = new ContentValues();
@@ -1087,9 +1123,7 @@ public class Aware extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
         if (repeatingIntent != null) alarmManager.cancel(repeatingIntent);
-        if (webserviceUploadIntent != null) alarmManager.cancel(webserviceUploadIntent);
 
         if (aware_BR != null) awareContext.unregisterReceiver(aware_BR);
         if (storage_BR != null) awareContext.unregisterReceiver(storage_BR);
@@ -1098,64 +1132,65 @@ public class Aware extends Service {
     /**
      * Client: check if a certain study is still ongoing, resets client otherwise.
      */
-    private class Study_Check extends AsyncTask<Void, Void, Boolean> {
-        @Override
-        protected Boolean doInBackground(Void... voids) {
-
-            Hashtable<String, String> data = new Hashtable<>();
-            data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-            data.put("study_check", "1");
-
-            String study_url = Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER);
-            String protocol = study_url.substring(0, study_url.indexOf(":"));
-
-            String response;
-            if (protocol.equals("https")) {
-                try {
-                    response = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataPOST(study_url, data, true);
-                } catch (FileNotFoundException e) {
-                    response = null;
-                }
-            } else {
-                response = new Http(getApplicationContext()).dataPOST(study_url, data, true);
-            }
-            if (response != null) {
-                try {
-                    JSONArray configs = new JSONArray(response);
-                    JSONObject io = configs.getJSONObject(0);
-                    if (io.has("message")) {
-                        Log.d(Aware.TAG, io.getString("message"));
-                        if (io.getString("message").equals("This study is not ongoing anymore."))
-                            return true;
-                    }
-                    return false;
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-            return false;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean is_closed) {
-            super.onPostExecute(is_closed);
-            if (is_closed) {
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
-                mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
-                mBuilder.setContentTitle("AWARE");
-                mBuilder.setContentText("The study has ended! Thanks!");
-                mBuilder.setAutoCancel(true);
-
-                NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                notManager.notify(new Random(System.currentTimeMillis()).nextInt(), mBuilder.build());
-
-                reset(getApplicationContext());
-            }
-        }
-    }
+//    private class Study_Check extends AsyncTask<Void, Void, Boolean> {
+//        @Override
+//        protected Boolean doInBackground(Void... voids) {
+//
+//            Hashtable<String, String> data = new Hashtable<>();
+//            data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+//            data.put("study_check", "1");
+//
+//            String study_url = Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER);
+//            String protocol = study_url.substring(0, study_url.indexOf(":"));
+//
+//            String response;
+//            if (protocol.equals("https")) {
+//                try {
+//                    response = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataPOST(study_url, data, true);
+//                } catch (FileNotFoundException e) {
+//                    response = null;
+//                }
+//            } else {
+//                response = new Http(getApplicationContext()).dataPOST(study_url, data, true);
+//            }
+//            if (response != null) {
+//                try {
+//                    JSONArray configs = new JSONArray(response);
+//                    JSONObject io = configs.getJSONObject(0);
+//                    if (io.has("message")) {
+//                        Log.d(Aware.TAG, io.getString("message"));
+//                        if (io.getString("message").equals("This study is not ongoing anymore."))
+//                            return true;
+//                    }
+//                    return false;
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//            return false;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(Boolean is_closed) {
+//            super.onPostExecute(is_closed);
+//            if (is_closed) {
+//                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
+//                mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
+//                mBuilder.setContentTitle("AWARE");
+//                mBuilder.setContentText("The study has ended! Thanks!");
+//                mBuilder.setAutoCancel(true);
+//
+//                NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+//                notManager.notify(new Random(System.currentTimeMillis()).nextInt(), mBuilder.build());
+//
+//                reset(getApplicationContext());
+//            }
+//        }
+//    }
 
     public static void reset(Context c) {
         String device_id = Aware.getSetting(c, Aware_Preferences.DEVICE_ID);
+        String device_label = Aware.getSetting(c, Aware_Preferences.DEVICE_LABEL);
 
         //Remove all settings
         c.getContentResolver().delete(Aware_Settings.CONTENT_URI, null, null);
@@ -1170,8 +1205,13 @@ public class Aware extends Service {
             Aware.setSetting(c, entry.getKey(), entry.getValue());
         }
 
-        //Keep previous AWARE Device ID
+        //Keep previous AWARE Device ID and label
         Aware.setSetting(c, Aware_Preferences.DEVICE_ID, device_id);
+        Aware.setSetting(c, Aware_Preferences.DEVICE_LABEL, device_label);
+
+        ContentValues update_label = new ContentValues();
+        update_label.put(Aware_Device.LABEL, device_label);
+        c.getContentResolver().update(Aware_Device.CONTENT_URI, update_label, Aware_Device.DEVICE_ID + " LIKE '" + device_id + "'", null);
 
         //Turn off all active plugins
         ArrayList<String> active_plugins = new ArrayList<>();
@@ -1193,135 +1233,63 @@ public class Aware extends Service {
         c.sendBroadcast(applyNew);
     }
 
-    private class AwarePluginsUpdateCheck extends AsyncTask<ArrayList<String>, Void, Boolean> {
-        private ArrayList<String> updated = new ArrayList<>();
-
-        @Override
-        protected Boolean doInBackground(ArrayList<String>... params) {
-            for (String package_name : params[0]) {
-
-                String study_url = Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER);
-                String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
-                String protocol = study_url.substring(0, study_url.indexOf(":"));
-
-                String http_request;
-                if (protocol.equals("https")) {
-                    try {
-                        http_request = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_host + "/index.php/plugins/get_plugin/" + package_name, true);
-                    } catch (FileNotFoundException e) {
-                        http_request = null;
-                    }
-                } else {
-                    http_request = new Http(getApplicationContext()).dataGET(study_host + "/index.php/plugins/get_plugin/" + package_name, true);
-                }
-
-                if (http_request != null) {
-                    if (!http_request.equals("[]")) {
-                        try {
-                            JSONObject json_package = new JSONObject(http_request);
-                            if (json_package.getInt("version") > PluginsManager.getVersion(getApplicationContext(), package_name)) {
-                                updated.add(package_name);
-                            }
-                        } catch (JSONException e) {
-                        }
-                    }
-                }
-            }
-            return (updated.size() > 0);
-        }
-
-        @Override
-        protected void onPostExecute(Boolean updates) {
-            super.onPostExecute(updates);
-            if (updates) {
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
-                mBuilder.setSmallIcon(R.drawable.ic_stat_aware_plugin_dependency);
-                mBuilder.setContentTitle("AWARE Update");
-                mBuilder.setContentText("Found " + updated.size() + " updated plugin(s). Install?");
-                mBuilder.setAutoCancel(true);
-
-                Intent updateIntent = new Intent(getApplicationContext(), DowloadUpdatedPlugins.class);
-                updateIntent.putExtra("updated", updated);
-
-                PendingIntent clickIntent = PendingIntent.getService(getApplicationContext(), 0, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                mBuilder.setContentIntent(clickIntent);
-                NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                notManager.notify(updated.size(), mBuilder.build());
-            }
-        }
-    }
-
-    /**
-     * Client: check if there is an update to the client.
-     */
-    public static class AwareUpdateCheck extends AsyncTask<Void, Void, Boolean> {
-        String filename = "", whats_new = "";
-        int version = 0;
-        PackageInfo awarePkg = null;
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            if (!Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER).contains("api.awareframework.com"))
-                return false;
-
-            try {
-                awarePkg = awareContext.getPackageManager().getPackageInfo("com.aware", PackageManager.GET_META_DATA);
-            } catch (NameNotFoundException e1) {
-                e1.printStackTrace();
-                return false;
-            }
-
-            String response;
-            try {
-                response = new Https(awareContext, SSLManager.getHTTPS(awareContext, "http://api.awareframework.com/index.php")).dataGET("https://api.awareframework.com/index.php/awaredev/framework_latest", true);
-            } catch (FileNotFoundException e) {
-                response = null;
-            }
-            if (response != null) {
-                try {
-                    JSONArray data = new JSONArray(response);
-                    JSONObject latest_framework = data.getJSONObject(0);
-
-                    if (Aware.DEBUG) Log.d(Aware.TAG, "Latest: " + latest_framework.toString());
-
-                    filename = latest_framework.getString("filename");
-                    version = latest_framework.getInt("version");
-                    whats_new = latest_framework.getString("whats_new");
-
-                    if (version > awarePkg.versionCode) {
-                        return true;
-                    }
-                    return false;
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Unable to fetch latest framework from AWARE repository...");
-            }
-            return false;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean result) {
-            super.onPostExecute(result);
-            if (result) {
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(awareContext);
-                mBuilder.setSmallIcon(R.drawable.ic_stat_aware_update);
-                mBuilder.setContentTitle("AWARE Update");
-                mBuilder.setContentText("Version: " + version + ". Install?");
-                mBuilder.setAutoCancel(true);
-
-                Intent updateIntent = new Intent(awareContext, AwareClientUpdateDownloader.class);
-                updateIntent.putExtra("filename", filename);
-
-                PendingIntent clickIntent = PendingIntent.getService(awareContext, 0, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                mBuilder.setContentIntent(clickIntent);
-                NotificationManager notManager = (NotificationManager) awareContext.getSystemService(Context.NOTIFICATION_SERVICE);
-                notManager.notify(version, mBuilder.build());
-            }
-        }
-    }
+//    private class AwarePluginsUpdateCheck extends AsyncTask<ArrayList<String>, Void, Boolean> {
+//        private ArrayList<String> updated = new ArrayList<>();
+//
+//        @Override
+//        protected Boolean doInBackground(ArrayList<String>... params) {
+//            for (String package_name : params[0]) {
+//
+//                String study_url = Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER);
+//                String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
+//                String protocol = study_url.substring(0, study_url.indexOf(":"));
+//
+//                String http_request;
+//                if (protocol.equals("https")) {
+//                    try {
+//                        http_request = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_host + "/index.php/plugins/get_plugin/" + package_name, true);
+//                    } catch (FileNotFoundException e) {
+//                        http_request = null;
+//                    }
+//                } else {
+//                    http_request = new Http(getApplicationContext()).dataGET(study_host + "/index.php/plugins/get_plugin/" + package_name, true);
+//                }
+//
+//                if (http_request != null) {
+//                    if (!http_request.equals("[]")) {
+//                        try {
+//                            JSONObject json_package = new JSONObject(http_request);
+//                            if (json_package.getInt("version") > PluginsManager.getVersion(getApplicationContext(), package_name)) {
+//                                updated.add(package_name);
+//                            }
+//                        } catch (JSONException e) {
+//                        }
+//                    }
+//                }
+//            }
+//            return (updated.size() > 0);
+//        }
+//
+//        @Override
+//        protected void onPostExecute(Boolean updates) {
+//            super.onPostExecute(updates);
+//            if (updates) {
+//                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
+//                mBuilder.setSmallIcon(R.drawable.ic_stat_aware_plugin_dependency);
+//                mBuilder.setContentTitle("AWARE Update");
+//                mBuilder.setContentText("Found " + updated.size() + " updated plugin(s). Install?");
+//                mBuilder.setAutoCancel(true);
+//
+//                Intent updateIntent = new Intent(getApplicationContext(), DowloadUpdatedPlugins.class);
+//                updateIntent.putExtra("updated", updated);
+//
+//                PendingIntent clickIntent = PendingIntent.getService(getApplicationContext(), 0, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+//                mBuilder.setContentIntent(clickIntent);
+//                NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+//                notManager.notify(updated.size(), mBuilder.build());
+//            }
+//        }
+//    }
 
     /**
      * AWARE Android Package Monitor
@@ -1505,45 +1473,6 @@ public class Aware extends Service {
     }
 
     /**
-     * Background service to download latest version of AWARE
-     *
-     * @author denzilferreira
-     */
-    public static class AwareClientUpdateDownloader extends IntentService {
-        public AwareClientUpdateDownloader() {
-            super("Update Framework service");
-        }
-
-        @Override
-        protected void onHandleIntent(Intent intent) {
-            String filename = intent.getStringExtra("filename");
-
-            //Make sure we have the releases folder
-            File releases = new File(getExternalFilesDir(null) + "/Documents/AWARE", "releases");
-            releases.mkdirs();
-
-            String url = "http://awareframework.com/" + filename;
-
-            Toast.makeText(this, "Updating AWARE...", Toast.LENGTH_SHORT).show();
-
-            Ion.with(getApplicationContext())
-                    .load(url)
-                    .write(new File(getExternalFilesDir(null) + "/Documents/AWARE/releases/" + filename))
-                    .setCallback(new FutureCallback<File>() {
-                        @Override
-                        public void onCompleted(Exception e, File result) {
-                            if (result != null) {
-                                Intent promptInstall = new Intent(Intent.ACTION_VIEW);
-                                promptInstall.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                promptInstall.setDataAndType(Uri.fromFile(result), "application/vnd.android.package-archive");
-                                startActivity(promptInstall);
-                            }
-                        }
-                    });
-        }
-    }
-
-    /**
      * BroadcastReceiver that monitors for AWARE framework actions:
      * - ACTION_AWARE_SYNC_DATA = upload data to remote webservice server.
      * - ACTION_AWARE_CLEAR_DATA = clears local device's AWARE modules databases.
@@ -1583,16 +1512,6 @@ public class Aware extends Service {
                     webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[0]);
                     context.startService(webserviceHelper);
                 }
-            }
-
-            if (intent.getAction().equals(Aware.ACTION_AWARE_CHECK_UPDATE)) {
-                //Check if there are updates to the client
-                if (!Aware.is_watch(context)) {
-                    new AwareUpdateCheck().execute();
-                }
-                SharedPreferences.Editor editor = aware_preferences.edit();
-                editor.putLong(PREF_LAST_UPDATE, System.currentTimeMillis());
-                editor.commit();
             }
 
             if (intent.getAction().equals(Aware.ACTION_QUIT_STUDY)) {

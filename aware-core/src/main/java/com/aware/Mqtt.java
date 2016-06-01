@@ -140,6 +140,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	
 	private static MqttClient MQTT_CLIENT = null;
 	private static Context mContext = null;
+
+    private static MQTTAsync connector;
 	
 	/**
 	 * Activity-Service binder
@@ -329,7 +331,14 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        initializeMQTT();
+
+        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
+
+        if( MQTT_CLIENT != null && MQTT_CLIENT.isConnected() ) {
+            if( DEBUG ) Log.d(TAG,"Connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
+        } else {
+            initializeMQTT();
+        }
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -353,13 +362,6 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	}
 
 	private void initializeMQTT() {
-		if( MQTT_CLIENT != null && MQTT_CLIENT.isConnected() ) {
-			if( DEBUG ) Log.d(TAG,"Connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
-            return;
-		}
-
-		TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
-	    
 	    MQTT_SERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_SERVER );
         MQTT_PORT = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_PORT );
         MQTT_USERNAME = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_USERNAME );
@@ -390,7 +392,11 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
     	try {
     		MQTT_CLIENT = new MqttClient( MQTT_URL, String.valueOf(Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).hashCode()), MQTT_MESSAGES_PERSISTENCE );
             MQTT_CLIENT.setCallback( this );
-            new MQTTAsync().execute( MQTT_OPTIONS );
+
+            if (connector == null) connector = new MQTTAsync();
+            if (connector.getStatus() == AsyncTask.Status.PENDING)
+                connector.execute( MQTT_OPTIONS );
+
 		} catch ( MqttException e ) {
 			if( Aware.DEBUG) Log.e(TAG, "Failed: " + e.getMessage());
 		}

@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.aware.Aware;
@@ -35,6 +36,7 @@ public class Scheduler extends Service {
     public static final String SCHEDULE_ACTION = "action";
     public static final String SCHEDULE_ID = "schedule_id";
 
+    public static final String TRIGGER_MINUTE = "minute";
     public static final String TRIGGER_HOUR = "hour";
     public static final String TRIGGER_TIMER = "timer";
     public static final String TRIGGER_WEEKDAY = "weekday";
@@ -198,6 +200,12 @@ public class Scheduler extends Service {
             return this;
         }
 
+        public Schedule addMinute(int minute) throws JSONException {
+            JSONArray minutes = getMinutes();
+            minutes.put(minute);
+            return this;
+        }
+
         public JSONArray getActionExtras() throws JSONException {
             if (!this.schedule.getJSONObject(SCHEDULE_ACTION).has(ACTION_EXTRAS)) {
                 this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_EXTRAS, new JSONArray());
@@ -209,6 +217,19 @@ public class Scheduler extends Service {
             JSONArray extras = getActionExtras();
             extras.put(new JSONObject().put(ACTION_EXTRA_KEY, key).put(ACTION_EXTRA_VALUE, value));
             return this;
+        }
+
+        /**
+         * Get scheduled minutes
+         *
+         * @return
+         * @throws JSONException
+         */
+        public JSONArray getMinutes() throws JSONException {
+            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_MINUTE)) {
+                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_MINUTE, new JSONArray());
+            }
+            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_MINUTE);
         }
 
         /**
@@ -452,14 +473,22 @@ public class Scheduler extends Service {
                 previous.setTimeInMillis(last_triggered);
             }
 
-            //triggered at the given hours, regardless of weekday or month
-            if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0) {
+            //triggered at the given minutes, regardless of hour, weekday or month
+            if (schedule.getMinutes().length() > 0 && schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0) {
+                if (Aware.DEBUG)
+                    Log.d(Aware.TAG, "Checking trigger at given minutes, regardless of hour, weekday or month");
+                if (previous != null && is_same_minute_hour(now, previous)) return false;
+                return is_trigger_minute(schedule);
+
+            } //triggered at the given hours, regardless of weekday or month
+            else if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0) {
                 if (Aware.DEBUG)
                     Log.d(Aware.TAG, "Checking trigger at given hour, regardless of weekday or month");
                 if (previous != null && is_same_hour_day(now, previous)) return false;
                 return is_trigger_hour(schedule);
-                //triggered at given hours and week day
-            } else if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() == 0) {
+
+            } //triggered at given hours and week day
+            else if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() == 0) {
                 if (Aware.DEBUG) Log.d(Aware.TAG, "Checking trigger at given hour, and weekday");
                 if (previous != null && is_same_hour_day(now, previous) && is_same_weekday(now, previous))
                     return false;
@@ -502,6 +531,13 @@ public class Scheduler extends Service {
         return false;
     }
 
+    private boolean is_same_minute_hour(Calendar date_one, Calendar date_two) {
+        return date_one.get(Calendar.YEAR) == date_two.get(Calendar.YEAR)
+                && date_one.get(Calendar.DAY_OF_YEAR) == date_two.get(Calendar.DAY_OF_YEAR)
+                && date_one.get(Calendar.HOUR_OF_DAY) == date_two.get(Calendar.HOUR_OF_DAY)
+                && date_one.get(Calendar.MINUTE) == date_two.get(Calendar.MINUTE);
+    }
+
     private boolean is_same_hour_day(Calendar date_one, Calendar date_two) {
         return date_one.get(Calendar.YEAR) == date_two.get(Calendar.YEAR)
                 && date_one.get(Calendar.DAY_OF_YEAR) == date_two.get(Calendar.DAY_OF_YEAR)
@@ -517,6 +553,35 @@ public class Scheduler extends Service {
     private boolean is_same_month(Calendar date_one, Calendar date_two) {
         return date_one.get(Calendar.YEAR) == date_two.get(Calendar.YEAR)
                 && date_one.get(Calendar.MONTH) == date_two.get(Calendar.MONTH);
+    }
+
+    /**
+     * Check if this trigger should be triggered at this minute
+     *
+     * @param schedule
+     * @return
+     */
+    private boolean is_trigger_minute(Schedule schedule) {
+        if (Aware.DEBUG) Log.d(Aware.TAG, "Checking minute matching");
+
+        Calendar now = Calendar.getInstance();
+        now.setTimeInMillis(System.currentTimeMillis());
+
+        try {
+            JSONArray minutes = schedule.getMinutes();
+            for (int i = 0; i < minutes.length(); i++) {
+                int minute = minutes.getInt(i);
+
+                if (Aware.DEBUG)
+                    Log.d(Aware.TAG, "Minute " + minute + " vs now " + now.get(Calendar.MINUTE) + " in trigger minutes: " + minutes.toString());
+
+                if (now.get(Calendar.MINUTE) >= minute-3 && now.get(Calendar.MINUTE) <= minute+3) return true;
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
     /**

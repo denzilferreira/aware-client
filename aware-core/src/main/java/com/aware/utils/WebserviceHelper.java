@@ -4,6 +4,7 @@ package com.aware.utils;
 import android.app.IntentService;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -41,6 +42,10 @@ public class WebserviceHelper extends IntentService {
         return false;
     }
 
+    private static String DEVICE_ID, DATABASE_TABLE, TABLES_FIELDS;
+    private static boolean DEBUG;
+    private static Uri CONTENT_URI;
+
     @Override
     protected void onHandleIntent(Intent intent) {
 
@@ -55,11 +60,11 @@ public class WebserviceHelper extends IntentService {
             batch_size = 100; //default for watch (we have a limit of 100KB of data packet size (Message API restrictions)
         }
 
-        String DEVICE_ID = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
-        boolean DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
-        String DATABASE_TABLE = intent.getStringExtra(EXTRA_TABLE);
-        String TABLES_FIELDS = intent.getStringExtra(EXTRA_FIELDS);
-        Uri CONTENT_URI = Uri.parse(intent.getStringExtra(EXTRA_CONTENT_URI));
+        DEVICE_ID = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
+        DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
+        DATABASE_TABLE = intent.getStringExtra(EXTRA_TABLE);
+        TABLES_FIELDS = intent.getStringExtra(EXTRA_FIELDS);
+        CONTENT_URI = Uri.parse(intent.getStringExtra(EXTRA_CONTENT_URI));
 
         if (intent.getAction().equals(ACTION_AWARE_WEBSERVICE_SYNC_TABLE)) {
 
@@ -75,7 +80,7 @@ public class WebserviceHelper extends IntentService {
                 }
             }
 
-            if (Aware.DEBUG) Log.d(Aware.TAG, "Synching data..." + DATABASE_TABLE);
+            if (Aware.DEBUG) Log.d(Aware.TAG, "Synching: " + DATABASE_TABLE);
 
             //Check first if we have database table remotely, otherwise create it!
             Hashtable<String, String> fields = new Hashtable<>();
@@ -94,7 +99,7 @@ public class WebserviceHelper extends IntentService {
                 response = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
             }
             if (response != null) {
-                if (DEBUG) Log.d(Aware.TAG, "CREATE TABLE RESULT: " + response);
+//                if (DEBUG) Log.d(Aware.TAG, "CREATE TABLE RESULT: " + response);
 
                 String[] columnsStr = new String[]{};
                 Cursor columnsDB = getContentResolver().query(CONTENT_URI, null, null, null, null);
@@ -120,7 +125,7 @@ public class WebserviceHelper extends IntentService {
                     }
                     if (latest == null) return;
 
-                    if (DEBUG) Log.d(Aware.TAG, "LATEST REMOTE ENTRY RESULT: " + latest);
+//                    if (DEBUG) Log.d(Aware.TAG, "LATEST REMOTE ENTRY RESULT: " + latest);
 
                     //If in a study, get from joined date onwards
                     String study_condition = "";
@@ -162,8 +167,8 @@ public class WebserviceHelper extends IntentService {
                         int batch_total = (Math.round(context_data.getCount() / batch_size) > 0 ? Math.round(context_data.getCount() / batch_size) : 1);
                         int batch_count = 0;
 
-                        if (DEBUG)
-                            Log.d(Aware.TAG, "Syncing " + context_data.getCount() + " from " + DATABASE_TABLE + " in " + batch_total + " batches");
+                        if (DEBUG) Log.d(Aware.TAG, "Syncing " + context_data.getCount() + " from " + DATABASE_TABLE + " in " + batch_total + " batches");
+
                         long start = System.currentTimeMillis();
 
                         do {
@@ -211,7 +216,7 @@ public class WebserviceHelper extends IntentService {
                                     insert = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                                 }
                                 if (insert != null) {
-                                    if (DEBUG) Log.d(Aware.TAG, "INSERT RESULT: " + insert);
+//                                    if (DEBUG) Log.d(Aware.TAG, "INSERT RESULT: " + insert);
                                 }
                                 context_data_entries = new JSONArray();
                             }
@@ -237,11 +242,11 @@ public class WebserviceHelper extends IntentService {
                                 insert = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                             }
                             if (insert != null) {
-                                if (DEBUG) Log.d(Aware.TAG, "INSERT RESULT: " + insert);
+//                                if (DEBUG) Log.d(Aware.TAG, "INSERT RESULT: " + insert);
                             }
                         }
                         if (DEBUG)
-                            Log.d(Aware.TAG, "Sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis() - start) / 1000));
+                            Log.d(Aware.TAG, DATABASE_TABLE + " sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis() - start) / 1000));
                     }
 
                     if (context_data != null && !context_data.isClosed()) context_data.close();
@@ -268,8 +273,16 @@ public class WebserviceHelper extends IntentService {
                 clear = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
             }
             if (clear != null) {
-                if (DEBUG) Log.d(Aware.TAG, "CLEAR RESULT: " + clear);
+//                if (DEBUG) Log.d(Aware.TAG, "CLEAR RESULT: " + clear);
             }
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        if (DEBUG)
+            Log.d(Aware.TAG, "Finished synching all the databases.");
     }
 }

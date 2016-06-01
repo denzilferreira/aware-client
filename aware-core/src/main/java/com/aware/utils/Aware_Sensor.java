@@ -123,24 +123,6 @@ public class Aware_Sensor extends Service {
         if (DEBUG) Log.d(TAG, TAG + " sensor terminated...");
     }
 
-//    @Override
-//    public int onStartCommand(Intent intent, int flags, int startId) {
-//        final ArrayList<String> missing = new ArrayList<>();
-//        for (String p : REQUIRED_PERMISSIONS) {
-//            int permission_access = ContextCompat.checkSelfPermission(getApplicationContext(), p);
-//            if (permission_access != PackageManager.PERMISSION_GRANTED) {
-//                missing.add(p);
-//            }
-//        }
-//        if (missing.size() > 0) {
-//            Intent permissionRequest = new Intent(this, PermissionsHandler.class);
-//            permissionRequest.putStringArrayListExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, missing );
-//            permissionRequest.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-//            startActivity(permissionRequest);
-//        }
-//        return super.onStartCommand(intent, flags, startId);
-//    }
-
     /**
      * AWARE Context Broadcaster<br/>
      * - ACTION_AWARE_CURRENT_CONTEXT: returns current plugin's context
@@ -219,6 +201,20 @@ public class Aware_Sensor extends Service {
                             cal.add(Calendar.MONTH, -1);
                             if (Aware.DEBUG)
                                 Log.d(TAG, TAG + " cleaning locally any data older than last month (yyyy/mm/dd): " + cal.get(Calendar.YEAR) + '/' + (cal.get(Calendar.MONTH) + 1) + '/' + cal.get(Calendar.DAY_OF_MONTH));
+                            for (int i = 0; i < DATABASE_TABLES.length; i++) {
+                                //Clear locally
+                                String where = "timestamp < " + cal.getTimeInMillis();
+                                int rowsDeleted = context.getContentResolver().delete(CONTEXT_URIS[i], where, null);
+                                if (Aware.DEBUG)
+                                    Log.d(TAG, "Cleaned " + rowsDeleted + " from " + CONTEXT_URIS[i].toString());
+                            }
+                        }
+                        break;
+                    case 3: //daily
+                        if (DATABASE_TABLES != null && CONTEXT_URIS != null) {
+                            cal.add(Calendar.DAY_OF_YEAR, -1);
+                            if (Aware.DEBUG)
+                                Log.d(TAG, TAG + " cleaning locally any data older than today (yyyy/mm/dd): " + cal.get(Calendar.YEAR) + '/' + (cal.get(Calendar.MONTH) + 1) + '/' + cal.get(Calendar.DAY_OF_MONTH));
                             for (int i = 0; i < DATABASE_TABLES.length; i++) {
                                 //Clear locally
                                 String where = "timestamp < " + cal.getTimeInMillis();

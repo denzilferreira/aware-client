@@ -36,12 +36,12 @@ public class Aware_Preferences {
     /**
      * AWARE Group ID, used for assigning clients to a specific research group upon deployment
      */
-    public static final String GROUP_ID = "group_id";
+    public static final String DEVICE_LABEL = "device_label";
 
     /**
      * Automatically check for updates on the client
      */
-    public static final String AWARE_AUTO_UPDATE = "aware_auto_update";
+    public static final String AWARE_VERSION = "aware_version";
 
     /**
      * Activate/deactivate accelerometer log (boolean)

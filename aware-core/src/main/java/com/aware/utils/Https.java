@@ -128,7 +128,7 @@ public class Https {
 			os.close();
 
             if(Aware.DEBUG) {
-                print_https_cert(path_connection);
+//                print_https_cert(path_connection);
             }
 
 			path_connection.connect();
@@ -156,8 +156,8 @@ public class Https {
             }
 
             if (Aware.DEBUG) {
-                Log.d(TAG, "Request: POST, URL: " + url + "\nData:" + builder.build().getEncodedQuery());
-                Log.i(TAG,"Answer:" + page_content );
+//                Log.d(TAG, "Request: POST, URL: " + url + "\nData:" + builder.build().getEncodedQuery());
+//                Log.i(TAG,"Answer:" + page_content );
             }
 
             return page_content;
@@ -194,7 +194,7 @@ public class Https {
             if( is_gzipped ) path_connection.setRequestProperty("accept-encoding","gzip");
 
             if(Aware.DEBUG) {
-                print_https_cert(path_connection);
+//                print_https_cert(path_connection);
             }
 
             path_connection.connect();
@@ -222,8 +222,8 @@ public class Https {
             }
 
             if (Aware.DEBUG) {
-                Log.i(TAG,"Request: GET, URL: " + url);
-                Log.i(TAG,"Answer:" + page_content );
+//                Log.i(TAG,"Request: GET, URL: " + url);
+//                Log.i(TAG,"Answer:" + page_content );
             }
 
             return page_content;

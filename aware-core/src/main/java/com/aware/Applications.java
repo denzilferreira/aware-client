@@ -96,7 +96,7 @@ public class Applications extends AccessibilityService {
     	PackageManager packageManager = getPackageManager();
         ApplicationInfo appInfo;
         try {
-            appInfo = packageManager.getApplicationInfo(package_name, PackageManager.GET_ACTIVITIES);
+            appInfo = packageManager.getApplicationInfo(package_name, PackageManager.GET_META_DATA);
         } catch( final NameNotFoundException e ) {
             appInfo = null;
         }
@@ -165,7 +165,7 @@ public class Applications extends AccessibilityService {
             if( ! same_app ) {
                 ApplicationInfo appInfo;
                 try {
-                    appInfo = packageManager.getApplicationInfo(event.getPackageName().toString(), PackageManager.GET_ACTIVITIES);
+                    appInfo = packageManager.getApplicationInfo(event.getPackageName().toString(), PackageManager.GET_META_DATA);
                 } catch( NameNotFoundException | NullPointerException | Resources.NotFoundException e ) {
                     appInfo = null;
                 }
@@ -213,7 +213,7 @@ public class Applications extends AccessibilityService {
 	            	for(ProcessErrorStateInfo error : errors ) {
 	            		try {
 							PackageInfo pkgInfo = packageManager.getPackageInfo(error.processName, PackageManager.GET_META_DATA);
-							ApplicationInfo appInfo = packageManager.getApplicationInfo(event.getPackageName().toString(), PackageManager.GET_ACTIVITIES);
+							ApplicationInfo appInfo = packageManager.getApplicationInfo(event.getPackageName().toString(), PackageManager.GET_META_DATA);
 				            String appName = ( appInfo != null ) ? (String) packageManager.getApplicationLabel(appInfo):"";
 							
 							ContentValues crashData = new ContentValues();
