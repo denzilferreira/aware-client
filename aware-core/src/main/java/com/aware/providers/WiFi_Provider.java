@@ -31,7 +31,7 @@ import java.util.HashMap;
  */
 public class WiFi_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 4;
+	public static final int DATABASE_VERSION = 5;
 
 	/**
 	 * Authority of WiFi content provider
@@ -105,8 +105,8 @@ public class WiFi_Provider extends ContentProvider {
 			+ WiFi_Data.SECURITY + " text default ''," 
 			+ WiFi_Data.FREQUENCY + " integer default 0," 
 			+ WiFi_Data.RSSI + " integer default 0," 
-			+ WiFi_Data.LABEL+ " text default ''," 
-			+ "UNIQUE(" + WiFi_Data.TIMESTAMP + "," + WiFi_Data.DEVICE_ID + "," + WiFi_Data.BSSID + ")",
+			+ WiFi_Data.LABEL+ " text default ''",
+//			+ "UNIQUE(" + WiFi_Data.DEVICE_ID + "," + WiFi_Data.TIMESTAMP + "," + WiFi_Data.BSSID + ")",
 			// device
 			WiFi_Sensor._ID + " integer primary key autoincrement,"
 			+ WiFi_Sensor.TIMESTAMP + " real default 0,"
@@ -114,7 +114,7 @@ public class WiFi_Provider extends ContentProvider {
 			+ WiFi_Sensor.MAC_ADDRESS + " text default '',"
 			+ WiFi_Data.SSID + " text default '',"
 			+ WiFi_Data.BSSID + " text default '',"
-			+ "UNIQUE("+ WiFi_Sensor.TIMESTAMP + "," + WiFi_Sensor.DEVICE_ID + ")" };
+			+ "UNIQUE("+ WiFi_Sensor.DEVICE_ID + "," + WiFi_Sensor.TIMESTAMP + ")" };
 
 	private static DatabaseHelper databaseHelper = null;
 	private static SQLiteDatabase database = null;

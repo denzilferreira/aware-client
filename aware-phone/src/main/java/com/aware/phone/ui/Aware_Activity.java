@@ -7,8 +7,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
@@ -17,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -157,8 +160,9 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                             startActivity(sensors_ui);
                             break;
                         case 2: //Plugins
-                            Intent plugin_manager = new Intent(getApplicationContext(), Plugins_Manager.class);
-                            startActivity(plugin_manager);
+                            Intent playStore = new Intent(Intent.ACTION_VIEW);
+                            playStore.setData(Uri.parse("market://search?q=awareframework plugin&c=apps"));
+                            startActivity(playStore);
                             break;
                         case 3: //Join study
                             //TODO: make ui for listing available studies

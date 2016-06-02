@@ -505,7 +505,7 @@ public class Applications extends AccessibilityService {
                 for( RunningAppProcessInfo app : runningApps ) {
                     try {
                         PackageInfo appPkg = packageManager.getPackageInfo(app.processName, PackageManager.GET_META_DATA);
-                        ApplicationInfo appInfo = packageManager.getApplicationInfo(app.processName, PackageManager.GET_ACTIVITIES);
+                        ApplicationInfo appInfo = packageManager.getApplicationInfo(app.processName, PackageManager.GET_META_DATA);
                         
                         String appName = ( appInfo != null ) ? (String) packageManager.getApplicationLabel(appInfo):"";
                         

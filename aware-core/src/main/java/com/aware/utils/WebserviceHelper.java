@@ -20,6 +20,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Hashtable;
 
 public class WebserviceHelper extends IntentService {
@@ -42,10 +43,6 @@ public class WebserviceHelper extends IntentService {
         return false;
     }
 
-    private static String DEVICE_ID, DATABASE_TABLE, TABLES_FIELDS;
-    private static boolean DEBUG;
-    private static Uri CONTENT_URI;
-
     @Override
     protected void onHandleIntent(Intent intent) {
 
@@ -60,22 +57,24 @@ public class WebserviceHelper extends IntentService {
             batch_size = 100; //default for watch (we have a limit of 100KB of data packet size (Message API restrictions)
         }
 
-        DEVICE_ID = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
-        DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
-        DATABASE_TABLE = intent.getStringExtra(EXTRA_TABLE);
-        TABLES_FIELDS = intent.getStringExtra(EXTRA_FIELDS);
-        CONTENT_URI = Uri.parse(intent.getStringExtra(EXTRA_CONTENT_URI));
+        String DEVICE_ID = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
+        boolean DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
+        String DATABASE_TABLE = intent.getStringExtra(EXTRA_TABLE);
+        String TABLES_FIELDS = intent.getStringExtra(EXTRA_FIELDS);
+        Uri CONTENT_URI = Uri.parse(intent.getStringExtra(EXTRA_CONTENT_URI));
 
         if (intent.getAction().equals(ACTION_AWARE_WEBSERVICE_SYNC_TABLE)) {
 
             //Check if we are supposed to sync over WiFi only
-            if( Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true") ) {
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true")) {
                 ConnectivityManager connManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
                 NetworkInfo activeNetwork = connManager.getActiveNetworkInfo();
                 if (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected()) {
-                    if (Aware.DEBUG) Log.d(Aware.TAG, "Synching data only over Wi-Fi and internet is available, let's sync!");
+                    if (Aware.DEBUG)
+                        Log.d(Aware.TAG, "Synching data only over Wi-Fi and internet is available, let's sync!");
                 } else {
-                    if (Aware.DEBUG) Log.d(Aware.TAG, "Synching data only over Wi-Fi and no internet. Will try again later...");
+                    if (Aware.DEBUG)
+                        Log.d(Aware.TAG, "Synching data only over Wi-Fi and no internet. Will try again later...");
                     return;
                 }
             }
@@ -98,9 +97,8 @@ public class WebserviceHelper extends IntentService {
             } else {
                 response = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
             }
-            if (response != null) {
-//                if (DEBUG) Log.d(Aware.TAG, "CREATE TABLE RESULT: " + response);
 
+            if (response != null) {
                 String[] columnsStr = new String[]{};
                 Cursor columnsDB = getContentResolver().query(CONTENT_URI, null, null, null, null);
                 if (columnsDB != null && columnsDB.moveToFirst()) {
@@ -124,8 +122,6 @@ public class WebserviceHelper extends IntentService {
                         latest = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
                     }
                     if (latest == null) return;
-
-//                    if (DEBUG) Log.d(Aware.TAG, "LATEST REMOTE ENTRY RESULT: " + latest);
 
                     //If in a study, get from joined date onwards
                     String study_condition = "";
@@ -164,10 +160,8 @@ public class WebserviceHelper extends IntentService {
                     JSONArray context_data_entries = new JSONArray();
                     if (context_data != null && context_data.moveToFirst()) {
 
-                        int batch_total = (Math.round(context_data.getCount() / batch_size) > 0 ? Math.round(context_data.getCount() / batch_size) : 1);
-                        int batch_count = 0;
-
-                        if (DEBUG) Log.d(Aware.TAG, "Syncing " + context_data.getCount() + " from " + DATABASE_TABLE + " in " + batch_total + " batches");
+                        if (DEBUG)
+                            Log.d(Aware.TAG, "Syncing " + context_data.getCount() + " records from " + DATABASE_TABLE);
 
                         long start = System.currentTimeMillis();
 
@@ -197,9 +191,6 @@ public class WebserviceHelper extends IntentService {
                             context_data_entries.put(entry);
 
                             if (context_data_entries.length() == batch_size) {
-                                batch_count++;
-                                if (DEBUG)
-                                    Log.d(Aware.TAG, "Sync batch " + batch_count + "/" + batch_total);
 
                                 request = new Hashtable<>();
                                 request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
@@ -215,17 +206,12 @@ public class WebserviceHelper extends IntentService {
                                 } else {
                                     insert = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                                 }
-                                if (insert != null) {
-//                                    if (DEBUG) Log.d(Aware.TAG, "INSERT RESULT: " + insert);
-                                }
+
                                 context_data_entries = new JSONArray();
                             }
                         } while (context_data.moveToNext());
 
                         if (context_data_entries.length() > 0) {
-                            batch_count++;
-                            if (DEBUG)
-                                Log.d(Aware.TAG, "Sync batch " + batch_count + "/" + batch_total);
 
                             request = new Hashtable<>();
                             request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
@@ -241,14 +227,35 @@ public class WebserviceHelper extends IntentService {
                             } else {
                                 insert = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                             }
-                            if (insert != null) {
-//                                if (DEBUG) Log.d(Aware.TAG, "INSERT RESULT: " + insert);
-                            }
                         }
+
                         if (DEBUG)
                             Log.d(Aware.TAG, DATABASE_TABLE + " sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis() - start) / 1000));
-                    }
 
+                        ArrayList<String> highFrequencySensors = new ArrayList<>();
+                        highFrequencySensors.add("accelerometer");
+                        highFrequencySensors.add("gyroscope");
+                        highFrequencySensors.add("barometer");
+                        highFrequencySensors.add("gravity");
+                        highFrequencySensors.add("light");
+                        highFrequencySensors.add("linear_accelerometer");
+                        highFrequencySensors.add("magnetometer");
+                        highFrequencySensors.add("rotation");
+                        highFrequencySensors.add("temperature");
+
+                        //Clean the local database, now that it is uploaded to the server, if required
+                        if (Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA)) == 4
+                                && highFrequencySensors.contains(DATABASE_TABLE)) {
+
+                            context_data.moveToFirst();
+
+                            double last = context_data.getDouble(context_data.getColumnIndex("timestamp"));
+                            getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null);
+
+                            if (DEBUG)
+                                Log.d(Aware.TAG, "Deleted local old records for " + DATABASE_TABLE);
+                        }
+                    }
                     if (context_data != null && !context_data.isClosed()) context_data.close();
 
                 } catch (JSONException e) {
@@ -259,21 +266,21 @@ public class WebserviceHelper extends IntentService {
 
         //Clear database table remotely
         if (intent.getAction().equals(ACTION_AWARE_WEBSERVICE_CLEAR_TABLE)) {
-            if (Aware.DEBUG) Log.d(Aware.TAG, "Clearing data..." + DATABASE_TABLE);
+
+            if (Aware.DEBUG)
+                Log.d(Aware.TAG, "Clearing data..." + DATABASE_TABLE);
+
             Hashtable<String, String> request = new Hashtable<>();
             request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
-            String clear;
+
             if (protocol.equals("https")) {
                 try {
-                    clear = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
+                    new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
                 } catch (FileNotFoundException e) {
-                    clear = null;
+                    e.printStackTrace();
                 }
             } else {
-                clear = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
-            }
-            if (clear != null) {
-//                if (DEBUG) Log.d(Aware.TAG, "CLEAR RESULT: " + clear);
+                new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
             }
         }
     }
@@ -282,7 +289,7 @@ public class WebserviceHelper extends IntentService {
     public void onDestroy() {
         super.onDestroy();
 
-        if (DEBUG)
+        if (Aware.DEBUG)
             Log.d(Aware.TAG, "Finished synching all the databases.");
     }
 }

@@ -15,6 +15,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
@@ -30,6 +31,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.aware.Applications;
 import com.aware.Aware;
@@ -223,6 +225,7 @@ public class Aware_Client extends Aware_Activity {
      */
     private void esm() {
         final PreferenceScreen mobile_esm = (PreferenceScreen) findPreference("esm");
+        mobile_esm.setTitle("ESM");
         if (is_watch) {
             mobile_esm.setEnabled(false);
             return;
@@ -243,6 +246,23 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
+
+        final PreferenceScreen esm_creator = (PreferenceScreen) findPreference("esm_creator");
+        if (Plugins_Manager.isInstalled(this, "com.niels.esmgenerator") == null ) {
+            Intent esmCreator = new Intent(Intent.ACTION_VIEW);
+            esmCreator.setData(Uri.parse("market://search?q=awareframework esmcreator&c=apps"));
+            esm_creator.setIntent(esmCreator);
+            esm_creator.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    Toast.makeText(getApplicationContext(), "Please install AWARE ESMCreator", Toast.LENGTH_LONG).show();
+                    Intent esmCreator = new Intent(Intent.ACTION_VIEW);
+                    esmCreator.setData(Uri.parse("market://search?q=awareframework esmcreator&c=apps"));
+                    startActivity(esmCreator);
+                    return true;
+                }
+            });
+        }
     }
 
     /**
@@ -1651,7 +1671,7 @@ public class Aware_Client extends Aware_Activity {
         } catch (NameNotFoundException e) {
             e.printStackTrace();
         }
-        aware_version.setSummary((awareInfo!=null)?""+awareInfo.versionCode:"???");
+        aware_version.setSummary((awareInfo != null) ? "" + awareInfo.versionCode : "???");
 
         final CheckBoxPreference debug_db_slow = (CheckBoxPreference) findPreference(Aware_Preferences.DEBUG_DB_SLOW);
         debug_db_slow.setChecked(Aware.getSetting(awareContext, Aware_Preferences.DEBUG_DB_SLOW).equals("true"));

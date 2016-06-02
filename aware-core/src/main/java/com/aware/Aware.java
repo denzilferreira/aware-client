@@ -44,6 +44,7 @@ import com.aware.providers.Aware_Provider;
 import com.aware.providers.Aware_Provider.Aware_Device;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.providers.Aware_Provider.Aware_Settings;
+import com.aware.providers.Scheduler_Provider;
 import com.aware.utils.Aware_Plugin;
 import com.aware.utils.DownloadPluginService;
 import com.aware.utils.Http;
@@ -403,6 +404,11 @@ public class Aware extends Service {
 //            }
 
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
+
+                //Checks if study is still active
+                //TODO: move to somewhere else - this should be sent by the server when closing study as an MQTT message
+//                    new Study_Check().execute();
+
                 int frequency_webservice = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_WEBSERVICE));
                 if (frequency_webservice == 0) {
                     if (DEBUG)
@@ -430,11 +436,6 @@ public class Aware extends Service {
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-
-
-                    //Checks if study is still active
-                    //TODO: move to somewhere else - this should be sent by the server when closing study as an MQTT message
-//                    new Study_Check().execute();
                 }
             }
 
@@ -1229,6 +1230,10 @@ public class Aware extends Service {
             }
             if (Aware.DEBUG) Log.w(TAG, "AWARE plugins disabled...");
         }
+
+        //Remove all schedules
+        c.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, null);
+
         Intent applyNew = new Intent(Aware.ACTION_AWARE_REFRESH);
         c.sendBroadcast(applyNew);
     }
