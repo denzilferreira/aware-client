@@ -447,7 +447,7 @@ public class Scheduler extends Service {
         try {
             //Context schedulers do not have time constrains
             if (schedule.getContext().length() > 0) {
-                if (schedule.getTimer() == -1 && schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0)
+                if (schedule.getTimer() == -1 && schedule.getMinutes().length() == 0 && schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0)
                     return true;
             }
 
@@ -575,7 +575,7 @@ public class Scheduler extends Service {
                 if (Aware.DEBUG)
                     Log.d(Aware.TAG, "Minute " + minute + " vs now " + now.get(Calendar.MINUTE) + " in trigger minutes: " + minutes.toString());
 
-                if (now.get(Calendar.MINUTE) >= minute-3 && now.get(Calendar.MINUTE) <= minute+3) return true;
+                return(now.get(Calendar.MINUTE) == minute);
             }
         } catch (JSONException e) {
             e.printStackTrace();
