@@ -1,12 +1,18 @@
 package com.aware.ui;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
+import com.aware.Aware;
+
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 /**
@@ -15,62 +21,52 @@ import java.util.ArrayList;
  */
 public class PermissionsHandler extends Activity {
 
-    public static String EXTRA_REQUIRED_PERMISSIONS = "required_permissions";
-    private final int CODE_PERMISSION_REQUEST = 999;
+    /**
+     * Extra ArrayList<String> with Manifest.permission that require explicit users' permission on Android API 23+
+     */
+    public static final String EXTRA_REQUIRED_PERMISSIONS = "required_permissions";
 
-    private ArrayList<String> missing = new ArrayList<>();
+    /**
+     * The request code for the permissions
+     */
+    public static final int RC_PERMISSIONS = 112;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if( getIntent() != null && getIntent().getExtras() != null && getIntent().getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS) != null ) {
-            String[] permissions = getIntent().getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS);
-            for( String p : permissions ) {
-                int ok = ContextCompat.checkSelfPermission(this, p);
-                if( ok != PackageManager.PERMISSION_GRANTED && ! is_missing(p) ) missing.add(p);
-            }
-        }
-    }
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        if( intent != null && intent.getExtras() != null && intent.getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS) != null ) {
-            String[] permissions = intent.getStringArrayExtra(EXTRA_REQUIRED_PERMISSIONS);
-            //Check if we have requested this permission already
-            for( String p : permissions ) {
-                int ok = ContextCompat.checkSelfPermission(this, p);
-                if( ok != PackageManager.PERMISSION_GRANTED && ! is_missing(p) ) missing.add(p);
-            }
+        if (getIntent() != null && getIntent().getExtras() != null && getIntent().getSerializableExtra(EXTRA_REQUIRED_PERMISSIONS) != null) {
+            ArrayList<String> permissionsNeeded = (ArrayList<String>) getIntent().getSerializableExtra(EXTRA_REQUIRED_PERMISSIONS);
+            ActivityCompat.requestPermissions(PermissionsHandler.this, permissionsNeeded.toArray(new String[permissionsNeeded.size()]), RC_PERMISSIONS);
+        } else {
+            Intent result = new Intent();
+            setResult(Activity.RESULT_OK, result);
+            finish();
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        //Done with the requested permissions
-        finish();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if( missing.size() > 0 ) {
-            ActivityCompat.requestPermissions(PermissionsHandler.this, missing.toArray(new String[missing.size()]), CODE_PERMISSION_REQUEST);
+        if (requestCode == RC_PERMISSIONS) {
+            int not_granted = 0;
+            for (int i = 0; i < permissions.length; i++) {
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                    not_granted++;
+                    Log.d(Aware.TAG, permissions[i] + " was not granted");
+                } else {
+                    Log.d(Aware.TAG, permissions[i] + " was granted");
+                }
+            }
+            if (not_granted > 0) {
+                Intent result = new Intent();
+                setResult(Activity.RESULT_CANCELED, result);
+                finish();
+            } else {
+                Intent result = new Intent();
+                setResult(Activity.RESULT_OK, result);
+                finish();
+            }
         } else {
-            finish();
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
-    }
-
-    /**
-     * Check if we are already asking this permission
-     * @param p
-     * @return
-     */
-    private boolean is_missing( String p ) {
-        for( String pp : missing ) {
-            if( pp.equals(p) ) return true;
-        }
-        return false;
     }
 }

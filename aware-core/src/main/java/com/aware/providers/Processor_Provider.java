@@ -48,7 +48,7 @@ public class Processor_Provider extends ContentProvider {
 	 */
 	public static final class Processor_Data implements BaseColumns {
 		private Processor_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Processor_Provider.AUTHORITY + "/processor");
@@ -187,7 +187,7 @@ public class Processor_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 		AUTHORITY = getContext().getPackageName() + ".provider.processor";
-		
+
 		sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Processor_Provider.AUTHORITY, DATABASE_TABLES[0],
                 PROCESSOR);

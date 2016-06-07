@@ -4,18 +4,12 @@ import android.content.Context;
 import android.util.Log;
 
 import com.aware.Aware;
-import com.aware.Aware_Preferences;
 
-import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.security.KeyStore;
-import java.security.SecureRandom;
-import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
-import java.util.HashMap;
 
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;

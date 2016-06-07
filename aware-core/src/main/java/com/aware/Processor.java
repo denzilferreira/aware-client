@@ -148,14 +148,19 @@ public class Processor extends Aware_Sensor {
         super.onCreate();
         
         TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):"AWARE::Processor";
-        
+
+        if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_PROCESSOR).length() == 0) {
+            Aware.setSetting(this, Aware_Preferences.FREQUENCY_PROCESSOR, PROCESSOR_UPDATE);
+        }
         PROCESSOR_UPDATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROCESSOR));
         
         DATABASE_TABLES = Processor_Provider.DATABASE_TABLES;
         TABLES_FIELDS = Processor_Provider.TABLES_FIELDS;
         CONTEXT_URIS = new Uri[]{ Processor_Data.CONTENT_URI };
         
-        mHandler.postDelayed(mRunnable, 1000);
+        mHandler.post(mRunnable);
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_PROCESSOR, true);
         if(Aware.DEBUG) Log.d(TAG,"Processor service created");
     }
     
@@ -177,7 +182,7 @@ public class Processor extends Aware_Sensor {
         super.onDestroy();
         
         mHandler.removeCallbacks(mRunnable);
-        
+
         if(Aware.DEBUG) Log.d(TAG,"Processor service terminated...");
     }
     

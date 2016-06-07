@@ -12,7 +12,6 @@ import android.net.Uri;
 import android.os.IBinder;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
@@ -78,7 +77,7 @@ public class Aware_Plugin extends Service {
     public void onCreate() {
         super.onCreate();
 
-        TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
+        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
         DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
         
         if( DEBUG ) Log.d(TAG, TAG + " plugin created!");
@@ -109,30 +108,13 @@ public class Aware_Plugin extends Service {
         super.onDestroy();
 
         //Unregister Context Broadcaster
-        unregisterReceiver(contextBroadcaster);
+        if( contextBroadcaster != null ) {
+            unregisterReceiver(contextBroadcaster);
+        }
 
         if( aware != null ) stopService(aware);
 
         if(DEBUG) Log.d(TAG, TAG + " plugin terminated...");
-    }
-    
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        //Ask the user all required permissions
-        final ArrayList<String> missing = new ArrayList<>();
-        for( String p : REQUIRED_PERMISSIONS ) {
-            int permission_access = ContextCompat.checkSelfPermission(getApplicationContext(), p);
-            if( permission_access != PackageManager.PERMISSION_GRANTED ) {
-                missing.add(p);
-            }
-        }
-        if( missing.size() > 0 ) {
-            Intent permissionRequest = new Intent(this, PermissionsHandler.class);
-            permissionRequest.putExtra( PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, missing.toArray(new String[missing.size()]) );
-            permissionRequest.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(permissionRequest);
-        }
-        return super.onStartCommand(intent, flags, startId);
     }
 
     /**
@@ -141,7 +123,7 @@ public class Aware_Plugin extends Service {
      * @author denzil
      */
     public interface ContextProducer {
-    	public void onContext();
+    	void onContext();
     }
     
     /**
@@ -196,11 +178,8 @@ public class Aware_Plugin extends Service {
             	if( Aware.DEBUG ) Log.d(TAG, TAG + " stopped");
             	stopSelf();
             }
-            
-            String frequency_old = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA);
-            if(frequency_old.length() == 0) Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA, 0);
-            
-            if(intent.getAction().equals(Aware.ACTION_AWARE_SPACE_MAINTENANCE) && ! Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).equals("0") ) {
+
+            if(intent.getAction().equals(Aware.ACTION_AWARE_SPACE_MAINTENANCE) && Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0 ) {
                 Calendar cal = Calendar.getInstance();
                 cal.setTimeInMillis(System.currentTimeMillis());
                 
@@ -226,6 +205,20 @@ public class Aware_Plugin extends Service {
                                 String where = "timestamp < " + cal.getTimeInMillis(); 
                                 int rowsDeleted = context.getContentResolver().delete(CONTEXT_URIS[i], where, null);
                                 if( Aware.DEBUG ) Log.d(TAG,"Cleaned " +rowsDeleted+ " from " + CONTEXT_URIS[i].toString());
+                            }
+                        }
+                        break;
+                    case 3: //daily
+                        if (DATABASE_TABLES != null && CONTEXT_URIS != null) {
+                            cal.add(Calendar.DAY_OF_YEAR, -1);
+                            if (Aware.DEBUG)
+                                Log.d(TAG, TAG + " cleaning locally any data older than today (yyyy/mm/dd): " + cal.get(Calendar.YEAR) + '/' + (cal.get(Calendar.MONTH) + 1) + '/' + cal.get(Calendar.DAY_OF_MONTH));
+                            for (int i = 0; i < DATABASE_TABLES.length; i++) {
+                                //Clear locally
+                                String where = "timestamp < " + cal.getTimeInMillis();
+                                int rowsDeleted = context.getContentResolver().delete(CONTEXT_URIS[i], where, null);
+                                if (Aware.DEBUG)
+                                    Log.d(TAG, "Cleaned " + rowsDeleted + " from " + CONTEXT_URIS[i].toString());
                             }
                         }
                         break;

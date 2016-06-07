@@ -138,7 +138,9 @@ public class Installations extends Aware_Sensor {
         filter.addAction(Intent.ACTION_PACKAGE_REPLACED);
         filter.addDataScheme("package");
         registerReceiver(installationsMonitor, filter);
-        
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_INSTALLATIONS, true);
+
         if( Aware.DEBUG ) Log.d(TAG,"Installations service created!");
     }
     
@@ -185,9 +187,9 @@ public class Installations extends Aware_Sensor {
                     String packageName = packageUri.getSchemeSpecificPart();
                     if( packageName == null ) return;
                     
-                    ApplicationInfo appInfo = null;
+                    ApplicationInfo appInfo;
                     try {
-                        appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_ACTIVITIES);
+                        appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
                     } catch( final NameNotFoundException e ) {
                         appInfo = null;
                     }
@@ -274,9 +276,9 @@ public class Installations extends Aware_Sensor {
                     String packageName = packageUri.getSchemeSpecificPart();
                     if( packageName == null ) return;
                     
-                    ApplicationInfo appInfo = null;
+                    ApplicationInfo appInfo;
                     try {
-                        appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_ACTIVITIES);
+                        appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
                     } catch( final NameNotFoundException e ) {
                         appInfo = null;
                     }

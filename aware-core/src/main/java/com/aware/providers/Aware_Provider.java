@@ -52,7 +52,7 @@ public class Aware_Provider extends ContentProvider {
 	 */
 	public static final class Aware_Device implements BaseColumns {
 		private Aware_Device() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://" + Aware_Provider.AUTHORITY + "/aware_device");
 		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.aware.device";
@@ -84,7 +84,7 @@ public class Aware_Provider extends ContentProvider {
 	 */
 	public static final class Aware_Settings implements BaseColumns {
 		private Aware_Settings() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Aware_Provider.AUTHORITY + "/aware_settings");
@@ -104,7 +104,7 @@ public class Aware_Provider extends ContentProvider {
 	 * 
 	 */
 	public static final class Aware_Plugins implements BaseColumns {
-		private Aware_Plugins() {};
+		private Aware_Plugins() {}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Aware_Provider.AUTHORITY + "/aware_plugins");
@@ -301,7 +301,7 @@ public class Aware_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 		AUTHORITY = getContext().getPackageName() + ".provider.aware";
-	    
+
         sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Aware_Provider.AUTHORITY, DATABASE_TABLES[0], DEVICE_INFO);
         sUriMatcher.addURI(Aware_Provider.AUTHORITY, DATABASE_TABLES[0] + "/#", DEVICE_INFO_ID);

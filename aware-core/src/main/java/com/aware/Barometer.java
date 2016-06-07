@@ -225,6 +225,8 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
             saveSensorDevice(mPressure);
         }
 
+        Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_BAROMETER, true);
+
         if(Aware.DEBUG) Log.d(TAG,"Barometer service created!");
     }
     
@@ -239,7 +241,7 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
         wakeLock.release();
 
         unregisterReceiver(dataLabeler);
-        
+
         if(Aware.DEBUG) Log.d(TAG,"Barometer service terminated...");
     }
     

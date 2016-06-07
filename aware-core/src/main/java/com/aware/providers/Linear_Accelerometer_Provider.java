@@ -54,7 +54,7 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
 	public static final class Linear_Accelerometer_Sensor implements
 			BaseColumns {
 		private Linear_Accelerometer_Sensor() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Linear_Accelerometer_Provider.AUTHORITY
@@ -83,7 +83,7 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
 	 */
 	public static final class Linear_Accelerometer_Data implements BaseColumns {
 		private Linear_Accelerometer_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Linear_Accelerometer_Provider.AUTHORITY
@@ -329,7 +329,7 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.accelerometer.linear";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Linear_Accelerometer_Provider.AUTHORITY,
                 DATABASE_TABLES[0], ACCEL_DEV);

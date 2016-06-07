@@ -43,7 +43,7 @@ public class Keyboard_Provider extends ContentProvider {
      */
     public static final class Keyboard_Data implements BaseColumns {
         private Keyboard_Data() {
-        };
+        }
 
         public static final Uri CONTENT_URI = Uri.parse("content://"
                 + Keyboard_Provider.AUTHORITY + "/keyboard");

@@ -1,35 +1,28 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'com.github.dcendents.android-maven'
 
-//Uncomment to choose how to treat the project. Use it as a library for AWARE-applications or plugins
-apply plugin: 'com.android.application' //AWARE is an application
-//apply plugin: 'com.android.library' //AWARE is a library: don't forget to comment the providers on manifest and set display_aware:false
-
-configurations {
-    wear
-}
-
-ext.version_readable = "3.9.9"
-ext.version_code = 431
+version = version_readable
+group = "com.awareframework"
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.2"
-    defaultPublishConfig "phoneRelease"
-    publishNonDefault true //set to false for Maven Central, otherwise set to true
+    buildToolsVersion "23.0.3"
 
     defaultConfig {
-        //Comment applicationId out for library
-        applicationId "com.aware"
         versionCode version_code
         versionName version_readable
         targetSdkVersion 23
+        minSdkVersion 10 //Android 2.3.3
     }
 
     signingConfigs {
-        release { //set values in ~/.gradle/gradle.properties to sign with your own keystore and certificate
-            storeFile file(KEYSTORE_FILE)
-            storePassword KEYSTORE_PASSWORD
-            keyAlias KEY
-            keyPassword KEY_PASSWORD
+        release {
+            //set values in ~/.gradle/gradle.properties to sign with your own keystore and certificate
+            storeFile file(project.hasProperty("KEYSTORE_FILE") ? KEYSTORE_FILE : "/")
+            storePassword project.hasProperty("KEYSTORE_PASSWORD") ? KEYSTORE_PASSWORD : ""
+            keyAlias project.hasProperty("KEY") ? KEY : ""
+            keyPassword project.hasProperty("KEY_PASSWORD") ? KEY_PASSWORD : ""
         }
     }
 
@@ -40,39 +33,77 @@ android {
             signingConfig signingConfigs.release
         }
     }
-    productFlavors {
-        wear {
-            minSdkVersion 21
-        }
-        phone {
-            minSdkVersion 10 //Android 2.3.3
-        }
-    }
 
     lintOptions {
         abortOnError false
     }
 }
 
-dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile files('libs/mqtt-client-0.4.0.jar')
-    compile 'com.android.support:appcompat-v7:23.1.1'
-    compile 'com.android.support:cardview-v7:23.1.1'
-    compile 'com.android.support:design:23.1.1'
-    compile 'com.google.android.gms:play-services-wearable:8.4.0'
-    compile 'com.google.android.gms:play-services-vision:8.4.0'
-    compile 'com.koushikdutta.ion:ion:2.1.6'
+bintray {
+    user = project.hasProperty("bintrayUsername") ? bintrayUsername : ""
+    key = project.hasProperty("bintrayKey") ? bintrayKey : ""
 
-    phoneCompile 'com.android.support:support-v4:23.1.1'
+    configurations = ['archives']
 
-    wearCompile 'com.android.support:support-v13:23.1.1'
-    wearCompile 'com.google.android.support:wearable:1.3.0'
+    publish = true
 
-    //Comment out for MavenCentral
-    phoneWearApp project(path: ':aware-wear', configuration: 'wearRelease')
+    pkg {
+        repo = 'com.awareframework'
+        name = 'com.aware'
+        licenses = ['Apache-2.0']
+        websiteUrl = 'http://www.awareframework.com'
+        issueTrackerUrl = 'https://github.com/denzilferreira/aware-client/issues'
+        labels = ['aar', 'android', 'framework', 'aware']
+        publicDownloadNumbers = true
+        vcsUrl = 'https://github.com/denzilferreira/aware-client.git'
+        desc = "AWARE Framework common library"
+        userOrg = user
+
+        githubRepo = "denzilferreira/aware-client"
+        githubReleaseNotesFile = "README.md"
+        version {
+            name = "$version_readable"
+            desc = bintray.pkg.desc
+            released = new Date()
+            vcsTag = "$version_readable"
+        }
+    }
 }
 
-//Update AWARE's library in Maven Central
-apply from: 'maven-publish.gradle'
+task generateSourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier 'sources'
+}
+
+task generateJavadocs(type: Javadoc) {
+    failOnError false
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task generateJavadocsJar(type: Jar) {
+    from generateJavadocs.destinationDir
+    classifier 'javadoc'
+}
+
+generateJavadocsJar.dependsOn generateJavadocs
+
+artifacts {
+    archives generateJavadocsJar
+    archives generateSourcesJar
+}
+
+repositories {
+    maven {
+        url  "http://dl.bintray.com/jfrog/bintray-tools"
+    }
+}
+
+dependencies {
+    compile "org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2"
+    compile "com.koushikdutta.ion:ion:2.1.6"
+    compile "com.android.support:cardview-v7:$support_libs"
+    compile "com.android.support:appcompat-v7:$support_libs"
+    compile "com.android.support:design:$support_libs"
+}
 

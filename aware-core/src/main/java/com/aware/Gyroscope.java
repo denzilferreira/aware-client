@@ -231,6 +231,8 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
             saveGyroscopeDevice(mGyroscope);
         }
 
+        Aware.setSetting(this, Aware_Preferences.STATUS_GYROSCOPE, true);
+
         if(Aware.DEBUG) Log.d(TAG,"Gyroscope service created!");
     }
     
@@ -245,7 +247,7 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
         wakeLock.release();
 
         unregisterReceiver(dataLabeler);
-        
+
         if(Aware.DEBUG) Log.d(TAG,"Gyroscope service terminated...");
     }
     

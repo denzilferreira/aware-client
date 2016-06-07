@@ -140,6 +140,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	
 	private static MqttClient MQTT_CLIENT = null;
 	private static Context mContext = null;
+
+    private static MQTTAsync connector;
 	
 	/**
 	 * Activity-Service binder
@@ -318,15 +320,25 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         registerReceiver(mqttReceiver, filter);
 
         if( Aware.is_watch(this) ) {
-            Log.d(TAG,"This is an Android Wear device, we can't connect to MQTT. Disabling it!");
+            Log.d(TAG, "This is an Android Wear device, we can't connect to MQTT. Disabling it!");
             Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, false);
             stopSelf();
+            return;
         }
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, true);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        initializeMQTT();
+
+        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
+
+        if( MQTT_CLIENT != null && MQTT_CLIENT.isConnected() ) {
+            if( DEBUG ) Log.d(TAG,"Connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
+        } else {
+            initializeMQTT();
+        }
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -345,17 +357,11 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                 if( Aware.DEBUG ) Log.e(TAG, e.getMessage());
             } 
 	    }
+
 		if(Aware.DEBUG) Log.d(TAG,"MQTT service terminated...");
 	}
 
 	private void initializeMQTT() {
-		if( MQTT_CLIENT != null && MQTT_CLIENT.isConnected() ) {
-			if( DEBUG ) Log.d(TAG,"Connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
-            return;
-		}
-
-		TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
-	    
 	    MQTT_SERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_SERVER );
         MQTT_PORT = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_PORT );
         MQTT_USERNAME = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_USERNAME );
@@ -374,7 +380,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         } catch (MqttPersistenceException e ) { e.printStackTrace(); }
 
         MqttConnectOptions MQTT_OPTIONS = new MqttConnectOptions();
-        MQTT_OPTIONS.setCleanSession( true );
+        MQTT_OPTIONS.setCleanSession( false ); //resume pending messages from server
         MQTT_OPTIONS.setConnectionTimeout( Integer.parseInt(MQTT_KEEPALIVE) + 10 ); //add 10 seconds to keep alive as options timeout
         MQTT_OPTIONS.setKeepAliveInterval( Integer.parseInt(MQTT_KEEPALIVE) );
         if( MQTT_USERNAME.length() > 0 ) MQTT_OPTIONS.setUserName( MQTT_USERNAME );
@@ -386,7 +392,11 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
     	try {
     		MQTT_CLIENT = new MqttClient( MQTT_URL, String.valueOf(Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).hashCode()), MQTT_MESSAGES_PERSISTENCE );
             MQTT_CLIENT.setCallback( this );
-            new MQTTAsync().execute( MQTT_OPTIONS );
+
+            if (connector == null) connector = new MQTTAsync();
+            if (connector.getStatus() == AsyncTask.Status.PENDING)
+                connector.execute( MQTT_OPTIONS );
+
 		} catch ( MqttException e ) {
 			if( Aware.DEBUG) Log.e(TAG, "Failed: " + e.getMessage());
 		}
@@ -468,13 +478,13 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	 */
 	private static boolean publish(String topicName, byte[] payload) {
 	    if( MQTT_CLIENT != null && MQTT_CLIENT.isConnected() ) {
-            MqttTopic topic = MQTT_CLIENT.getTopic(topicName);
-            MqttMessage message = new MqttMessage();
-            message.setPayload(payload);
-            message.setQos( Integer.parseInt(MQTT_QoS) );
-            message.setRetained(true);
             try {
-                topic.publish( message );
+                MqttMessage message = new MqttMessage();
+                message.setPayload(payload);
+                message.setQos( Integer.parseInt(MQTT_QoS) );
+                message.setRetained(true);
+
+                MQTT_CLIENT.publish(topicName, message);
             } catch (MqttPersistenceException e) {
                 if(Aware.DEBUG) Log.e(TAG, e.getMessage());
                 return false;

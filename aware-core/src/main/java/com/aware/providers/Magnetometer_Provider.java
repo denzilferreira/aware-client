@@ -54,7 +54,7 @@ public class Magnetometer_Provider extends ContentProvider {
 	 */
 	public static final class Magnetometer_Sensor implements BaseColumns {
 		private Magnetometer_Sensor() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Magnetometer_Provider.AUTHORITY + "/sensor_magnetometer");
@@ -82,7 +82,7 @@ public class Magnetometer_Provider extends ContentProvider {
 	 */
 	public static final class Magnetometer_Data implements BaseColumns {
 		private Magnetometer_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Magnetometer_Provider.AUTHORITY + "/magnetometer");
@@ -319,7 +319,7 @@ public class Magnetometer_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.magnetometer";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Magnetometer_Provider.AUTHORITY, DATABASE_TABLES[0],
                 SENSOR_DEV);

@@ -54,7 +54,7 @@ public class Battery_Provider extends ContentProvider {
 	 */
 	public static final class Battery_Data implements BaseColumns {
 		private Battery_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Battery_Provider.AUTHORITY + "/battery");
@@ -76,7 +76,7 @@ public class Battery_Provider extends ContentProvider {
 
 	public static final class Battery_Discharges implements BaseColumns {
 		private Battery_Discharges() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Battery_Provider.AUTHORITY + "/battery_discharges");
@@ -93,7 +93,7 @@ public class Battery_Provider extends ContentProvider {
 
 	public static final class Battery_Charges implements BaseColumns {
 		private Battery_Charges() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Battery_Provider.AUTHORITY + "/battery_charges");
@@ -300,7 +300,7 @@ public class Battery_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.battery";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Battery_Provider.AUTHORITY, DATABASE_TABLES[0],
                 BATTERY);

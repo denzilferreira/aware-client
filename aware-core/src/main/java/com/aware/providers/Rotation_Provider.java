@@ -54,7 +54,7 @@ public class Rotation_Provider extends ContentProvider {
 	 */
 	public static final class Rotation_Sensor implements BaseColumns {
 		private Rotation_Sensor() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Rotation_Provider.AUTHORITY + "/sensor_rotation");
@@ -82,7 +82,7 @@ public class Rotation_Provider extends ContentProvider {
 	 */
 	public static final class Rotation_Data implements BaseColumns {
 		private Rotation_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Rotation_Provider.AUTHORITY + "/rotation");
@@ -320,7 +320,7 @@ public class Rotation_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.rotation";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Rotation_Provider.AUTHORITY, DATABASE_TABLES[0],
                 SENSOR_DEV);

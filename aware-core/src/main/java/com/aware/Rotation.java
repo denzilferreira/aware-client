@@ -238,6 +238,8 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
             return;
         }
 
+        Aware.setSetting(this, Aware_Preferences.STATUS_ROTATION, true);
+
         if(Aware.DEBUG) Log.d(TAG,"Rotation service created!");
     }
     
@@ -252,7 +254,7 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
         wakeLock.release();
 
         unregisterReceiver(dataLabeler);
-        
+
         if(Aware.DEBUG) Log.d(TAG,"Rotation service terminated...");
     }
     

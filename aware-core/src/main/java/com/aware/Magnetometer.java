@@ -229,6 +229,8 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
         } else {
             saveSensorDevice(mMagnetometer);
         }
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_MAGNETOMETER, true);
         
         if(Aware.DEBUG) Log.d(TAG,"Magnetometer service created!");
     }

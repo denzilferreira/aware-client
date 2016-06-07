@@ -233,6 +233,8 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
             saveSensorDevice(mGravity);
         }
 
+        Aware.setSetting(this, Aware_Preferences.STATUS_GRAVITY, true);
+
         if(Aware.DEBUG) Log.d(TAG,"Gravity service created!");
     }
     
@@ -248,7 +250,7 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
         wakeLock.release();
 
         unregisterReceiver(dataLabeler);
-        
+
         if(Aware.DEBUG) Log.d(TAG,"Gravity service terminated...");
     }
     

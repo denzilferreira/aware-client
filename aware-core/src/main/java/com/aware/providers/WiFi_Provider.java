@@ -31,7 +31,7 @@ import java.util.HashMap;
  */
 public class WiFi_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 4;
+	public static final int DATABASE_VERSION = 5;
 
 	/**
 	 * Authority of WiFi content provider
@@ -52,7 +52,7 @@ public class WiFi_Provider extends ContentProvider {
 	 */
 	public static final class WiFi_Sensor implements BaseColumns {
 		private WiFi_Sensor() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"+ WiFi_Provider.AUTHORITY + "/sensor_wifi");
 		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.aware.wifi.sensor";
@@ -74,7 +74,7 @@ public class WiFi_Provider extends ContentProvider {
 	 */
 	public static final class WiFi_Data implements BaseColumns {
 		private WiFi_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"+ WiFi_Provider.AUTHORITY + "/wifi");
 		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.aware.wifi.data";
@@ -105,8 +105,8 @@ public class WiFi_Provider extends ContentProvider {
 			+ WiFi_Data.SECURITY + " text default ''," 
 			+ WiFi_Data.FREQUENCY + " integer default 0," 
 			+ WiFi_Data.RSSI + " integer default 0," 
-			+ WiFi_Data.LABEL+ " text default ''," 
-			+ "UNIQUE(" + WiFi_Data.TIMESTAMP + "," + WiFi_Data.DEVICE_ID + "," + WiFi_Data.BSSID + ")",
+			+ WiFi_Data.LABEL+ " text default ''",
+//			+ "UNIQUE(" + WiFi_Data.DEVICE_ID + "," + WiFi_Data.TIMESTAMP + "," + WiFi_Data.BSSID + ")",
 			// device
 			WiFi_Sensor._ID + " integer primary key autoincrement,"
 			+ WiFi_Sensor.TIMESTAMP + " real default 0,"
@@ -114,7 +114,7 @@ public class WiFi_Provider extends ContentProvider {
 			+ WiFi_Sensor.MAC_ADDRESS + " text default '',"
 			+ WiFi_Data.SSID + " text default '',"
 			+ WiFi_Data.BSSID + " text default '',"
-			+ "UNIQUE("+ WiFi_Sensor.TIMESTAMP + "," + WiFi_Sensor.DEVICE_ID + ")" };
+			+ "UNIQUE("+ WiFi_Sensor.DEVICE_ID + "," + WiFi_Sensor.TIMESTAMP + ")" };
 
 	private static DatabaseHelper databaseHelper = null;
 	private static SQLiteDatabase database = null;
@@ -247,7 +247,7 @@ public class WiFi_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.wifi";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(WiFi_Provider.AUTHORITY, DATABASE_TABLES[0],
                 WIFI_DATA);

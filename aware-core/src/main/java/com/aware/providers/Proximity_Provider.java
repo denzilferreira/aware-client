@@ -53,7 +53,7 @@ public class Proximity_Provider extends ContentProvider {
 	 */
 	public static final class Proximity_Sensor implements BaseColumns {
 		private Proximity_Sensor() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Proximity_Provider.AUTHORITY + "/sensor_proximity");
@@ -81,7 +81,7 @@ public class Proximity_Provider extends ContentProvider {
 	 */
 	public static final class Proximity_Data implements BaseColumns {
 		private Proximity_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Proximity_Provider.AUTHORITY + "/proximity");
@@ -314,7 +314,7 @@ public class Proximity_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.proximity";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Proximity_Provider.AUTHORITY, DATABASE_TABLES[0],
                 SENSOR_DEV);

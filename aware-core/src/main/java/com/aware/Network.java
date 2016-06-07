@@ -498,6 +498,8 @@ public class Network extends Aware_Sensor {
         registerReceiver(networkMonitor, filter);
         
         teleManager.listen(phoneListener, PhoneStateListener.LISTEN_SERVICE_STATE);
+
+		Aware.setSetting(this, Aware_Preferences.STATUS_NETWORK_EVENTS, true);
 	}
 
 	@Override
@@ -506,7 +508,7 @@ public class Network extends Aware_Sensor {
 		
 		unregisterReceiver(networkMonitor);
 		teleManager.listen(phoneListener, PhoneStateListener.LISTEN_NONE);
-		
+
 		if(Aware.DEBUG) Log.d(TAG,"Network service terminated...");
 	}
 	

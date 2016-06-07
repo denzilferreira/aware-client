@@ -39,7 +39,7 @@ public class Scheduler_Provider extends ContentProvider {
 
 	public static final class Scheduler_Data implements BaseColumns {
 		private Scheduler_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://" + Scheduler_Provider.AUTHORITY + "/scheduler");
 		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.aware.scheduler";
@@ -172,7 +172,7 @@ public class Scheduler_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.scheduler";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Scheduler_Provider.AUTHORITY, DATABASE_TABLES[0], SCHEDULER);
         sUriMatcher.addURI(Scheduler_Provider.AUTHORITY, DATABASE_TABLES[0] + "/#", SCHEDULER_ID);

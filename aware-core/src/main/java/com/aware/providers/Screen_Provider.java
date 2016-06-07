@@ -50,7 +50,7 @@ public class Screen_Provider extends ContentProvider {
 	 */
 	public static final class Screen_Data implements BaseColumns {
 		private Screen_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Screen_Provider.AUTHORITY + "/screen");
@@ -179,7 +179,7 @@ public class Screen_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.screen";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Screen_Provider.AUTHORITY, DATABASE_TABLES[0],
                 SCREEN);

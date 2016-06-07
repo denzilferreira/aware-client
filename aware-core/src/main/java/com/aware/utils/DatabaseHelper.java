@@ -50,11 +50,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         this.new_version = database_version;
 		this.mContext = context;
 
-        File documents_folder = mContext.getExternalFilesDir(null); //get the root of OS handled app external folder
-        File docs = new File( documents_folder, "Documents" ); //create a Documents folder if it doesn't exist
-        if( ! docs.exists() ) docs.mkdirs();
-        File aware_folder = new File( docs, "AWARE" ); //create an AWARE folder if it doesn't exist
-        if( ! aware_folder.exists() ) aware_folder.mkdirs();
+		File aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString());
+		aware_folder.mkdirs();
+
+//        File documents_folder = mContext.getExternalFilesDir(null); //get the root of OS handled app external folder
+//        File docs = new File( documents_folder, "Documents" ); //create a Documents folder if it doesn't exist
+//        if( ! docs.exists() ) docs.mkdirs();
+//        File aware_folder = new File( docs, "AWARE" ); //create an AWARE folder if it doesn't exist
+//        if( ! aware_folder.exists() ) aware_folder.mkdirs();
     }
 
     public void setRenamedColumns( HashMap<String, String> renamed ) {
@@ -167,7 +170,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     	}
     	
     	//Get reference to database file, we might not have it.
-    	File database_file = new File( mContext.getExternalFilesDir(null) + "/Documents/AWARE/" , database_name );
+        File database_file = new File( Environment.getExternalStoragePublicDirectory("AWARE").toString(), database_name );
+//    	File database_file = new File( mContext.getExternalFilesDir(null) + "/Documents/AWARE/" , database_name );
     	try {
     	    SQLiteDatabase current_database = SQLiteDatabase.openDatabase(database_file.getPath(), null, SQLiteDatabase.CREATE_IF_NECESSARY);
     	    int current_version = current_database.getVersion();
@@ -205,7 +209,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     	}
     	
     	//Get reference to database file, we might not have it.
-		File database_file = new File( mContext.getExternalFilesDir(null) + "/Documents/AWARE/" , database_name );
+        File database_file = new File( Environment.getExternalStoragePublicDirectory("AWARE").toString(), database_name );
+//		File database_file = new File( mContext.getExternalFilesDir(null) + "/Documents/AWARE/" , database_name );
 		try {
 			SQLiteDatabase current_database = SQLiteDatabase.openDatabase(database_file.getPath(), null, SQLiteDatabase.OPEN_READONLY);
 			onOpen(current_database);

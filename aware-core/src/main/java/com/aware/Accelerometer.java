@@ -224,6 +224,8 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
             saveAccelerometerDevice(mAccelerometer);
         }
 
+        Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, true);
+
         if(Aware.DEBUG) Log.d(TAG,"Accelerometer service created!");
     }
     
@@ -238,7 +240,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         wakeLock.release();
 
         unregisterReceiver(dataLabeler);
-        
+
         if(Aware.DEBUG) Log.d(TAG,"Accelerometer service terminated...");
     }
 
@@ -260,7 +262,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
         if(Aware.DEBUG) Log.d(TAG,"Accelerometer service active at " + SAMPLING_RATE + " microseconds...");
         
-        return START_STICKY;
+        return super.onStartCommand(intent, flags, startId);
     }
 
     //Singleton instance of this service

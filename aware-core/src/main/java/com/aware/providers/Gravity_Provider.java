@@ -53,7 +53,7 @@ public class Gravity_Provider extends ContentProvider {
 	 */
 	public static final class Gravity_Sensor implements BaseColumns {
 		private Gravity_Sensor() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Gravity_Provider.AUTHORITY + "/sensor_gravity");
@@ -81,7 +81,7 @@ public class Gravity_Provider extends ContentProvider {
 	 */
 	public static final class Gravity_Data implements BaseColumns {
 		private Gravity_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Gravity_Provider.AUTHORITY + "/gravity");
@@ -318,7 +318,7 @@ public class Gravity_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.gravity";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Gravity_Provider.AUTHORITY, DATABASE_TABLES[0],
                 SENSOR_DEV);

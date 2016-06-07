@@ -80,7 +80,7 @@ public class Accelerometer_Provider extends ContentProvider {
 	 */
 	public static final class Accelerometer_Data implements BaseColumns {
 		private Accelerometer_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Accelerometer_Provider.AUTHORITY + "/accelerometer");
@@ -307,7 +307,7 @@ public class Accelerometer_Provider extends ContentProvider {
     @Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.accelerometer";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Accelerometer_Provider.AUTHORITY,
                 DATABASE_TABLES[0], ACCEL_DEV);

@@ -51,7 +51,7 @@ public class Locations_Provider extends ContentProvider {
 	 */
 	public static final class Locations_Data implements BaseColumns {
 		private Locations_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Locations_Provider.AUTHORITY + "/locations");
@@ -197,7 +197,7 @@ public class Locations_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.locations";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Locations_Provider.AUTHORITY, DATABASE_TABLES[0],
                 LOCATIONS);

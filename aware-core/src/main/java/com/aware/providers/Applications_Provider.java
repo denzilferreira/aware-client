@@ -106,7 +106,7 @@ public class Applications_Provider extends ContentProvider {
 	 */
 	public static final class Applications_Notifications implements BaseColumns {
 		private Applications_Notifications() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Applications_Provider.AUTHORITY
@@ -128,7 +128,7 @@ public class Applications_Provider extends ContentProvider {
 
 	public static final class Applications_Crashes implements BaseColumns {
 		private Applications_Crashes() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Applications_Provider.AUTHORITY + "/applications_crashes");
@@ -400,7 +400,7 @@ public class Applications_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.applications";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Applications_Provider.AUTHORITY, DATABASE_TABLES[0],
                 FOREGROUND);

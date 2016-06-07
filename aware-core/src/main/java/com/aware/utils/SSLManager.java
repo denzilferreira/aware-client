@@ -68,8 +68,6 @@ public class SSLManager extends IntentService {
         String aware_host = server.substring(0, server.indexOf("/index.php"));
         aware_host = aware_host.substring(aware_host.indexOf("//")+2, aware_host.length());
 
-        Log.d(Aware.TAG, "getHTTPS: " + aware_host );
-
         File host_credentials = new File( c.getExternalFilesDir(null) + "/Documents/", "credentials/"+ aware_host );
         if( host_credentials.exists() ) {
             File[] certs = host_credentials.listFiles();
@@ -88,7 +86,6 @@ public class SSLManager extends IntentService {
      * @throws FileNotFoundException
      */
     public static InputStream getCA(Context c, String server) throws FileNotFoundException {
-        Log.d(Aware.TAG, "getCA: " + server);
         File host_credentials = new File( c.getExternalFilesDir(null) + "/Documents/", "credentials/"+ server );
         if( host_credentials.exists() ) {
             File[] certs = host_credentials.listFiles();

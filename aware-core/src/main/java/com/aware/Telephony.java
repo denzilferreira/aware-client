@@ -108,6 +108,8 @@ public class Telephony extends Aware_Sensor {
         CONTEXT_URIS = new Uri[] { Telephony_Data.CONTENT_URI, GSM_Data.CONTENT_URI, GSM_Neighbors_Data.CONTENT_URI, CDMA_Data.CONTENT_URI };
         
         telephonyManager.listen(telephonyState, PhoneStateListener.LISTEN_CELL_LOCATION | PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+
+        Aware.setSetting(this, Aware_Preferences.STATUS_TELEPHONY, true);
         
         if(Aware.DEBUG) Log.d(TAG,"Telephony service created!");
     }
@@ -127,7 +129,7 @@ public class Telephony extends Aware_Sensor {
         super.onDestroy();
         
         telephonyManager.listen(telephonyState, PhoneStateListener.LISTEN_NONE);
-        
+
         if(Aware.DEBUG) Log.d(TAG,"Telephony service terminated...");
     }
     

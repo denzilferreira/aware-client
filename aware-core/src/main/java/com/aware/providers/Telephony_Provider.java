@@ -56,7 +56,7 @@ public class Telephony_Provider extends ContentProvider {
 	 */
 	public static final class Telephony_Data implements BaseColumns {
 		private Telephony_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Telephony_Provider.AUTHORITY + "/telephony");
@@ -90,7 +90,7 @@ public class Telephony_Provider extends ContentProvider {
 	 */
 	public static final class GSM_Data implements BaseColumns {
 		private GSM_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Telephony_Provider.AUTHORITY + "/gsm");
@@ -115,7 +115,7 @@ public class Telephony_Provider extends ContentProvider {
 	 */
 	public static final class GSM_Neighbors_Data implements BaseColumns {
 		private GSM_Neighbors_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Telephony_Provider.AUTHORITY + "/gsm_neighbor");
@@ -139,7 +139,7 @@ public class Telephony_Provider extends ContentProvider {
 	 */
 	public static final class CDMA_Data implements BaseColumns {
 		private CDMA_Data() {
-		};
+		}
 
 		public static final Uri CONTENT_URI = Uri.parse("content://"
 				+ Telephony_Provider.AUTHORITY + "/cdma");
@@ -404,7 +404,7 @@ public class Telephony_Provider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 	    AUTHORITY = getContext().getPackageName() + ".provider.telephony";
-	    
+
 	    sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(Telephony_Provider.AUTHORITY, DATABASE_TABLES[0],
                 TELEPHONY);

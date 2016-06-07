@@ -150,6 +150,10 @@ public class Traffic extends Aware_Sensor {
 		super.onCreate();
 		
 		TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
+
+		if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC).length() == 0) {
+			Aware.setSetting(this, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC, NETWORK_TRAFFIC_UPDATE_INTERVAL);
+		}
 		NETWORK_TRAFFIC_UPDATE_INTERVAL = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC));
         
 		startTotalRxBytes = TrafficStats.getTotalRxBytes();
@@ -165,6 +169,7 @@ public class Traffic extends Aware_Sensor {
 			Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_NETWORK_TRAFFIC, false);
 			if ( Aware.DEBUG ) Log.d(TAG, "Device doesn't support traffic statistics! Disabling sensor...");
 			stopSelf();
+			return;
 		} else {
 			mobileRxBytes = TrafficStats.getMobileRxBytes();
 			mobileTxBytes = TrafficStats.getMobileTxBytes();
@@ -179,6 +184,7 @@ public class Traffic extends Aware_Sensor {
 			mHandler.postDelayed(mRunnable, 1000);
 			if ( Aware.DEBUG ) Log.d(TAG, "Traffic service created...");
 		}
+		Aware.setSetting(this, Aware_Preferences.STATUS_NETWORK_TRAFFIC, true);
 	}
 
 	@Override
@@ -197,7 +203,7 @@ public class Traffic extends Aware_Sensor {
 		super.onDestroy();
 		
 		mHandler.removeCallbacks(mRunnable);
-		
+
 		if(Aware.DEBUG) Log.d(TAG,"Traffic service terminated...");
 	}
 }

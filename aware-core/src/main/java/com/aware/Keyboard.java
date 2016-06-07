@@ -24,10 +24,7 @@ public class Keyboard extends Aware_Sensor {
         DATABASE_TABLES = Keyboard_Provider.DATABASE_TABLES;
         TABLES_FIELDS = Keyboard_Provider.TABLES_FIELDS;
         CONTEXT_URIS = new Uri[]{ Keyboard_Provider.Keyboard_Data.CONTENT_URI };
-    }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+        Aware.setSetting(this, Aware_Preferences.STATUS_KEYBOARD, true);
     }
 }
