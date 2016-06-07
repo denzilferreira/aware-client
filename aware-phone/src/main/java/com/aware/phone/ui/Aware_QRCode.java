@@ -21,6 +21,8 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -46,10 +48,13 @@ import org.json.JSONObject;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import me.dm7.barcodescanner.zbar.Result;
+import me.dm7.barcodescanner.zbar.ZBarScannerView;
+
 /**
  * Created by denzil on 27/10/15.
  */
-public class Aware_QRCode extends Aware_Activity {
+public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.ResultHandler {
 
     private static final int RC_HANDLE_GMS = 9001;
 
@@ -60,39 +65,55 @@ public class Aware_QRCode extends Aware_Activity {
     private ScaleGestureDetector scaleGestureDetector;
     private GestureDetector gestureDetector;
 
+    private BarcodeDetector barcodeDetector;
+
+    private ZBarScannerView mScannerView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.aware_qrcode);
+        barcodeDetector = new BarcodeDetector.Builder(this).build();
 
-        mPreview = (CameraSourcePreview) findViewById(R.id.preview);
-        mGraphicOverlay = (GraphicOverlay<BarcodeGraphic>) findViewById(R.id.overlay);
+        if (barcodeDetector.isOperational()) {
+            setContentView(R.layout.aware_qrcode);
 
-        createCameraSource();
+            mPreview = (CameraSourcePreview) findViewById(R.id.preview);
+            mGraphicOverlay = (GraphicOverlay<BarcodeGraphic>) findViewById(R.id.overlay);
 
-        gestureDetector = new GestureDetector(this, new CaptureGestureListener());
-        scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
+            createCameraSource();
 
-        mPreview.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent e) {
-                boolean b = scaleGestureDetector.onTouchEvent(e);
-                boolean c = gestureDetector.onTouchEvent(e);
-                return b || c;
+            gestureDetector = new GestureDetector(this, new CaptureGestureListener());
+            scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
+
+            mPreview.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent e) {
+                    boolean b = scaleGestureDetector.onTouchEvent(e);
+                    boolean c = gestureDetector.onTouchEvent(e);
+                    return b || c;
+                }
+            });
+
+            Snackbar snack = Snackbar.make(mGraphicOverlay, "Tap QRCode to scan. Pinch/strech to zoom", Snackbar.LENGTH_LONG);
+            ViewGroup group = (ViewGroup) snack.getView();
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View v = group.getChildAt(i);
+                if (v instanceof TextView) {
+                    TextView t = (TextView) v;
+                    t.setTextColor(Color.WHITE);
+                }
             }
-        });
-
-        Snackbar snack = Snackbar.make(mGraphicOverlay, "Tap QRCode to scan. Pinch/strech to zoom", Snackbar.LENGTH_LONG);
-        ViewGroup group = (ViewGroup) snack.getView();
-        for (int i = 0; i < group.getChildCount(); i++) {
-            View v = group.getChildAt(i);
-            if (v instanceof TextView) {
-                TextView t = (TextView) v;
-                t.setTextColor(Color.WHITE);
-            }
+            snack.show();
+        } else {
+            mScannerView = new ZBarScannerView(this);
+            LinearLayout main = new LinearLayout(this);
+            ListView list = new ListView(this);
+            list.setId(android.R.id.list);
+            main.addView(list);
+            main.addView(mScannerView);
+            setContentView(main);
         }
-        snack.show();
     }
 
     @SuppressLint("InlinedApi")
@@ -130,19 +151,28 @@ public class Aware_QRCode extends Aware_Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        startCameraSource();
+
+        if (barcodeDetector.isOperational()) {
+            startCameraSource();
+        } else {
+            mScannerView.setResultHandler(this);
+            mScannerView.startCamera();
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (mPreview != null) mPreview.stop();
+        if (barcodeDetector.isOperational()) {
+            if (mPreview != null) mPreview.stop();
+        } else {
+            mScannerView.stopCamera();
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
         if (mPreview != null) mPreview.release();
     }
 
@@ -194,6 +224,12 @@ public class Aware_QRCode extends Aware_Activity {
             if (Aware.DEBUG) Log.d(Aware.TAG, "no barcode detected");
         }
         return barcode != null;
+    }
+
+    //Zbar QRCode handler
+    @Override
+    public void handleResult(Result result) {
+        new StudyData().execute(result.getContents());
     }
 
     private class CaptureGestureListener extends GestureDetector.SimpleOnGestureListener {

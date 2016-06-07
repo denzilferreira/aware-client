@@ -2,18 +2,21 @@
 package com.aware.utils;
 
 import android.app.IntentService;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.net.wifi.WifiManager;
+import android.support.v4.app.NotificationCompat;
 import android.text.format.DateUtils;
 import android.util.Log;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
+import com.aware.R;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,6 +35,8 @@ public class WebserviceHelper extends IntentService {
     public static final String EXTRA_FIELDS = "fields";
     public static final String EXTRA_CONTENT_URI = "uri";
 
+    private static final int WEBSERVICES_NOTIFICATION_ID = 98765;
+
     public WebserviceHelper() {
         super(Aware.TAG + " Webservice Sync");
     }
@@ -41,6 +46,38 @@ public class WebserviceHelper extends IntentService {
             if (a.equals(find)) return true;
         }
         return false;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        if (Aware.DEBUG)
+            Log.d(Aware.TAG, "Synching all the databases...");
+
+        notifyUser("Synching data to server...", false);
+    }
+
+    private void notifyUser(String message, boolean dismiss) {
+        if (!dismiss) {
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
+            mBuilder.setSmallIcon(R.drawable.ic_stat_aware_sync);
+            mBuilder.setContentTitle("AWARE Sync");
+            mBuilder.setContentText(message);
+            mBuilder.setAutoCancel(true);
+            mBuilder.setOnlyAlertOnce(true); //notify the user only once
+            mBuilder.setDefaults(NotificationCompat.DEFAULT_LIGHTS); //we only blink the LED, nothing else.
+            mBuilder.setProgress(100, 100, true);
+
+            PendingIntent clickIntent = PendingIntent.getActivity(this, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
+            mBuilder.setContentIntent(clickIntent);
+
+            NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            notManager.notify(WEBSERVICES_NOTIFICATION_ID, mBuilder.build());
+        } else {
+            NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            notManager.cancel(WEBSERVICES_NOTIFICATION_ID);
+        }
     }
 
     @Override
@@ -160,6 +197,8 @@ public class WebserviceHelper extends IntentService {
                     JSONArray context_data_entries = new JSONArray();
                     if (context_data != null && context_data.moveToFirst()) {
 
+                        notifyUser("Syncing " + context_data.getCount() + " from " + DATABASE_TABLE, false);
+
                         if (DEBUG)
                             Log.d(Aware.TAG, "Syncing " + context_data.getCount() + " records from " + DATABASE_TABLE);
 
@@ -196,15 +235,14 @@ public class WebserviceHelper extends IntentService {
                                 request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
                                 request.put("data", context_data_entries.toString());
 
-                                String insert;
                                 if (protocol.equals("https")) {
                                     try {
-                                        insert = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+                                        new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                                     } catch (FileNotFoundException e) {
-                                        insert = null;
+                                        e.printStackTrace();
                                     }
                                 } else {
-                                    insert = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+                                    new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                                 }
 
                                 context_data_entries = new JSONArray();
@@ -217,17 +255,18 @@ public class WebserviceHelper extends IntentService {
                             request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
                             request.put("data", context_data_entries.toString());
 
-                            String insert;
                             if (protocol.equals("https")) {
                                 try {
-                                    insert = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+                                    new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                                 } catch (FileNotFoundException e) {
-                                    insert = null;
+                                    e.printStackTrace();
                                 }
                             } else {
-                                insert = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+                                new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                             }
                         }
+
+                        notifyUser("Done sync: " + DateUtils.formatElapsedTime((System.currentTimeMillis() - start) / 1000), false);
 
                         if (DEBUG)
                             Log.d(Aware.TAG, DATABASE_TABLE + " sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis() - start) / 1000));
@@ -254,6 +293,8 @@ public class WebserviceHelper extends IntentService {
 
                             if (DEBUG)
                                 Log.d(Aware.TAG, "Deleted local old records for " + DATABASE_TABLE);
+
+                            notifyUser("Cleaned old records from " + DATABASE_TABLE, false);
                         }
                     }
                     if (context_data != null && !context_data.isClosed()) context_data.close();
@@ -291,5 +332,7 @@ public class WebserviceHelper extends IntentService {
 
         if (Aware.DEBUG)
             Log.d(Aware.TAG, "Finished synching all the databases.");
+
+        notifyUser("Sync complete", true);
     }
 }

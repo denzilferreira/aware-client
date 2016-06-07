@@ -95,11 +95,14 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
         navigationList = (ListView) findViewById(R.id.aware_navigation);
 
         navigationToggle = new ActionBarDrawerToggle(Aware_Activity.this, navigationDrawer, toolbar, R.string.drawer_open, R.string.drawer_close);
-        navigationDrawer.setDrawerListener(navigationToggle);
+
+        if (navigationDrawer != null && navigationToggle != null)
+            navigationDrawer.setDrawerListener(navigationToggle);
 
         String[] options = {"Stream", "Sensors", "Plugins", "Studies"};
         NavigationAdapter nav_adapter = new NavigationAdapter(getApplicationContext(), options);
-        navigationList.setAdapter(nav_adapter);
+        if (navigationList != null)
+            navigationList.setAdapter(nav_adapter);
 
         if (navigationToggle != null) navigationToggle.syncState();
     }
