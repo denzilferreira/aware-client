@@ -41,6 +41,8 @@ public class WebserviceHelper extends IntentService {
         super(Aware.TAG + " Webservice Sync");
     }
 
+    private static long sync_start = 0;
+
     private boolean exists(String[] array, String find) {
         for (String a : array) {
             if (a.equals(find)) return true;
@@ -54,6 +56,8 @@ public class WebserviceHelper extends IntentService {
 
         if (Aware.DEBUG)
             Log.d(Aware.TAG, "Synching all the databases...");
+
+        WebserviceHelper.sync_start = System.currentTimeMillis();
 
         notifyUser("Synching data to server...", false);
     }
@@ -333,6 +337,6 @@ public class WebserviceHelper extends IntentService {
         if (Aware.DEBUG)
             Log.d(Aware.TAG, "Finished synching all the databases.");
 
-        notifyUser("Sync complete", true);
+        notifyUser("Sync took: " + DateUtils.formatElapsedTime((System.currentTimeMillis()-WebserviceHelper.sync_start)/1000), false);
     }
 }
