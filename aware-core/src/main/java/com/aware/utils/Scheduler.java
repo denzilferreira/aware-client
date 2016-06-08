@@ -22,6 +22,7 @@ import org.json.JSONObject;
 
 import java.util.Calendar;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Random;
 
@@ -47,7 +48,9 @@ public class Scheduler extends Service {
     public static final int RANDOM_TYPE_HOUR = 0;
     public static final int RANDOM_TYPE_WEEKDAY = 1;
     public static final int RANDOM_TYPE_MONTH = 2;
+    public static final int RANDOM_TYPE_MINUTE = 3;
 
+    public static final String RANDOM_MINUTE = "random_minute";
     public static final String RANDOM_HOUR = "random_hour";
     public static final String RANDOM_MONTH = "random_month";
     public static final String RANDOM_WEEKDAY = "random_weekday";
@@ -62,7 +65,7 @@ public class Scheduler extends Service {
     public static final String ACTION_EXTRA_KEY = "extra_key";
     public static final String ACTION_EXTRA_VALUE = "extra_value";
 
-    //String is the scheduler ID
+    //String is the scheduler ID, and hashtable contains list of intentfilters and broadcastreceivers
     private static final Hashtable<String, Hashtable<IntentFilter, BroadcastReceiver>> schedulerListeners = new Hashtable<>();
 
     @Override
@@ -328,21 +331,22 @@ public class Scheduler extends Service {
          *
          * @param broadcast e.g., ACTION_AWARE_CALL_ACCEPTED runs this schedule when the user has answered a phone call
          */
-        public Schedule setContext(String broadcast) throws JSONException {
-            this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_CONTEXT, broadcast);
+        public Schedule addContext(String broadcast) throws JSONException {
+            JSONArray contexts = getContexts();
+            contexts.put(broadcast);
             return this;
         }
 
         /**
-         * Get the contextual broadcast that triggers this schedule
-         *
+         * Returns the list of contexts which trigger this schedule
          * @return
+         * @throws JSONException
          */
-        public String getContext() throws JSONException {
-            if (this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_CONTEXT)) {
-                return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getString(TRIGGER_CONTEXT);
+        public JSONArray getContexts() throws JSONException {
+            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_CONTEXT)) {
+                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_CONTEXT, new JSONArray());
             }
-            return "";
+            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_CONTEXT);
         }
 
         /**
@@ -353,6 +357,9 @@ public class Scheduler extends Service {
         public Schedule randomize(int random_type) throws JSONException {
             JSONObject json_random = getRandom();
             switch (random_type) {
+                case RANDOM_TYPE_MINUTE:
+                    json_random.put(RANDOM_MINUTE, true);
+                    break;
                 case RANDOM_TYPE_HOUR:
                     json_random.put(RANDOM_HOUR, true);
                     break;
@@ -381,29 +388,36 @@ public class Scheduler extends Service {
                     final Schedule schedule = new Schedule(scheduled_tasks.getString(scheduled_tasks.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID)));
                     schedule.rebuild(new JSONObject(scheduled_tasks.getString(scheduled_tasks.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE))));
 
-                    if (schedule.getContext().length() > 0) {
+                    if (schedule.getContexts().length() > 0) {
                         if (!schedulerListeners.containsKey(schedule.getScheduleID())) {
+
+                            final JSONArray contexts = schedule.getContexts();
+
+                            IntentFilter filters = new IntentFilter();
+                            for( int i = 0; i< contexts.length(); i++ ) {
+                                String context = contexts.getString(i);
+                                filters.addAction(context);
+                            }
+
                             BroadcastReceiver listener = new BroadcastReceiver() {
                                 @Override
                                 public void onReceive(Context context, Intent intent) {
                                     if (is_trigger(schedule)) {
                                         if (Aware.DEBUG)
-                                            Log.d(Aware.TAG, "Received contextual trigger: " + intent.getAction());
+                                            Log.d(Aware.TAG, "Received contextual trigger: " + contexts.toString());
                                         performAction(schedule);
                                     }
                                 }
                             };
 
-                            IntentFilter filter = new IntentFilter(schedule.getContext());
-
                             Hashtable<IntentFilter, BroadcastReceiver> scheduler_listener = new Hashtable<>();
-                            scheduler_listener.put(filter, listener);
+                            scheduler_listener.put(filters, listener);
                             schedulerListeners.put(schedule.getScheduleID(), scheduler_listener);
 
-                            registerReceiver(listener, filter);
+                            registerReceiver(listener, filters);
 
                             if (Aware.DEBUG)
-                                Log.d(Aware.TAG, "Registered a contextual trigger for " + schedule.getContext());
+                                Log.d(Aware.TAG, "Registered a contextual trigger for " + contexts.toString());
                         }
 
                     } else {
@@ -445,8 +459,8 @@ public class Scheduler extends Service {
         now.setTimeInMillis(System.currentTimeMillis());
 
         try {
-            //Context schedulers do not have time constrains
-            if (schedule.getContext().length() > 0) {
+            //Context schedulers do not have time constrains and it is handled by the broadcast receiver
+            if (schedule.getContexts().length() > 0) {
                 if (schedule.getTimer() == -1 && schedule.getMinutes().length() == 0 && schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0)
                     return true;
             }
@@ -569,13 +583,26 @@ public class Scheduler extends Service {
 
         try {
             JSONArray minutes = schedule.getMinutes();
-            for (int i = 0; i < minutes.length(); i++) {
-                int minute = minutes.getInt(i);
+
+            if (schedule.getRandom().optBoolean(RANDOM_MINUTE)) {
+
+                Random random = new Random();
+                int random_minute = minutes.getInt(random.nextInt(minutes.length()));
 
                 if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Minute " + minute + " vs now " + now.get(Calendar.MINUTE) + " in trigger minutes: " + minutes.toString());
+                    Log.d(Aware.TAG, "Random minute " + random_minute + " vs now " + now.get(Calendar.MINUTE) + " in trigger minutes: " + minutes.toString());
 
-                return(now.get(Calendar.MINUTE) == minute);
+                if (random_minute == now.get(Calendar.MINUTE)) return true;
+
+            } else {
+                for (int i = 0; i < minutes.length(); i++) {
+                    int minute = minutes.getInt(i);
+
+                    if (Aware.DEBUG)
+                        Log.d(Aware.TAG, "Minute " + minute + " vs now " + now.get(Calendar.MINUTE) + " in trigger minutes: " + minutes.toString());
+
+                    if (now.get(Calendar.MINUTE) == minute) return true;
+                }
             }
         } catch (JSONException e) {
             e.printStackTrace();
