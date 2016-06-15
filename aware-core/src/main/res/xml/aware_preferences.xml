@@ -669,7 +669,14 @@
                 android:key="frequency_webservice"
                 android:persistent="true"
                 android:summary="30 minutes"
-                android:title="Sync every (in minutes, 0 to disable)." />
+                android:title="Sync interval (in minutes, 0 to disable)." />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="webservice_charging"
+                android:persistent="true"
+                android:summary="Only sync if charging"
+                android:title="Charging" />
 
             <ListPreference
                 android:defaultValue="0"

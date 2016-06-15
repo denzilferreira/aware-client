@@ -712,13 +712,20 @@
                 android:summary="Sync only on Wi-Fi"
                 android:title="Wi-Fi only" />
 
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="webservice_charging"
+                android:persistent="true"
+                android:summary="Only sync if charging"
+                android:title="Charging" />
+
             <EditTextPreference
                 android:defaultValue="30"
                 android:inputType="number"
                 android:key="frequency_webservice"
                 android:persistent="true"
                 android:summary="30 minutes"
-                android:title="Sync every (in minutes, 0 to disable)." />
+                android:title="Sync interval (in minutes, 0 to disable)." />
 
             <ListPreference
                 android:defaultValue="0"

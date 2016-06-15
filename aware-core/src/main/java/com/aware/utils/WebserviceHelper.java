@@ -6,10 +6,12 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.BatteryManager;
 import android.support.v4.app.NotificationCompat;
 import android.text.format.DateUtils;
 import android.util.Log;
@@ -105,6 +107,20 @@ public class WebserviceHelper extends IntentService {
         Uri CONTENT_URI = Uri.parse(intent.getStringExtra(EXTRA_CONTENT_URI));
 
         if (intent.getAction().equals(ACTION_AWARE_WEBSERVICE_SYNC_TABLE)) {
+
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_CHARGING).equals("true")) {
+                IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+                Intent batteryStatus = registerReceiver(null, ifilter);
+
+                int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+                boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
+
+                if (!isCharging) {
+                    if (Aware.DEBUG)
+                        Log.d(Aware.TAG, "Only synching data if charging...");
+                    return;
+                }
+            }
 
             //Check if we are supposed to sync over WiFi only
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true")) {
@@ -270,8 +286,6 @@ public class WebserviceHelper extends IntentService {
                             }
                         }
 
-                        notifyUser("Done sync: " + DateUtils.formatElapsedTime((System.currentTimeMillis() - start) / 1000), false);
-
                         if (DEBUG)
                             Log.d(Aware.TAG, DATABASE_TABLE + " sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis() - start) / 1000));
 
@@ -287,7 +301,7 @@ public class WebserviceHelper extends IntentService {
                         highFrequencySensors.add("temperature");
 
                         //Clean the local database, now that it is uploaded to the server, if required
-                        if (Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA)) == 4
+                        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0 && Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA)) == 4
                                 && highFrequencySensors.contains(DATABASE_TABLE)) {
 
                             context_data.moveToFirst();
@@ -337,6 +351,6 @@ public class WebserviceHelper extends IntentService {
         if (Aware.DEBUG)
             Log.d(Aware.TAG, "Finished synching all the databases.");
 
-        notifyUser("Sync took: " + DateUtils.formatElapsedTime((System.currentTimeMillis()-WebserviceHelper.sync_start)/1000), false);
+        notifyUser("Sync complete.", true);
     }
 }

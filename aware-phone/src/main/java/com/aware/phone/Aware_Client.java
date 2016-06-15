@@ -1473,6 +1473,16 @@ public class Aware_Client extends Aware_Activity {
             }
         });
 
+        final CheckBoxPreference webservice_charging = (CheckBoxPreference) findPreference(Aware_Preferences.WEBSERVICE_CHARGING);
+        webservice_charging.setChecked(Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_CHARGING).equals("true"));
+        webservice_charging.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                Aware.setSetting(awareContext, Aware_Preferences.WEBSERVICE_CHARGING, webservice_charging.isChecked());
+                return true;
+            }
+        });
+
         final EditTextPreference frequency_webservice = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_WEBSERVICE);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_WEBSERVICE).length() > 0) {
             frequency_webservice.setSummary(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_WEBSERVICE) + " minutes");

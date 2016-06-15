@@ -394,6 +394,11 @@ public class Aware_Preferences {
     public static final String WEBSERVICE_WIFI_ONLY = "webservice_wifi_only";
 
     /**
+     * AWARE webservice sync only if charging
+     */
+    public static final String WEBSERVICE_CHARGING = "webservice_charging";
+
+    /**
      * AWARE webservice frequency (default = 30), in minutes
      */
     public static final String FREQUENCY_WEBSERVICE = "frequency_webservice";
@@ -403,6 +408,8 @@ public class Aware_Preferences {
      * 0 - never
      * 1 - weekly
      * 2 - monthly
+     * 3 - daily
+     * 4 - always
      */
     public static final String FREQUENCY_CLEAN_OLD_DATA = "frequency_clean_old_data";
 
