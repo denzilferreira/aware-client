@@ -43,8 +43,6 @@ public class WebserviceHelper extends IntentService {
         super(Aware.TAG + " Webservice Sync");
     }
 
-    private static long sync_start = 0;
-
     private boolean exists(String[] array, String find) {
         for (String a : array) {
             if (a.equals(find)) return true;
@@ -58,8 +56,6 @@ public class WebserviceHelper extends IntentService {
 
         if (Aware.DEBUG)
             Log.d(Aware.TAG, "Synching all the databases...");
-
-        WebserviceHelper.sync_start = System.currentTimeMillis();
 
         notifyUser("Synching data to server...", false);
     }
@@ -104,9 +100,10 @@ public class WebserviceHelper extends IntentService {
         boolean DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
         String DATABASE_TABLE = intent.getStringExtra(EXTRA_TABLE);
         String TABLES_FIELDS = intent.getStringExtra(EXTRA_FIELDS);
-        Uri CONTENT_URI = Uri.parse(intent.getStringExtra(EXTRA_CONTENT_URI));
 
         if (intent.getAction().equals(ACTION_AWARE_WEBSERVICE_SYNC_TABLE)) {
+
+            Uri CONTENT_URI = Uri.parse(intent.getStringExtra(EXTRA_CONTENT_URI));
 
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_CHARGING).equals("true")) {
                 IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);

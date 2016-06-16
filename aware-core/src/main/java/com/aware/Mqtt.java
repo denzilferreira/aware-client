@@ -142,7 +142,9 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	private static Context mContext = null;
 
     private static MQTTAsync connector;
-	
+
+    private static int retries = 3;
+
 	/**
 	 * Activity-Service binder
 	 */
@@ -150,7 +152,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
     @Override
     public void connectionLost(Throwable throwable) {
-        if( Aware.DEBUG ) Log.d(TAG,"MQTT: Connection lost to server... AWARE will reconnect in 5 minutes...");
+        if( Aware.DEBUG ) Log.d(TAG,"MQTT: Connection lost to server... reconnecting...");
+        initializeMQTT();
     }
 
     @Override
@@ -233,7 +236,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                 String topic = intent.getStringExtra(EXTRA_TOPIC);
                 String message = intent.getStringExtra(EXTRA_MESSAGE);
                 if(topic != null && message!= null && topic.length() > 0 && message.length() >0 ) {
-                    if ( publish(topic, message.getBytes()) ) {
+                    if ( publish(topic, message) ) {
                         ContentValues rowData = new ContentValues();
                         rowData.put(Mqtt_Messages.TIMESTAMP, System.currentTimeMillis());
                         rowData.put(Mqtt_Messages.DEVICE_ID, Aware.getSetting(context,Aware_Preferences.DEVICE_ID));
@@ -371,8 +374,6 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         MQTT_PROTOCOL = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_PROTOCOL).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_PROTOCOL ) : "tcp";
         
         String MQTT_URL = MQTT_PROTOCOL + "://" + MQTT_SERVER + ":" + MQTT_PORT;
-        
-        if(Aware.DEBUG) Log.d(TAG, "MQTT service connecting: " + MQTT_URL);
 
         if( MQTT_MESSAGES_PERSISTENCE == null ) MQTT_MESSAGES_PERSISTENCE = new MqttDefaultFilePersistence( getExternalFilesDir(null) + "/Documents/AWARE/" );
         try {
@@ -394,9 +395,10 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
             MQTT_CLIENT.setCallback( this );
 
             if (connector == null) connector = new MQTTAsync();
-            if (connector.getStatus() == AsyncTask.Status.PENDING)
+            if (connector.getStatus() == AsyncTask.Status.PENDING) {
                 connector.execute( MQTT_OPTIONS );
-
+                if(Aware.DEBUG) Log.d(TAG, "MQTT service connecting: " + MQTT_URL);
+            }
 		} catch ( MqttException e ) {
 			if( Aware.DEBUG) Log.e(TAG, "Failed: " + e.getMessage());
 		}
@@ -408,7 +410,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	 */
 	private class MQTTAsync extends AsyncTask<MqttConnectOptions, Void, Boolean> {
 		private MqttConnectOptions options;
-		@Override
+
+        @Override
         protected Boolean doInBackground(MqttConnectOptions... params) {
             options = params[0];
         	try {
@@ -474,13 +477,13 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 	/**
 	 * Publish message to topic
 	 * @param topicName
-	 * @param payload
+	 * @param messageText
 	 */
-	private static boolean publish(String topicName, byte[] payload) {
+	public static boolean publish(String topicName, String messageText) {
 	    if( MQTT_CLIENT != null && MQTT_CLIENT.isConnected() ) {
             try {
                 MqttMessage message = new MqttMessage();
-                message.setPayload(payload);
+                message.setPayload(messageText.getBytes());
                 message.setQos( Integer.parseInt(MQTT_QoS) );
                 message.setRetained(true);
 
