@@ -141,7 +141,7 @@ public class Aware_Provider extends ContentProvider {
 			+ Aware_Device.RELEASE_TYPE + " text default '',"
 			+ Aware_Device.SDK + " integer default 0,"
 			+ Aware_Device.LABEL + " text default '',"
-			+ "UNIQUE (" + Aware_Device.TIMESTAMP + "," + Aware_Device.DEVICE_ID + ")",
+			+ "UNIQUE (" + Aware_Device.DEVICE_ID + "," + Aware_Device.TIMESTAMP + ")",
 
 			// Settings
 			Aware_Settings.SETTING_ID + " integer primary key autoincrement,"

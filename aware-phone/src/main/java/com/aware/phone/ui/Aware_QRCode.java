@@ -110,8 +110,8 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
             LinearLayout main = new LinearLayout(this);
             ListView list = new ListView(this);
             list.setId(android.R.id.list);
-            main.addView(list);
             main.addView(mScannerView);
+            main.addView(list);
             setContentView(main);
         }
     }
@@ -156,7 +156,7 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
             startCameraSource();
         } else {
             mScannerView.setResultHandler(this);
-            mScannerView.startCamera();
+            mScannerView.startCamera(-1);
         }
     }
 

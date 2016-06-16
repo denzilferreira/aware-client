@@ -716,8 +716,8 @@
                 android:defaultValue="false"
                 android:key="webservice_charging"
                 android:persistent="true"
-                android:summary="Only sync if charging"
-                android:title="Charging" />
+                android:summary="Sync only while charging"
+                android:title="Charging only" />
 
             <EditTextPreference
                 android:defaultValue="30"

@@ -96,15 +96,15 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
 
         navigationToggle = new ActionBarDrawerToggle(Aware_Activity.this, navigationDrawer, toolbar, R.string.drawer_open, R.string.drawer_close);
 
-        if (navigationDrawer != null && navigationToggle != null)
+        if (navigationDrawer != null && navigationToggle != null) {
             navigationDrawer.setDrawerListener(navigationToggle);
+            navigationToggle.syncState();
+        }
 
         String[] options = {"Stream", "Sensors", "Plugins", "Studies"};
         NavigationAdapter nav_adapter = new NavigationAdapter(getApplicationContext(), options);
         if (navigationList != null)
             navigationList.setAdapter(nav_adapter);
-
-        if (navigationToggle != null) navigationToggle.syncState();
     }
 
     @Override
@@ -198,6 +198,11 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
 
             return row;
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 
     public class Async_StudyData extends AsyncTask<String, Void, JSONObject> {

@@ -425,7 +425,8 @@ public class Aware extends Service {
                     try {
                         Scheduler.Schedule schedule = new Scheduler.Schedule(SCHEDULE_SYNC_DATA)
                                 .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                .setActionClass(Aware.ACTION_AWARE_SYNC_DATA);
+                                .setActionClass(Aware.ACTION_AWARE_SYNC_DATA)
+                                .addContext(Battery.ACTION_AWARE_BATTERY_CHARGING);
 
                         int i = frequency_webservice;
                         while (i<60) {
@@ -616,7 +617,7 @@ public class Aware extends Service {
     }
 
     /**
-     * Requests the download of a plugin given the package name from AWARE webservices.
+     * Requests the download of a plugin given the package name from AWARE webservices or the Play Store otherwise
      *
      * @param context
      * @param package_name
@@ -1112,7 +1113,7 @@ public class Aware extends Service {
                 e.printStackTrace();
             }
 
-            //Send data to server for the first time, so that this device is immediately visible on the GUI
+            //Send data to server for the first time, so that this device is immediately visible on the dashboard
             Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
             sendBroadcast(sync);
 
@@ -1203,12 +1204,12 @@ public class Aware extends Service {
 
         Map<String, ?> defaults = prefs.getAll();
         for (Map.Entry<String, ?> entry : defaults.entrySet()) {
-            Aware.setSetting(c, entry.getKey(), entry.getValue());
+            Aware.setSetting(c, entry.getKey(), entry.getValue(), "com.aware");
         }
 
         //Keep previous AWARE Device ID and label
-        Aware.setSetting(c, Aware_Preferences.DEVICE_ID, device_id);
-        Aware.setSetting(c, Aware_Preferences.DEVICE_LABEL, device_label);
+        Aware.setSetting(c, Aware_Preferences.DEVICE_ID, device_id, "com.aware");
+        Aware.setSetting(c, Aware_Preferences.DEVICE_LABEL, device_label, "com.aware");
 
         ContentValues update_label = new ContentValues();
         update_label.put(Aware_Device.LABEL, device_label);
@@ -1324,21 +1325,17 @@ public class Aware extends Service {
                     if (Aware.DEBUG) Log.d(TAG, packageName + " is updating!");
 
                     ContentValues rowData = new ContentValues();
-                    rowData.put(Aware_Plugins.PLUGIN_VERSION, PluginsManager.getVersion(context, packageName));
-                    try {
-                        rowData.put(Aware_Plugins.PLUGIN_ICON, PluginsManager.getPluginIcon(context, mPkgManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES)));
-                    } catch (NameNotFoundException e) {
-                        e.printStackTrace();
-                    }
+                    rowData.put(Aware_Plugins.PLUGIN_VERSION, PluginsManager.getPluginVersion(context, packageName));
+                    rowData.put(Aware_Plugins.PLUGIN_ICON, PluginsManager.getPluginIcon(context, packageName));
+                    rowData.put(Aware_Plugins.PLUGIN_NAME, PluginsManager.getPluginName(context, packageName));
 
                     Cursor current_status = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, new String[]{Aware_Plugins.PLUGIN_STATUS}, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null, null);
                     if (current_status != null && current_status.moveToFirst()) {
                         if (current_status.getInt(current_status.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == PluginsManager.PLUGIN_UPDATED) { //was updated, set to active now
                             rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
                         }
-                    }
-                    if (current_status != null && !current_status.isClosed())
                         current_status.close();
+                    }
 
                     context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
 
@@ -1349,9 +1346,25 @@ public class Aware extends Service {
 
                 //Installing new
                 try {
-                    ApplicationInfo appInfo = mPkgManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
-                    //Check if this is a package for which we have more info from the server
-                    new AwarePluginOnlineInfo(context).execute(appInfo);
+                    ApplicationInfo app = mPkgManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
+
+                    ContentValues rowData = new ContentValues();
+                    rowData.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, app.packageName);
+                    rowData.put(Aware_Plugins.PLUGIN_NAME, app.loadLabel(awareContext.getPackageManager()).toString());
+                    rowData.put(Aware_Plugins.PLUGIN_VERSION, PluginsManager.getPluginVersion(context, app.packageName));
+                    rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
+                    rowData.put(Aware_Plugins.PLUGIN_ICON, PluginsManager.getPluginIcon(context, app.packageName));
+
+                    if (PluginsManager.isLocal(context, app.packageName)) {
+                        context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + app.packageName + "'", null);
+                    } else {
+                        context.getContentResolver().insert(Aware_Plugins.CONTENT_URI, rowData);
+                    }
+
+                    if (Aware.DEBUG) Log.d(TAG, "AWARE plugin added and activated:" + app.packageName);
+
+                    Aware.startPlugin(context, app.packageName);
+
                 } catch (final NameNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -1371,111 +1384,19 @@ public class Aware extends Service {
         }
     }
 
-    /**
-     * Fetches info from webservices on installed plugins.
-     *
-     * @author denzilferreira
-     */
-    private static class AwarePluginOnlineInfo extends AsyncTask<ApplicationInfo, Void, JSONObject> {
-
-        private ApplicationInfo app;
-        private Context appContext;
-
-        public AwarePluginOnlineInfo(Context c) {
-            this.appContext = c;
-        }
-
-        @Override
-        protected JSONObject doInBackground(ApplicationInfo... params) {
-
-            app = params[0];
-
-            JSONObject json_package = null;
-
-            String study_url = Aware.getSetting(appContext, Aware_Preferences.WEBSERVICE_SERVER);
-            String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
-            String protocol = study_url.substring(0, study_url.indexOf(":"));
-
-            String http_request;
-            if (protocol.equals("https")) {
-                try {
-                    http_request = new Https(appContext, SSLManager.getHTTPS(appContext, study_url)).dataGET(study_host + "/index.php/plugins/get_plugin/" + app.packageName, true);
-                } catch (FileNotFoundException e) {
-                    http_request = null;
-                }
-            } else {
-                http_request = new Http(appContext).dataGET(study_host + "/index.php/plugins/get_plugin/" + app.packageName, true);
-            }
-            if (http_request != null) {
-                try {
-                    if (!http_request.trim().equalsIgnoreCase("[]")) {
-                        json_package = new JSONObject(http_request);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-            return json_package;
-        }
-
-        @Override
-        protected void onPostExecute(JSONObject json_package) {
-            super.onPostExecute(json_package);
-
-            ContentValues rowData = new ContentValues();
-            rowData.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, app.packageName);
-            rowData.put(Aware_Plugins.PLUGIN_NAME, app.loadLabel(awareContext.getPackageManager()).toString());
-            rowData.put(Aware_Plugins.PLUGIN_VERSION, PluginsManager.getVersion(appContext, app.packageName));
-            rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
-            try {
-                rowData.put(Aware_Plugins.PLUGIN_ICON, PluginsManager.getPluginIcon(appContext, appContext.getPackageManager().getPackageInfo(app.packageName, PackageManager.GET_ACTIVITIES)));
-            } catch (NameNotFoundException e) {
-                e.printStackTrace();
-            }
-
-            try {
-                if (json_package != null) {
-                    rowData.put(Aware_Plugins.PLUGIN_AUTHOR, json_package.getString("first_name") + " " + json_package.getString("last_name") + " - " + json_package.getString("email"));
-                    rowData.put(Aware_Plugins.PLUGIN_DESCRIPTION, json_package.getString("desc"));
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            //If we already have cached information for this package, just update it
-            boolean is_cached = false;
-            Cursor plugin_cached = appContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + app.packageName + "'", null, null);
-            if (plugin_cached != null && plugin_cached.moveToFirst()) {
-                is_cached = true;
-            }
-            if (plugin_cached != null && !plugin_cached.isClosed()) plugin_cached.close();
-
-            if (!is_cached) {
-                appContext.getContentResolver().insert(Aware_Plugins.CONTENT_URI, rowData);
-            } else {
-                appContext.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + app.packageName + "'", null);
-            }
-
-            if (Aware.DEBUG) Log.d(TAG, "AWARE plugin added and activated:" + app.packageName);
-
-            //Start plugin
-            Aware.startPlugin(appContext, app.packageName);
-        }
-    }
-
-    public static class DowloadUpdatedPlugins extends IntentService {
-        public DowloadUpdatedPlugins() {
-            super("Update Plugins service");
-        }
-
-        @Override
-        protected void onHandleIntent(Intent intent) {
-            ArrayList<String> packages = intent.getStringArrayListExtra("updated");
-            for (String package_name : packages) {
-                Aware.downloadPlugin(getApplicationContext(), package_name, true);
-            }
-        }
-    }
+//    public static class DowloadUpdatedPlugins extends IntentService {
+//        public DowloadUpdatedPlugins() {
+//            super("Update Plugins service");
+//        }
+//
+//        @Override
+//        protected void onHandleIntent(Intent intent) {
+//            ArrayList<String> packages = intent.getStringArrayListExtra("updated");
+//            for (String package_name : packages) {
+//                Aware.downloadPlugin(getApplicationContext(), package_name, true);
+//            }
+//        }
+//    }
 
     /**
      * BroadcastReceiver that monitors for AWARE framework actions:
@@ -1534,7 +1455,6 @@ public class Aware extends Service {
      * Checks if we have access to the storage of the device. Turns off AWARE when we don't, turns it back on when available again.
      */
     private static final Storage_Broadcaster storage_BR = new Storage_Broadcaster();
-
     public static class Storage_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {

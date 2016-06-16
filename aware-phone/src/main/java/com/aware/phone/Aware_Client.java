@@ -41,6 +41,7 @@ import com.aware.phone.ui.Plugins_Manager;
 import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
+import com.aware.utils.PluginsManager;
 import com.aware.utils.SSLManager;
 
 import org.json.JSONArray;
@@ -73,6 +74,8 @@ public class Aware_Client extends Aware_Activity {
     private static Context awareContext;
     private static PreferenceActivity clientUI;
     public static ArrayList<String> missing_permissions = new ArrayList<>();
+
+    private static Aware_Activity.Async_StudyData studyCheck;
 
     @Override
     protected Dialog onCreateDialog(int id) {
@@ -250,14 +253,14 @@ public class Aware_Client extends Aware_Activity {
         final PreferenceScreen esm_creator = (PreferenceScreen) findPreference("esm_creator");
         if (Plugins_Manager.isInstalled(this, "com.niels.esmgenerator") == null ) {
             Intent esmCreator = new Intent(Intent.ACTION_VIEW);
-            esmCreator.setData(Uri.parse("market://search?q=awareframework esmcreator&c=apps"));
+            esmCreator.setData(Uri.parse("market://details?id=com.niels.esmgenerator"));
             esm_creator.setIntent(esmCreator);
             esm_creator.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-                    Toast.makeText(getApplicationContext(), "Please install AWARE ESMCreator", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Please install AWARE: ESM Generator", Toast.LENGTH_LONG).show();
                     Intent esmCreator = new Intent(Intent.ACTION_VIEW);
-                    esmCreator.setData(Uri.parse("market://search?q=awareframework esmcreator&c=apps"));
+                    esmCreator.setData(Uri.parse("market://details?id=com.niels.esmgenerator"));
                     startActivity(esmCreator);
                     return true;
                 }
@@ -1757,7 +1760,10 @@ public class Aware_Client extends Aware_Activity {
 
             //Lock interface if in a study
             if (Aware.getSetting(getApplicationContext(), "study_id").length() > 0) {
-                new Aware_Activity.Async_StudyData().execute(Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
+                if (studyCheck == null) studyCheck = new Aware_Activity.Async_StudyData();
+                if (studyCheck.getStatus() == AsyncTask.Status.PENDING) {
+                    studyCheck.execute(Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
+                }
             }
         }
     }
@@ -1826,8 +1832,15 @@ public class Aware_Client extends Aware_Activity {
             }
         }
 
-        //Now check plugins
-        new CheckPlugins(context).execute(active_plugins);
+        for(String package_name : active_plugins) {
+            PackageInfo installed = PluginsManager.isInstalled(context, package_name);
+            if (installed != null) {
+                Aware.startPlugin(context, package_name);
+            } else {
+                //TODO: wizard to install plugins, step by step
+                Aware.downloadPlugin(context, package_name, false);
+            }
+        }
 
         //Send data to server
         Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
@@ -1835,70 +1848,5 @@ public class Aware_Client extends Aware_Activity {
 
         Intent applyNew = new Intent(Aware.ACTION_AWARE_REFRESH);
         context.sendBroadcast(applyNew);
-    }
-
-    public static class CheckPlugins extends AsyncTask<ArrayList<String>, Void, Void> {
-        private Context context;
-
-        public CheckPlugins(Context c) {
-            this.context = c;
-        }
-
-        @Override
-        protected Void doInBackground(ArrayList<String>... params) {
-
-            String study_url = Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SERVER);
-            String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
-            String protocol = study_url.substring(0, study_url.indexOf(":"));
-
-            for (final String package_name : params[0]) {
-
-                String http_request;
-                if (protocol.equals("https")) {
-                    try {
-                        http_request = new Https(context, SSLManager.getHTTPS(context, study_url)).dataGET(study_host + "/index.php/plugins/get_plugin/" + package_name, true);
-                    } catch (FileNotFoundException e) {
-                        http_request = null;
-                    }
-                } else {
-                    http_request = new Http(context).dataGET(study_host + "/index.php/plugins/get_plugin/" + package_name, true);
-                }
-
-                if (http_request != null) {
-                    try {
-                        if (!http_request.equals("[]")) {
-                            JSONObject json_package = new JSONObject(http_request);
-                            if (json_package.getInt("version") > Plugins_Manager.getVersion(context, package_name)) {
-                                Aware.downloadPlugin(context, package_name, true); //update the existing plugin
-                            } else {
-                                PackageInfo installed = Plugins_Manager.isInstalled(context, package_name);
-                                if (installed != null) {
-                                    Aware.startPlugin(context, package_name); //start plugin
-                                } else {
-
-                                    //We don't have the plugin installed or bundled. Ask to install?
-                                    if (Aware.DEBUG)
-                                        Log.d(Aware.TAG, package_name + " is not installed yet!");
-
-                                    android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(context);
-                                    builder.setTitle("AWARE")
-                                            .setMessage("Install necessary plugin(s)?")
-                                            .setPositiveButton("Install", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    Aware.downloadPlugin(context, package_name, false);
-                                                }
-                                            })
-                                            .setNegativeButton("Cancel", null).show();
-                                }
-                            }
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            return null;
-        }
     }
 }

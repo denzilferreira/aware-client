@@ -108,14 +108,16 @@ public class WebserviceHelper extends IntentService {
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_CHARGING).equals("true")) {
                 IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
                 Intent batteryStatus = registerReceiver(null, ifilter);
-
                 int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-                boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
+                boolean isCharging = (status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL);
 
                 if (!isCharging) {
                     if (Aware.DEBUG)
                         Log.d(Aware.TAG, "Only synching data if charging...");
                     return;
+                } else {
+                    if (Aware.DEBUG)
+                        Log.d(Aware.TAG, "Device is charging, can we sync?");
                 }
             }
 
@@ -128,7 +130,7 @@ public class WebserviceHelper extends IntentService {
                         Log.d(Aware.TAG, "Synching data only over Wi-Fi and internet is available, let's sync!");
                 } else {
                     if (Aware.DEBUG)
-                        Log.d(Aware.TAG, "Synching data only over Wi-Fi and no internet. Will try again later...");
+                        Log.d(Aware.TAG, "Synching data only over Wi-Fi. Will try again later...");
                     return;
                 }
             }

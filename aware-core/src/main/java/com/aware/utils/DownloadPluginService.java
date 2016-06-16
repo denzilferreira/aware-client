@@ -5,8 +5,10 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Environment;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
@@ -72,8 +74,11 @@ public class DownloadPluginService extends IntentService {
                 JSONObject json_package = new JSONObject(response);
 
                 //Create the folder where all the plugins will be stored on external storage
-                File folders = new File( getExternalFilesDir(null) + "/Documents/AWARE/", "plugins");
+                File folders = new File(Environment.getExternalStoragePublicDirectory("AWARE/plugins").toString());
                 folders.mkdirs();
+
+//                File folders = new File( getExternalFilesDir(null) + "/Documents/AWARE/", "plugins");
+//                folders.mkdirs();
 
                 String package_url = study_host + json_package.getString("package_path") + json_package.getString("package_name");
 
@@ -113,9 +118,10 @@ public class DownloadPluginService extends IntentService {
                             .getHttpClient()
                             .getSSLSocketMiddleware().setSSLContext(sslContext);
 
+                    //.write(new File(getExternalFilesDir(null)+"/Documents/AWARE/plugins/" + json_package.getString("package_name")))
                     Ion.with(getApplicationContext())
                             .load(package_url)
-                            .write(new File(getExternalFilesDir(null)+"/Documents/AWARE/plugins/" + json_package.getString("package_name")))
+                            .write(new File(Environment.getExternalStoragePublicDirectory("AWARE/plugins/" + json_package.getString("package_name")).toString()))
                             .setCallback(new FutureCallback<File>() {
                                 @Override
                                 public void onCompleted(Exception e, File result) {
@@ -131,9 +137,10 @@ public class DownloadPluginService extends IntentService {
                                 }
                             });
                 } else {
+                    //.write(new File(getExternalFilesDir(null)+"/Documents/AWARE/plugins/" + json_package.getString("package_name")))
                     Ion.with(getApplicationContext())
                             .load(package_url)
-                            .write(new File(getExternalFilesDir(null)+"/Documents/AWARE/plugins/" + json_package.getString("package_name")))
+                            .write(new File(Environment.getExternalStoragePublicDirectory("AWARE/plugins/" + json_package.getString("package_name")).toString()))
                             .setCallback(new FutureCallback<File>() {
                                 @Override
                                 public void onCompleted(Exception e, File result) {
@@ -162,6 +169,13 @@ public class DownloadPluginService extends IntentService {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        } else {
+            //We don't have it on our server, let's try the Play Store
+            Toast.makeText(getApplicationContext(), "Please install this plugin", Toast.LENGTH_LONG).show();
+            Intent playInstaller = new Intent(Intent.ACTION_VIEW);
+            playInstaller.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            playInstaller.setData(Uri.parse("market://details?id=" + package_name));
+            startActivity(playInstaller);
         }
     }
 }
