@@ -25,11 +25,10 @@ public class Aware_Toolbar extends Preference {
         super.onCreateView(parent);
         parent.setPadding(0, 0, 0, 0);
 
-        LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View layout = inflater.inflate(R.layout.aware_toolbar, parent, false);
-
+        View layout = LayoutInflater.from(getContext()).inflate(R.layout.aware_toolbar, parent, false);
         final Toolbar toolbar = (Toolbar) layout.findViewById(R.id.aware_toolbar);
         toolbar.setTitle(this.getTitle());
+        toolbar.inflateMenu(R.menu.aware_menu);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -41,6 +40,7 @@ public class Aware_Toolbar extends Preference {
                 }
             }
         });
+
         return layout;
     }
 }

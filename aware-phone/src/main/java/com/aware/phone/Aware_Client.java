@@ -75,7 +75,7 @@ public class Aware_Client extends Aware_Activity {
     private static PreferenceActivity clientUI;
     public static ArrayList<String> missing_permissions = new ArrayList<>();
 
-    private static Aware_Activity.Async_StudyData studyCheck;
+    private Aware_Activity.Async_StudyData studyCheck;
 
     @Override
     protected Dialog onCreateDialog(int id) {
@@ -251,7 +251,7 @@ public class Aware_Client extends Aware_Activity {
         });
 
         final PreferenceScreen esm_creator = (PreferenceScreen) findPreference("esm_creator");
-        if (Plugins_Manager.isInstalled(this, "com.niels.esmgenerator") == null ) {
+        if (PluginsManager.isInstalled(this, "com.niels.esmgenerator") == null ) {
             Intent esmCreator = new Intent(Intent.ACTION_VIEW);
             esmCreator.setData(Uri.parse("market://details?id=com.niels.esmgenerator"));
             esm_creator.setIntent(esmCreator);
@@ -1776,77 +1776,77 @@ public class Aware_Client extends Aware_Activity {
      * @param context
      * @param configs
      */
-    protected static void applySettings(Context context, JSONArray configs) {
-
-        boolean is_developer = Aware.getSetting(context, Aware_Preferences.DEBUG_FLAG).equals("true");
-
-        //First reset the client to default settings...
-        Aware.reset(context);
-
-        if (is_developer) Aware.setSetting(context, Aware_Preferences.DEBUG_FLAG, true);
-
-        //Now apply the new settings
-        JSONArray plugins = new JSONArray();
-        JSONArray sensors = new JSONArray();
-
-        for (int i = 0; i < configs.length(); i++) {
-            try {
-                JSONObject element = configs.getJSONObject(i);
-                if (element.has("plugins")) {
-                    plugins = element.getJSONArray("plugins");
-                }
-                if (element.has("sensors")) {
-                    sensors = element.getJSONArray("sensors");
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        //Set the sensors' settings first
-        for (int i = 0; i < sensors.length(); i++) {
-            try {
-                JSONObject sensor_config = sensors.getJSONObject(i);
-                Aware.setSetting(context, sensor_config.getString("setting"), sensor_config.get("value"));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        //Set the plugins' settings now
-        ArrayList<String> active_plugins = new ArrayList<>();
-        for (int i = 0; i < plugins.length(); i++) {
-            try {
-                JSONObject plugin_config = plugins.getJSONObject(i);
-
-                String package_name = plugin_config.getString("plugin");
-                active_plugins.add(package_name);
-
-                JSONArray plugin_settings = plugin_config.getJSONArray("settings");
-                for (int j = 0; j < plugin_settings.length(); j++) {
-                    JSONObject plugin_setting = plugin_settings.getJSONObject(j);
-                    Aware.setSetting(context, plugin_setting.getString("setting"), plugin_setting.get("value"), package_name);
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        for(String package_name : active_plugins) {
-            PackageInfo installed = PluginsManager.isInstalled(context, package_name);
-            if (installed != null) {
-                Aware.startPlugin(context, package_name);
-            } else {
-                //TODO: wizard to install plugins, step by step
-                Aware.downloadPlugin(context, package_name, false);
-            }
-        }
-
-        //Send data to server
-        Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
-        context.sendBroadcast(sync);
-
-        Intent applyNew = new Intent(Aware.ACTION_AWARE_REFRESH);
-        context.sendBroadcast(applyNew);
-    }
+//    protected static void applySettings(Context context, JSONArray configs) {
+//
+//        boolean is_developer = Aware.getSetting(context, Aware_Preferences.DEBUG_FLAG).equals("true");
+//
+//        //First reset the client to default settings...
+//        Aware.reset(context);
+//
+//        if (is_developer) Aware.setSetting(context, Aware_Preferences.DEBUG_FLAG, true);
+//
+//        //Now apply the new settings
+//        JSONArray plugins = new JSONArray();
+//        JSONArray sensors = new JSONArray();
+//
+//        for (int i = 0; i < configs.length(); i++) {
+//            try {
+//                JSONObject element = configs.getJSONObject(i);
+//                if (element.has("plugins")) {
+//                    plugins = element.getJSONArray("plugins");
+//                }
+//                if (element.has("sensors")) {
+//                    sensors = element.getJSONArray("sensors");
+//                }
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        //Set the sensors' settings first
+//        for (int i = 0; i < sensors.length(); i++) {
+//            try {
+//                JSONObject sensor_config = sensors.getJSONObject(i);
+//                Aware.setSetting(context, sensor_config.getString("setting"), sensor_config.get("value"));
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        //Set the plugins' settings now
+//        ArrayList<String> active_plugins = new ArrayList<>();
+//        for (int i = 0; i < plugins.length(); i++) {
+//            try {
+//                JSONObject plugin_config = plugins.getJSONObject(i);
+//
+//                String package_name = plugin_config.getString("plugin");
+//                active_plugins.add(package_name);
+//
+//                JSONArray plugin_settings = plugin_config.getJSONArray("settings");
+//                for (int j = 0; j < plugin_settings.length(); j++) {
+//                    JSONObject plugin_setting = plugin_settings.getJSONObject(j);
+//                    Aware.setSetting(context, plugin_setting.getString("setting"), plugin_setting.get("value"), package_name);
+//                }
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        for(String package_name : active_plugins) {
+//            PackageInfo installed = PluginsManager.isInstalled(context, package_name);
+//            if (installed != null) {
+//                Aware.startPlugin(context, package_name);
+//            } else {
+//                //TODO: wizard to install plugins, step by step
+//                Aware.downloadPlugin(context, package_name, false);
+//            }
+//        }
+//
+//        //Send data to server
+//        Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
+//        context.sendBroadcast(sync);
+//
+//        Intent applyNew = new Intent(Aware.ACTION_AWARE_REFRESH);
+//        context.sendBroadcast(applyNew);
+//    }
 }

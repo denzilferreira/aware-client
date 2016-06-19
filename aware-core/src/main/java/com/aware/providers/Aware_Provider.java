@@ -29,7 +29,7 @@ import java.util.HashMap;
  */
 public class Aware_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 7;
+	public static final int DATABASE_VERSION = 8;
 
 	/**
 	 * AWARE framework content authority
@@ -153,7 +153,7 @@ public class Aware_Provider extends ContentProvider {
 			Aware_Plugins.PLUGIN_ID + " integer primary key autoincrement,"
 			+ Aware_Plugins.PLUGIN_PACKAGE_NAME + " text default '',"
 			+ Aware_Plugins.PLUGIN_NAME + " text default '',"
-			+ Aware_Plugins.PLUGIN_VERSION + " integer default 0,"
+			+ Aware_Plugins.PLUGIN_VERSION + " text default '',"
 			+ Aware_Plugins.PLUGIN_STATUS + " integer default 0,"
 			+ Aware_Plugins.PLUGIN_AUTHOR + " text default '',"
 			+ Aware_Plugins.PLUGIN_ICON + " blob default null,"

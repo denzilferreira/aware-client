@@ -39,6 +39,8 @@ public class WebserviceHelper extends IntentService {
 
     private static final int WEBSERVICES_NOTIFICATION_ID = 98765;
 
+    private static NotificationManager notManager;
+
     public WebserviceHelper() {
         super(Aware.TAG + " Webservice Sync");
     }
@@ -57,7 +59,7 @@ public class WebserviceHelper extends IntentService {
         if (Aware.DEBUG)
             Log.d(Aware.TAG, "Synching all the databases...");
 
-        notifyUser("Synching data to server...", false);
+        notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
     private void notifyUser(String message, boolean dismiss) {
@@ -74,10 +76,8 @@ public class WebserviceHelper extends IntentService {
             PendingIntent clickIntent = PendingIntent.getActivity(this, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
             mBuilder.setContentIntent(clickIntent);
 
-            NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             notManager.notify(WEBSERVICES_NOTIFICATION_ID, mBuilder.build());
         } else {
-            NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             notManager.cancel(WEBSERVICES_NOTIFICATION_ID);
         }
     }
@@ -350,6 +350,6 @@ public class WebserviceHelper extends IntentService {
         if (Aware.DEBUG)
             Log.d(Aware.TAG, "Finished synching all the databases.");
 
-        notifyUser("Sync complete.", true);
+        notManager.cancel(WEBSERVICES_NOTIFICATION_ID);
     }
 }

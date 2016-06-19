@@ -143,8 +143,6 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
     private static MQTTAsync connector;
 
-    private static int retries = 3;
-
 	/**
 	 * Activity-Service binder
 	 */

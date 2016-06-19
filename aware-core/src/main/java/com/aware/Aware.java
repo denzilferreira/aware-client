@@ -2,8 +2,6 @@
 package com.aware;
 
 import android.app.AlarmManager;
-import android.app.IntentService;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.app.UiModeManager;
@@ -15,7 +13,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
@@ -31,7 +28,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -54,24 +50,19 @@ import com.aware.utils.SSLManager;
 import com.aware.utils.Scheduler;
 import com.aware.utils.StudyUtils;
 import com.aware.utils.WebserviceHelper;
-import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.ion.Ion;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 
 import dalvik.system.DexFile;
@@ -183,7 +174,6 @@ public class Aware extends Service {
     private static Intent installationsSrv = null;
     private static Intent keyboard = null;
     private static Intent scheduler = null;
-    private static Intent pluginsManager = null;
 
     private final static String PREF_FREQUENCY_WATCHDOG = "frequency_watchdog";
     private final static String PREF_LAST_UPDATE = "last_update";
@@ -380,34 +370,7 @@ public class Aware extends Service {
             //Boot AWARE services
             startAWARE();
 
-            //Get the active plugins
-            ArrayList<String> active_plugins = new ArrayList<>();
-            Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
-            if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
-                do {
-                    String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-                    active_plugins.add(package_name);
-                } while (enabled_plugins.moveToNext());
-            }
-            if (enabled_plugins != null && !enabled_plugins.isClosed()) enabled_plugins.close();
-
-            //The official client takes care of staying updated to avoid compromising studies
-            //TODO: move to somewhere else - triggered by the user on demand - make it remotely triggered by server
-//            if (getPackageName().equals("com.aware")) {
-//                //Check if there are updates on the plugins
-//                if (active_plugins.size() > 0) {
-//                    //the phone takes care of updating the watch packages
-//                    if (!Aware.is_watch(this)) {
-//                        new AwarePluginsUpdateCheck().execute(active_plugins);
-//                    }
-//                }
-//            }
-
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
-
-                //Checks if study is still active
-                //TODO: move to somewhere else - this should be sent by the server when closing study as an MQTT message
-//                    new Study_Check().execute();
 
                 int frequency_webservice = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_WEBSERVICE));
                 if (frequency_webservice == 0) {
@@ -492,6 +455,17 @@ public class Aware extends Service {
                     e.printStackTrace();
                 }
             }
+
+            //Get the active plugins
+            ArrayList<String> active_plugins = new ArrayList<>();
+            Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
+            if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
+                do {
+                    String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+                    active_plugins.add(package_name);
+                } while (enabled_plugins.moveToNext());
+            }
+            if (enabled_plugins != null && !enabled_plugins.isClosed()) enabled_plugins.close();
 
             if (active_plugins.size() > 0) {
                 for (String package_name : active_plugins) {
@@ -1131,65 +1105,6 @@ public class Aware extends Service {
         if (storage_BR != null) awareContext.unregisterReceiver(storage_BR);
     }
 
-    /**
-     * Client: check if a certain study is still ongoing, resets client otherwise.
-     */
-//    private class Study_Check extends AsyncTask<Void, Void, Boolean> {
-//        @Override
-//        protected Boolean doInBackground(Void... voids) {
-//
-//            Hashtable<String, String> data = new Hashtable<>();
-//            data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-//            data.put("study_check", "1");
-//
-//            String study_url = Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER);
-//            String protocol = study_url.substring(0, study_url.indexOf(":"));
-//
-//            String response;
-//            if (protocol.equals("https")) {
-//                try {
-//                    response = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataPOST(study_url, data, true);
-//                } catch (FileNotFoundException e) {
-//                    response = null;
-//                }
-//            } else {
-//                response = new Http(getApplicationContext()).dataPOST(study_url, data, true);
-//            }
-//            if (response != null) {
-//                try {
-//                    JSONArray configs = new JSONArray(response);
-//                    JSONObject io = configs.getJSONObject(0);
-//                    if (io.has("message")) {
-//                        Log.d(Aware.TAG, io.getString("message"));
-//                        if (io.getString("message").equals("This study is not ongoing anymore."))
-//                            return true;
-//                    }
-//                    return false;
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//            return false;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(Boolean is_closed) {
-//            super.onPostExecute(is_closed);
-//            if (is_closed) {
-//                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
-//                mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
-//                mBuilder.setContentTitle("AWARE");
-//                mBuilder.setContentText("The study has ended! Thanks!");
-//                mBuilder.setAutoCancel(true);
-//
-//                NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-//                notManager.notify(new Random(System.currentTimeMillis()).nextInt(), mBuilder.build());
-//
-//                reset(getApplicationContext());
-//            }
-//        }
-//    }
-
     public static void reset(Context c) {
         String device_id = Aware.getSetting(c, Aware_Preferences.DEVICE_ID);
         String device_label = Aware.getSetting(c, Aware_Preferences.DEVICE_LABEL);
@@ -1238,64 +1153,6 @@ public class Aware extends Service {
         Intent applyNew = new Intent(Aware.ACTION_AWARE_REFRESH);
         c.sendBroadcast(applyNew);
     }
-
-//    private class AwarePluginsUpdateCheck extends AsyncTask<ArrayList<String>, Void, Boolean> {
-//        private ArrayList<String> updated = new ArrayList<>();
-//
-//        @Override
-//        protected Boolean doInBackground(ArrayList<String>... params) {
-//            for (String package_name : params[0]) {
-//
-//                String study_url = Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER);
-//                String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
-//                String protocol = study_url.substring(0, study_url.indexOf(":"));
-//
-//                String http_request;
-//                if (protocol.equals("https")) {
-//                    try {
-//                        http_request = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_host + "/index.php/plugins/get_plugin/" + package_name, true);
-//                    } catch (FileNotFoundException e) {
-//                        http_request = null;
-//                    }
-//                } else {
-//                    http_request = new Http(getApplicationContext()).dataGET(study_host + "/index.php/plugins/get_plugin/" + package_name, true);
-//                }
-//
-//                if (http_request != null) {
-//                    if (!http_request.equals("[]")) {
-//                        try {
-//                            JSONObject json_package = new JSONObject(http_request);
-//                            if (json_package.getInt("version") > PluginsManager.getVersion(getApplicationContext(), package_name)) {
-//                                updated.add(package_name);
-//                            }
-//                        } catch (JSONException e) {
-//                        }
-//                    }
-//                }
-//            }
-//            return (updated.size() > 0);
-//        }
-//
-//        @Override
-//        protected void onPostExecute(Boolean updates) {
-//            super.onPostExecute(updates);
-//            if (updates) {
-//                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
-//                mBuilder.setSmallIcon(R.drawable.ic_stat_aware_plugin_dependency);
-//                mBuilder.setContentTitle("AWARE Update");
-//                mBuilder.setContentText("Found " + updated.size() + " updated plugin(s). Install?");
-//                mBuilder.setAutoCancel(true);
-//
-//                Intent updateIntent = new Intent(getApplicationContext(), DowloadUpdatedPlugins.class);
-//                updateIntent.putExtra("updated", updated);
-//
-//                PendingIntent clickIntent = PendingIntent.getService(getApplicationContext(), 0, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-//                mBuilder.setContentIntent(clickIntent);
-//                NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-//                notManager.notify(updated.size(), mBuilder.build());
-//            }
-//        }
-//    }
 
     /**
      * AWARE Android Package Monitor
@@ -1383,20 +1240,6 @@ public class Aware extends Service {
             }
         }
     }
-
-//    public static class DowloadUpdatedPlugins extends IntentService {
-//        public DowloadUpdatedPlugins() {
-//            super("Update Plugins service");
-//        }
-//
-//        @Override
-//        protected void onHandleIntent(Intent intent) {
-//            ArrayList<String> packages = intent.getStringArrayListExtra("updated");
-//            for (String package_name : packages) {
-//                Aware.downloadPlugin(getApplicationContext(), package_name, true);
-//            }
-//        }
-//    }
 
     /**
      * BroadcastReceiver that monitors for AWARE framework actions:
@@ -1581,12 +1424,6 @@ public class Aware extends Service {
         //Start task scheduler
         scheduler = new Intent(awareContext, Scheduler.class);
         awareContext.startService(scheduler);
-
-        //Start plugin manager
-        if (awareContext.getPackageName().equalsIgnoreCase("com.aware.phone")) {
-            pluginsManager = new Intent(awareContext, PluginsManager.class);
-            awareContext.startService(pluginsManager);
-        }
     }
 
     /**
@@ -1620,10 +1457,6 @@ public class Aware extends Service {
         stopInstallations(awareContext);
         stopKeyboard(awareContext);
         awareContext.stopService(scheduler);
-
-        if (awareContext.getPackageName().equalsIgnoreCase("com.aware.phone")) {
-            awareContext.stopService(pluginsManager);
-        }
     }
 
     /**

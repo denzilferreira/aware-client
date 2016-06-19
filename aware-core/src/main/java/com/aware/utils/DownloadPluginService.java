@@ -69,7 +69,15 @@ public class DownloadPluginService extends IntentService {
 
         if( response != null ) {
             try {
-                if(response.trim().equalsIgnoreCase("[]")) return;
+                if(response.trim().equalsIgnoreCase("[]")) {
+                    Toast.makeText(getApplicationContext(), "Please install this plugin", Toast.LENGTH_LONG).show();
+                    Intent playInstaller = new Intent(Intent.ACTION_VIEW);
+                    playInstaller.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    playInstaller.setData(Uri.parse("market://details?id=" + package_name));
+                    startActivity(playInstaller);
+
+                    return;
+                }
 
                 JSONObject json_package = new JSONObject(response);
 

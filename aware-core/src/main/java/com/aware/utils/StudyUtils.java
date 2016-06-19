@@ -107,7 +107,7 @@ public class StudyUtils extends IntentService {
      * @param context
      * @param configs
      */
-    protected static void applySettings(Context context, JSONArray configs) {
+    public static void applySettings(Context context, JSONArray configs) {
 
         boolean is_developer = Aware.getSetting(context, Aware_Preferences.DEBUG_FLAG).equals("true");
 
