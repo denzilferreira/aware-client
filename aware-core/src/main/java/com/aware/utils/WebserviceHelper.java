@@ -70,7 +70,7 @@ public class WebserviceHelper extends IntentService {
         if (!dismiss) {
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_sync);
-            mBuilder.setContentTitle("AWARE Sync");
+            mBuilder.setContentTitle(getResources().getString(R.string.app_name));
             mBuilder.setContentText(message);
             mBuilder.setAutoCancel(true);
             mBuilder.setOnlyAlertOnce(true); //notify the user only once
