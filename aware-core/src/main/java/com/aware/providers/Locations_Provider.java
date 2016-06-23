@@ -32,7 +32,7 @@ import java.util.HashMap;
  */
 public class Locations_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 2;
+	public static final int DATABASE_VERSION = 3;
 
 	/**
 	 * Authority of Locations content provider
@@ -75,18 +75,17 @@ public class Locations_Provider extends ContentProvider {
 
 	public static final String[] DATABASE_TABLES = { "locations" };
 
-	public static final String[] TABLES_FIELDS = { Locations_Data._ID
-			+ " integer primary key autoincrement," + Locations_Data.TIMESTAMP
-			+ " real default 0," + Locations_Data.DEVICE_ID
-			+ " text default ''," + Locations_Data.LATITUDE
-			+ " real default 0," + Locations_Data.LONGITUDE
-			+ " real default 0," + Locations_Data.BEARING + " real default 0,"
+	public static final String[] TABLES_FIELDS = {
+			Locations_Data._ID + " integer primary key autoincrement,"
+					+ Locations_Data.TIMESTAMP + " real default 0,"
+					+ Locations_Data.DEVICE_ID + " text default '',"
+					+ Locations_Data.LATITUDE + " real default 0,"
+					+ Locations_Data.LONGITUDE + " real default 0," + Locations_Data.BEARING + " real default 0,"
 			+ Locations_Data.SPEED + " real default 0,"
 			+ Locations_Data.ALTITUDE + " real default 0,"
 			+ Locations_Data.PROVIDER + " text default '',"
 			+ Locations_Data.ACCURACY + " real default 0,"
-			+ Locations_Data.LABEL + " text default ''," + "UNIQUE("
-			+ Locations_Data.TIMESTAMP + "," + Locations_Data.DEVICE_ID + ")" };
+			+ Locations_Data.LABEL + " text default ''" };
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> locationsProjectionMap = null;

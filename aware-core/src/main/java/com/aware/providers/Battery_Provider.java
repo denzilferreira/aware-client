@@ -31,7 +31,7 @@ import java.util.HashMap;
  */
 public class Battery_Provider extends ContentProvider {
 
-	private static final int DATABASE_VERSION = 3;
+	private static final int DATABASE_VERSION = 4;
 
 	/**
 	 * Authority of Battery content provider
@@ -124,27 +124,21 @@ public class Battery_Provider extends ContentProvider {
 					+ Battery_Data.TEMPERATURE + " integer default 0,"
 					+ Battery_Data.PLUG_ADAPTOR + " integer default 0,"
 					+ Battery_Data.HEALTH + " integer default 0,"
-					+ Battery_Data.TECHNOLOGY + " text default '',"
-					+ "UNIQUE (" + Battery_Data.TIMESTAMP + ","
-					+ Battery_Data.DEVICE_ID + ")",
+					+ Battery_Data.TECHNOLOGY + " text default ''",
 			// battery discharges
 			Battery_Discharges._ID + " integer primary key autoincrement,"
 					+ Battery_Discharges.TIMESTAMP + " real default 0,"
 					+ Battery_Discharges.DEVICE_ID + " text default '',"
 					+ Battery_Discharges.BATTERY_START + " integer default 0,"
 					+ Battery_Discharges.BATTERY_END + " integer default 0,"
-					+ Battery_Discharges.END_TIMESTAMP + " real default 0,"
-					+ "UNIQUE (" + Battery_Discharges.TIMESTAMP + ","
-					+ Battery_Discharges.DEVICE_ID + ")",
+					+ Battery_Discharges.END_TIMESTAMP + " real default 0",
 			// battery charges
 			Battery_Charges._ID + " integer primary key autoincrement,"
 					+ Battery_Charges.TIMESTAMP + " real default 0,"
 					+ Battery_Charges.DEVICE_ID + " text default '',"
 					+ Battery_Charges.BATTERY_START + " integer default 0,"
 					+ Battery_Charges.BATTERY_END + " integer default 0,"
-					+ Battery_Charges.END_TIMESTAMP + " real default 0,"
-					+ "UNIQUE (" + Battery_Charges.TIMESTAMP + ","
-					+ Battery_Charges.DEVICE_ID + ")" };
+					+ Battery_Charges.END_TIMESTAMP + " real default 0" };
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> batteryProjectionMap = null;

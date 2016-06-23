@@ -31,7 +31,7 @@ import java.util.HashMap;
  */
 public class Network_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 2;
+	public static final int DATABASE_VERSION = 3;
 
 	/**
 	 * Authority of Screen content provider
@@ -74,9 +74,7 @@ public class Network_Provider extends ContentProvider {
 			+ Network_Data.TIMESTAMP + " real default 0,"
 			+ Network_Data.DEVICE_ID + " text default ''," + Network_Data.TYPE
 			+ " integer default 0," + Network_Data.SUBTYPE
-			+ " text default ''," + Network_Data.STATE + " integer default 0,"
-			+ "UNIQUE(" + Network_Data.TIMESTAMP + "," + Network_Data.DEVICE_ID
-			+ ")" };
+			+ " text default ''," + Network_Data.STATE + " integer default 0" };
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> networkProjectionMap = null;

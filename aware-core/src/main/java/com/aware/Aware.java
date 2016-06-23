@@ -258,14 +258,14 @@ public class Aware extends Service {
 
         Map<String, ?> defaults = prefs.getAll();
         for (Map.Entry<String, ?> entry : defaults.entrySet()) {
-            if (Aware.getSetting(getApplicationContext(), entry.getKey(), "com.aware").length() == 0) {
-                Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue(), "com.aware"); //default AWARE settings
+            if (Aware.getSetting(getApplicationContext(), entry.getKey(), "com.aware.phone").length() == 0) {
+                Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue(), "com.aware.phone"); //default AWARE settings
             }
         }
 
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
             UUID uuid = UUID.randomUUID();
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString(), "com.aware");
+            Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString(), "com.aware.phone");
         }
 
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
@@ -359,6 +359,15 @@ public class Aware extends Service {
         return false;
     }
 
+    /**
+     * Identifies if the devices is enrolled in a study
+     * @param c
+     * @return
+     */
+    public static boolean isStudy(Context c) {
+        return (Aware.getSetting(c, Aware.STUDY_ID).length() > 0);
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
@@ -380,25 +389,49 @@ public class Aware extends Service {
                     Scheduler.removeSchedule(getApplicationContext(), SCHEDULE_SYNC_DATA);
 
                 } else {
-                    if (DEBUG) {
-                        Log.d(TAG, "Data sync every " + frequency_webservice + " minute(s)");
-                    }
+                    Scheduler.Schedule sync = Scheduler.getSchedule(this, SCHEDULE_SYNC_DATA);
+                    if (sync == null) { //Set the sync schedule for the first time
+                        try {
+                            Scheduler.Schedule schedule = new Scheduler.Schedule(SCHEDULE_SYNC_DATA)
+                                    .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
+                                    .setActionClass(Aware.ACTION_AWARE_SYNC_DATA);
 
-                    //Set sync schedule
-                    try {
-                        Scheduler.Schedule schedule = new Scheduler.Schedule(SCHEDULE_SYNC_DATA)
-                                .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                .setActionClass(Aware.ACTION_AWARE_SYNC_DATA)
-                                .addContext(Battery.ACTION_AWARE_BATTERY_CHARGING);
+                            int i = frequency_webservice;
+                            while (i<60) {
+                                schedule.addMinute(i); //add minute intervals
+                                i+=frequency_webservice;
+                            }
+                            Scheduler.saveSchedule(getApplicationContext(), schedule);
 
-                        int i = frequency_webservice;
-                        while (i<60) {
-                            schedule.addMinute(i); //add minute intervals
-                            i+=frequency_webservice;
+                            if (DEBUG) {
+                                Log.d(TAG, "Data sync at " + schedule.getMinutes().toString() + " minute(s)");
+                            }
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
                         }
-                        Scheduler.saveSchedule(getApplicationContext(), schedule);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                    } else { //check the sync schedule for changes
+                        try {
+                            JSONArray minutes = sync.getMinutes();
+                            if (minutes.getInt(0) != frequency_webservice) { //update on minutes interval
+                                Scheduler.Schedule schedule = new Scheduler.Schedule(SCHEDULE_SYNC_DATA)
+                                        .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
+                                        .setActionClass(Aware.ACTION_AWARE_SYNC_DATA);
+
+                                int i = frequency_webservice;
+                                while (i<60) {
+                                    schedule.addMinute(i); //add minute intervals
+                                    i+=frequency_webservice;
+                                }
+                                Scheduler.saveSchedule(getApplicationContext(), schedule);
+
+                                if (DEBUG) {
+                                    Log.d(TAG, "Data sync at " + schedule.getMinutes().toString() + " minute(s)");
+                                }
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
@@ -651,7 +684,7 @@ public class Aware extends Service {
                 info.setBackgroundColor(Color.parseColor("#33B5E5"));
 
                 TextView plugin_header = new TextView(context);
-                plugin_header.setText(Aware.getPluginName(context, package_name));
+                plugin_header.setText(PluginsManager.getPluginName(context, package_name));
                 plugin_header.setTextColor(Color.WHITE);
                 plugin_header.setPadding(10, 0, 0, 0);
                 params.gravity = android.view.Gravity.CENTER_VERTICAL;
@@ -702,16 +735,6 @@ public class Aware extends Service {
             e.printStackTrace();
         }
         return null;
-    }
-
-    public static String getPluginName(Context c, String package_name) {
-        String name = "";
-        Cursor plugin_name = c.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null, null);
-        if (plugin_name != null && plugin_name.moveToFirst()) {
-            name = plugin_name.getString(plugin_name.getColumnIndex(Aware_Plugins.PLUGIN_NAME));
-        }
-        if (plugin_name != null && !plugin_name.isClosed()) plugin_name.close();
-        return name;
     }
 
     /**
@@ -772,7 +795,7 @@ public class Aware extends Service {
         is_global = global_settings.contains(key);
 
         String value = "";
-        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global) ? "'com.aware'" : "'" + context.getPackageName() + "'") + ((is_global) ? " OR " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE ''" : ""), null, null);
+        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'") + ((is_global) ? " OR " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE ''" : ""), null, null);
         if (qry != null && qry.moveToFirst()) {
             value = qry.getString(qry.getColumnIndex(Aware_Settings.SETTING_VALUE));
         }
@@ -845,12 +868,12 @@ public class Aware extends Service {
         setting.put(Aware_Settings.SETTING_KEY, key);
         setting.put(Aware_Settings.SETTING_VALUE, value.toString());
         if (is_global) {
-            setting.put(Aware_Settings.SETTING_PACKAGE_NAME, "com.aware");
+            setting.put(Aware_Settings.SETTING_PACKAGE_NAME, "com.aware.phone");
         } else {
             setting.put(Aware_Settings.SETTING_PACKAGE_NAME, context.getPackageName());
         }
 
-        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global) ? "'com.aware'" : "'" + context.getPackageName() + "'"), null, null);
+        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'"), null, null);
         //update
         if (qry != null && qry.moveToFirst()) {
             try {
@@ -963,7 +986,7 @@ public class Aware extends Service {
         for (int i = 0; i < sensors.length(); i++) {
             try {
                 JSONObject sensor_config = sensors.getJSONObject(i);
-                Aware.setSetting(c, sensor_config.getString("setting"), sensor_config.get("value"), "com.aware");
+                Aware.setSetting(c, sensor_config.getString("setting"), sensor_config.get("value"), "com.aware.phone");
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -1054,7 +1077,7 @@ public class Aware extends Service {
                 for (int i = 0; i < sensors.length(); i++) {
                     try {
                         JSONObject sensor_config = sensors.getJSONObject(i);
-                        Aware.setSetting(getApplicationContext(), sensor_config.getString("setting"), sensor_config.get("value"));
+                        Aware.setSetting(getApplicationContext(), sensor_config.getString("setting"), sensor_config.get("value"), "com.aware.phone");
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -1119,12 +1142,12 @@ public class Aware extends Service {
 
         Map<String, ?> defaults = prefs.getAll();
         for (Map.Entry<String, ?> entry : defaults.entrySet()) {
-            Aware.setSetting(c, entry.getKey(), entry.getValue(), "com.aware");
+            Aware.setSetting(c, entry.getKey(), entry.getValue(), "com.aware.phone");
         }
 
         //Keep previous AWARE Device ID and label
-        Aware.setSetting(c, Aware_Preferences.DEVICE_ID, device_id, "com.aware");
-        Aware.setSetting(c, Aware_Preferences.DEVICE_LABEL, device_label, "com.aware");
+        Aware.setSetting(c, Aware_Preferences.DEVICE_ID, device_id);
+        Aware.setSetting(c, Aware_Preferences.DEVICE_LABEL, device_label);
 
         ContentValues update_label = new ContentValues();
         update_label.put(Aware_Device.LABEL, device_label);

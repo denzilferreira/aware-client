@@ -32,7 +32,7 @@ import java.util.HashMap;
  */
 public class Telephony_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 8;
+	public static final int DATABASE_VERSION = 9;
 
 	/**
 	 * Provider authority: com.aware.TelephonyProvider
@@ -187,8 +187,7 @@ public class Telephony_Provider extends ContentProvider {
 					+ " text default ''," + Telephony_Data.SIM_OPERATOR_NAME
 					+ " text default ''," + Telephony_Data.SIM_SERIAL
 					+ " text default ''," + Telephony_Data.SUBSCRIBER_ID
-					+ " text default ''," 
-					+ "UNIQUE(" + Telephony_Data.TIMESTAMP + "," + Telephony_Data.DEVICE_ID + ")",
+					+ " text default ''",
 			// GSM data
 			GSM_Data._ID + " integer primary key autoincrement,"
 					+ GSM_Data.TIMESTAMP + " real default 0,"
@@ -197,8 +196,7 @@ public class Telephony_Provider extends ContentProvider {
 					+ " integer default -1," + GSM_Data.PSC
 					+ " integer default 0," + GSM_Data.SIGNAL_STRENGTH
 					+ " integer default -1," + GSM_Data.GSM_BER
-					+ " integer default -1," + "UNIQUE(" + GSM_Data.TIMESTAMP
-					+ "," + GSM_Data.DEVICE_ID + ")",
+					+ " integer default -1",
 			// GSM neighbors data
 			GSM_Neighbors_Data._ID + " integer primary key autoincrement,"
 					+ GSM_Neighbors_Data.TIMESTAMP + " real default 0,"
@@ -220,8 +218,7 @@ public class Telephony_Provider extends ContentProvider {
 					+ CDMA_Data.CDMA_ECIO + " integer default -1,"
 					+ CDMA_Data.EVDO_DBM + " integer default -1,"
 					+ CDMA_Data.EVDO_ECIO + " integer default -1,"
-					+ CDMA_Data.EVDO_SNR + " integer default -1," + "UNIQUE("
-					+ CDMA_Data.TIMESTAMP + "," + CDMA_Data.DEVICE_ID + ")" };
+					+ CDMA_Data.EVDO_SNR + " integer default -1" };
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> telephonyMap = null;

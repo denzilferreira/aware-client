@@ -32,7 +32,7 @@ import java.util.HashMap;
  */
 public class Mqtt_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 2;
+	public static final int DATABASE_VERSION = 3;
 
 	/**
 	 * Authority of MQTT content provider
@@ -88,16 +88,12 @@ public class Mqtt_Provider extends ContentProvider {
 					+ Mqtt_Messages.DEVICE_ID + " text default '',"
 					+ Mqtt_Messages.TOPIC + " text default '',"
 					+ Mqtt_Messages.MESSAGE + " text default '',"
-					+ Mqtt_Messages.STATUS + " integer default 0," + "UNIQUE("
-					+ Mqtt_Messages.TIMESTAMP + "," + Mqtt_Messages.DEVICE_ID
-					+ ")",
+					+ Mqtt_Messages.STATUS + " integer default 0",
 			// mqtt subscriptions
 			Mqtt_Subscriptions._ID + " integer primary key autoincrement,"
 					+ Mqtt_Subscriptions.TIMESTAMP + " real default 0,"
 					+ Mqtt_Subscriptions.DEVICE_ID + " text default '',"
-					+ Mqtt_Subscriptions.TOPIC + " text default '',"
-					+ "UNIQUE(" + Mqtt_Subscriptions.TIMESTAMP + ","
-					+ Mqtt_Subscriptions.DEVICE_ID + ")" };
+					+ Mqtt_Subscriptions.TOPIC + " text default ''" };
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> messagesMap = null;

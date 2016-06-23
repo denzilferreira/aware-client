@@ -33,7 +33,7 @@ import java.util.HashMap;
  */
 public class Rotation_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 3;
+	public static final int DATABASE_VERSION = 4;
 
 	/**
 	 * Authority of content provider
@@ -115,9 +115,7 @@ public class Rotation_Provider extends ContentProvider {
 					+ Rotation_Sensor.RESOLUTION + " real default 0,"
 					+ Rotation_Sensor.TYPE + " text default '',"
 					+ Rotation_Sensor.VENDOR + " text default '',"
-					+ Rotation_Sensor.VERSION + " text default ''," + "UNIQUE("
-					+ Rotation_Sensor.TIMESTAMP + ","
-					+ Rotation_Sensor.DEVICE_ID + ")",
+					+ Rotation_Sensor.VERSION + " text default ''",
 			// sensor data
 			Rotation_Data._ID + " integer primary key autoincrement,"
 					+ Rotation_Data.TIMESTAMP + " real default 0,"
@@ -127,9 +125,7 @@ public class Rotation_Provider extends ContentProvider {
 					+ Rotation_Data.VALUES_2 + " real default 0,"
 					+ Rotation_Data.VALUES_3 + " real default 0,"
 					+ Rotation_Data.ACCURACY + " integer default 0,"
-					+ Rotation_Data.LABEL + " text default ''," + "UNIQUE("
-					+ Rotation_Data.TIMESTAMP + "," + Rotation_Data.DEVICE_ID
-					+ ")" };
+					+ Rotation_Data.LABEL + " text default ''" };
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> sensorMap = null;

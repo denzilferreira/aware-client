@@ -32,7 +32,7 @@ import java.util.HashMap;
  */
 public class Traffic_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 4;
+	public static final int DATABASE_VERSION = 5;
 
 	/**
 	 * Authority of Screen content provider
@@ -79,8 +79,7 @@ public class Traffic_Provider extends ContentProvider {
 			+ Traffic_Data.RECEIVED_BYTES + " real default 0,"
 			+ Traffic_Data.SENT_BYTES + " real default 0,"
 			+ Traffic_Data.RECEIVED_PACKETS + " real default 0,"
-			+ Traffic_Data.SENT_PACKETS + " real default 0," + "UNIQUE("
-			+ Traffic_Data.TIMESTAMP + "," + Traffic_Data.DEVICE_ID + ")" };
+			+ Traffic_Data.SENT_PACKETS + " real default 0" };
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> trafficProjectionMap = null;

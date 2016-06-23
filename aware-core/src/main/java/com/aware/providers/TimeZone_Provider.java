@@ -31,7 +31,7 @@ import java.util.HashMap;
  */
 public class TimeZone_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 6;
+	public static final int DATABASE_VERSION = 7;
 
 	/**
 	 * Provider authority: com.aware.TimeZoneProvider
@@ -71,8 +71,7 @@ public class TimeZone_Provider extends ContentProvider {
 			TimeZone_Data._ID + " integer primary key autoincrement,"
 			+ TimeZone_Data.TIMESTAMP + " real default 0,"
 			+ TimeZone_Data.DEVICE_ID + " text default '',"
-			+ TimeZone_Data.TIMEZONE + " text default ''," 
-			+ "UNIQUE(" + TimeZone_Data.TIMESTAMP + "," + TimeZone_Data.DEVICE_ID + ")" };
+			+ TimeZone_Data.TIMEZONE + " text default ''" };
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> timeZoneMap = null;

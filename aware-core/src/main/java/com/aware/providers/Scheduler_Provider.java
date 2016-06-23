@@ -26,7 +26,7 @@ import java.util.HashMap;
  */
 public class Scheduler_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 2;
+	public static final int DATABASE_VERSION = 3;
 
 	/**
 	 * Authority of Scheduler content provider
@@ -64,8 +64,7 @@ public class Scheduler_Provider extends ContentProvider {
 			+ Scheduler_Data.SCHEDULE_ID + " text default '',"
             + Scheduler_Data.SCHEDULE + " text default '',"
             + Scheduler_Data.LAST_TRIGGERED + " real default 0,"
-			+ Scheduler_Data.PACKAGE_NAME + " text default '',"
-            + "UNIQUE(" + Scheduler_Data.TIMESTAMP + "," + Scheduler_Data.DEVICE_ID + ")" };
+			+ Scheduler_Data.PACKAGE_NAME + " text default ''" };
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> dataMap = null;

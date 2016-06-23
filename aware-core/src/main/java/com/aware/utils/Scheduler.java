@@ -114,6 +114,22 @@ public class Scheduler extends Service {
         context.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + context.getPackageName() + "'", null);
     }
 
+    public static Schedule getSchedule(Context context, String schedule_id) {
+        Schedule output = null;
+
+        Cursor scheduleData = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + context.getPackageName() + "'", null, null);
+        if (scheduleData != null && scheduleData.moveToFirst()) {
+            try {
+                JSONObject jsonSchedule = new JSONObject( scheduleData.getString(scheduleData.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE)) );
+                output = new Schedule(jsonSchedule);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            scheduleData.close();
+        }
+        return output;
+    }
+
     /**
      * Scheduler object that contains<br/>
      * - schedule ID<br/>
@@ -134,6 +150,10 @@ public class Scheduler extends Service {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+        }
+
+        public Schedule(JSONObject schedule) {
+            this.rebuild(schedule);
         }
 
         /**

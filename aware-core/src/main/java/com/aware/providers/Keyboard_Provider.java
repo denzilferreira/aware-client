@@ -25,7 +25,7 @@ import java.util.HashMap;
 * Created by denzil on 21/10/14.
 */
 public class Keyboard_Provider extends ContentProvider {
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     /**
      * Authority of Installations content provider
@@ -69,9 +69,7 @@ public class Keyboard_Provider extends ContentProvider {
                     + Keyboard_Data.PACKAGE_NAME + " text default '',"
                     + Keyboard_Data.BEFORE_TEXT + " text default '',"
                     + Keyboard_Data.CURRENT_TEXT + " text default '',"
-                    + Keyboard_Data.IS_PASSWORD + " integer default -1,"
-                    + "UNIQUE(" + Keyboard_Data.TIMESTAMP + ","
-                    + Keyboard_Data.DEVICE_ID + ")" };
+                    + Keyboard_Data.IS_PASSWORD + " integer default -1" };
 
     private static UriMatcher sUriMatcher = null;
     private static HashMap<String, String> dataMap = null;

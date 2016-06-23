@@ -32,7 +32,7 @@ import java.util.HashMap;
  */
 public class Barometer_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 1;
+	public static final int DATABASE_VERSION = 2;
 
 	/**
 	 * Authority of content provider
@@ -111,18 +111,14 @@ public class Barometer_Provider extends ContentProvider {
 					+ Barometer_Sensor.RESOLUTION + " real default 0,"
 					+ Barometer_Sensor.TYPE + " text default '',"
 					+ Barometer_Sensor.VENDOR + " text default '',"
-					+ Barometer_Sensor.VERSION + " text default '',"
-					+ "UNIQUE(" + Barometer_Sensor.TIMESTAMP + ","
-					+ Barometer_Sensor.DEVICE_ID + ")",
+					+ Barometer_Sensor.VERSION + " text default ''",
 			// sensor data
 			Barometer_Data._ID + " integer primary key autoincrement,"
 					+ Barometer_Data.TIMESTAMP + " real default 0,"
 					+ Barometer_Data.DEVICE_ID + " text default '',"
 					+ Barometer_Data.AMBIENT_PRESSURE + " real default 0,"
 					+ Barometer_Data.ACCURACY + " integer default 0,"
-					+ Barometer_Data.LABEL + " text default ''," + "UNIQUE("
-					+ Barometer_Data.TIMESTAMP + "," + Barometer_Data.DEVICE_ID
-					+ ")" };
+					+ Barometer_Data.LABEL + " text default ''" };
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> sensorMap = null;

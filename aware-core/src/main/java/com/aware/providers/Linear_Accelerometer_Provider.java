@@ -32,7 +32,7 @@ import java.util.HashMap;
  */
 public class Linear_Accelerometer_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 2;
+	public static final int DATABASE_VERSION = 3;
 
 	/**
 	 * Authority of content provider
@@ -107,25 +107,17 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
 			"sensor_linear_accelerometer", "linear_accelerometer" };
 	public static final String[] TABLES_FIELDS = {
 			// sensor information
-			Linear_Accelerometer_Sensor._ID
-					+ " integer primary key autoincrement,"
-					+ Linear_Accelerometer_Sensor.TIMESTAMP
-					+ " real default 0,"
-					+ Linear_Accelerometer_Sensor.DEVICE_ID
-					+ " text default '',"
-					+ Linear_Accelerometer_Sensor.MAXIMUM_RANGE
-					+ " real default 0,"
-					+ Linear_Accelerometer_Sensor.MINIMUM_DELAY
-					+ " real default 0," + Linear_Accelerometer_Sensor.NAME
-					+ " text default '',"
+			Linear_Accelerometer_Sensor._ID + " integer primary key autoincrement,"
+					+ Linear_Accelerometer_Sensor.TIMESTAMP + " real default 0,"
+					+ Linear_Accelerometer_Sensor.DEVICE_ID + " text default '',"
+					+ Linear_Accelerometer_Sensor.MAXIMUM_RANGE + " real default 0,"
+					+ Linear_Accelerometer_Sensor.MINIMUM_DELAY + " real default 0,"
+					+ Linear_Accelerometer_Sensor.NAME + " text default '',"
 					+ Linear_Accelerometer_Sensor.POWER_MA + " real default 0,"
-					+ Linear_Accelerometer_Sensor.RESOLUTION
-					+ " real default 0," + Linear_Accelerometer_Sensor.TYPE
-					+ " text default ''," + Linear_Accelerometer_Sensor.VENDOR
-					+ " text default ''," + Linear_Accelerometer_Sensor.VERSION
-					+ " text default ''," + "UNIQUE("
-					+ Linear_Accelerometer_Sensor.TIMESTAMP + ","
-					+ Linear_Accelerometer_Sensor.DEVICE_ID + ")",
+					+ Linear_Accelerometer_Sensor.RESOLUTION + " real default 0,"
+					+ Linear_Accelerometer_Sensor.TYPE + " text default '',"
+					+ Linear_Accelerometer_Sensor.VENDOR + " text default '',"
+					+ Linear_Accelerometer_Sensor.VERSION + " text default ''",
 			// sensor data
 			Linear_Accelerometer_Data._ID
 					+ " integer primary key autoincrement,"
@@ -134,11 +126,8 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
 					+ Linear_Accelerometer_Data.VALUES_0 + " real default 0,"
 					+ Linear_Accelerometer_Data.VALUES_1 + " real default 0,"
 					+ Linear_Accelerometer_Data.VALUES_2 + " real default 0,"
-					+ Linear_Accelerometer_Data.ACCURACY
-					+ " integer default 0," + Linear_Accelerometer_Data.LABEL
-					+ " text default ''," + "UNIQUE("
-					+ Linear_Accelerometer_Data.TIMESTAMP + ","
-					+ Linear_Accelerometer_Data.DEVICE_ID + ")" };
+					+ Linear_Accelerometer_Data.ACCURACY + " integer default 0,"
+					+ Linear_Accelerometer_Data.LABEL + " text default ''" };
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> accelDeviceMap = null;

@@ -85,9 +85,6 @@ public class DownloadPluginService extends IntentService {
                 File folders = new File(Environment.getExternalStoragePublicDirectory("AWARE/plugins").toString());
                 folders.mkdirs();
 
-//                File folders = new File( getExternalFilesDir(null) + "/Documents/AWARE/", "plugins");
-//                folders.mkdirs();
-
                 String package_url = study_host + json_package.getString("package_path") + json_package.getString("package_name");
 
                 NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
@@ -126,7 +123,6 @@ public class DownloadPluginService extends IntentService {
                             .getHttpClient()
                             .getSSLSocketMiddleware().setSSLContext(sslContext);
 
-                    //.write(new File(getExternalFilesDir(null)+"/Documents/AWARE/plugins/" + json_package.getString("package_name")))
                     Ion.with(getApplicationContext())
                             .load(package_url)
                             .write(new File(Environment.getExternalStoragePublicDirectory("AWARE/plugins/" + json_package.getString("package_name")).toString()))
@@ -145,7 +141,6 @@ public class DownloadPluginService extends IntentService {
                                 }
                             });
                 } else {
-                    //.write(new File(getExternalFilesDir(null)+"/Documents/AWARE/plugins/" + json_package.getString("package_name")))
                     Ion.with(getApplicationContext())
                             .load(package_url)
                             .write(new File(Environment.getExternalStoragePublicDirectory("AWARE/plugins/" + json_package.getString("package_name")).toString()))

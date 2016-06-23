@@ -7,10 +7,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.PersistableBundle;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
@@ -19,7 +21,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -48,7 +49,7 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
     private DrawerLayout navigationDrawer;
     private ListView navigationList;
     private ActionBarDrawerToggle navigationToggle;
-    private Toolbar toolbar;
+    private CoordinatorLayout aware_container;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -80,16 +81,14 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
-        toolbar = (Toolbar) findViewById(R.id.aware_toolbar);
-        setSupportActionBar(toolbar);
+        aware_container = (CoordinatorLayout) findViewById(R.id.aware_container);
 
-        if (Aware.is_watch(this)) {
-            Menu menu = toolbar.getMenu();
-            for (int i = 0; i < menu.size(); i++) {
-                MenuItem item = menu.getItem(i);
-                item.setVisible(false);
-            }
-        }
+        Toolbar toolbar = (Toolbar) findViewById(R.id.aware_toolbar);
+        toolbar.setTitle(getTitle());
+        toolbar.inflateMenu(R.menu.aware_menu);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
 
         navigationDrawer = (DrawerLayout) findViewById(R.id.aware_ui_main);
         navigationList = (ListView) findViewById(R.id.aware_navigation);
@@ -110,18 +109,31 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.aware_menu, menu);
-        return super.onCreateOptionsMenu(menu);
+        for (int i = 0; i < menu.size(); i++) {
+            MenuItem item = menu.getItem(i);
+            if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_qrcode)) && Aware.is_watch(this))
+                item.setVisible(false);
+            if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_team)) && Aware.is_watch(this))
+                item.setVisible(false);
+            if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_sync)) && !Aware.isStudy(this))
+                item.setVisible(false);
+        }
+        return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getTitle().toString().equals("QRCode")) {
+        if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_qrcode))) {
             Intent join_study = new Intent(Aware_Activity.this, Aware_QRCode.class);
             startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
         }
-        if (item.getTitle().toString().equals("Team")) {
+        if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_team))) {
             Intent about_us = new Intent(Aware_Activity.this, About.class);
             startActivity(about_us);
+        }
+        if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_sync))) {
+            Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
+            sendBroadcast(sync);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -213,7 +225,7 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
         protected void onPreExecute() {
             super.onPreExecute();
             loader = new ProgressDialog(Aware_Activity.this);
-            loader.setTitle("Loading study");
+            loader.setTitle("Study information");
             loader.setMessage("Please wait...");
             loader.setCancelable(false);
             loader.setIndeterminate(true);
@@ -273,8 +285,10 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                         dialog.dismiss();
                         //if part of a study, you can't change settings.
                         if (Aware.getSetting(getApplicationContext(), "study_id").length() > 0) {
-                            Toast.makeText(getApplicationContext(), "As part of a study, no changes are allowed.", Toast.LENGTH_LONG).show();
-                            finish();
+                            Snackbar noChanges = Snackbar.make(aware_container, "Ongoing study, no changes allowed.", Snackbar.LENGTH_LONG);
+                            TextView output = (TextView) noChanges.getView().findViewById(android.support.design.R.id.snackbar_text);
+                            output.setTextColor(Color.WHITE);
+                            noChanges.show();
                         }
                     }
                 });
@@ -284,7 +298,12 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
-                        Toast.makeText(getApplicationContext(), "Clearing settings... please wait", Toast.LENGTH_LONG).show();
+
+                        Snackbar clear = Snackbar.make(aware_container, "Clearing settings, please wait.", Snackbar.LENGTH_LONG);
+                        TextView output = (TextView) clear.getView().findViewById(android.support.design.R.id.snackbar_text);
+                        output.setTextColor(Color.WHITE);
+                        clear.show();
+
                         Aware.reset(getApplicationContext());
 
                         Intent preferences = new Intent(getApplicationContext(), Aware_Client.class);
@@ -302,8 +321,10 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                         dialog.dismiss();
                         //if part of a study, you can't change settings.
                         if (Aware.getSetting(getApplicationContext(), "study_id").length() > 0) {
-                            Toast.makeText(getApplicationContext(), "As part of a study, no changes are allowed.", Toast.LENGTH_LONG).show();
-                            finish();
+                            Snackbar noChanges = Snackbar.make(aware_container, "Ongoing study, no changes allowed.", Snackbar.LENGTH_LONG);
+                            TextView output = (TextView) noChanges.getView().findViewById(android.support.design.R.id.snackbar_text);
+                            output.setTextColor(Color.WHITE);
+                            noChanges.show();
                         }
                     }
                 });
@@ -311,7 +332,12 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
-                        Toast.makeText(getApplicationContext(), "Clearing settings... please wait", Toast.LENGTH_LONG).show();
+
+                        Snackbar clear = Snackbar.make(aware_container, "Clearing settings, please wait.", Snackbar.LENGTH_LONG);
+                        TextView output = (TextView) clear.getView().findViewById(android.support.design.R.id.snackbar_text);
+                        output.setTextColor(Color.WHITE);
+                        clear.show();
+
                         Aware.reset(getApplicationContext());
 
                         Intent preferences = new Intent(getApplicationContext(), Aware_Client.class);
@@ -329,7 +355,7 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                 try {
                     study_name.setText((result.getString("study_name").length() > 0 ? result.getString("study_name") : "Not available"));
                     study_description.setText((result.getString("study_description").length() > 0 ? result.getString("study_description") : "Not available."));
-                    study_pi.setText("PI: " + result.getString("researcher_first") + " " + result.getString("researcher_last") + "\nContact: " + result.getString("researcher_contact"));
+                    study_pi.setText(result.getString("researcher_first") + " " + result.getString("researcher_last") + "\nContact: " + result.getString("researcher_contact"));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

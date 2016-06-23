@@ -33,7 +33,7 @@ import java.util.HashMap;
  */
 public class Magnetometer_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 2;
+	public static final int DATABASE_VERSION = 3;
 
 	/**
 	 * Authority of content provider
@@ -115,9 +115,7 @@ public class Magnetometer_Provider extends ContentProvider {
 					+ Magnetometer_Sensor.RESOLUTION + " real default 0,"
 					+ Magnetometer_Sensor.TYPE + " text default '',"
 					+ Magnetometer_Sensor.VENDOR + " text default '',"
-					+ Magnetometer_Sensor.VERSION + " text default '',"
-					+ "UNIQUE(" + Magnetometer_Sensor.TIMESTAMP + ","
-					+ Magnetometer_Data.DEVICE_ID + ")",
+					+ Magnetometer_Sensor.VERSION + " text default ''",
 			// sensor data
 			Magnetometer_Data._ID + " integer primary key autoincrement,"
 					+ Magnetometer_Data.TIMESTAMP + " real default 0,"
@@ -126,9 +124,7 @@ public class Magnetometer_Provider extends ContentProvider {
 					+ Magnetometer_Data.VALUES_1 + " real default 0,"
 					+ Magnetometer_Data.VALUES_2 + " real default 0,"
 					+ Magnetometer_Data.ACCURACY + " integer default 0,"
-					+ Magnetometer_Data.LABEL + " text default ''," + "UNIQUE("
-					+ Magnetometer_Data.TIMESTAMP + ","
-					+ Magnetometer_Data.DEVICE_ID + ")" };
+					+ Magnetometer_Data.LABEL + " text default ''" };
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> sensorDeviceMap = null;

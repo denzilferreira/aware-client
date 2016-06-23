@@ -39,7 +39,8 @@ public class WebserviceHelper extends IntentService {
 
     private static final int WEBSERVICES_NOTIFICATION_ID = 98765;
 
-    private static NotificationManager notManager;
+    private NotificationManager notManager;
+    private long sync_start = 0;
 
     public WebserviceHelper() {
         super(Aware.TAG + " Webservice Sync");
@@ -60,9 +61,12 @@ public class WebserviceHelper extends IntentService {
             Log.d(Aware.TAG, "Synching all the databases...");
 
         notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notifyUser("Synching initiated...", false, true);
+
+        sync_start = System.currentTimeMillis();
     }
 
-    private void notifyUser(String message, boolean dismiss) {
+    private void notifyUser(String message, boolean dismiss, boolean indetermined) {
         if (!dismiss) {
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_sync);
@@ -71,7 +75,7 @@ public class WebserviceHelper extends IntentService {
             mBuilder.setAutoCancel(true);
             mBuilder.setOnlyAlertOnce(true); //notify the user only once
             mBuilder.setDefaults(NotificationCompat.DEFAULT_LIGHTS); //we only blink the LED, nothing else.
-            mBuilder.setProgress(100, 100, true);
+            mBuilder.setProgress(100, 100, indetermined);
 
             PendingIntent clickIntent = PendingIntent.getActivity(this, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
             mBuilder.setContentIntent(clickIntent);
@@ -136,6 +140,7 @@ public class WebserviceHelper extends IntentService {
             }
 
             if (Aware.DEBUG) Log.d(Aware.TAG, "Synching: " + DATABASE_TABLE);
+            notifyUser("Synching " + DATABASE_TABLE, false, true);
 
             //Check first if we have database table remotely, otherwise create it!
             Hashtable<String, String> fields = new Hashtable<>();
@@ -216,7 +221,7 @@ public class WebserviceHelper extends IntentService {
                     JSONArray context_data_entries = new JSONArray();
                     if (context_data != null && context_data.moveToFirst()) {
 
-                        notifyUser("Syncing " + context_data.getCount() + " from " + DATABASE_TABLE, false);
+                        notifyUser("Syncing " + context_data.getCount() + " from " + DATABASE_TABLE, false, true);
 
                         if (DEBUG)
                             Log.d(Aware.TAG, "Syncing " + context_data.getCount() + " records from " + DATABASE_TABLE);
@@ -303,15 +308,41 @@ public class WebserviceHelper extends IntentService {
                         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0 && Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA)) == 4
                                 && highFrequencySensors.contains(DATABASE_TABLE)) {
 
-                            context_data.moveToFirst();
+                            Hashtable<String, String> syncRemote = new Hashtable<>();
+                            syncRemote.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
 
-                            double last = context_data.getDouble(context_data.getColumnIndex("timestamp"));
-                            getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null);
+                            //check the latest entry in remote database
+                            String remoteSuccess;
+                            if (protocol.equals("https")) {
+                                try {
+                                    remoteSuccess = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
+                                } catch (FileNotFoundException e) {
+                                    remoteSuccess = null;
+                                }
+                            } else {
+                                remoteSuccess = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
+                            }
+                            if (remoteSuccess != null) {
 
-                            if (DEBUG)
-                                Log.d(Aware.TAG, "Deleted local old records for " + DATABASE_TABLE);
+                                JSONArray remoteSyncData = new JSONArray(remoteSuccess);
 
-                            notifyUser("Cleaned old records from " + DATABASE_TABLE, false);
+                                long last;
+                                if (exists(columnsStr, "double_end_timestamp")) {
+                                    last = remoteSyncData.getJSONObject(0).getLong("double_end_timestamp");
+                                    getContentResolver().delete(CONTENT_URI, "double_end_timestamp <= " + last, null);
+                                } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
+                                    last = remoteSyncData.getJSONObject(0).getLong("double_esm_user_answer_timestamp");
+                                    getContentResolver().delete(CONTENT_URI, "double_esm_user_answer_timestamp <= " + last, null);
+                                } else {
+                                    last = remoteSyncData.getJSONObject(0).getLong("timestamp");
+                                    getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null);
+                                }
+
+                                if (DEBUG)
+                                    Log.d(Aware.TAG, "Deleted local old records for " + DATABASE_TABLE);
+
+                                notifyUser("Cleaned old records from " + DATABASE_TABLE, false, true);
+                            }
                         }
                     }
                     if (context_data != null && !context_data.isClosed()) context_data.close();
@@ -350,6 +381,6 @@ public class WebserviceHelper extends IntentService {
         if (Aware.DEBUG)
             Log.d(Aware.TAG, "Finished synching all the databases.");
 
-        notManager.cancel(WEBSERVICES_NOTIFICATION_ID);
+        notifyUser("Finished syncing in " + DateUtils.formatElapsedTime((System.currentTimeMillis()-sync_start)/1000), false, false);
     }
 }

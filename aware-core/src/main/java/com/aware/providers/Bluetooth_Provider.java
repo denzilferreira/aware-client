@@ -31,7 +31,7 @@ import java.util.HashMap;
  */
 public class Bluetooth_Provider extends ContentProvider {
 
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     /**
      * Authority of Bluetooth content provider
@@ -98,8 +98,7 @@ public class Bluetooth_Provider extends ContentProvider {
             + Bluetooth_Sensor.TIMESTAMP + " real default 0,"
             + Bluetooth_Sensor.DEVICE_ID + " text default '',"
             + Bluetooth_Sensor.BT_ADDRESS + " text default '',"
-            + Bluetooth_Sensor.BT_NAME + " text default '',"
-            + "UNIQUE (" + Bluetooth_Sensor.TIMESTAMP + "," + Bluetooth_Sensor.DEVICE_ID + ")",
+            + Bluetooth_Sensor.BT_NAME + " text default ''",
             // data
             Bluetooth_Data._ID + " integer primary key autoincrement,"
             + Bluetooth_Data.TIMESTAMP + " real default 0,"
@@ -107,8 +106,7 @@ public class Bluetooth_Provider extends ContentProvider {
             + Bluetooth_Data.BT_ADDRESS + " text default '',"
             + Bluetooth_Data.BT_NAME + " text default '',"
             + Bluetooth_Data.BT_RSSI + " integer default 0,"
-            + Bluetooth_Data.BT_LABEL + " text default '',"
-            + "UNIQUE (" + Bluetooth_Data.TIMESTAMP + "," + Bluetooth_Data.DEVICE_ID + "," + Bluetooth_Data.BT_ADDRESS + ")"
+            + Bluetooth_Data.BT_LABEL + " text default ''"
     };
 
     private static UriMatcher sUriMatcher = null;

@@ -33,7 +33,7 @@ import java.util.HashMap;
  */
 public class Gyroscope_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 2;
+	public static final int DATABASE_VERSION = 4;
 
 	/**
 	 * Authority of Gyroscope content provider
@@ -86,9 +86,9 @@ public class Gyroscope_Provider extends ContentProvider {
 		public static final String _ID = "_id";
 		public static final String TIMESTAMP = "timestamp";
 		public static final String DEVICE_ID = "device_id";
-		public static final String VALUES_0 = "axis_x";
-		public static final String VALUES_1 = "axis_y";
-		public static final String VALUES_2 = "axis_z";
+		public static final String VALUES_0 = "double_values_0";
+		public static final String VALUES_1 = "double_values_1";
+		public static final String VALUES_2 = "double_values_2";
 		public static final String ACCURACY = "accuracy";
 		public static final String LABEL = "label";
 	}
@@ -109,9 +109,7 @@ public class Gyroscope_Provider extends ContentProvider {
 					+ Gyroscope_Sensor.RESOLUTION + " real default 0,"
 					+ Gyroscope_Sensor.TYPE + " text default '',"
 					+ Gyroscope_Sensor.VENDOR + " text default '',"
-					+ Gyroscope_Sensor.VERSION + " text default '',"
-					+ "UNIQUE(" + Gyroscope_Sensor.TIMESTAMP + ","
-					+ Gyroscope_Sensor.DEVICE_ID + ")",
+					+ Gyroscope_Sensor.VERSION + " text default ''",
 			// gyroscope data
 			Gyroscope_Data._ID + " integer primary key autoincrement,"
 					+ Gyroscope_Data.TIMESTAMP + " real default 0,"
@@ -120,9 +118,7 @@ public class Gyroscope_Provider extends ContentProvider {
 					+ Gyroscope_Data.VALUES_1 + " real default 0,"
 					+ Gyroscope_Data.VALUES_2 + " real default 0,"
 					+ Gyroscope_Data.ACCURACY + " integer default 0,"
-					+ Gyroscope_Data.LABEL + " text default ''," + "UNIQUE("
-					+ Gyroscope_Data.TIMESTAMP + "," + Gyroscope_Data.DEVICE_ID
-					+ ")" };
+					+ Gyroscope_Data.LABEL + " text default ''" };
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> gyroDeviceMap = null;

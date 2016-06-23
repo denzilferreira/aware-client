@@ -31,7 +31,7 @@ import java.util.Hashtable;
  */
 public class ESM_Provider extends ContentProvider {
 
-    public static final int DATABASE_VERSION = 6;
+    public static final int DATABASE_VERSION = 7;
 
     /**
      * Authority of content provider

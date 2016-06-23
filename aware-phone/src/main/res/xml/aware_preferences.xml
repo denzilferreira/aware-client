@@ -18,7 +18,7 @@
             android:title="@string/aware_debug_tag" />
         <EditTextPreference
             android:defaultValue=""
-            android:editable="false"
+            android:selectable="false"
             android:key="aware_version"
             android:persistent="true"
             android:summary="@string/aware_auto_update_version"
@@ -678,7 +678,7 @@
             android:title="MQTT Server">
 
             <com.aware.phone.ui.Aware_Toolbar
-                android:key="mqtt"
+                android:key="mqtt_toolbar"
                 android:title="MQTT" />
 
             <CheckBoxPreference
@@ -738,7 +738,7 @@
             android:title="AWARE Study">
 
             <com.aware.phone.ui.Aware_Toolbar
-                android:key="webservice"
+                android:key="webservice_toolbar"
                 android:title="AWARE Study" />
 
             <CheckBoxPreference

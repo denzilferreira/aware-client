@@ -31,7 +31,7 @@ import java.util.HashMap;
  */
 public class Screen_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 2;
+	public static final int DATABASE_VERSION = 3;
 
 	/**
 	 * Authority of Screen content provider
@@ -71,8 +71,7 @@ public class Screen_Provider extends ContentProvider {
 	Screen_Data._ID + " integer primary key autoincrement,"
 			+ Screen_Data.TIMESTAMP + " real default 0,"
 			+ Screen_Data.DEVICE_ID + " text default '',"
-			+ Screen_Data.SCREEN_STATUS + " integer default 0," + "UNIQUE("
-			+ Screen_Data.TIMESTAMP + "," + Screen_Data.DEVICE_ID + ")" };
+			+ Screen_Data.SCREEN_STATUS + " integer default 0" };
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> screenProjectionMap = null;

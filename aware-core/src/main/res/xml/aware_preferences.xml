@@ -18,7 +18,7 @@
             android:title="@string/aware_debug_tag" />
         <EditTextPreference
             android:defaultValue=""
-            android:editable="false"
+            android:selectable="false"
             android:key="aware_version"
             android:persistent="true"
             android:summary="@string/aware_auto_update_version"

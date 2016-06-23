@@ -32,7 +32,7 @@ import java.util.HashMap;
  */
 public class Communication_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 2;
+	public static final int DATABASE_VERSION = 3;
 
 	/**
 	 * Authority of Screen content provider
@@ -101,16 +101,13 @@ public class Communication_Provider extends ContentProvider {
 					+ "device_id text default '',"
 					+ "call_type integer default 0,"
 					+ "call_duration integer default 0,"
-					+ "trace text default ''," + "UNIQUE ("
-					+ Calls_Data.TIMESTAMP + "," + Calls_Data.DEVICE_ID + ")",
+					+ "trace text default ''",
 			// messages
 			"_id integer primary key autoincrement,"
 					+ "timestamp real default 0,"
 					+ "device_id text default '',"
 					+ "message_type integer default 0,"
-					+ "trace text default ''," + "UNIQUE ("
-					+ Messages_Data.TIMESTAMP + "," + Messages_Data.DEVICE_ID
-					+ ")" };
+					+ "trace text default ''" };
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> callsProjectionMap = null;

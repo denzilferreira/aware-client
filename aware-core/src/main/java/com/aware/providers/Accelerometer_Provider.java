@@ -33,7 +33,7 @@ import java.util.HashMap;
  */
 public class Accelerometer_Provider extends ContentProvider {
 
-	public static final int DATABASE_VERSION = 2;
+	public static final int DATABASE_VERSION = 4;
 
 	/**
 	 * Authority of content provider
@@ -111,9 +111,7 @@ public class Accelerometer_Provider extends ContentProvider {
 					+ Accelerometer_Sensor.RESOLUTION + " real default 0,"
 					+ Accelerometer_Sensor.TYPE + " text default '',"
 					+ Accelerometer_Sensor.VENDOR + " text default '',"
-					+ Accelerometer_Sensor.VERSION + " text default '',"
-					+ "UNIQUE (" + Accelerometer_Sensor.TIMESTAMP + ","
-					+ Accelerometer_Sensor.DEVICE_ID + ")",
+					+ Accelerometer_Sensor.VERSION + " text default ''",
 
 			// accelerometer data
 			Accelerometer_Data._ID + " integer primary key autoincrement,"
@@ -123,9 +121,7 @@ public class Accelerometer_Provider extends ContentProvider {
 					+ Accelerometer_Data.VALUES_1 + " real default 0,"
 					+ Accelerometer_Data.VALUES_2 + " real default 0,"
 					+ Accelerometer_Data.ACCURACY + " integer default 0,"
-					+ Accelerometer_Data.LABEL + " text default '',"
-					+ "UNIQUE (" + Accelerometer_Data.TIMESTAMP + ","
-					+ Accelerometer_Data.DEVICE_ID + ")" };
+					+ Accelerometer_Data.LABEL + " text default ''" };
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> accelDeviceMap = null;
