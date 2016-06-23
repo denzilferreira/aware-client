@@ -180,7 +180,6 @@ public class Aware_Client extends Aware_Activity {
 
         addPreferencesFromResource(R.xml.aware_preferences);
         setContentView(R.layout.aware_ui);
-        defaultSettings();
     }
 
     @Override
@@ -240,6 +239,8 @@ public class Aware_Client extends Aware_Activity {
                     studyCheck.execute(Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
                 }
             }
+
+            defaultSettings();
         }
     }
 
