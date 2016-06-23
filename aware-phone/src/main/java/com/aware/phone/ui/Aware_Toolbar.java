@@ -21,10 +21,12 @@ import com.aware.phone.R;
 public class Aware_Toolbar extends Preference {
 
     private Context mContext;
+    private Preference mSelf;
 
     public Aware_Toolbar(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
+        mSelf = this;
     }
 
     @Override
@@ -39,10 +41,12 @@ public class Aware_Toolbar extends Preference {
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                PreferenceScreen pref = (PreferenceScreen) getPreferenceManager().findPreference(getKey());
-                if (pref != null && pref.getDialog() != null) { //for the client sub-preference pages
-                    pref.getDialog().dismiss();
-                }
+                try {
+                    PreferenceScreen pref = (PreferenceScreen) getPreferenceManager().findPreference(getKey());
+                    if (pref != null && pref.getDialog() != null) { //for the client sub-preference pages
+                        pref.getDialog().dismiss();
+                    }
+                } catch (ClassCastException e) {}
             }
         });
         return layout;

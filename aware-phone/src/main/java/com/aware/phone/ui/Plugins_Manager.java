@@ -402,14 +402,16 @@ public class Plugins_Manager extends Aware_Activity {
             if (response != null) {
                 try {
                     plugins = new JSONArray(response);
+
                     for (int i = 0; i < plugins.length(); i++) {
                         JSONObject plugin = plugins.getJSONObject(i);
                         PackageInfo installed = PluginsManager.isInstalled(getApplicationContext(), plugin.getString("package"));
                         if (installed != null) {
                             //Installed, lets check if it is updated
-                            if (plugin.getString("version").compareTo(installed.versionName) > 0) {
+                            if (plugin.getString("version").compareTo(installed.versionName) != 0) {
                                 ContentValues data = new ContentValues();
                                 data.put(Aware_Plugins.PLUGIN_DESCRIPTION, plugin.getString("desc"));
+                                data.put(Aware_Plugins.PLUGIN_VERSION, plugin.getString("version"));
                                 data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
                                 data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
                                 data.put(Aware_Plugins.PLUGIN_STATUS, PluginsManager.PLUGIN_UPDATED);

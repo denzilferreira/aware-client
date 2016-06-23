@@ -184,13 +184,15 @@ public class Aware_Client extends Aware_Activity {
 
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
-        Dialog subpref = ((PreferenceScreen) preference).getDialog();
-        subpref.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialog) {
-                defaultSettings(); //updates the UI to reflect the changes in active sensors
-            }
-        });
+        if (preference instanceof PreferenceScreen) {
+            Dialog subpref = ((PreferenceScreen) preference).getDialog();
+            subpref.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    defaultSettings(); //updates the UI to reflect the changes in active sensors
+                }
+            });
+        }
         return super.onPreferenceTreeClick(preferenceScreen, preference);
     }
 
