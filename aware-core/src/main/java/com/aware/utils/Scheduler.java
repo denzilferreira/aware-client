@@ -20,6 +20,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -37,12 +38,14 @@ public class Scheduler extends Service {
     public static final String SCHEDULE_ACTION = "action";
     public static final String SCHEDULE_ID = "schedule_id";
 
+    public static final String TRIGGER_INTERVAL = "interval";
     public static final String TRIGGER_MINUTE = "minute";
     public static final String TRIGGER_HOUR = "hour";
     public static final String TRIGGER_TIMER = "timer";
     public static final String TRIGGER_WEEKDAY = "weekday";
     public static final String TRIGGER_MONTH = "month";
     public static final String TRIGGER_CONTEXT = "context";
+    public static final String TRIGGER_CONDITION = "condition"; //TODO
     public static final String TRIGGER_RANDOM = "random";
 
     public static final int RANDOM_TYPE_HOUR = 0;
@@ -82,17 +85,23 @@ public class Scheduler extends Service {
      */
     public static void saveSchedule(Context context, Schedule schedule) {
         try {
+            ArrayList<String> global_settings = new ArrayList<String>();
+            global_settings.add(Aware.SCHEDULE_SPACE_MAINTENANCE);
+            global_settings.add(Aware.SCHEDULE_SYNC_DATA);
+
+            boolean is_global = global_settings.contains(schedule.getScheduleID());
+
             ContentValues data = new ContentValues();
             data.put(Scheduler_Provider.Scheduler_Data.TIMESTAMP, System.currentTimeMillis());
             data.put(Scheduler_Provider.Scheduler_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
             data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID, schedule.getScheduleID());
             data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE, schedule.build().toString());
-            data.put(Scheduler_Provider.Scheduler_Data.PACKAGE_NAME, context.getPackageName());
+            data.put(Scheduler_Provider.Scheduler_Data.PACKAGE_NAME, (is_global) ? "com.aware.phone" : context.getPackageName());
 
             Cursor schedules = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + context.getPackageName() + "'", null, null);
             if (schedules != null && schedules.getCount() == 1) {
                 Log.d(Aware.TAG, "Updating already existing schedule...");
-                context.getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + context.getPackageName() + "'", null);
+                context.getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + ((is_global) ? "com.aware.phone" : context.getPackageName()) + "'", null);
             } else {
                 Log.d(Aware.TAG, "New schedule: " + data.toString());
                 context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
@@ -111,16 +120,37 @@ public class Scheduler extends Service {
      * @param schedule_id
      */
     public static void removeSchedule(Context context, String schedule_id) {
-        context.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + context.getPackageName() + "'", null);
+
+        ArrayList<String> global_settings = new ArrayList<String>();
+        global_settings.add(Aware.SCHEDULE_SPACE_MAINTENANCE);
+        global_settings.add(Aware.SCHEDULE_SYNC_DATA);
+
+        boolean is_global = global_settings.contains(schedule_id);
+
+        context.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + ((is_global) ? "com.aware.phone" : context.getPackageName()) + "'", null);
     }
 
+    /**
+     * Return a schedule from current package
+     *
+     * @param context
+     * @param schedule_id
+     * @return
+     */
     public static Schedule getSchedule(Context context, String schedule_id) {
+
+        ArrayList<String> global_settings = new ArrayList<String>();
+        global_settings.add(Aware.SCHEDULE_SPACE_MAINTENANCE);
+        global_settings.add(Aware.SCHEDULE_SYNC_DATA);
+
+        boolean is_global = global_settings.contains(schedule_id);
+
         Schedule output = null;
 
-        Cursor scheduleData = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + context.getPackageName() + "'", null, null);
+        Cursor scheduleData = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + ((is_global) ? "com.aware.phone" : context.getPackageName()) + "'", null, null);
         if (scheduleData != null && scheduleData.moveToFirst()) {
             try {
-                JSONObject jsonSchedule = new JSONObject( scheduleData.getString(scheduleData.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE)) );
+                JSONObject jsonSchedule = new JSONObject(scheduleData.getString(scheduleData.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE)));
                 output = new Schedule(jsonSchedule);
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -217,6 +247,11 @@ public class Scheduler extends Service {
             return this;
         }
 
+        public Schedule setInterval(long minutes) throws JSONException {
+            this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_INTERVAL, minutes);
+            return this;
+        }
+
         public Schedule addHour(int hour) throws JSONException {
             JSONArray hours = getHours();
             hours.put(hour);
@@ -240,6 +275,19 @@ public class Scheduler extends Service {
             JSONArray extras = getActionExtras();
             extras.put(new JSONObject().put(ACTION_EXTRA_KEY, key).put(ACTION_EXTRA_VALUE, value));
             return this;
+        }
+
+        /**
+         * Get scheduled interval
+         *
+         * @return
+         * @throws JSONException
+         */
+        public long getInterval() throws JSONException {
+            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_INTERVAL)) {
+                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_INTERVAL, 0);
+            }
+            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getLong(TRIGGER_INTERVAL);
         }
 
         /**
@@ -359,6 +407,7 @@ public class Scheduler extends Service {
 
         /**
          * Returns the list of contexts which trigger this schedule
+         *
          * @return
          * @throws JSONException
          */
@@ -370,7 +419,7 @@ public class Scheduler extends Service {
         }
 
         /**
-         * Get X random schedules from defined hour/weekday/month triggers
+         * Get X random schedules from defined minute/hour/weekday/month triggers
          *
          * @throws JSONException
          */
@@ -413,10 +462,10 @@ public class Scheduler extends Service {
 
                             final JSONArray contexts = schedule.getContexts();
 
-                            IntentFilter filters = new IntentFilter();
-                            for( int i = 0; i< contexts.length(); i++ ) {
+                            IntentFilter filter = new IntentFilter();
+                            for (int i = 0; i < contexts.length(); i++) {
                                 String context = contexts.getString(i);
-                                filters.addAction(context);
+                                filter.addAction(context);
                             }
 
                             BroadcastReceiver listener = new BroadcastReceiver() {
@@ -431,10 +480,10 @@ public class Scheduler extends Service {
                             };
 
                             Hashtable<IntentFilter, BroadcastReceiver> scheduler_listener = new Hashtable<>();
-                            scheduler_listener.put(filters, listener);
+                            scheduler_listener.put(filter, listener);
                             schedulerListeners.put(schedule.getScheduleID(), scheduler_listener);
 
-                            registerReceiver(listener, filters);
+                            registerReceiver(listener, filter);
 
                             if (Aware.DEBUG)
                                 Log.d(Aware.TAG, "Registered a contextual trigger for " + contexts.toString());
@@ -493,12 +542,13 @@ public class Scheduler extends Service {
             if (last_time_triggered != null && !last_time_triggered.isClosed())
                 last_time_triggered.close();
 
-            //This is a scheduled task with a precise time
+            // This is a scheduled task with a set timestamp.
+            // We trigger it within a 10 minute interval (before & after). The framework checks this at inexact 5 minutes
             if (schedule.getTimer() != -1 && last_triggered == 0) { //not been triggered yet
                 if (Aware.DEBUG)
                     Log.d(Aware.TAG, "Checking trigger set for a specific timestamp: " + schedule.getTimer());
-                if ((now.getTimeInMillis() - schedule.getTimer()) < 5 * 60 * 1000)
-                    return true; //trigger within a 5-minute window
+                if ((now.getTimeInMillis() - schedule.getTimer()) < 10 * 60 * 1000)
+                    return true; //trigger within a 10-minute window
             }
 
             Calendar previous = null;
@@ -507,20 +557,26 @@ public class Scheduler extends Service {
                 previous.setTimeInMillis(last_triggered);
             }
 
-            //triggered at the given minutes, regardless of hour, weekday or month
-            if (schedule.getMinutes().length() > 0 && schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0) {
+            if (schedule.getInterval() > 0
+                    && schedule.getMinutes().length() == 0 && schedule.getHours().length() == 0
+                    && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0
+            ) { //triggered in intervals, regardless of minute, hour, weekday or month
                 if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Checking trigger at given minutes, regardless of hour, weekday or month");
+                    Log.d(Aware.TAG, "Checking trigger interval, regardless of minute, hour, weekday or month");
+                if (previous == null) return true;
+                return is_interval_elapsed(now, previous, schedule.getInterval());
+            } //triggered at the given minutes, regardless of hour, weekday or month
+            else if (schedule.getMinutes().length() > 0 && schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0) {
+                if (Aware.DEBUG)
+                    Log.d(Aware.TAG, "Checking trigger at given minute, regardless of hour, weekday or month");
                 if (previous != null && is_same_minute_hour(now, previous)) return false;
                 return is_trigger_minute(schedule);
-
             } //triggered at the given hours, regardless of weekday or month
             else if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0) {
                 if (Aware.DEBUG)
                     Log.d(Aware.TAG, "Checking trigger at given hour, regardless of weekday or month");
                 if (previous != null && is_same_hour_day(now, previous)) return false;
                 return is_trigger_hour(schedule);
-
             } //triggered at given hours and week day
             else if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() == 0) {
                 if (Aware.DEBUG) Log.d(Aware.TAG, "Checking trigger at given hour, and weekday");
@@ -558,11 +614,17 @@ public class Scheduler extends Service {
                     return false;
                 return is_trigger_hour(schedule) && is_trigger_month(schedule);
             }
-
         } catch (JSONException e) {
             e.printStackTrace();
         }
         return false;
+    }
+
+    private boolean is_interval_elapsed(Calendar date_one, Calendar date_two, long required_minutes) {
+        long elapsed = (date_one.getTimeInMillis()-date_two.getTimeInMillis())/1000/60;
+        if (Aware.DEBUG)
+            Log.d(Aware.TAG, "Checking interval elapsed: " + elapsed + " vs " + required_minutes + " minutes elapsed");
+        return (elapsed >= required_minutes);
     }
 
     private boolean is_same_minute_hour(Calendar date_one, Calendar date_two) {

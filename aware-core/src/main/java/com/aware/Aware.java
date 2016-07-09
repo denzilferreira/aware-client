@@ -136,8 +136,11 @@ public class Aware extends Service {
      */
     public static final String ACTION_QUIT_STUDY = "ACTION_QUIT_STUDY";
 
-    private static final String SCHEDULE_SPACE_MAINTENANCE = "schedule_aware_space_maintenance";
-    private static final String SCHEDULE_SYNC_DATA = "schedule_aware_sync_data";
+    /**
+     * Used on the scheduler class to define global schedules for AWARE, SYNC and SPACE MAINTENANCE actions
+     */
+    public static final String SCHEDULE_SPACE_MAINTENANCE = "schedule_aware_space_maintenance";
+    public static final String SCHEDULE_SYNC_DATA = "schedule_aware_sync_data";
 
     public static String STUDY_ID = "study_id";
     public static String STUDY_START = "study_start";
@@ -364,6 +367,7 @@ public class Aware extends Service {
 
     /**
      * Identifies if the devices is enrolled in a study
+     *
      * @param c
      * @return
      */
@@ -397,17 +401,13 @@ public class Aware extends Service {
                         try {
                             Scheduler.Schedule schedule = new Scheduler.Schedule(SCHEDULE_SYNC_DATA)
                                     .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                    .setActionClass(Aware.ACTION_AWARE_SYNC_DATA);
+                                    .setActionClass(Aware.ACTION_AWARE_SYNC_DATA)
+                                    .setInterval(frequency_webservice);
 
-                            int i = frequency_webservice;
-                            while (i<60) {
-                                schedule.addMinute(i); //add minute intervals
-                                i+=frequency_webservice;
-                            }
                             Scheduler.saveSchedule(getApplicationContext(), schedule);
 
                             if (DEBUG) {
-                                Log.d(TAG, "Data sync at " + schedule.getMinutes().toString() + " minute(s)");
+                                Log.d(TAG, "Data sync every " + schedule.getInterval() + " minute(s)");
                             }
 
                         } catch (JSONException e) {
@@ -415,21 +415,17 @@ public class Aware extends Service {
                         }
                     } else { //check the sync schedule for changes
                         try {
-                            JSONArray minutes = sync.getMinutes();
-                            if (minutes.getInt(0) != frequency_webservice) { //update on minutes interval
+                            long interval = sync.getInterval();
+                            if (interval != frequency_webservice) {
                                 Scheduler.Schedule schedule = new Scheduler.Schedule(SCHEDULE_SYNC_DATA)
                                         .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                        .setActionClass(Aware.ACTION_AWARE_SYNC_DATA);
+                                        .setActionClass(Aware.ACTION_AWARE_SYNC_DATA)
+                                        .setInterval(frequency_webservice);
 
-                                int i = frequency_webservice;
-                                while (i<60) {
-                                    schedule.addMinute(i); //add minute intervals
-                                    i+=frequency_webservice;
-                                }
                                 Scheduler.saveSchedule(getApplicationContext(), schedule);
 
                                 if (DEBUG) {
-                                    Log.d(TAG, "Data sync at " + schedule.getMinutes().toString() + " minute(s)");
+                                    Log.d(TAG, "Data sync at " + schedule.getInterval() + " minute(s)");
                                 }
                             }
                         } catch (JSONException e) {
@@ -454,8 +450,8 @@ public class Aware extends Service {
                         switch (frequency_space_maintenance) {
                             case 1: //weekly, by default every Sunday
                                 cleanup.addWeekday("Sunday")
-                                .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
+                                        .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
+                                        .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
                                 break;
                             case 2: //monthly
                                 cleanup.addMonth("January")
@@ -470,8 +466,8 @@ public class Aware extends Service {
                                         .addMonth("October")
                                         .addMonth("November")
                                         .addMonth("December")
-                                .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
+                                        .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
+                                        .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
                                 break;
                             case 3: //daily
                                 cleanup.addWeekday("Monday")
@@ -481,13 +477,13 @@ public class Aware extends Service {
                                         .addWeekday("Friday")
                                         .addWeekday("Saturday")
                                         .addWeekday("Sunday")
-                                .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
+                                        .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
+                                        .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
                                 break;
                         }
                         Scheduler.saveSchedule(getApplicationContext(), cleanup);
                     }
-                } catch (JSONException e){
+                } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
@@ -751,9 +747,9 @@ public class Aware extends Service {
         try {
             Context package_context = context.createPackageContext(package_name, Context.CONTEXT_IGNORE_SECURITY + Context.CONTEXT_INCLUDE_CODE);
             DexFile df = new DexFile(package_context.getPackageCodePath());
-            for(Enumeration<String> iter = df.entries(); iter.hasMoreElements();) {
+            for (Enumeration<String> iter = df.entries(); iter.hasMoreElements(); ) {
                 String className = iter.nextElement();
-                if( className.contains(class_name)) return true;
+                if (className.contains(class_name)) return true;
             }
             return false;
         } catch (IOException | NameNotFoundException e) {
@@ -1245,7 +1241,8 @@ public class Aware extends Service {
                         context.getContentResolver().insert(Aware_Plugins.CONTENT_URI, rowData);
                     }
 
-                    if (Aware.DEBUG) Log.d(TAG, "AWARE plugin added and activated:" + app.packageName);
+                    if (Aware.DEBUG)
+                        Log.d(TAG, "AWARE plugin added and activated:" + app.packageName);
 
                     Aware.startPlugin(context, app.packageName);
 
@@ -1340,6 +1337,9 @@ public class Aware extends Service {
         }
     }
 
+    /**
+     * Checks if we still have the accessibility services active or not
+     */
     private static final AwareBoot awareBoot = new AwareBoot();
     public static class AwareBoot extends BroadcastReceiver {
         @Override

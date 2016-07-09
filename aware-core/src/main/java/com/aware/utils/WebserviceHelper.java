@@ -182,19 +182,18 @@ public class WebserviceHelper extends IntentService {
                     } else {
                         latest = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
                     }
-                    if (latest == null) return;
+                    if (latest == null) return; //unable to reach the server, cancel this sync
 
-                    //If in a study, get from joined date onwards
+                    //If in a study, get only data from joined date onwards
                     String study_condition = "";
-                    if (Aware.getSetting(getApplicationContext(), "study_id").length() > 0 && Aware.getSetting(getApplicationContext(), "study_start").length() > 0) {
-                        study_condition = " AND timestamp > " + Long.parseLong(Aware.getSetting(getApplicationContext(), "study_start"));
+                    if (Aware.getSetting(getApplicationContext(), Aware.STUDY_ID).length() > 0 && Aware.getSetting(getApplicationContext(), Aware.STUDY_START).length() > 0) {
+                        study_condition = " AND timestamp > " + Long.parseLong(Aware.getSetting(getApplicationContext(), Aware.STUDY_START));
                     }
 
-                    //We always want to sync the device's profile
+                    //However, we always want to sync the device's profile for any study
                     if (DATABASE_TABLE.equalsIgnoreCase("aware_device")) study_condition = "";
 
                     JSONArray remoteData = new JSONArray(latest);
-
                     Cursor context_data;
                     if (remoteData.length() == 0) {
                         if (exists(columnsStr, "double_end_timestamp")) {
@@ -218,7 +217,9 @@ public class WebserviceHelper extends IntentService {
                         }
                     }
 
-                    JSONArray context_data_entries = new JSONArray();
+                    boolean interrupted = false;
+
+                    JSONArray rows = new JSONArray();
                     if (context_data != null && context_data.moveToFirst()) {
 
                         notifyUser("Syncing " + context_data.getCount() + " from " + DATABASE_TABLE, false, true);
@@ -229,121 +230,138 @@ public class WebserviceHelper extends IntentService {
                         long start = System.currentTimeMillis();
 
                         do {
-                            JSONObject entry = new JSONObject();
-
+                            JSONObject row = new JSONObject();
                             String[] columns = context_data.getColumnNames();
                             for (String c_name : columns) {
-
-                                //Skip local database ID
-                                if (c_name.equals("_id")) continue;
-
+                                if (c_name.equals("_id")) continue; //Skip local database ID
                                 if (c_name.equals("timestamp") || c_name.contains("double")) {
-                                    entry.put(c_name, context_data.getDouble(context_data.getColumnIndex(c_name)));
+                                    row.put(c_name, context_data.getDouble(context_data.getColumnIndex(c_name)));
                                 } else if (c_name.contains("float")) {
-                                    entry.put(c_name, context_data.getFloat(context_data.getColumnIndex(c_name)));
+                                    row.put(c_name, context_data.getFloat(context_data.getColumnIndex(c_name)));
                                 } else if (c_name.contains("long")) {
-                                    entry.put(c_name, context_data.getLong(context_data.getColumnIndex(c_name)));
+                                    row.put(c_name, context_data.getLong(context_data.getColumnIndex(c_name)));
                                 } else if (c_name.contains("blob")) {
-                                    entry.put(c_name, context_data.getBlob(context_data.getColumnIndex(c_name)));
+                                    row.put(c_name, context_data.getBlob(context_data.getColumnIndex(c_name)));
                                 } else if (c_name.contains("integer")) {
-                                    entry.put(c_name, context_data.getInt(context_data.getColumnIndex(c_name)));
+                                    row.put(c_name, context_data.getInt(context_data.getColumnIndex(c_name)));
                                 } else {
-                                    entry.put(c_name, context_data.getString(context_data.getColumnIndex(c_name)));
+                                    row.put(c_name, context_data.getString(context_data.getColumnIndex(c_name)));
                                 }
                             }
-                            context_data_entries.put(entry);
+                            rows.put(row);
 
-                            if (context_data_entries.length() == batch_size) {
-
+                            if (rows.length() == batch_size) { //loaded enough rows into memory, try to upload
                                 request = new Hashtable<>();
                                 request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
-                                request.put("data", context_data_entries.toString());
+                                request.put("data", rows.toString());
 
+                                String success;
                                 if (protocol.equals("https")) {
                                     try {
-                                        new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+                                        success = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                                     } catch (FileNotFoundException e) {
-                                        e.printStackTrace();
+                                        success = null;
                                     }
                                 } else {
-                                    new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+                                    success = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                                 }
 
-                                context_data_entries = new JSONArray();
+                                //Something went wrong, e.g., server is down, lost internet, etc.
+                                if (success == null) {
+                                    interrupted = true;
+                                    break;
+                                } else {
+                                    ArrayList<String> highFrequencySensors = new ArrayList<>();
+                                    highFrequencySensors.add("accelerometer");
+                                    highFrequencySensors.add("gyroscope");
+                                    highFrequencySensors.add("barometer");
+                                    highFrequencySensors.add("gravity");
+                                    highFrequencySensors.add("light");
+                                    highFrequencySensors.add("linear_accelerometer");
+                                    highFrequencySensors.add("magnetometer");
+                                    highFrequencySensors.add("rotation");
+                                    highFrequencySensors.add("temperature");
+
+                                    //Clean the local database, now that it is uploaded to the server, if required
+                                    if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0 && Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA)) == 4
+                                            && highFrequencySensors.contains(DATABASE_TABLE)) {
+
+                                        long last = rows.getJSONObject(rows.length()).getLong("timestamp");
+
+                                        if (exists(columnsStr, "double_end_timestamp")) {
+                                            getContentResolver().delete(CONTENT_URI, "double_end_timestamp <= " + last, null);
+                                        } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
+                                            getContentResolver().delete(CONTENT_URI, "double_esm_user_answer_timestamp <= " + last, null);
+                                        } else {
+                                            getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null);
+                                        }
+
+                                        if (DEBUG)
+                                            Log.d(Aware.TAG, "Deleted local old records for " + DATABASE_TABLE);
+
+                                        notifyUser("Cleaned old records from " + DATABASE_TABLE, false, true);
+                                    }
+
+                                    rows = new JSONArray();
+                                    interrupted = false;
+                                }
                             }
                         } while (context_data.moveToNext());
 
-                        if (context_data_entries.length() > 0) {
+                        if (!interrupted) {
+                            if (rows.length() > 0) {
+                                request = new Hashtable<>();
+                                request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
+                                request.put("data", rows.toString());
 
-                            request = new Hashtable<>();
-                            request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
-                            request.put("data", context_data_entries.toString());
-
-                            if (protocol.equals("https")) {
-                                try {
-                                    new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
-                                } catch (FileNotFoundException e) {
-                                    e.printStackTrace();
+                                String success;
+                                if (protocol.equals("https")) {
+                                    try {
+                                        success = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+                                    } catch (FileNotFoundException e) {
+                                        success = null;
+                                    }
+                                } else {
+                                    success = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                                 }
-                            } else {
-                                new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+
+                                if (success != null) {
+                                    ArrayList<String> highFrequencySensors = new ArrayList<>();
+                                    highFrequencySensors.add("accelerometer");
+                                    highFrequencySensors.add("gyroscope");
+                                    highFrequencySensors.add("barometer");
+                                    highFrequencySensors.add("gravity");
+                                    highFrequencySensors.add("light");
+                                    highFrequencySensors.add("linear_accelerometer");
+                                    highFrequencySensors.add("magnetometer");
+                                    highFrequencySensors.add("rotation");
+                                    highFrequencySensors.add("temperature");
+
+                                    //Clean the local database, now that it is uploaded to the server, if required
+                                    if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0 && Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA)) == 4
+                                            && highFrequencySensors.contains(DATABASE_TABLE)) {
+
+                                        long last = rows.getJSONObject(rows.length()).getLong("timestamp");
+
+                                        if (exists(columnsStr, "double_end_timestamp")) {
+                                            getContentResolver().delete(CONTENT_URI, "double_end_timestamp <= " + last, null);
+                                        } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
+                                            getContentResolver().delete(CONTENT_URI, "double_esm_user_answer_timestamp <= " + last, null);
+                                        } else {
+                                            getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null);
+                                        }
+
+                                        if (DEBUG)
+                                            Log.d(Aware.TAG, "Deleted local old records for " + DATABASE_TABLE);
+
+                                        notifyUser("Cleaned old records from " + DATABASE_TABLE, false, true);
+                                    }
+                                }
                             }
                         }
 
                         if (DEBUG)
                             Log.d(Aware.TAG, DATABASE_TABLE + " sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis() - start) / 1000));
-
-                        ArrayList<String> highFrequencySensors = new ArrayList<>();
-                        highFrequencySensors.add("accelerometer");
-                        highFrequencySensors.add("gyroscope");
-                        highFrequencySensors.add("barometer");
-                        highFrequencySensors.add("gravity");
-                        highFrequencySensors.add("light");
-                        highFrequencySensors.add("linear_accelerometer");
-                        highFrequencySensors.add("magnetometer");
-                        highFrequencySensors.add("rotation");
-                        highFrequencySensors.add("temperature");
-
-                        //Clean the local database, now that it is uploaded to the server, if required
-                        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0 && Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA)) == 4
-                                && highFrequencySensors.contains(DATABASE_TABLE)) {
-
-                            Hashtable<String, String> syncRemote = new Hashtable<>();
-                            syncRemote.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
-
-                            //check the latest entry in remote database
-                            String remoteSuccess;
-                            if (protocol.equals("https")) {
-                                try {
-                                    remoteSuccess = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
-                                } catch (FileNotFoundException e) {
-                                    remoteSuccess = null;
-                                }
-                            } else {
-                                remoteSuccess = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
-                            }
-                            if (remoteSuccess != null) {
-
-                                JSONArray remoteSyncData = new JSONArray(remoteSuccess);
-
-                                long last;
-                                if (exists(columnsStr, "double_end_timestamp")) {
-                                    last = remoteSyncData.getJSONObject(0).getLong("double_end_timestamp");
-                                    getContentResolver().delete(CONTENT_URI, "double_end_timestamp <= " + last, null);
-                                } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
-                                    last = remoteSyncData.getJSONObject(0).getLong("double_esm_user_answer_timestamp");
-                                    getContentResolver().delete(CONTENT_URI, "double_esm_user_answer_timestamp <= " + last, null);
-                                } else {
-                                    last = remoteSyncData.getJSONObject(0).getLong("timestamp");
-                                    getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null);
-                                }
-
-                                if (DEBUG)
-                                    Log.d(Aware.TAG, "Deleted local old records for " + DATABASE_TABLE);
-
-                                notifyUser("Cleaned old records from " + DATABASE_TABLE, false, true);
-                            }
-                        }
                     }
                     if (context_data != null && !context_data.isClosed()) context_data.close();
 
@@ -379,8 +397,8 @@ public class WebserviceHelper extends IntentService {
         super.onDestroy();
 
         if (Aware.DEBUG)
-            Log.d(Aware.TAG, "Finished synching all the databases.");
+            Log.d(Aware.TAG, "Finished synching all the databases in " + DateUtils.formatElapsedTime((System.currentTimeMillis() - sync_start) / 1000));
 
-        notifyUser("Finished syncing in " + DateUtils.formatElapsedTime((System.currentTimeMillis()-sync_start)/1000), false, false);
+        notifyUser("Finished syncing", true, false);
     }
 }
