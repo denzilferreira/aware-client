@@ -422,6 +422,10 @@ public class Applications extends AccessibilityService {
             } catch (NoSuchMethodError e) {
             }
         }
+
+        //Keep the global setting up-to-date
+        Aware.setSetting(c, Applications.STATUS_AWARE_ACCESSIBILITY, enabled);
+
         return enabled;
     }
 
@@ -431,8 +435,6 @@ public class Applications extends AccessibilityService {
      * @return boolean isActive
      */
     public static boolean isAccessibilityServiceActive(Context c) {
-        if (Aware.getSetting(c, Applications.STATUS_AWARE_ACCESSIBILITY).equals("true"))
-            return true;
         if (!isAccessibilityEnabled(c)) {
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_accessibility);
@@ -449,8 +451,10 @@ public class Applications extends AccessibilityService {
             mBuilder.setContentIntent(clickIntent);
             NotificationManager notManager = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
             notManager.notify(Applications.ACCESSIBILITY_NOTIFICATION_ID, mBuilder.build());
+
+            return false;
         }
-        return isAccessibilityEnabled(c);
+        return true;
     }
 
     /**

@@ -45,10 +45,6 @@
             android:exported="true" />
 
         <service
-            android:name="com.aware.utils.PluginsManager"
-            android:exported="true" />
-
-        <service
             android:name="com.aware.Applications"
             android:enabled="@bool/accessibility_access"
             android:exported="true"
@@ -164,10 +160,6 @@
             android:exported="true" />
         <service
             android:name="com.aware.utils.Aware_TTS"
-            android:exported="true" />
-
-        <service
-            android:name="com.aware.Aware$DowloadUpdatedPlugins"
             android:exported="true" />
 
         <!-- BroadcastReceivers -->

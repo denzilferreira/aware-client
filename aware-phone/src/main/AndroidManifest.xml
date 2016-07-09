@@ -15,6 +15,8 @@
         android:label="Write to AWARE&apos;s Context data"
         android:protectionLevel="normal" />
 
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
@@ -118,12 +120,6 @@
                 android:value="com.aware.phone.Aware_Client" />
         </activity>
 
-        <!-- Services -->
-
-        <service
-            android:name="com.aware.Aware$AwareClientUpdateDownloader"
-            android:exported="true" />
-
         <receiver
             android:name="com.aware.Aware$AndroidPackageMonitor"
             android:exported="true">
@@ -132,6 +128,13 @@
                 <action android:name="android.intent.action.PACKAGE_REMOVED" />
 
                 <data android:scheme="package" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name="com.aware.Aware$AwareBoot" android:enabled="true" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </receiver>
 

@@ -220,19 +220,22 @@ public class Aware extends Service {
         awareContext = getApplicationContext();
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
-        filter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
-        filter.addDataScheme("file");
-        awareContext.registerReceiver(storage_BR, filter);
+        IntentFilter storage = new IntentFilter();
+        storage.addAction(Intent.ACTION_MEDIA_MOUNTED);
+        storage.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
+        storage.addDataScheme("file");
+        awareContext.registerReceiver(storage_BR, storage);
 
-        filter = new IntentFilter();
-        filter.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
-        filter.addAction(Aware.ACTION_AWARE_REFRESH);
-        filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
-        filter.addAction(Aware.ACTION_QUIT_STUDY);
+        IntentFilter awareactions = new IntentFilter();
+        awareactions.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
+        awareactions.addAction(Aware.ACTION_AWARE_REFRESH);
+        awareactions.addAction(Aware.ACTION_AWARE_SYNC_DATA);
+        awareactions.addAction(Aware.ACTION_QUIT_STUDY);
+        awareContext.registerReceiver(aware_BR, awareactions);
 
-        awareContext.registerReceiver(aware_BR, filter);
+        IntentFilter boot = new IntentFilter();
+        boot.addAction(Intent.ACTION_BOOT_COMPLETED);
+        awareContext.registerReceiver(awareBoot, boot);
 
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             stopSelf();
@@ -449,7 +452,7 @@ public class Aware extends Service {
                     } else {
                         Scheduler.Schedule cleanup = new Scheduler.Schedule(SCHEDULE_SPACE_MAINTENANCE);
                         switch (frequency_space_maintenance) {
-                            case 1: //weekly, by default every Friday
+                            case 1: //weekly, by default every Sunday
                                 cleanup.addWeekday("Sunday")
                                 .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
                                 .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
@@ -1124,8 +1127,9 @@ public class Aware extends Service {
         super.onDestroy();
         if (repeatingIntent != null) alarmManager.cancel(repeatingIntent);
 
-        if (aware_BR != null) awareContext.unregisterReceiver(aware_BR);
-        if (storage_BR != null) awareContext.unregisterReceiver(storage_BR);
+        awareContext.unregisterReceiver(aware_BR);
+        awareContext.unregisterReceiver(storage_BR);
+        awareContext.unregisterReceiver(awareBoot);
     }
 
     public static void reset(Context c) {
@@ -1333,6 +1337,14 @@ public class Aware extends Service {
             }
             Intent aware = new Intent(context, Aware.class);
             context.startService(aware);
+        }
+    }
+
+    private static final AwareBoot awareBoot = new AwareBoot();
+    public static class AwareBoot extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Applications.isAccessibilityServiceActive(context); //This shows notification automatically if the accessibility services are off
         }
     }
 
