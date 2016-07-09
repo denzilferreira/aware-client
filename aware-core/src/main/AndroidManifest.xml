@@ -91,7 +91,6 @@
         <service
             android:name="com.aware.Traffic"
             android:exported="true" />
-
         <service
             android:name="com.aware.Accelerometer"
             android:exported="true" />
@@ -151,7 +150,6 @@
                 <action android:name="ACTION_AWARE_WEBSERVICE_CLEAR_TABLE" />
             </intent-filter>
         </service>
-
         <service
             android:name="com.aware.utils.DownloadPluginService"
             android:exported="true" />
@@ -171,20 +169,17 @@
                 <action android:name="ACTION_AWARE_TTS_SPEAK" />
             </intent-filter>
         </receiver>
-
         <receiver
             android:name="com.aware.Aware$Storage_Broadcaster"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_MOUNTED" />
                 <action android:name="android.intent.action.MEDIA_UNMOUNTED" />
-
                 <data android:scheme="file" />
             </intent-filter>
         </receiver>
 
         <!-- Core providers -->
-
         <provider
             android:name="com.aware.providers.Scheduler_Provider"
             android:authorities="${applicationId}.provider.scheduler"

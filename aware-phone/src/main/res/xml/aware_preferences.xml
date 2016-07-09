@@ -680,7 +680,7 @@
             android:title="MQTT Server">
 
             <com.aware.phone.ui.Aware_Toolbar
-                android:key="mqtt_toolbar"
+                android:key="mqtt"
                 android:title="MQTT" />
 
             <CheckBoxPreference
@@ -740,7 +740,7 @@
             android:title="AWARE Study">
 
             <com.aware.phone.ui.Aware_Toolbar
-                android:key="webservice_toolbar"
+                android:key="webservice"
                 android:title="AWARE Study" />
 
             <CheckBoxPreference
