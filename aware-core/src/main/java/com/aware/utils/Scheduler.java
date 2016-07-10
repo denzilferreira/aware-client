@@ -488,7 +488,6 @@ public class Scheduler extends Service {
                             if (Aware.DEBUG)
                                 Log.d(Aware.TAG, "Registered a contextual trigger for " + contexts.toString());
                         }
-
                     } else {
                         if (is_trigger(schedule)) {
                             if (Aware.DEBUG)
@@ -530,17 +529,16 @@ public class Scheduler extends Service {
         try {
             //Context schedulers do not have time constrains and it is handled by the broadcast receiver
             if (schedule.getContexts().length() > 0) {
-                if (schedule.getTimer() == -1 && schedule.getMinutes().length() == 0 && schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0)
-                    return true;
+                return true;
             }
 
+            //Has this scheduler been triggered before?
             long last_triggered = 0;
             Cursor last_time_triggered = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, new String[]{Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED}, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'", null, null);
             if (last_time_triggered != null && last_time_triggered.moveToFirst()) {
                 last_triggered = last_time_triggered.getLong(last_time_triggered.getColumnIndex(Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED));
-            }
-            if (last_time_triggered != null && !last_time_triggered.isClosed())
                 last_time_triggered.close();
+            }
 
             // This is a scheduled task with a set timestamp.
             // We trigger it within a 10 minute interval (before & after). The framework checks this at inexact 5 minutes
@@ -557,63 +555,110 @@ public class Scheduler extends Service {
                 previous.setTimeInMillis(last_triggered);
             }
 
-            if (schedule.getInterval() > 0
-                    && schedule.getMinutes().length() == 0 && schedule.getHours().length() == 0
-                    && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0
-            ) { //triggered in intervals, regardless of minute, hour, weekday or month
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Checking trigger interval, regardless of minute, hour, weekday or month");
-                if (previous == null) return true;
-                return is_interval_elapsed(now, previous, schedule.getInterval());
-            } //triggered at the given minutes, regardless of hour, weekday or month
-            else if (schedule.getMinutes().length() > 0 && schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0) {
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Checking trigger at given minute, regardless of hour, weekday or month");
-                if (previous != null && is_same_minute_hour(now, previous)) return false;
-                return is_trigger_minute(schedule);
-            } //triggered at the given hours, regardless of weekday or month
-            else if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0) {
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Checking trigger at given hour, regardless of weekday or month");
-                if (previous != null && is_same_hour_day(now, previous)) return false;
-                return is_trigger_hour(schedule);
-            } //triggered at given hours and week day
-            else if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() == 0) {
-                if (Aware.DEBUG) Log.d(Aware.TAG, "Checking trigger at given hour, and weekday");
-                if (previous != null && is_same_hour_day(now, previous) && is_same_weekday(now, previous))
-                    return false;
-                return is_trigger_hour(schedule) && is_trigger_weekday(schedule);
-                //triggered at given hours, week day and month
-            } else if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() > 0) {
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Checking trigger at given hour, weekday and month");
-                if (previous != null && is_same_hour_day(now, previous) && is_same_weekday(now, previous) && is_same_month(now, previous))
-                    return false;
-                return is_trigger_hour(schedule) && is_trigger_weekday(schedule) && is_trigger_month(schedule);
-                //triggered at given weekday, regardless of time or month
-            } else if (schedule.getHours().length() == 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() == 0) {
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Checking trigger at given weekday, regardless of hour or month");
-                if (previous != null && is_same_weekday(now, previous)) return false;
-                return is_trigger_weekday(schedule);
-                //triggered at given weekday and month
-            } else if (schedule.getHours().length() == 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() > 0) {
-                if (Aware.DEBUG) Log.d(Aware.TAG, "Checking trigger at given weekday, and month");
-                if (previous != null && is_same_weekday(now, previous) && is_same_month(now, previous))
-                    return false;
-                return is_trigger_weekday(schedule) && is_trigger_month(schedule);
-                //triggered at given month
-            } else if (schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() > 0) {
-                if (Aware.DEBUG) Log.d(Aware.TAG, "Checking trigger at given month");
-                if (previous != null && is_same_month(now, previous)) return false;
-                return is_trigger_month(schedule);
-                //Triggered at given hour and months
-            } else if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() > 0) {
-                if (Aware.DEBUG) Log.d(Aware.TAG, "Checking trigger at given hour and month");
-                if (previous != null && is_same_hour_day(now, previous) && is_same_month(now, previous))
-                    return false;
-                return is_trigger_hour(schedule) && is_trigger_month(schedule);
+            boolean execute = false;
+
+            if (schedule.getInterval() > 0 && previous == null) {
+                execute = true;
+            } else if (schedule.getInterval() > 0 && previous != null) {
+                execute = is_interval_elapsed(now, previous, schedule.getInterval());
             }
+            if (Aware.DEBUG)
+                Log.d(Aware.TAG, "Trigger interval: " + execute);
+
+            if (schedule.getMinutes().length() > 0) {
+                if (previous != null && is_same_minute_hour(now, previous)) {
+                    execute = false;
+                } else
+                    execute = is_trigger_minute(schedule);
+            }
+            if (Aware.DEBUG)
+                Log.d(Aware.TAG, "Trigger minute: " + execute);
+
+            if (schedule.getHours().length() > 0) {
+                if (previous != null && is_same_hour_day(now, previous)) {
+                    execute = false;
+                } else
+                    execute = is_trigger_hour(schedule);
+            }
+            if (Aware.DEBUG)
+                Log.d(Aware.TAG, "Trigger hour: " + execute);
+
+            if (schedule.getWeekdays().length() > 0) {
+                if (previous != null && is_same_weekday(now, previous)) {
+                    execute = false;
+                } else
+                    execute = is_trigger_weekday(schedule);
+            }
+            if (Aware.DEBUG)
+                Log.d(Aware.TAG, "Trigger weekday: " + execute);
+
+            if (schedule.getMonths().length() > 0) {
+                if (previous != null && is_same_month(now, previous)) {
+                    execute = false;
+                } else
+                    execute = is_trigger_month(schedule);
+            }
+            if (Aware.DEBUG)
+                Log.d(Aware.TAG, "Trigger month: " + execute);
+
+            return execute;
+//            if (schedule.getInterval() > 0
+//                    && schedule.getMinutes().length() == 0 && schedule.getHours().length() == 0
+//                    && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0
+//            ) {
+//                if (Aware.DEBUG)
+//                    Log.d(Aware.TAG, "Checking trigger interval, regardless of minute, hour, weekday or month");
+//                if (previous == null) return true;
+//                return is_interval_elapsed(now, previous, schedule.getInterval());
+//            } //triggered at the given minutes, regardless of hour, weekday or month
+//            else if (schedule.getMinutes().length() > 0 && schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0) {
+//                if (Aware.DEBUG)
+//                    Log.d(Aware.TAG, "Checking trigger at given minute, regardless of hour, weekday or month");
+//                if (previous != null && is_same_minute_hour(now, previous)) return false;
+//                return is_trigger_minute(schedule);
+//            } //triggered at the given hours, regardless of weekday or month
+//            else if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0) {
+//                if (Aware.DEBUG)
+//                    Log.d(Aware.TAG, "Checking trigger at given hour, regardless of weekday or month");
+//                if (previous != null && is_same_hour_day(now, previous)) return false;
+//                return is_trigger_hour(schedule);
+//            } //triggered at given hours and week day
+//            else if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() == 0) {
+//                if (Aware.DEBUG) Log.d(Aware.TAG, "Checking trigger at given hour, and weekday");
+//                if (previous != null && is_same_hour_day(now, previous) && is_same_weekday(now, previous))
+//                    return false;
+//                return is_trigger_hour(schedule) && is_trigger_weekday(schedule);
+//                //triggered at given hours, week day and month
+//            } else if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() > 0) {
+//                if (Aware.DEBUG)
+//                    Log.d(Aware.TAG, "Checking trigger at given hour, weekday and month");
+//                if (previous != null && is_same_hour_day(now, previous) && is_same_weekday(now, previous) && is_same_month(now, previous))
+//                    return false;
+//                return is_trigger_hour(schedule) && is_trigger_weekday(schedule) && is_trigger_month(schedule);
+//                //triggered at given weekday, regardless of time or month
+//            } else if (schedule.getHours().length() == 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() == 0) {
+//                if (Aware.DEBUG)
+//                    Log.d(Aware.TAG, "Checking trigger at given weekday, regardless of hour or month");
+//                if (previous != null && is_same_weekday(now, previous)) return false;
+//                return is_trigger_weekday(schedule);
+//                //triggered at given weekday and month
+//            } else if (schedule.getHours().length() == 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() > 0) {
+//                if (Aware.DEBUG) Log.d(Aware.TAG, "Checking trigger at given weekday, and month");
+//                if (previous != null && is_same_weekday(now, previous) && is_same_month(now, previous))
+//                    return false;
+//                return is_trigger_weekday(schedule) && is_trigger_month(schedule);
+//                //triggered at given month
+//            } else if (schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() > 0) {
+//                if (Aware.DEBUG) Log.d(Aware.TAG, "Checking trigger at given month");
+//                if (previous != null && is_same_month(now, previous)) return false;
+//                return is_trigger_month(schedule);
+//                //Triggered at given hour and months
+//            } else if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() > 0) {
+//                if (Aware.DEBUG) Log.d(Aware.TAG, "Checking trigger at given hour and month");
+//                if (previous != null && is_same_hour_day(now, previous) && is_same_month(now, previous))
+//                    return false;
+//                return is_trigger_hour(schedule) && is_trigger_month(schedule);
+//            }
         } catch (JSONException e) {
             e.printStackTrace();
         }
