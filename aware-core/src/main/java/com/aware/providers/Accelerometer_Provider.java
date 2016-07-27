@@ -111,7 +111,8 @@ public class Accelerometer_Provider extends ContentProvider {
 					+ Accelerometer_Sensor.RESOLUTION + " real default 0,"
 					+ Accelerometer_Sensor.TYPE + " text default '',"
 					+ Accelerometer_Sensor.VENDOR + " text default '',"
-					+ Accelerometer_Sensor.VERSION + " text default ''",
+					+ Accelerometer_Sensor.VERSION + " text default '',"
+					+ "UNIQUE(" + Accelerometer_Sensor.DEVICE_ID + ")",
 
 			// accelerometer data
 			Accelerometer_Data._ID + " integer primary key autoincrement,"

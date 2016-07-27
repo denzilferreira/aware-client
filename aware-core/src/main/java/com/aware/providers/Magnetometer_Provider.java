@@ -115,7 +115,8 @@ public class Magnetometer_Provider extends ContentProvider {
 					+ Magnetometer_Sensor.RESOLUTION + " real default 0,"
 					+ Magnetometer_Sensor.TYPE + " text default '',"
 					+ Magnetometer_Sensor.VENDOR + " text default '',"
-					+ Magnetometer_Sensor.VERSION + " text default ''",
+					+ Magnetometer_Sensor.VERSION + " text default '',"
+					+ "UNIQUE(" + Magnetometer_Sensor.DEVICE_ID + ")",
 			// sensor data
 			Magnetometer_Data._ID + " integer primary key autoincrement,"
 					+ Magnetometer_Data.TIMESTAMP + " real default 0,"

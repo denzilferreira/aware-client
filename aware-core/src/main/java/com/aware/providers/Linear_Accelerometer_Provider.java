@@ -117,7 +117,8 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
 					+ Linear_Accelerometer_Sensor.RESOLUTION + " real default 0,"
 					+ Linear_Accelerometer_Sensor.TYPE + " text default '',"
 					+ Linear_Accelerometer_Sensor.VENDOR + " text default '',"
-					+ Linear_Accelerometer_Sensor.VERSION + " text default ''",
+					+ Linear_Accelerometer_Sensor.VERSION + " text default '',"
+					+ "UNIQUE(" + Linear_Accelerometer_Sensor.DEVICE_ID + ")",
 			// sensor data
 			Linear_Accelerometer_Data._ID
 					+ " integer primary key autoincrement,"

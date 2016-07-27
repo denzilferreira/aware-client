@@ -115,7 +115,8 @@ public class Rotation_Provider extends ContentProvider {
 					+ Rotation_Sensor.RESOLUTION + " real default 0,"
 					+ Rotation_Sensor.TYPE + " text default '',"
 					+ Rotation_Sensor.VENDOR + " text default '',"
-					+ Rotation_Sensor.VERSION + " text default ''",
+					+ Rotation_Sensor.VERSION + " text default '',"
+					+ "UNIQUE(" + Rotation_Sensor.DEVICE_ID + ")",
 			// sensor data
 			Rotation_Data._ID + " integer primary key autoincrement,"
 					+ Rotation_Data.TIMESTAMP + " real default 0,"

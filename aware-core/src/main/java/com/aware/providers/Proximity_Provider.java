@@ -112,7 +112,8 @@ public class Proximity_Provider extends ContentProvider {
 					+ Proximity_Sensor.RESOLUTION + " real default 0,"
 					+ Proximity_Sensor.TYPE + " text default '',"
 					+ Proximity_Sensor.VENDOR + " text default '',"
-					+ Proximity_Sensor.VERSION + " text default ''",
+					+ Proximity_Sensor.VERSION + " text default '',"
+					+ "UNIQUE(" + Proximity_Sensor.DEVICE_ID + ")",
 			// sensor data
 			Proximity_Data._ID + " integer primary key autoincrement,"
 					+ Proximity_Data.TIMESTAMP + " real default 0,"

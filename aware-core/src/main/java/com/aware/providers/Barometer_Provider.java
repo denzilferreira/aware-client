@@ -111,7 +111,8 @@ public class Barometer_Provider extends ContentProvider {
 					+ Barometer_Sensor.RESOLUTION + " real default 0,"
 					+ Barometer_Sensor.TYPE + " text default '',"
 					+ Barometer_Sensor.VENDOR + " text default '',"
-					+ Barometer_Sensor.VERSION + " text default ''",
+					+ Barometer_Sensor.VERSION + " text default '',"
+					+ "UNIQUE(" + Barometer_Sensor.DEVICE_ID + ")",
 			// sensor data
 			Barometer_Data._ID + " integer primary key autoincrement,"
 					+ Barometer_Data.TIMESTAMP + " real default 0,"

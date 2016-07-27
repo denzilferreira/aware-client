@@ -155,10 +155,10 @@ public class Https {
                 page_content+=line;
             }
 
-            if (Aware.DEBUG) {
+//            if (Aware.DEBUG) {
 //                Log.d(TAG, "Request: POST, URL: " + url + "\nData:" + builder.build().getEncodedQuery());
 //                Log.i(TAG,"Answer:" + page_content );
-            }
+//            }
 
             return page_content;
 		}catch (UnsupportedEncodingException e) {

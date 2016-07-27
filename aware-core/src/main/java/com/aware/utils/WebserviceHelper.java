@@ -95,9 +95,12 @@ public class WebserviceHelper extends IntentService {
         //Fixed: not using webservices
         if (WEBSERVER.length() == 0) return;
 
-        int batch_size = 10000; //default for phones
+        /**
+         * Max number of rows to place on the HTTP(s) post
+         */
+        int MAX_POST_SIZE = 10000; //recommended for phones. This loads ~ 1-2MB data worth for HTTP POST as JSON, depending on the fields size (e.g. blobs)
         if (Aware.is_watch(getApplicationContext())) {
-            batch_size = 100; //default for watch (we have a limit of 100KB of data packet size (Message API restrictions)
+            MAX_POST_SIZE = 100; //default for watch (we have a limit of 100KB of data packet size (Message API restrictions)
         }
 
         String DEVICE_ID = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
@@ -138,9 +141,6 @@ public class WebserviceHelper extends IntentService {
                     return;
                 }
             }
-
-            if (Aware.DEBUG) Log.d(Aware.TAG, "Synching: " + DATABASE_TABLE);
-            notifyUser("Synching " + DATABASE_TABLE, false, true);
 
             //Check first if we have database table remotely, otherwise create it!
             Hashtable<String, String> fields = new Hashtable<>();
@@ -194,176 +194,179 @@ public class WebserviceHelper extends IntentService {
                     if (DATABASE_TABLE.equalsIgnoreCase("aware_device")) study_condition = "";
 
                     JSONArray remoteData = new JSONArray(latest);
-                    Cursor context_data;
+
+                    int TOTAL_RECORDS = 0;
                     if (remoteData.length() == 0) {
                         if (exists(columnsStr, "double_end_timestamp")) {
-                            context_data = getContentResolver().query(CONTENT_URI, null, "double_end_timestamp != 0" + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "double_end_timestamp != 0" + study_condition, null, "timestamp ASC");
+                            if (counter != null && counter.moveToFirst()) {
+                                TOTAL_RECORDS = counter.getInt(0);
+                                counter.close();
+                            }
                         } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
-                            context_data = getContentResolver().query(CONTENT_URI, null, "double_esm_user_answer_timestamp != 0" + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "double_esm_user_answer_timestamp != 0" + study_condition, null, "timestamp ASC");
+                            if (counter != null && counter.moveToFirst()) {
+                                TOTAL_RECORDS = counter.getInt(0);
+                                counter.close();
+                            }
                         } else {
-                            context_data = getContentResolver().query(CONTENT_URI, null, "1" + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "1" + study_condition, null, "timestamp ASC");
+                            if (counter != null && counter.moveToFirst()) {
+                                TOTAL_RECORDS = counter.getInt(0);
+                                counter.close();
+                            }
                         }
                     } else {
                         long last;
                         if (exists(columnsStr, "double_end_timestamp")) {
                             last = remoteData.getJSONObject(0).getLong("double_end_timestamp");
-                            context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + " AND double_end_timestamp != 0" + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + " AND double_end_timestamp != 0" + study_condition, null, "timestamp ASC");
+                            if (counter != null && counter.moveToFirst()) {
+                                TOTAL_RECORDS = counter.getInt(0);
+                                counter.close();
+                            }
                         } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
                             last = remoteData.getJSONObject(0).getLong("double_esm_user_answer_timestamp");
-                            context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + " AND double_esm_user_answer_timestamp != 0" + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + " AND double_esm_user_answer_timestamp != 0" + study_condition, null, "timestamp ASC");
+                            if (counter != null && counter.moveToFirst()) {
+                                TOTAL_RECORDS = counter.getInt(0);
+                                counter.close();
+                            }
                         } else {
                             last = remoteData.getJSONObject(0).getLong("timestamp");
-                            context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + study_condition, null, "timestamp ASC");
+                            if (counter != null && counter.moveToFirst()) {
+                                TOTAL_RECORDS = counter.getInt(0);
+                                counter.close();
+                            }
                         }
                     }
 
-                    boolean interrupted = false;
+                    if (TOTAL_RECORDS == 0) {
+                        return; //nothing to upload, no need to do anything now.
+                    }
 
-                    JSONArray rows = new JSONArray();
-                    if (context_data != null && context_data.moveToFirst()) {
+                    if (DEBUG)
+                        Log.d(Aware.TAG, "Syncing " + TOTAL_RECORDS + " records from " + DATABASE_TABLE);
 
-                        notifyUser("Syncing " + context_data.getCount() + " from " + DATABASE_TABLE, false, true);
+                    notifyUser("Syncing " + TOTAL_RECORDS + " from " + DATABASE_TABLE, false, true);
 
-                        if (DEBUG)
-                            Log.d(Aware.TAG, "Syncing " + context_data.getCount() + " records from " + DATABASE_TABLE);
+                    long start = System.currentTimeMillis();
 
-                        long start = System.currentTimeMillis();
-
-                        do {
-                            JSONObject row = new JSONObject();
-                            String[] columns = context_data.getColumnNames();
-                            for (String c_name : columns) {
-                                if (c_name.equals("_id")) continue; //Skip local database ID
-                                if (c_name.equals("timestamp") || c_name.contains("double")) {
-                                    row.put(c_name, context_data.getDouble(context_data.getColumnIndex(c_name)));
-                                } else if (c_name.contains("float")) {
-                                    row.put(c_name, context_data.getFloat(context_data.getColumnIndex(c_name)));
-                                } else if (c_name.contains("long")) {
-                                    row.put(c_name, context_data.getLong(context_data.getColumnIndex(c_name)));
-                                } else if (c_name.contains("blob")) {
-                                    row.put(c_name, context_data.getBlob(context_data.getColumnIndex(c_name)));
-                                } else if (c_name.contains("integer")) {
-                                    row.put(c_name, context_data.getInt(context_data.getColumnIndex(c_name)));
-                                } else {
-                                    row.put(c_name, context_data.getString(context_data.getColumnIndex(c_name)));
-                                }
+                    int UPLOADED = 0;
+                    while (UPLOADED < TOTAL_RECORDS) { //paginate cursor so it does not explode the phone's memory
+                        Cursor context_data;
+                        if (remoteData.length() == 0) {
+                            if (exists(columnsStr, "double_end_timestamp")) {
+                                context_data = getContentResolver().query(CONTENT_URI, null, "double_end_timestamp != 0" + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
+                            } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
+                                context_data = getContentResolver().query(CONTENT_URI, null, "double_esm_user_answer_timestamp != 0" + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
+                            } else {
+                                context_data = getContentResolver().query(CONTENT_URI, null, "1" + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
                             }
-                            rows.put(row);
-
-                            if (rows.length() == batch_size) { //loaded enough rows into memory, try to upload
-                                request = new Hashtable<>();
-                                request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
-                                request.put("data", rows.toString());
-
-                                String success;
-                                if (protocol.equals("https")) {
-                                    try {
-                                        success = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
-                                    } catch (FileNotFoundException e) {
-                                        success = null;
-                                    }
-                                } else {
-                                    success = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
-                                }
-
-                                //Something went wrong, e.g., server is down, lost internet, etc.
-                                if (success == null) {
-                                    interrupted = true;
-                                    break;
-                                } else {
-                                    ArrayList<String> highFrequencySensors = new ArrayList<>();
-                                    highFrequencySensors.add("accelerometer");
-                                    highFrequencySensors.add("gyroscope");
-                                    highFrequencySensors.add("barometer");
-                                    highFrequencySensors.add("gravity");
-                                    highFrequencySensors.add("light");
-                                    highFrequencySensors.add("linear_accelerometer");
-                                    highFrequencySensors.add("magnetometer");
-                                    highFrequencySensors.add("rotation");
-                                    highFrequencySensors.add("temperature");
-
-                                    //Clean the local database, now that it is uploaded to the server, if required
-                                    if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0 && Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA)) == 4
-                                            && highFrequencySensors.contains(DATABASE_TABLE)) {
-
-                                        long last = rows.getJSONObject(rows.length()).getLong("timestamp");
-
-                                        if (exists(columnsStr, "double_end_timestamp")) {
-                                            getContentResolver().delete(CONTENT_URI, "double_end_timestamp <= " + last, null);
-                                        } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
-                                            getContentResolver().delete(CONTENT_URI, "double_esm_user_answer_timestamp <= " + last, null);
-                                        } else {
-                                            getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null);
-                                        }
-
-                                        if (DEBUG)
-                                            Log.d(Aware.TAG, "Deleted local old records for " + DATABASE_TABLE);
-
-                                        notifyUser("Cleaned old records from " + DATABASE_TABLE, false, true);
-                                    }
-
-                                    rows = new JSONArray();
-                                    interrupted = false;
-                                }
+                        } else {
+                            long last;
+                            if (exists(columnsStr, "double_end_timestamp")) {
+                                last = remoteData.getJSONObject(0).getLong("double_end_timestamp");
+                                context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + " AND double_end_timestamp != 0" + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
+                            } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
+                                last = remoteData.getJSONObject(0).getLong("double_esm_user_answer_timestamp");
+                                context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + " AND double_esm_user_answer_timestamp != 0" + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
+                            } else {
+                                last = remoteData.getJSONObject(0).getLong("timestamp");
+                                context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
                             }
-                        } while (context_data.moveToNext());
+                        }
 
-                        if (!interrupted) {
-                            if (rows.length() > 0) {
-                                request = new Hashtable<>();
-                                request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
-                                request.put("data", rows.toString());
-
-                                String success;
-                                if (protocol.equals("https")) {
-                                    try {
-                                        success = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
-                                    } catch (FileNotFoundException e) {
-                                        success = null;
+                        JSONArray rows = new JSONArray();
+                        if (context_data != null && context_data.moveToFirst()) {
+                            do {
+                                JSONObject row = new JSONObject();
+                                String[] columns = context_data.getColumnNames();
+                                for (String c_name : columns) {
+                                    if (c_name.equals("_id")) continue; //Skip local database ID
+                                    if (c_name.equals("timestamp") || c_name.contains("double")) {
+                                        row.put(c_name, context_data.getDouble(context_data.getColumnIndex(c_name)));
+                                    } else if (c_name.contains("float")) {
+                                        row.put(c_name, context_data.getFloat(context_data.getColumnIndex(c_name)));
+                                    } else if (c_name.contains("long")) {
+                                        row.put(c_name, context_data.getLong(context_data.getColumnIndex(c_name)));
+                                    } else if (c_name.contains("blob")) {
+                                        row.put(c_name, context_data.getBlob(context_data.getColumnIndex(c_name)));
+                                    } else if (c_name.contains("integer")) {
+                                        row.put(c_name, context_data.getInt(context_data.getColumnIndex(c_name)));
+                                    } else {
+                                        row.put(c_name, context_data.getString(context_data.getColumnIndex(c_name)));
                                     }
-                                } else {
-                                    success = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                                 }
+                                rows.put(row);
+                            } while (context_data.moveToNext());
 
-                                if (success != null) {
-                                    ArrayList<String> highFrequencySensors = new ArrayList<>();
-                                    highFrequencySensors.add("accelerometer");
-                                    highFrequencySensors.add("gyroscope");
-                                    highFrequencySensors.add("barometer");
-                                    highFrequencySensors.add("gravity");
-                                    highFrequencySensors.add("light");
-                                    highFrequencySensors.add("linear_accelerometer");
-                                    highFrequencySensors.add("magnetometer");
-                                    highFrequencySensors.add("rotation");
-                                    highFrequencySensors.add("temperature");
+                            context_data.close(); //clear phone's memory immediately
 
-                                    //Clean the local database, now that it is uploaded to the server, if required
-                                    if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0 && Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA)) == 4
-                                            && highFrequencySensors.contains(DATABASE_TABLE)) {
+                            request = new Hashtable<>();
+                            request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
+                            request.put("data", rows.toString());
 
-                                        long last = rows.getJSONObject(rows.length()).getLong("timestamp");
+                            String success;
+                            if (protocol.equals("https")) {
+                                try {
+                                    success = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+                                    if (DEBUG)
+                                        Log.d(Aware.TAG, "Sync " + DATABASE_TABLE + " OK");
+                                } catch (FileNotFoundException e) {
+                                    success = null;
+                                }
+                            } else {
+                                success = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+                                if (DEBUG)
+                                    Log.d(Aware.TAG, "Sync " + DATABASE_TABLE + " OK");
+                            }
 
-                                        if (exists(columnsStr, "double_end_timestamp")) {
-                                            getContentResolver().delete(CONTENT_URI, "double_end_timestamp <= " + last, null);
-                                        } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
-                                            getContentResolver().delete(CONTENT_URI, "double_esm_user_answer_timestamp <= " + last, null);
-                                        } else {
-                                            getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null);
-                                        }
+                            //Something went wrong, e.g., server is down, lost internet, etc.
+                            if (success == null) {
+                                if (DEBUG)
+                                    Log.d(Aware.TAG, DATABASE_TABLE + " FAILED to upload. Server down?");
+                                break;
+                            } else { //perform database space maintenance
+                                ArrayList<String> highFrequencySensors = new ArrayList<>();
+                                highFrequencySensors.add("accelerometer");
+                                highFrequencySensors.add("gyroscope");
+                                highFrequencySensors.add("barometer");
+                                highFrequencySensors.add("gravity");
+                                highFrequencySensors.add("light");
+                                highFrequencySensors.add("linear_accelerometer");
+                                highFrequencySensors.add("magnetometer");
+                                highFrequencySensors.add("rotation");
+                                highFrequencySensors.add("temperature");
 
-                                        if (DEBUG)
-                                            Log.d(Aware.TAG, "Deleted local old records for " + DATABASE_TABLE);
+                                //Clean the local database, now that it is uploaded to the server, if required
+                                if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0 && Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA)) == 4
+                                        && highFrequencySensors.contains(DATABASE_TABLE)) {
 
-                                        notifyUser("Cleaned old records from " + DATABASE_TABLE, false, true);
+                                    long last = rows.getJSONObject(rows.length()).getLong("timestamp");
+
+                                    if (exists(columnsStr, "double_end_timestamp")) {
+                                        getContentResolver().delete(CONTENT_URI, "double_end_timestamp <= " + last, null);
+                                    } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
+                                        getContentResolver().delete(CONTENT_URI, "double_esm_user_answer_timestamp <= " + last, null);
+                                    } else {
+                                        getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null); //high-frequency sensors are timestamp-based
                                     }
+
+                                    if (DEBUG)
+                                        Log.d(Aware.TAG, "Deleted local old records for " + DATABASE_TABLE);
+
+                                    notifyUser("Cleaned old records from " + DATABASE_TABLE, false, true);
                                 }
                             }
                         }
 
-                        if (DEBUG)
-                            Log.d(Aware.TAG, DATABASE_TABLE + " sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis() - start) / 1000));
+                        UPLOADED += MAX_POST_SIZE;
                     }
-                    if (context_data != null && !context_data.isClosed()) context_data.close();
+
+                    if (DEBUG)
+                        Log.d(Aware.TAG, DATABASE_TABLE + " sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis() - start) / 1000));
 
                 } catch (JSONException e) {
                     e.printStackTrace();

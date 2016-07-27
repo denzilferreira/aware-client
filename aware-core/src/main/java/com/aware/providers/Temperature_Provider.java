@@ -113,7 +113,8 @@ public class Temperature_Provider extends ContentProvider {
 					+ Temperature_Sensor.RESOLUTION + " real default 0,"
 					+ Temperature_Sensor.TYPE + " text default '',"
 					+ Temperature_Sensor.VENDOR + " text default '',"
-					+ Temperature_Sensor.VERSION + " text default ''",
+					+ Temperature_Sensor.VERSION + " text default '',"
+					+ "UNIQUE(" + Temperature_Sensor.DEVICE_ID + ")",
 			// sensor data
 			Temperature_Data._ID + " integer primary key autoincrement,"
 					+ Temperature_Data.TIMESTAMP + " real default 0,"

@@ -110,7 +110,8 @@ public class Light_Provider extends ContentProvider {
 					+ Light_Sensor.RESOLUTION + " real default 0,"
 					+ Light_Sensor.TYPE + " text default '',"
 					+ Light_Sensor.VENDOR + " text default '',"
-					+ Light_Sensor.VERSION + " text default ''",
+					+ Light_Sensor.VERSION + " text default '',"
+					+ "UNIQUE(" + Light_Sensor.DEVICE_ID + ")",
 			// sensor data
 			Light_Data._ID + " integer primary key autoincrement,"
 					+ Light_Data.TIMESTAMP + " real default 0,"

@@ -109,7 +109,8 @@ public class Gyroscope_Provider extends ContentProvider {
 					+ Gyroscope_Sensor.RESOLUTION + " real default 0,"
 					+ Gyroscope_Sensor.TYPE + " text default '',"
 					+ Gyroscope_Sensor.VENDOR + " text default '',"
-					+ Gyroscope_Sensor.VERSION + " text default ''",
+					+ Gyroscope_Sensor.VERSION + " text default '',"
+					+ "UNIQUE(" + Gyroscope_Sensor.DEVICE_ID + ")",
 			// gyroscope data
 			Gyroscope_Data._ID + " integer primary key autoincrement,"
 					+ Gyroscope_Data.TIMESTAMP + " real default 0,"

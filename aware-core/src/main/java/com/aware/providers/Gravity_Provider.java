@@ -114,7 +114,8 @@ public class Gravity_Provider extends ContentProvider {
 					+ Gravity_Sensor.RESOLUTION + " real default 0,"
 					+ Gravity_Sensor.TYPE + " text default '',"
 					+ Gravity_Sensor.VENDOR + " text default '',"
-					+ Gravity_Sensor.VERSION + " text default ''",
+					+ Gravity_Sensor.VERSION + " text default '',"
+					+ "UNIQUE(" + Gravity_Sensor.DEVICE_ID + ")",
 			// sensor data
 			Gravity_Data._ID + " integer primary key autoincrement,"
 					+ Gravity_Data.TIMESTAMP + " real default 0,"
