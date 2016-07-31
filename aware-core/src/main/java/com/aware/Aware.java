@@ -1258,6 +1258,10 @@ public class Aware extends Service {
                     return;
                 }
 
+                //clean-up settings & schedules
+                context.getContentResolver().delete(Aware_Settings.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
+                context.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
+
                 //Deleting
                 context.getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
                 if (Aware.DEBUG) Log.d(TAG, "AWARE plugin removed:" + packageName);
