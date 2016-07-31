@@ -101,8 +101,8 @@ public class Aware_Sensor extends Service {
 
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
-//        aware = new Intent(getApplicationContext(), Aware.class);
-//        startService(aware);
+        aware = new Intent(getApplicationContext(), Aware.class);
+        startService(aware);
 
         if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
             Intent study_SSL = new Intent(this, SSLManager.class);
