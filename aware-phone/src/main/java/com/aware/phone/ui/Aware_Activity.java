@@ -105,6 +105,10 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
         NavigationAdapter nav_adapter = new NavigationAdapter(getApplicationContext(), options);
         if (navigationList != null)
             navigationList.setAdapter(nav_adapter);
+
+        if (Aware.isStudy(this)) {
+            navigationToggle.setDrawerIndicatorEnabled(false);
+        }
     }
 
     @Override
