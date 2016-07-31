@@ -108,6 +108,7 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
 
         if (Aware.isStudy(this)) {
             navigationToggle.setDrawerIndicatorEnabled(false);
+            navigationDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         }
     }
 
