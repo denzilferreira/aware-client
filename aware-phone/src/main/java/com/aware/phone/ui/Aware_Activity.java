@@ -121,7 +121,7 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                 item.setVisible(false);
             if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_team)) && Aware.is_watch(this))
                 item.setVisible(false);
-            if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_sync)) && !Aware.isStudy(this))
+            if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_sync)) && !Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true"))
                 item.setVisible(false);
         }
         return true;
