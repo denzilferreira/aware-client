@@ -391,7 +391,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         try {
             MQTT_MESSAGES_PERSISTENCE.open(String.valueOf(Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).hashCode()), MQTT_URL);
         } catch (MqttPersistenceException e) {
-            e.printStackTrace();
+            //This is OK. The client is primarily connected and created the persistence file and is using it. Plugins use the same file, thus this exception is thrown.
         }
 
         MqttConnectOptions MQTT_OPTIONS = new MqttConnectOptions();

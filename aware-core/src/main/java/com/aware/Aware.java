@@ -1134,6 +1134,7 @@ public class Aware extends Service {
 
         //Remove all settings
         c.getContentResolver().delete(Aware_Settings.CONTENT_URI, null, null);
+        c.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, null);
 
         //Read default client settings
         SharedPreferences prefs = c.getSharedPreferences(c.getPackageName(), Context.MODE_PRIVATE);
@@ -1169,9 +1170,6 @@ public class Aware extends Service {
             }
             if (Aware.DEBUG) Log.w(TAG, "AWARE plugins disabled...");
         }
-
-        //Remove all schedules
-        c.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, null);
 
         Intent applyNew = new Intent(Aware.ACTION_AWARE_REFRESH);
         c.sendBroadcast(applyNew);
