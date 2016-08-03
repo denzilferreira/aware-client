@@ -541,12 +541,12 @@ public class Scheduler extends Service {
             }
 
             // This is a scheduled task with a set timestamp.
-            // We trigger it within a 10 minute interval (before & after). The framework checks this at inexact 5 minutes
+            // We trigger it within a 5 minute interval (before & after). The framework checks this at inexact 5 minutes
             if (schedule.getTimer() != -1 && last_triggered == 0) { //not been triggered yet
                 if (Aware.DEBUG)
                     Log.d(Aware.TAG, "Checking trigger set for a specific timestamp: " + schedule.getTimer());
-                if ((now.getTimeInMillis() - schedule.getTimer()) < 10 * 60 * 1000)
-                    return true; //trigger within a 10-minute window
+                if ( Math.abs(now.getTimeInMillis()-schedule.getTimer()) < 5 * 60 * 1000)
+                    return true; //trigger within a 5-minute window
             }
 
             Calendar previous = null;
