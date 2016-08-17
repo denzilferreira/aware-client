@@ -275,6 +275,20 @@ public class Aware extends Service {
 //            startActivity(intent);
 //        }
 
+        // Set sync schedule to Aware server every day around midnight
+        Aware.setSetting(this, Aware_Preferences.WEBSERVICE_WIFI_ONLY, true);
+
+        Scheduler.Schedule schedule = new Scheduler.Schedule("serverSync");
+        try {
+            schedule.addContext(Battery.ACTION_AWARE_BATTERY_CHARGING);
+            schedule.addHour(0).addHour(1);
+            schedule.setActionType(Scheduler.ACTION_TYPE_BROADCAST);
+            schedule.setActionClass(Aware.ACTION_AWARE_SYNC_DATA);
+            Scheduler.saveSchedule(this, schedule);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            if (Aware.DEBUG) Log.d(TAG, "Sync schedule failed: " + e.getMessage());
+        }
 
         if (Aware.DEBUG) Log.d(TAG, "AWARE framework is created!");
     }
