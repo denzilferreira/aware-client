@@ -57,6 +57,8 @@ public class ESMFactory {
                 return new ESM_Radio().rebuild(esm).setID(_id);
             case ESM.TYPE_ESM_SCALE:
                 return new ESM_Scale().rebuild(esm).setID(_id);
+            case ESM.TYPE_ESM_NUMBER:
+                return new ESM_Number().rebuild(esm).setID(_id);
             default:
                 return null;
         }

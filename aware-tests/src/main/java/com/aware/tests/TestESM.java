@@ -11,6 +11,7 @@ import com.aware.ui.esms.ESM_Likert;
 import com.aware.ui.esms.ESM_QuickAnswer;
 import com.aware.ui.esms.ESM_Radio;
 import com.aware.ui.esms.ESM_Scale;
+import com.aware.ui.esms.ESM_Number;
 
 import org.json.JSONException;
 
@@ -63,12 +64,18 @@ public class TestESM implements AwareTest {
                     .setTitle("Question 4")
                     .setInstructions("Likert ESM")
                     .setTrigger("test")
-                    .setSubmitButton("Finish");
+                    .setSubmitButton("Next");
+
+            ESM_Number q5 = new ESM_Number();
+            q5.setTitle("Question 5")
+                    .setSubmitButton("Finish")
+                    .setInstructions("This is question 5");
 
             factory.addESM(q1);
             factory.addESM(q2);
             factory.addESM(q3);
             factory.addESM(q4);
+            factory.addESM(q5);
 
             Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
             queue.putExtra(ESM.EXTRA_ESM, factory.build());
