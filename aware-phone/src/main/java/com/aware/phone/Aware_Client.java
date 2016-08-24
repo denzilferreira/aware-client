@@ -2,10 +2,8 @@
 package com.aware.phone;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.TaskStackBuilder;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -25,13 +23,9 @@ import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
-import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
-import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -64,7 +58,7 @@ public class Aware_Client extends Aware_Activity {
     private static SensorManager mSensorMgr;
     private static Context awareContext;
     private static PreferenceActivity clientUI;
-    public static ArrayList<String> missing_permissions = new ArrayList<>();
+    public static ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
 
     private Aware_Activity.Async_StudyData studyCheck;
 
@@ -98,38 +92,6 @@ public class Aware_Client extends Aware_Activity {
         return dialog;
     }
 
-    private void defaultSettings() {
-        final SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-        if (!prefs.contains("intro_done")) {
-            final ViewGroup parent = (ViewGroup) findViewById(android.R.id.content);
-            final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-            LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-
-            final View help_qrcode = inflater.inflate(R.layout.help_qrcode, null);
-            final View help_menu = inflater.inflate(R.layout.help_menu, null);
-            parent.addView(help_qrcode, params);
-            help_qrcode.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    parent.removeView(help_qrcode);
-                    parent.addView(help_menu, params);
-                }
-            });
-
-            help_menu.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    parent.removeView(help_menu);
-                    prefs.edit().putBoolean("intro_done", true).commit();
-                }
-            });
-        }
-
-        developerOptions();
-        servicesOptions();
-        logging();
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -138,45 +100,7 @@ public class Aware_Client extends Aware_Activity {
         awareContext = getApplicationContext();
         clientUI = this;
 
-        int storage = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        int camera = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.CAMERA);
-        int phone_state = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.READ_PHONE_STATE);
-        int phone_log = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.READ_CALL_LOG);
-        int contacts = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.READ_CONTACTS);
-        int sms = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.READ_SMS);
-        int location_network = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.ACCESS_COARSE_LOCATION);
-        int location_gps = ContextCompat.checkSelfPermission(Aware_Client.this, Manifest.permission.ACCESS_FINE_LOCATION);
-
-        if (storage != PackageManager.PERMISSION_GRANTED) {
-            missing_permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        }
-        if (camera != PackageManager.PERMISSION_GRANTED) {
-            missing_permissions.add(Manifest.permission.CAMERA);
-        }
-        if (phone_state != PackageManager.PERMISSION_GRANTED) {
-            missing_permissions.add(Manifest.permission.READ_PHONE_STATE);
-        }
-        if (phone_log != PackageManager.PERMISSION_GRANTED) {
-            missing_permissions.add(Manifest.permission.READ_CALL_LOG);
-        }
-        if (contacts != PackageManager.PERMISSION_GRANTED) {
-            missing_permissions.add(Manifest.permission.READ_CONTACTS);
-        }
-        if (sms != PackageManager.PERMISSION_GRANTED) {
-            missing_permissions.add(Manifest.permission.READ_SMS);
-        }
-        if (location_network != PackageManager.PERMISSION_GRANTED) {
-            missing_permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
-        }
-        if (location_gps != PackageManager.PERMISSION_GRANTED) {
-            missing_permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
-        }
-
-        if (missing_permissions.size() > 0) {
-            Intent permissionsHandler = new Intent(this, PermissionsHandler.class);
-            permissionsHandler.putStringArrayListExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, missing_permissions);
-            startActivityForResult(permissionsHandler, PermissionsHandler.RC_PERMISSIONS);
-        }
+        REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
         addPreferencesFromResource(R.xml.aware_preferences);
         setContentView(R.layout.aware_ui);
@@ -197,11 +121,18 @@ public class Aware_Client extends Aware_Activity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onStart() {
+        super.onStart();
 
-        if (missing_permissions.size() == 0) {
+        boolean permissions_ok = true;
+        for (String p : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+                permissions_ok = false;
+                break;
+            }
+        }
 
+        if (permissions_ok) {
             //Start AWARE framework background service
             Intent startAware = new Intent(awareContext, Aware.class);
             startService(startAware);
@@ -243,7 +174,45 @@ public class Aware_Client extends Aware_Activity {
             }
 
             defaultSettings();
+
+        } else {
+            Intent permissionsHandler = new Intent(this, PermissionsHandler.class);
+            permissionsHandler.putStringArrayListExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
+            startActivityForResult(permissionsHandler, PermissionsHandler.RC_PERMISSIONS);
+            finish();
         }
+    }
+
+    private void defaultSettings() {
+        final SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+        if (!prefs.contains("intro_done")) {
+            final ViewGroup parent = (ViewGroup) findViewById(android.R.id.content);
+            final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+            LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+
+            final View help_qrcode = inflater.inflate(R.layout.help_qrcode, null);
+            final View help_menu = inflater.inflate(R.layout.help_menu, null);
+            parent.addView(help_qrcode, params);
+            help_qrcode.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    parent.removeView(help_qrcode);
+                    parent.addView(help_menu, params);
+                }
+            });
+
+            help_menu.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    parent.removeView(help_menu);
+                    prefs.edit().putBoolean("intro_done", true).commit();
+                }
+            });
+        }
+
+        developerOptions();
+        servicesOptions();
+        logging();
     }
 
     /**

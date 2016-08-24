@@ -67,11 +67,7 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
         }
         if (requestCode == PermissionsHandler.RC_PERMISSIONS) {
             if (resultCode == Activity.RESULT_OK) {
-
-                Aware_Client.missing_permissions.clear();
-
                 finish();
-
                 Intent preferences = new Intent(this, Aware_Client.class);
                 startActivity(preferences);
             }
@@ -216,11 +212,6 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
 
             return row;
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 
     public class Async_StudyData extends AsyncTask<String, Void, JSONObject> {

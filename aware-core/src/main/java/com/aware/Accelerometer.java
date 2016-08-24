@@ -6,6 +6,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
@@ -20,11 +21,13 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.aware.providers.Accelerometer_Provider;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Data;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Sensor;
+import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 
 import java.util.ArrayList;
@@ -34,28 +37,21 @@ import java.util.List;
  * AWARE Accelerometer module
  * - Accelerometer raw data
  * - Accelerometer sensor information
- * @author df
  *
+ * @author df
  */
 public class Accelerometer extends Aware_Sensor implements SensorEventListener {
-    
-    /**
-     * Logging tag (default = "AWARE::Accelerometer")
-     */
+
     public static String TAG = "AWARE::Accelerometer";
-    
-    /**
-     * Sensor update frequency in microseconds, default 200000
-     */
-    private static int SAMPLING_RATE = 200000;
 
     private static SensorManager mSensorManager;
     private static Sensor mAccelerometer;
     private static HandlerThread sensorThread = null;
     private static Handler sensorHandler = null;
+    private static PowerManager powerManager;
     private static PowerManager.WakeLock wakeLock = null;
     private static String LABEL = "";
-    
+
     /**
      * Broadcasted event: new accelerometer values
      * extra: context (ContentValues)
@@ -71,10 +67,11 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     private List<ContentValues> data_values = new ArrayList<ContentValues>();
 
     private static DataLabel dataLabeler = new DataLabel();
+
     public static class DataLabel extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if( intent.getAction().equals(ACTION_AWARE_ACCELEROMETER_LABEL)) {
+            if (intent.getAction().equals(ACTION_AWARE_ACCELEROMETER_LABEL)) {
                 LABEL = intent.getStringExtra(EXTRA_LABEL);
             }
         }
@@ -96,14 +93,14 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         rowData.put(Accelerometer_Data.ACCURACY, event.accuracy);
         rowData.put(Accelerometer_Data.LABEL, LABEL);
 
-        if( data_values.size() < 250 ) {
+        if (data_values.size() < 250) {
             data_values.add(rowData);
 
             Intent accelData = new Intent(ACTION_AWARE_ACCELEROMETER);
             accelData.putExtra(EXTRA_DATA, rowData);
             sendBroadcast(accelData);
 
-            if( Aware.DEBUG ) Log.d(TAG, "Accelerometer: "+ rowData.toString());
+            if (Aware.DEBUG) Log.d(TAG, "Accelerometer: " + rowData.toString());
 
             return;
         }
@@ -112,13 +109,13 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         data_values.toArray(data_buffer);
 
         try {
-        	if( ! Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true") ) {
-        		new AsyncStore().execute(data_buffer);
-        	}
-        }catch( SQLiteException e ) {
-            if(Aware.DEBUG) Log.d(TAG,e.getMessage());
-        }catch( SQLException e ) {
-            if(Aware.DEBUG) Log.d(TAG,e.getMessage());
+            if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true")) {
+                new AsyncStore().execute(data_buffer);
+            }
+        } catch (SQLiteException e) {
+            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+        } catch (SQLException e) {
+            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
         }
         data_values.clear();
     }
@@ -136,25 +133,26 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
     /**
      * Calculates the sampling rate in Hz (i.e., how many samples did we collect in the past second)
+     *
      * @param context
      * @return hz
      */
     public static int getFrequency(Context context) {
         int hz = 0;
-        String[] columns = new String[]{ "count(*) as frequency", "datetime("+Accelerometer_Data.TIMESTAMP+"/1000, 'unixepoch','localtime') as sample_time" };
+        String[] columns = new String[]{"count(*) as frequency", "datetime(" + Accelerometer_Data.TIMESTAMP + "/1000, 'unixepoch','localtime') as sample_time"};
         Cursor qry = context.getContentResolver().query(Accelerometer_Data.CONTENT_URI, columns, "1) group by (sample_time", null, "sample_time DESC LIMIT 1 OFFSET 2");
-        if( qry != null && qry.moveToFirst() ) {
+        if (qry != null && qry.moveToFirst()) {
             hz = qry.getInt(0);
         }
-        if( qry != null && ! qry.isClosed() ) qry.close();
+        if (qry != null && !qry.isClosed()) qry.close();
         return hz;
     }
 
     private void saveAccelerometerDevice(Sensor acc) {
         Cursor accelInfo = getContentResolver().query(Accelerometer_Sensor.CONTENT_URI, null, null, null, null);
-        if( accelInfo == null || ! accelInfo.moveToFirst() ) {
+        if (accelInfo == null || !accelInfo.moveToFirst()) {
             ContentValues rowData = new ContentValues();
-            rowData.put(Accelerometer_Sensor.DEVICE_ID, Aware.getSetting(getApplicationContext(),Aware_Preferences.DEVICE_ID));
+            rowData.put(Accelerometer_Sensor.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
             rowData.put(Accelerometer_Sensor.TIMESTAMP, System.currentTimeMillis());
             rowData.put(Accelerometer_Sensor.MAXIMUM_RANGE, acc.getMaximumRange());
             rowData.put(Accelerometer_Sensor.MINIMUM_DELAY, acc.getMinDelay());
@@ -164,19 +162,19 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
             rowData.put(Accelerometer_Sensor.TYPE, acc.getType());
             rowData.put(Accelerometer_Sensor.VENDOR, acc.getVendor());
             rowData.put(Accelerometer_Sensor.VERSION, acc.getVersion());
-            
+
             try {
                 getContentResolver().insert(Accelerometer_Sensor.CONTENT_URI, rowData);
 
-            	Intent accel_dev = new Intent(ACTION_AWARE_ACCELEROMETER);
-            	accel_dev.putExtra(EXTRA_SENSOR, rowData);
-            	sendBroadcast(accel_dev);
-            	
-            	if( Aware.DEBUG ) Log.d(TAG, "Accelerometer device:"+ rowData.toString());
-            }catch( SQLiteException e ) {
-                if(Aware.DEBUG) Log.d(TAG,e.getMessage());
-            }catch( SQLException e ) {
-                if(Aware.DEBUG) Log.d(TAG,e.getMessage());
+                Intent accel_dev = new Intent(ACTION_AWARE_ACCELEROMETER);
+                accel_dev.putExtra(EXTRA_SENSOR, rowData);
+                sendBroadcast(accel_dev);
+
+                if (Aware.DEBUG) Log.d(TAG, "Accelerometer device:" + rowData.toString());
+            } catch (SQLiteException e) {
+                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+            } catch (SQLException e) {
+                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
             }
         } else accelInfo.close();
     }
@@ -184,106 +182,109 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     @Override
     public void onCreate() {
         super.onCreate();
-        
+
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-        
+        powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
-        TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-
-        if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER).length() > 0 ) {
-            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_ACCELEROMETER));
-        } else {
-            Aware.setSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER, SAMPLING_RATE);
-        }
-
-        DATABASE_TABLES = Accelerometer_Provider.DATABASE_TABLES;
-    	TABLES_FIELDS = Accelerometer_Provider.TABLES_FIELDS;
-    	CONTEXT_URIS = new Uri[]{ Accelerometer_Sensor.CONTENT_URI, Accelerometer_Data.CONTENT_URI };
-        
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
-        
+
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
         wakeLock.acquire();
-        
+
         sensorHandler = new Handler(sensorThread.getLooper());
-        mSensorManager.registerListener(this, mAccelerometer, SAMPLING_RATE, sensorHandler);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_ACCELEROMETER_LABEL);
         registerReceiver(dataLabeler, filter);
 
-        if( mAccelerometer == null ) {
-            if(Aware.DEBUG) Log.w(TAG,"This device does not have an accelerometer!");
-            Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, false);
-            stopSelf();
-            return;
-        } else {
-            saveAccelerometerDevice(mAccelerometer);
-        }
+        DATABASE_TABLES = Accelerometer_Provider.DATABASE_TABLES;
+        TABLES_FIELDS = Accelerometer_Provider.TABLES_FIELDS;
+        CONTEXT_URIS = new Uri[]{Accelerometer_Sensor.CONTENT_URI, Accelerometer_Data.CONTENT_URI};
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, true);
-
-        if(Aware.DEBUG) Log.d(TAG,"Accelerometer service created!");
+        if (Aware.DEBUG) Log.d(TAG, "Accelerometer service created!");
     }
-    
+
     @Override
     public void onDestroy() {
         super.onDestroy();
-        
+
         sensorHandler.removeCallbacksAndMessages(null);
         mSensorManager.unregisterListener(this, mAccelerometer);
         sensorThread.quit();
-        
         wakeLock.release();
 
         unregisterReceiver(dataLabeler);
 
-        if(Aware.DEBUG) Log.d(TAG,"Accelerometer service terminated...");
+        if (Aware.DEBUG) Log.d(TAG, "Accelerometer service terminated...");
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        
-        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
 
-        if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER).length() == 0 ) {
-            Aware.setSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER, SAMPLING_RATE);
+        boolean permissions_ok = true;
+        for (String p : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+                permissions_ok = false;
+                break;
+            }
         }
 
-        if( SAMPLING_RATE != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)) ) { //changed parameters
-            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER));
-            sensorHandler.removeCallbacksAndMessages(null);
-            mSensorManager.unregisterListener(this, mAccelerometer);
-            mSensorManager.registerListener(this, mAccelerometer, SAMPLING_RATE, sensorHandler);
+        if (permissions_ok) {
+            if (mAccelerometer == null) {
+                if (Aware.DEBUG) Log.w(TAG, "This device does not have an accelerometer!");
+                Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, false);
+                stopSelf();
+            } else {
+                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+
+                Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, true);
+                saveAccelerometerDevice(mAccelerometer);
+
+                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER, 200000);
+                }
+
+                sensorHandler.removeCallbacksAndMessages(null);
+                mSensorManager.unregisterListener(this, mAccelerometer);
+                mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), sensorHandler);
+
+                if (Aware.DEBUG)
+                    Log.d(TAG, "Accelerometer service active");
+            }
+
+        } else {
+            Intent permissions = new Intent(this, PermissionsHandler.class);
+            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
+            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(permissions);
         }
 
-        if(Aware.DEBUG) Log.d(TAG,"Accelerometer service active at " + SAMPLING_RATE + " microseconds...");
-        
         return super.onStartCommand(intent, flags, startId);
     }
 
     //Singleton instance of this service
     private static Accelerometer accelerometerSrv = Accelerometer.getService();
-    
+
     /**
      * Get singleton instance to Accelerometer service
+     *
      * @return Accelerometer obj
      */
     public static Accelerometer getService() {
-        if( accelerometerSrv == null ) accelerometerSrv = new Accelerometer();
+        if (accelerometerSrv == null) accelerometerSrv = new Accelerometer();
         return accelerometerSrv;
     }
-    
+
     private final IBinder serviceBinder = new ServiceBinder();
+
     public class ServiceBinder extends Binder {
         Accelerometer getService() {
             return Accelerometer.getService();
         }
     }
-    
+
     @Override
     public IBinder onBind(Intent intent) {
         return serviceBinder;
