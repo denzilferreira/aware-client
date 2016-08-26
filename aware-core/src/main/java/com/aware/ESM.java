@@ -9,17 +9,20 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.aware.providers.ESM_Provider;
 import com.aware.providers.ESM_Provider.ESM_Data;
 import com.aware.ui.ESM_Queue;
+import com.aware.ui.PermissionsHandler;
 import com.aware.ui.esms.ESMFactory;
 import com.aware.ui.esms.ESM_Question;
 import com.aware.utils.Aware_Sensor;
@@ -185,8 +188,6 @@ public class ESM extends Aware_Sensor {
     public void onCreate() {
         super.onCreate();
 
-        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG) : TAG;
-
         DATABASE_TABLES = ESM_Provider.DATABASE_TABLES;
         TABLES_FIELDS = ESM_Provider.TABLES_FIELDS;
         CONTEXT_URIS = new Uri[]{ESM_Data.CONTENT_URI};
@@ -200,8 +201,6 @@ public class ESM extends Aware_Sensor {
         registerReceiver(esmMonitor, filter);
 
         if (Aware.DEBUG) Log.d(TAG, "ESM service created!");
-
-        Aware.setSetting(this, Aware_Preferences.STATUS_ESM, true);
 
         //Restore pending ESMs back upon service creation. This may happen on rebooting the phone
         if (isESMWaiting(getApplicationContext()) || isESMVisible(getApplicationContext())) {
@@ -220,15 +219,35 @@ public class ESM extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG) : TAG;
-        if (Aware.DEBUG)
-            Log.d(TAG, "ESM service active... Queue = " + ESM_Queue.getQueueSize(getApplicationContext()));
 
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_ESM).equals("true")) {
-            if (isESMWaiting(getApplicationContext()) && !isESMVisible(getApplicationContext())) {
-                notifyESM(getApplicationContext());
+        boolean permissions_ok = true;
+        for (String p : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+                permissions_ok = false;
+                break;
             }
         }
+
+        if (permissions_ok) {
+
+            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+            Aware.setSetting(this, Aware_Preferences.STATUS_ESM, true);
+
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_ESM).equals("true")) {
+                if (isESMWaiting(getApplicationContext()) && !isESMVisible(getApplicationContext())) {
+                    notifyESM(getApplicationContext());
+                }
+            }
+
+            if (DEBUG) Log.d(TAG, "ESM service active... Queue = " + ESM_Queue.getQueueSize(getApplicationContext()));
+
+        } else {
+            Intent permissions = new Intent(this, PermissionsHandler.class);
+            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
+            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(permissions);
+        }
+
         return super.onStartCommand(intent, flags, startId);
     }
 

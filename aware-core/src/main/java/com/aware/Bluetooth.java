@@ -86,6 +86,7 @@ public class Bluetooth extends Aware_Sensor {
     private static String ACTION_AWARE_ENABLE_BT = "ACTION_AWARE_ENABLE_BT";
 
     private static NotificationManager notificationManager = null;
+    private static Intent enableBT = null;
 
     /**
      * Get an instance for the Bluetooth Service
@@ -120,22 +121,13 @@ public class Bluetooth extends Aware_Sensor {
 
         REQUIRED_PERMISSIONS.add(Manifest.permission.BLUETOOTH);
         REQUIRED_PERMISSIONS.add(Manifest.permission.BLUETOOTH_ADMIN);
-        REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_COARSE_LOCATION); //we need this permission for BT scanning to work
 
-        Intent enableBT = new Intent(this, Bluetooth.class);
+        enableBT = new Intent(this, Bluetooth.class);
         enableBT.putExtra("action", ACTION_AWARE_ENABLE_BT);
 
         if (!bluetoothAdapter.isEnabled()) {
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-                    .setSmallIcon(R.drawable.ic_stat_aware_accessibility)
-                    .setContentTitle("AWARE")
-                    .setContentText("Tap to enable Bluetooth for nearby scanning.")
-                    .setDefaults(Notification.DEFAULT_ALL)
-                    .setOnlyAlertOnce(true)
-                    .setAutoCancel(true)
-                    .setContentIntent(PendingIntent.getService(this, 123, enableBT, PendingIntent.FLAG_UPDATE_CURRENT));
-
-            notificationManager.notify(123, builder.build());
+            notifyMissingBluetooth(getApplicationContext());
         }
 
         if (Aware.DEBUG) Log.d(TAG, "Bluetooth service created!");
@@ -143,7 +135,6 @@ public class Bluetooth extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         if (intent != null && intent.hasExtra("action") && intent.getStringExtra("action").equalsIgnoreCase(ACTION_AWARE_ENABLE_BT)) {
             bluetoothAdapter.enable();
             bluetoothAdapter.startDiscovery();
@@ -170,7 +161,6 @@ public class Bluetooth extends Aware_Sensor {
                 stopSelf();
             } else {
                 save_bluetooth_device(bluetoothAdapter);
-
                 alarmManager.cancel(bluetoothScan);
                 alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
                         System.currentTimeMillis() + 1000,
@@ -293,27 +283,18 @@ public class Bluetooth extends Aware_Sensor {
         if (btAdapter == null) return;
 
         Cursor sensorBT = getContentResolver().query(Bluetooth_Sensor.CONTENT_URI, null, null, null, null);
-        if (sensorBT != null && sensorBT.moveToFirst()) {
-            sensorBT.close();
-        } else {
+        if (sensorBT == null || !sensorBT.moveToFirst()) {
             ContentValues rowData = new ContentValues();
             rowData.put(Bluetooth_Sensor.TIMESTAMP, System.currentTimeMillis());
             rowData.put(Bluetooth_Sensor.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
             rowData.put(Bluetooth_Sensor.BT_ADDRESS, btAdapter.getAddress());
             rowData.put(Bluetooth_Sensor.BT_NAME, btAdapter.getName());
 
-            try {
+            getContentResolver().insert(Bluetooth_Sensor.CONTENT_URI, rowData);
 
-                getContentResolver().insert(Bluetooth_Sensor.CONTENT_URI, rowData);
-
-                if (Aware.DEBUG) Log.d(TAG, "Bluetooth local information: " + rowData.toString());
-
-            } catch (SQLiteException e) {
-                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-            } catch (SQLException e) {
-                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-            }
+            if (Aware.DEBUG) Log.d(TAG, "Bluetooth local information: " + rowData.toString());
         }
+        if (sensorBT != null && ! sensorBT.isClosed()) sensorBT.close();
     }
 
     public static class BackgroundService extends IntentService {
@@ -328,6 +309,9 @@ public class Bluetooth extends Aware_Sensor {
                     if (bluetoothAdapter.isEnabled()) {
                         bluetoothAdapter.startDiscovery();
                     } else {
+
+                        notifyMissingBluetooth(getApplicationContext());
+
                         //Bluetooth is off
                         if (Aware.DEBUG) Log.d(TAG, "Bluetooth is turned off...");
                         ContentValues rowData = new ContentValues();
@@ -342,5 +326,18 @@ public class Bluetooth extends Aware_Sensor {
                 }
             }
         }
+    }
+
+    private static void notifyMissingBluetooth(Context c) {
+        //Remind the user that we need Bluetooth on for data collection
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(c)
+                .setSmallIcon(R.drawable.ic_stat_aware_accessibility)
+                .setContentTitle("AWARE: Bluetooth needed")
+                .setContentText("Tap to enable Bluetooth for nearby scanning.")
+                .setDefaults(Notification.DEFAULT_ALL)
+                .setOnlyAlertOnce(true)
+                .setAutoCancel(true)
+                .setContentIntent(PendingIntent.getService(c, 123, enableBT, PendingIntent.FLAG_UPDATE_CURRENT));
+        notificationManager.notify(123, builder.build());
     }
 }

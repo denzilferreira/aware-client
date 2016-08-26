@@ -1,8 +1,10 @@
 
 package com.aware;
 
+import android.Manifest;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -12,6 +14,7 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.provider.CallLog.Calls;
+import android.support.v4.content.ContextCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -19,6 +22,7 @@ import android.util.Log;
 import com.aware.providers.Communication_Provider;
 import com.aware.providers.Communication_Provider.Calls_Data;
 import com.aware.providers.Communication_Provider.Messages_Data;
+import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 import com.aware.utils.Encrypter;
 
@@ -313,8 +317,6 @@ public class Communication extends Aware_Sensor {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		
-        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):TAG;
         
         telephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
         
@@ -324,35 +326,55 @@ public class Communication extends Aware_Sensor {
         DATABASE_TABLES = Communication_Provider.DATABASE_TABLES;
     	TABLES_FIELDS = Communication_Provider.TABLES_FIELDS;
     	CONTEXT_URIS = new Uri[]{ Calls_Data.CONTENT_URI, Messages_Data.CONTENT_URI};
+
+		REQUIRED_PERMISSIONS.add(Manifest.permission.READ_CONTACTS);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.READ_PHONE_STATE);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.READ_CALL_LOG);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.READ_SMS);
         
 		if(Aware.DEBUG) Log.d(TAG, "Communication service created!");
 	}
 
 	@Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        
-	    TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        
-        if( Aware.getSetting(getApplicationContext(),Aware_Preferences.STATUS_CALLS).equals("true") ) {
-            getContentResolver().registerContentObserver(Calls.CONTENT_URI, true, callsObs);
-        }else{
-            getContentResolver().unregisterContentObserver(callsObs);
+
+		boolean permissions_ok = true;
+		for (String p : REQUIRED_PERMISSIONS) {
+			if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+				permissions_ok = false;
+				break;
+			}
+		}
+
+        if (permissions_ok) {
+            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+
+            if( Aware.getSetting(getApplicationContext(),Aware_Preferences.STATUS_CALLS).equals("true") ) {
+                getContentResolver().registerContentObserver(Calls.CONTENT_URI, true, callsObs);
+            }else{
+                getContentResolver().unregisterContentObserver(callsObs);
+            }
+
+            if( Aware.getSetting(getApplicationContext(),Aware_Preferences.STATUS_MESSAGES).equals("true") ) {
+                getContentResolver().registerContentObserver(MESSAGES_CONTENT_URI, true, msgsObs);
+            }else {
+                getContentResolver().unregisterContentObserver(msgsObs);
+            }
+
+            if( Aware.getSetting(getApplicationContext(),Aware_Preferences.STATUS_COMMUNICATION_EVENTS).equals("true") ) {
+                telephonyManager.listen(phoneState, PhoneStateListener.LISTEN_CALL_STATE);
+            }else{
+                telephonyManager.listen(phoneState, PhoneStateListener.LISTEN_NONE);
+            }
+
+            if(Aware.DEBUG) Log.d(TAG, TAG + " service active...");
+        } else {
+            Intent permissions = new Intent(this, PermissionsHandler.class);
+            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
+            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(permissions);
         }
-        
-        if( Aware.getSetting(getApplicationContext(),Aware_Preferences.STATUS_MESSAGES).equals("true") ) {
-            getContentResolver().registerContentObserver(MESSAGES_CONTENT_URI, true, msgsObs);
-        }else {
-            getContentResolver().unregisterContentObserver(msgsObs);
-        }
-        
-        if( Aware.getSetting(getApplicationContext(),Aware_Preferences.STATUS_COMMUNICATION_EVENTS).equals("true") ) {
-            telephonyManager.listen(phoneState, PhoneStateListener.LISTEN_CALL_STATE);
-        }else{
-            telephonyManager.listen(phoneState, PhoneStateListener.LISTEN_NONE);
-        }
-        
-        if(Aware.DEBUG) Log.d(TAG, TAG + " service active...");
-        
+
         return START_STICKY;
     }
 	

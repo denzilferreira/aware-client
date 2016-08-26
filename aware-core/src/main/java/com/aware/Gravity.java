@@ -6,6 +6,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
@@ -20,12 +21,14 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.aware.providers.Barometer_Provider;
 import com.aware.providers.Gravity_Provider;
 import com.aware.providers.Gravity_Provider.Gravity_Data;
 import com.aware.providers.Gravity_Provider.Gravity_Sensor;
+import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 import com.aware.utils.Converters;
 
@@ -45,18 +48,14 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
      * Logging tag (default = "AWARE::Gravity")
      */
     private static String TAG = "AWARE::Gravity";
-    
-    /**
-     * Sensor update frequency in microseconds, default 200000
-     */
-    private static int SAMPLING_RATE = 200000;
-    
+
     private static SensorManager mSensorManager;
     private static Sensor mGravity;
     private static HandlerThread sensorThread = null;
     private static Handler sensorHandler = null;
     private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
+    private static int FIFO_SIZE = 0;
     
     /**
      * Broadcasted event: new sensor values
@@ -171,23 +170,17 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
             rowData.put(Gravity_Sensor.TYPE, sensor.getType());
             rowData.put(Gravity_Sensor.VENDOR, sensor.getVendor());
             rowData.put(Gravity_Sensor.VERSION, sensor.getVersion());
-            
-            try {
-            	if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("false") ) {
-            		getContentResolver().insert(Gravity_Sensor.CONTENT_URI, rowData);
-            	}
-            	
-            	Intent grav_dev = new Intent(ACTION_AWARE_GRAVITY);
-            	grav_dev.putExtra(EXTRA_SENSOR, rowData);
-            	sendBroadcast(grav_dev);
-            	
-                if( Aware.DEBUG ) Log.d(TAG, "Gravity sensor: "+ rowData.toString());
-            }catch( SQLiteException e ) {
-                if(Aware.DEBUG) Log.d(TAG,e.getMessage());
-            }catch( SQLException e ) {
-                if(Aware.DEBUG) Log.d(TAG,e.getMessage());
-            }
-        }else sensorInfo.close();
+
+            getContentResolver().insert(Gravity_Sensor.CONTENT_URI, rowData);
+
+            Intent grav_dev = new Intent(ACTION_AWARE_GRAVITY);
+            grav_dev.putExtra(EXTRA_SENSOR, rowData);
+            sendBroadcast(grav_dev);
+
+            if( Aware.DEBUG ) Log.d(TAG, "Gravity sensor: "+ rowData.toString());
+        }
+
+        if (sensorInfo != null && !sensorInfo.isClosed()) sensorInfo.close();
     }
     
     @Override
@@ -198,15 +191,8 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         
         mGravity = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+        FIFO_SIZE = mGravity.getFifoReservedEventCount();
 
-        TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-
-        if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_GRAVITY).length() > 0 ) {
-            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY));
-        } else {
-            Aware.setSetting(this, Aware_Preferences.FREQUENCY_GRAVITY, SAMPLING_RATE);
-        }
-        
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
         
@@ -214,7 +200,6 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
         wakeLock.acquire();
         
         sensorHandler = new Handler(sensorThread.getLooper());
-        mSensorManager.registerListener(this, mGravity, SAMPLING_RATE, sensorHandler);
 
         DATABASE_TABLES = Gravity_Provider.DATABASE_TABLES;
     	TABLES_FIELDS = Gravity_Provider.TABLES_FIELDS;
@@ -223,17 +208,6 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_GRAVITY_LABEL);
         registerReceiver(dataLabeler, filter);
-
-        if(mGravity == null) {
-            if(Aware.DEBUG) Log.w(TAG,"This device does not have a gravity sensor!");
-            Aware.setSetting(this, Aware_Preferences.STATUS_GRAVITY, false);
-            stopSelf();
-            return;
-        } else {
-            saveSensorDevice(mGravity);
-        }
-
-        Aware.setSetting(this, Aware_Preferences.STATUS_GRAVITY, true);
 
         if(Aware.DEBUG) Log.d(TAG,"Gravity service created!");
     }
@@ -256,23 +230,42 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
     
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        
-        TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
 
-        if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_GRAVITY).length() == 0 ) {
-            Aware.setSetting(this, Aware_Preferences.FREQUENCY_GRAVITY, SAMPLING_RATE);
+        boolean permissions_ok = true;
+        for (String p : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+                permissions_ok = false;
+                break;
+            }
         }
 
-        if( SAMPLING_RATE != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY))) { //changed setting
-            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY));
-            sensorHandler.removeCallbacksAndMessages(null);
-            mSensorManager.unregisterListener(this, mGravity);
-            mSensorManager.registerListener(this, mGravity, SAMPLING_RATE, sensorHandler);
-        }
+        if (permissions_ok) {
+            if(mGravity == null) {
+                if(Aware.DEBUG) Log.w(TAG,"This device does not have a gravity sensor!");
+                Aware.setSetting(this, Aware_Preferences.STATUS_GRAVITY, false);
+                stopSelf();
+            } else {
+                Aware.setSetting(this, Aware_Preferences.STATUS_GRAVITY, true);
+                saveSensorDevice(mGravity);
 
-        if(Aware.DEBUG) Log.d(TAG,"Gravity service active...");
+                if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_GRAVITY).length() == 0 ) {
+                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_GRAVITY, 200000);
+                }
+
+                sensorHandler.removeCallbacksAndMessages(null);
+                mSensorManager.unregisterListener(this, mGravity);
+                mSensorManager.registerListener(this, mGravity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY)), FIFO_SIZE, sensorHandler);
+
+                if(Aware.DEBUG) Log.d(TAG,"Gravity service active...");
+            }
+        } else {
+            Intent permissions = new Intent(this, PermissionsHandler.class);
+            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
+            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(permissions);
+        }
         
-        return START_STICKY;
+        return super.onStartCommand(intent, flags, startId);
     }
 
     //Singleton instance of this service

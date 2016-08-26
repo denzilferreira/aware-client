@@ -27,6 +27,7 @@ import android.util.Log;
 import com.aware.providers.Accelerometer_Provider;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Data;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Sensor;
+import com.aware.providers.Barometer_Provider;
 import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 
@@ -51,6 +52,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     private static PowerManager powerManager;
     private static PowerManager.WakeLock wakeLock = null;
     private static String LABEL = "";
+    private static int FIFO_SIZE = 0;
 
     /**
      * Broadcasted event: new accelerometer values
@@ -149,6 +151,8 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     }
 
     private void saveAccelerometerDevice(Sensor acc) {
+        if (acc == null) return;
+
         Cursor accelInfo = getContentResolver().query(Accelerometer_Sensor.CONTENT_URI, null, null, null, null);
         if (accelInfo == null || !accelInfo.moveToFirst()) {
             ContentValues rowData = new ContentValues();
@@ -163,20 +167,15 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
             rowData.put(Accelerometer_Sensor.VENDOR, acc.getVendor());
             rowData.put(Accelerometer_Sensor.VERSION, acc.getVersion());
 
-            try {
-                getContentResolver().insert(Accelerometer_Sensor.CONTENT_URI, rowData);
+            getContentResolver().insert(Accelerometer_Sensor.CONTENT_URI, rowData);
 
-                Intent accel_dev = new Intent(ACTION_AWARE_ACCELEROMETER);
-                accel_dev.putExtra(EXTRA_SENSOR, rowData);
-                sendBroadcast(accel_dev);
+            Intent accel_dev = new Intent(ACTION_AWARE_ACCELEROMETER);
+            accel_dev.putExtra(EXTRA_SENSOR, rowData);
+            sendBroadcast(accel_dev);
 
-                if (Aware.DEBUG) Log.d(TAG, "Accelerometer device:" + rowData.toString());
-            } catch (SQLiteException e) {
-                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-            } catch (SQLException e) {
-                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-            }
-        } else accelInfo.close();
+            if (Aware.DEBUG) Log.d(TAG, "Accelerometer device:" + rowData.toString());
+        }
+        if (accelInfo != null && !accelInfo.isClosed()) accelInfo.close();
     }
 
     @Override
@@ -186,6 +185,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        FIFO_SIZE = mAccelerometer.getFifoReservedEventCount();
 
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
@@ -239,6 +239,8 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
             } else {
                 DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
 
+                if (DEBUG) Log.d(TAG, "Accelerometer hardware buffer size:" + FIFO_SIZE);
+
                 Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, true);
                 saveAccelerometerDevice(mAccelerometer);
 
@@ -248,7 +250,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
                 sensorHandler.removeCallbacksAndMessages(null);
                 mSensorManager.unregisterListener(this, mAccelerometer);
-                mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), sensorHandler);
+                mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), FIFO_SIZE, sensorHandler);
 
                 if (Aware.DEBUG)
                     Log.d(TAG, "Accelerometer service active");

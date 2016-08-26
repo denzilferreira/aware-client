@@ -50,6 +50,7 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
     private static Handler sensorHandler = null;
     private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
+    private static int FIFO_SIZE = 0;
 
     /**
      * Broadcasted event: new sensor values
@@ -165,22 +166,15 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
             rowData.put(Barometer_Sensor.VENDOR, sensor.getVendor());
             rowData.put(Barometer_Sensor.VERSION, sensor.getVersion());
 
-            try {
-                if (Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("false")) {
-                    getContentResolver().insert(Barometer_Sensor.CONTENT_URI, rowData);
-                }
+            getContentResolver().insert(Barometer_Sensor.CONTENT_URI, rowData);
 
-                Intent pressureDev = new Intent(ACTION_AWARE_BAROMETER);
-                pressureDev.putExtra(EXTRA_SENSOR, rowData);
-                sendBroadcast(pressureDev);
+            Intent pressureDev = new Intent(ACTION_AWARE_BAROMETER);
+            pressureDev.putExtra(EXTRA_SENSOR, rowData);
+            sendBroadcast(pressureDev);
 
-                if (Aware.DEBUG) Log.d(TAG, "Barometer sensor info: " + rowData.toString());
-            } catch (SQLiteException e) {
-                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-            } catch (SQLException e) {
-                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-            }
-        } else sensorInfo.close();
+            if (Aware.DEBUG) Log.d(TAG, "Barometer sensor info: " + rowData.toString());
+        }
+        if (sensorInfo != null && !sensorInfo.isClosed()) sensorInfo.close();
     }
 
     @Override
@@ -190,6 +184,7 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         mPressure = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
+        FIFO_SIZE = mPressure.getFifoReservedEventCount();
 
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
@@ -254,7 +249,7 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
 
                 sensorHandler.removeCallbacksAndMessages(null);
                 mSensorManager.unregisterListener(this, mPressure);
-                mSensorManager.registerListener(this, mPressure, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER)), sensorHandler);
+                mSensorManager.registerListener(this, mPressure, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER)), FIFO_SIZE, sensorHandler);
 
                 if (Aware.DEBUG)
                     Log.d(TAG, "Barometer service active...");
