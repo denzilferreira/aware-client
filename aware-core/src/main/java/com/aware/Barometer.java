@@ -52,6 +52,8 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
     private static PowerManager.WakeLock wakeLock = null;
     private static int FIFO_SIZE = 0;
 
+    private static int FREQUENCY = -1;
+
     /**
      * Broadcasted event: new sensor values
      * ContentProvider: PressureProvider
@@ -247,12 +249,15 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
                     Aware.setSetting(this, Aware_Preferences.FREQUENCY_BAROMETER, 200000);
                 }
 
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mPressure);
-                mSensorManager.registerListener(this, mPressure, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER)), FIFO_SIZE, sensorHandler);
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER))) {
+                    sensorHandler.removeCallbacksAndMessages(null);
+                    mSensorManager.unregisterListener(this, mPressure);
+                    mSensorManager.registerListener(this, mPressure, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER)), FIFO_SIZE, sensorHandler);
 
-                if (Aware.DEBUG)
-                    Log.d(TAG, "Barometer service active...");
+                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER));
+                }
+
+                if (Aware.DEBUG) Log.d(TAG, "Barometer service active: " + FREQUENCY + "ms");
             }
         } else {
             Intent permissions = new Intent(this, PermissionsHandler.class);

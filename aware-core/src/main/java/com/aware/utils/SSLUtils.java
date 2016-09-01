@@ -50,7 +50,8 @@ public class SSLUtils {
             return(sslContext.getSocketFactory());
 
         } catch (Exception x){
-            Log.e(Aware.TAG, x.getMessage());
+            Log.e(Aware.TAG, "SSL exception: ");
+            x.printStackTrace();
         }
         return null;
     }

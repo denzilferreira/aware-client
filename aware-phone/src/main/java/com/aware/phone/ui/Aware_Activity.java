@@ -1,11 +1,13 @@
 package com.aware.phone.ui;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
@@ -13,6 +15,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
@@ -43,6 +46,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 
 //PreferenceActivity
 public class Aware_Activity extends AppCompatPreferenceActivity {
@@ -126,8 +130,19 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_qrcode))) {
-            Intent join_study = new Intent(Aware_Activity.this, Aware_QRCode.class);
-            startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
+
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                ArrayList<String> permission = new ArrayList<>();
+                permission.add(Manifest.permission.CAMERA);
+
+                Intent permissions = new Intent(this, PermissionsHandler.class);
+                permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, permission);
+                permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(permissions);
+            } else {
+                Intent join_study = new Intent(Aware_Activity.this, Aware_QRCode.class);
+                startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
+            }
         }
         if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_team))) {
             Intent about_us = new Intent(Aware_Activity.this, About.class);

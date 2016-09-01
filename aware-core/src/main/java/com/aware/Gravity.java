@@ -56,6 +56,7 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
     private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
     private static int FIFO_SIZE = 0;
+    private static int FREQUENCY = -1;
     
     /**
      * Broadcasted event: new sensor values
@@ -252,11 +253,15 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
                     Aware.setSetting(this, Aware_Preferences.FREQUENCY_GRAVITY, 200000);
                 }
 
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mGravity);
-                mSensorManager.registerListener(this, mGravity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY)), FIFO_SIZE, sensorHandler);
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY))) {
+                    sensorHandler.removeCallbacksAndMessages(null);
+                    mSensorManager.unregisterListener(this, mGravity);
+                    mSensorManager.registerListener(this, mGravity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY)), FIFO_SIZE, sensorHandler);
 
-                if(Aware.DEBUG) Log.d(TAG,"Gravity service active...");
+                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY));
+                }
+
+                if(Aware.DEBUG) Log.d(TAG,"Gravity service active: " + FREQUENCY + "ms");
             }
         } else {
             Intent permissions = new Intent(this, PermissionsHandler.class);

@@ -54,6 +54,8 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     private static String LABEL = "";
     private static int FIFO_SIZE = 0;
 
+    private static int FREQUENCY = -1;
+
     /**
      * Broadcasted event: new accelerometer values
      * extra: context (ContentValues)
@@ -238,9 +240,6 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
                 stopSelf();
             } else {
                 DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-
-                if (DEBUG) Log.d(TAG, "Accelerometer hardware buffer size:" + FIFO_SIZE);
-
                 Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, true);
                 saveAccelerometerDevice(mAccelerometer);
 
@@ -248,12 +247,15 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
                     Aware.setSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER, 200000);
                 }
 
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mAccelerometer);
-                mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), FIFO_SIZE, sensorHandler);
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER))) {
+                    sensorHandler.removeCallbacksAndMessages(null);
+                    mSensorManager.unregisterListener(this, mAccelerometer);
+                    mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), FIFO_SIZE, sensorHandler);
 
-                if (Aware.DEBUG)
-                    Log.d(TAG, "Accelerometer service active");
+                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER));
+                }
+
+                if (Aware.DEBUG) Log.d(TAG, "Accelerometer service active: " + FREQUENCY + "ms");
             }
 
         } else {

@@ -6,6 +6,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
@@ -14,11 +15,13 @@ import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Environment;
 import android.os.IBinder;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.aware.providers.Mqtt_Provider;
 import com.aware.providers.Mqtt_Provider.Mqtt_Messages;
 import com.aware.providers.Mqtt_Provider.Mqtt_Subscriptions;
+import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 import com.aware.utils.SSLUtils;
 
@@ -31,6 +34,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.MqttTopic;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
 import org.json.JSONArray;
@@ -52,7 +56,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
     /**
      * MQTT persistence messages
      */
-    private static MqttDefaultFilePersistence MQTT_MESSAGES_PERSISTENCE = null;
+    private static MemoryPersistence MQTT_MESSAGES_PERSISTENCE = null;
 
     /**
      * The MQTT server
@@ -144,8 +148,6 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
     private static MqttClient MQTT_CLIENT = null;
     private static Context mContext = null;
-
-//    private MQTTAsync connector;
 
     /**
      * Activity-Service binder
@@ -317,7 +319,6 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
     public void onCreate() {
         super.onCreate();
 
-        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG) : TAG;
         mContext = getApplicationContext();
 
         DATABASE_TABLES = Mqtt_Provider.DATABASE_TABLES;
@@ -330,27 +331,41 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         filter.addAction(Mqtt.ACTION_AWARE_MQTT_MSG_PUBLISH);
         registerReceiver(mqttReceiver, filter);
 
-        if (Aware.is_watch(this)) {
-            Log.d(TAG, "This is an Android Wear device, we can't connect to MQTT. Disabling it!");
-            Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, false);
-            stopSelf();
-            return;
-        }
-
-        Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, true);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG) : TAG;
-
-        if (MQTT_CLIENT != null && MQTT_CLIENT.isConnected()) {
-            if (DEBUG)
-                Log.d(TAG, "Connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
-        } else {
-            initializeMQTT();
+        boolean permissions_ok = true;
+        for (String p : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+                permissions_ok = false;
+                break;
+            }
         }
+
+        if (permissions_ok) {
+            if (Aware.is_watch(this)) {
+                Log.d(TAG, "This is an Android Wear device, we can't connect to MQTT. Disabling it!");
+                Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, false);
+                stopSelf();
+            }
+            Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, true);
+
+            if (MQTT_CLIENT != null && MQTT_CLIENT.isConnected()) {
+                if (DEBUG)
+                    Log.d(TAG, "Connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
+            } else {
+                initializeMQTT();
+            }
+
+        } else {
+            Intent permissions = new Intent(this, PermissionsHandler.class);
+            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
+            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(permissions);
+        }
+
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -386,12 +401,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         String MQTT_URL = MQTT_PROTOCOL + "://" + MQTT_SERVER + ":" + MQTT_PORT;
 
         if (MQTT_MESSAGES_PERSISTENCE == null) {
-            MQTT_MESSAGES_PERSISTENCE = new MqttDefaultFilePersistence(Environment.getExternalStoragePublicDirectory("AWARE").toString());
-        }
-        try {
-            MQTT_MESSAGES_PERSISTENCE.open(String.valueOf(Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).hashCode()), MQTT_URL);
-        } catch (MqttPersistenceException e) {
-            //This is OK. The client is primarily connected and created the persistence file and is using it. Plugins use the same file, thus this exception is thrown.
+            MQTT_MESSAGES_PERSISTENCE = new MemoryPersistence();
         }
 
         MqttConnectOptions MQTT_OPTIONS = new MqttConnectOptions();

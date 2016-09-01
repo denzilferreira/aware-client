@@ -3,6 +3,7 @@ package com.aware;
 
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
@@ -10,10 +11,12 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.aware.providers.Processor_Provider;
 import com.aware.providers.Processor_Provider.Processor_Data;
+import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 
 import java.io.BufferedReader;
@@ -30,11 +33,6 @@ import java.util.HashMap;
  */
 public class Processor extends Aware_Sensor {
 
-    /**
-     * Frequency of update of processor information. (default = 10) seconds
-     */
-    private static int PROCESSOR_UPDATE = 10;
-    
     /**
      * Broadcasted event: when there is new processor usage information
      */
@@ -77,7 +75,7 @@ public class Processor extends Aware_Sensor {
             }
             if( lastProcessor != null && !lastProcessor.isClosed() ) lastProcessor.close();
             
-            if(Aware.DEBUG) Log.d(TAG,"USER:"+user_percentage + "% SYSTEM:"+system_percentage+"% IDLE:"+idle_percentage +"% Total:"+ (user_percentage+system_percentage+idle_percentage));
+            if(Aware.DEBUG) Log.d(TAG,"USER: "+user_percentage + "% SYSTEM: "+system_percentage+"% IDLE: "+idle_percentage +"% Total: "+ (user_percentage+system_percentage+idle_percentage));
             
             ContentValues rowData = new ContentValues();
             rowData.put(Processor_Data.TIMESTAMP, System.currentTimeMillis());
@@ -111,11 +109,12 @@ public class Processor extends Aware_Sensor {
             	Intent relaxed = new Intent( ACTION_AWARE_PROCESSOR_RELAXED );
             	sendBroadcast(relaxed);
             }
-            
-            PROCESSOR_UPDATE = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR));
-            mHandler.postDelayed(mRunnable, PROCESSOR_UPDATE * 1000);
+
+            mHandler.postDelayed(mRunnable, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR)) * 1000);
 		}
 	};
+
+    private static int FREQUENCY = -1;
     
     private final IBinder serviceBinder = new ServiceBinder();
     /**
@@ -146,35 +145,48 @@ public class Processor extends Aware_Sensor {
     @Override
     public void onCreate() {
         super.onCreate();
-        
-        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):"AWARE::Processor";
 
-        if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_PROCESSOR).length() == 0) {
-            Aware.setSetting(this, Aware_Preferences.FREQUENCY_PROCESSOR, PROCESSOR_UPDATE);
-        }
-        PROCESSOR_UPDATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROCESSOR));
-        
         DATABASE_TABLES = Processor_Provider.DATABASE_TABLES;
         TABLES_FIELDS = Processor_Provider.TABLES_FIELDS;
         CONTEXT_URIS = new Uri[]{ Processor_Data.CONTENT_URI };
-        
-        mHandler.post(mRunnable);
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_PROCESSOR, true);
         if(Aware.DEBUG) Log.d(TAG,"Processor service created");
     }
     
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG):"AWARE::Processor";
-        
-        if( Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROCESSOR)) != PROCESSOR_UPDATE ) {
-            PROCESSOR_UPDATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROCESSOR));
+
+        boolean permissions_ok = true;
+        for (String p : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+                permissions_ok = false;
+                break;
+            }
+        }
+
+        if (permissions_ok) {
+            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+            if (Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROCESSOR).length() == 0) {
+                Aware.setSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROCESSOR, 10);
+            }
+
+            Aware.setSetting(this, Aware_Preferences.STATUS_PROCESSOR, true);
+            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR))) {
+                mHandler.removeCallbacks(mRunnable);
+                mHandler.post(mRunnable);
+                FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR));
+            }
+
+            if(Aware.DEBUG) Log.d(TAG,"Processor service active: " + FREQUENCY + "s");
+
+        } else {
+            Intent permissions = new Intent(this, PermissionsHandler.class);
+            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
+            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(permissions);
         }
         
-        if(Aware.DEBUG) Log.d(TAG,"Processor service active...");
-        
-        return START_STICKY;
+        return super.onStartCommand(intent, flags, startId);
     }
     
     @Override

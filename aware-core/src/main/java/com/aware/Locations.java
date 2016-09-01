@@ -1,7 +1,9 @@
 package com.aware;
 
+import android.Manifest;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.location.GpsStatus;
@@ -12,10 +14,12 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.aware.providers.Locations_Provider;
 import com.aware.providers.Locations_Provider.Locations_Data;
+import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 
 /**
@@ -112,34 +116,10 @@ public class Locations extends Aware_Sensor implements LocationListener {
      */
     public static final String ACTION_AWARE_NETWORK_LOCATION_DISABLED = "ACTION_AWARE_NETWORK_LOCATION_DISABLED";
 
-    /**
-     * Update interval for GPS, in seconds (default = 180)
-     * 0 = realtime updates
-     */
-    public static int UPDATE_TIME_GPS = 180;
-
-    /**
-     * Update interval for Network, in seconds (default = 300)
-     * 0 = realtime updates
-     */
-    public static int UPDATE_TIME_NETWORK = 300;
-
-    /**
-     * Minimum accuracy value acceptable for GPS, in meters (default = 150)
-     */
-    public static int UPDATE_DISTANCE_GPS = 150;
-
-    /**
-     * Minimum accuracy value acceptable for Network location, in meters (default = 1500)
-     */
-    public static int UPDATE_DISTANCE_NETWORK = 1500;
-
-    /**
-     * For how long is the last best location considered valid, in seconds ( default = 300 )
-     */
-    public static int EXPIRATION_TIME = 300;
-
     private static Locations locationSrv = Locations.getService();
+
+    private static int FREQUENCY_NETWORK = -1;
+    private static int FREQUENCY_GPS = -1;
 
     /**
      * Singleton instance of Locations service
@@ -185,8 +165,8 @@ public class Locations extends Aware_Sensor implements LocationListener {
         }
 
         long timeDelta = newLocation.getTime() - lastLocation.getTime();
-        boolean isSignificantlyNewer = timeDelta > 1000 * EXPIRATION_TIME;
-        boolean isSignificantlyOlder = timeDelta < -(1000 * EXPIRATION_TIME);
+        boolean isSignificantlyNewer = timeDelta > 1000 * Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.LOCATION_EXPIRATION_TIME));
+        boolean isSignificantlyOlder = timeDelta < -(1000 * Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.LOCATION_EXPIRATION_TIME)));
         boolean isNewer = timeDelta > 0;
 
         if (isSignificantlyNewer) {
@@ -227,37 +207,14 @@ public class Locations extends Aware_Sensor implements LocationListener {
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG) : "AWARE::Locations";
-
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_GPS).length() > 0) {
-            UPDATE_TIME_GPS = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_GPS));
-        }
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_NETWORK).length() > 0) {
-            UPDATE_TIME_NETWORK = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_NETWORK));
-        }
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_GPS_ACCURACY).length() > 0) {
-            UPDATE_DISTANCE_GPS = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_GPS_ACCURACY));
-        }
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY).length() > 0) {
-            UPDATE_DISTANCE_NETWORK = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY));
-        }
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.LOCATION_EXPIRATION_TIME).length() > 0) {
-            EXPIRATION_TIME = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.LOCATION_EXPIRATION_TIME));
-        }
-
         DATABASE_TABLES = Locations_Provider.DATABASE_TABLES;
         TABLES_FIELDS = Locations_Provider.TABLES_FIELDS;
         CONTEXT_URIS = new Uri[]{Locations_Data.CONTENT_URI};
 
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_LOCATION_GPS).equals("true")) {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, UPDATE_TIME_GPS * 1000, UPDATE_DISTANCE_GPS, this);
-            locationManager.addGpsStatusListener(gps_status_listener);
-            if (Aware.DEBUG) Log.d(TAG, "Location tracking with GPS is active");
-        }
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true")) {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, UPDATE_TIME_NETWORK * 1000, UPDATE_DISTANCE_NETWORK, this);
-            if (Aware.DEBUG) Log.d(TAG, "Location tracking with Network is active");
-        }
+        REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_FINE_LOCATION);
+
+        if (Aware.DEBUG) Log.d(TAG, "Location sensor is created!");
     }
 
     @Override
@@ -274,40 +231,73 @@ public class Locations extends Aware_Sensor implements LocationListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
 
-        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG) : "AWARE::Locations";
-
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_GPS).length() > 0) {
-            UPDATE_TIME_GPS = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_GPS));
-        }
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_NETWORK).length() > 0) {
-            UPDATE_TIME_NETWORK = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_NETWORK));
-        }
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_GPS_ACCURACY).length() > 0) {
-            UPDATE_DISTANCE_GPS = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_GPS_ACCURACY));
-        }
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY).length() > 0) {
-            UPDATE_DISTANCE_NETWORK = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY));
-        }
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.LOCATION_EXPIRATION_TIME).length() > 0) {
-            EXPIRATION_TIME = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.LOCATION_EXPIRATION_TIME));
+        boolean permissions_ok = true;
+        for (String p : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+                permissions_ok = false;
+                break;
+            }
         }
 
-        locationManager.removeUpdates(this);
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_LOCATION_GPS).equals("true")) {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, UPDATE_TIME_GPS * 1000, UPDATE_DISTANCE_GPS, this);
-            if (Aware.DEBUG) Log.d(TAG, "Location tracking with GPS is active");
-        }
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true")) {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, UPDATE_TIME_NETWORK * 1000, UPDATE_DISTANCE_NETWORK, this);
-            if (Aware.DEBUG) Log.d(TAG, "Location tracking with Network is active");
+        if (permissions_ok) {
+
+            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_GPS).length() == 0) {
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_GPS, 180);
+            }
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_GPS_ACCURACY).length() == 0) {
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_GPS_ACCURACY, 150);
+            }
+
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_NETWORK).length() == 0) {
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_NETWORK, 300);
+            }
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY).length() == 0) {
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY, 1500);
+            }
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.LOCATION_EXPIRATION_TIME).length() == 0) {
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.LOCATION_EXPIRATION_TIME, 300);
+            }
+
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_LOCATION_GPS).equals("true")) {
+                if (FREQUENCY_GPS != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_GPS))) {
+                    locationManager.requestLocationUpdates(
+                            LocationManager.GPS_PROVIDER,
+                            Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_GPS)) * 1000,
+                            Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_GPS_ACCURACY)), this);
+                    locationManager.removeGpsStatusListener(gps_status_listener);
+                    locationManager.addGpsStatusListener(gps_status_listener);
+
+                    FREQUENCY_GPS = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_GPS));
+                }
+                if (Aware.DEBUG) Log.d(TAG, "Location tracking with GPS is active: " + FREQUENCY_GPS + "s");
+            }
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true")) {
+                if (FREQUENCY_NETWORK != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_NETWORK))) {
+                    locationManager.requestLocationUpdates(
+                            LocationManager.NETWORK_PROVIDER,
+                            Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_NETWORK)) * 1000,
+                            Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY)), this);
+
+                    FREQUENCY_NETWORK = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LOCATION_NETWORK));
+                }
+                if (Aware.DEBUG) Log.d(TAG, "Location tracking with Network is active: " + FREQUENCY_NETWORK + "s");
+            }
+
+        } else {
+            Intent permissions = new Intent(this, PermissionsHandler.class);
+            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
+            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(permissions);
         }
 
-        return START_STICKY;
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
     public void onLocationChanged(Location newLocation) {
-        Location bestLocation = null;
+        Location bestLocation;
 
         //If we have both GPS and Network active, check if we got a better location. Otherwise always keep the latest.
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_LOCATION_GPS).equals("true") && Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true")) {
@@ -359,11 +349,25 @@ public class Locations extends Aware_Sensor implements LocationListener {
             if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_GPS_LOCATION_DISABLED);
             Intent gps = new Intent(ACTION_AWARE_GPS_LOCATION_DISABLED);
             sendBroadcast(gps);
+
+            ContentValues rowData = new ContentValues();
+            rowData.put(Locations_Data.TIMESTAMP, System.currentTimeMillis());
+            rowData.put(Locations_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+            rowData.put(Locations_Data.PROVIDER, LocationManager.GPS_PROVIDER);
+            rowData.put(Locations_Data.LABEL, "disabled");
+            getContentResolver().insert(Locations_Data.CONTENT_URI, rowData);
         }
         if (provider.equals(LocationManager.NETWORK_PROVIDER)) {
             if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_NETWORK_LOCATION_DISABLED);
             Intent network = new Intent(ACTION_AWARE_NETWORK_LOCATION_DISABLED);
             sendBroadcast(network);
+
+            ContentValues rowData = new ContentValues();
+            rowData.put(Locations_Data.TIMESTAMP, System.currentTimeMillis());
+            rowData.put(Locations_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+            rowData.put(Locations_Data.PROVIDER, LocationManager.NETWORK_PROVIDER);
+            rowData.put(Locations_Data.LABEL, "disabled");
+            getContentResolver().insert(Locations_Data.CONTENT_URI, rowData);
         }
     }
 
@@ -373,11 +377,25 @@ public class Locations extends Aware_Sensor implements LocationListener {
             if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_GPS_LOCATION_ENABLED);
             Intent gps = new Intent(ACTION_AWARE_GPS_LOCATION_ENABLED);
             sendBroadcast(gps);
+
+            ContentValues rowData = new ContentValues();
+            rowData.put(Locations_Data.TIMESTAMP, System.currentTimeMillis());
+            rowData.put(Locations_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+            rowData.put(Locations_Data.PROVIDER, LocationManager.GPS_PROVIDER);
+            rowData.put(Locations_Data.LABEL, "enabled");
+            getContentResolver().insert(Locations_Data.CONTENT_URI, rowData);
         }
         if (provider.equals(LocationManager.NETWORK_PROVIDER)) {
             if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_NETWORK_LOCATION_ENABLED);
             Intent network = new Intent(ACTION_AWARE_NETWORK_LOCATION_ENABLED);
             sendBroadcast(network);
+
+            ContentValues rowData = new ContentValues();
+            rowData.put(Locations_Data.TIMESTAMP, System.currentTimeMillis());
+            rowData.put(Locations_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+            rowData.put(Locations_Data.PROVIDER, LocationManager.NETWORK_PROVIDER);
+            rowData.put(Locations_Data.LABEL, "enabled");
+            getContentResolver().insert(Locations_Data.CONTENT_URI, rowData);
         }
     }
 
@@ -397,7 +415,7 @@ public class Locations extends Aware_Sensor implements LocationListener {
             lastNetwork = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         }
 
-        Location bestLocation = null;
+        Location bestLocation;
         if (isBetterLocation(lastNetwork, lastGPS)) {
             bestLocation = lastNetwork;
         } else {

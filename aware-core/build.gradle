@@ -7,7 +7,7 @@ group = "com.awareframework"
 
 android {
     compileSdkVersion 24
-    buildToolsVersion "24.0.1"
+    buildToolsVersion "24.0.2"
 
     defaultConfig {
         versionCode version_code

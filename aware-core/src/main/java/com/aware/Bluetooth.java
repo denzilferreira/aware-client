@@ -48,6 +48,7 @@ public class Bluetooth extends Aware_Sensor {
     private static AlarmManager alarmManager = null;
     private static PendingIntent bluetoothScan = null;
     private static long scanTimestamp = 0;
+    private static int FREQUENCY = -1;
 
     /**
      * This device's bluetooth adapter
@@ -161,13 +162,18 @@ public class Bluetooth extends Aware_Sensor {
                 stopSelf();
             } else {
                 save_bluetooth_device(bluetoothAdapter);
-                alarmManager.cancel(bluetoothScan);
-                alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
-                        System.currentTimeMillis() + 1000,
-                        Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BLUETOOTH)) * 1000,
-                        bluetoothScan);
 
-                if (Aware.DEBUG) Log.d(TAG, "Bluetooth service active...");
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BLUETOOTH))) {
+                    alarmManager.cancel(bluetoothScan);
+                    alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
+                            System.currentTimeMillis() + 1000,
+                            Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BLUETOOTH)) * 1000,
+                            bluetoothScan);
+
+                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BLUETOOTH));
+                }
+
+                if (Aware.DEBUG) Log.d(TAG, "Bluetooth service active: " + FREQUENCY + "s");
             }
         } else {
             Intent permissions = new Intent(this, PermissionsHandler.class);
@@ -309,18 +315,12 @@ public class Bluetooth extends Aware_Sensor {
                     if (bluetoothAdapter.isEnabled()) {
                         bluetoothAdapter.startDiscovery();
                     } else {
-
-                        notifyMissingBluetooth(getApplicationContext());
-
                         //Bluetooth is off
                         if (Aware.DEBUG) Log.d(TAG, "Bluetooth is turned off...");
                         ContentValues rowData = new ContentValues();
                         rowData.put(Bluetooth_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
                         rowData.put(Bluetooth_Data.TIMESTAMP, System.currentTimeMillis());
-                        rowData.put(Bluetooth_Data.BT_ADDRESS, "disabled");
-                        rowData.put(Bluetooth_Data.BT_NAME, "disabled");
-                        rowData.put(Bluetooth_Data.BT_RSSI, "disabled");
-                        rowData.put(Bluetooth_Data.BT_LABEL, "");
+                        rowData.put(Bluetooth_Data.BT_LABEL, "disabled");
                         getContentResolver().insert(Bluetooth_Data.CONTENT_URI, rowData);
                     }
                 }

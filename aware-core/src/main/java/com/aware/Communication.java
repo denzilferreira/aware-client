@@ -348,7 +348,6 @@ public class Communication extends Aware_Sensor {
 
         if (permissions_ok) {
             DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-
             if( Aware.getSetting(getApplicationContext(),Aware_Preferences.STATUS_CALLS).equals("true") ) {
                 getContentResolver().registerContentObserver(Calls.CONTENT_URI, true, callsObs);
             }else{

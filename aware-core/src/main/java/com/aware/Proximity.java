@@ -6,6 +6,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
@@ -20,14 +21,14 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
-import com.aware.providers.Magnetometer_Provider;
 import com.aware.providers.Proximity_Provider;
 import com.aware.providers.Proximity_Provider.Proximity_Data;
 import com.aware.providers.Proximity_Provider.Proximity_Sensor;
+import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
-import com.aware.utils.Converters;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,23 +37,20 @@ import java.util.List;
  * AWARE Proximity module
  * - Proximity raw data in centimeters / (binary far/near for some sensors)
  * - Proximity sensor information
- * @author df
  *
+ * @author df
  */
 public class Proximity extends Aware_Sensor implements SensorEventListener {
-    
-    /**
-     * Sensor update frequency in microseconds, default 200000
-     */
-    private static int SAMPLING_RATE = 200000;
-    
+
     private static SensorManager mSensorManager;
     private static Sensor mProximity;
     private static HandlerThread sensorThread = null;
     private static Handler sensorHandler = null;
     private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
-    
+    private static int FIFO_SIZE = 0;
+    private static int FREQUENCY = -1;
+
     /**
      * Broadcasted event: new sensor values
      * ContentProvider: ProximityProvider
@@ -73,15 +71,16 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
     private static String LABEL = "";
 
     private static DataLabel dataLabeler = new DataLabel();
+
     public static class DataLabel extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if( intent.getAction().equals(ACTION_AWARE_PROXIMITY_LABEL)) {
+            if (intent.getAction().equals(ACTION_AWARE_PROXIMITY_LABEL)) {
                 LABEL = intent.getStringExtra(EXTRA_LABEL);
             }
         }
     }
-    
+
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         //We log current accuracy on the sensor changed event
@@ -90,20 +89,20 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
         ContentValues rowData = new ContentValues();
-        rowData.put(Proximity_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(),Aware_Preferences.DEVICE_ID));
+        rowData.put(Proximity_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
         rowData.put(Proximity_Data.TIMESTAMP, System.currentTimeMillis());
         rowData.put(Proximity_Data.PROXIMITY, event.values[0]);
         rowData.put(Proximity_Data.ACCURACY, event.accuracy);
         rowData.put(Proximity_Data.LABEL, LABEL);
 
-        if( data_values.size() < 250 ) {
+        if (data_values.size() < 250) {
             data_values.add(rowData);
 
             Intent proxyData = new Intent(ACTION_AWARE_PROXIMITY);
             proxyData.putExtra(EXTRA_DATA, rowData);
             sendBroadcast(proxyData);
 
-            if( Aware.DEBUG ) Log.d(TAG, "Proximity:"+ rowData.toString());
+            if (Aware.DEBUG) Log.d(TAG, "Proximity:" + rowData.toString());
 
             return;
         }
@@ -112,13 +111,13 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
         data_values.toArray(data_buffer);
 
         try {
-            if( ! Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true") ) {
-        		new AsyncStore().execute(data_buffer);
-        	}
-        }catch( SQLiteException e ) {
-            if(Aware.DEBUG) Log.d(TAG,e.getMessage());
-        }catch( SQLException e ) {
-            if(Aware.DEBUG) Log.d(TAG,e.getMessage());
+            if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true")) {
+                new AsyncStore().execute(data_buffer);
+            }
+        } catch (SQLiteException e) {
+            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+        } catch (SQLException e) {
+            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
         }
         data_values.clear();
     }
@@ -136,25 +135,26 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
 
     /**
      * Calculates the sampling rate in Hz (i.e., how many samples did we collect in the past second)
+     *
      * @param context
      * @return hz
      */
     public static int getFrequency(Context context) {
         int hz = 0;
-        String[] columns = new String[]{ "count(*) as frequency", "datetime("+ Proximity_Data.TIMESTAMP+"/1000, 'unixepoch','localtime') as sample_time" };
+        String[] columns = new String[]{"count(*) as frequency", "datetime(" + Proximity_Data.TIMESTAMP + "/1000, 'unixepoch','localtime') as sample_time"};
         Cursor qry = context.getContentResolver().query(Proximity_Data.CONTENT_URI, columns, "1) group by (sample_time", null, "sample_time DESC LIMIT 1 OFFSET 2");
-        if( qry != null && qry.moveToFirst() ) {
+        if (qry != null && qry.moveToFirst()) {
             hz = qry.getInt(0);
         }
-        if( qry != null && ! qry.isClosed() ) qry.close();
+        if (qry != null && !qry.isClosed()) qry.close();
         return hz;
     }
 
     private void saveSensorDevice(Sensor sensor) {
         Cursor sensorInfo = getContentResolver().query(Proximity_Sensor.CONTENT_URI, null, null, null, null);
-        if( sensorInfo == null || ! sensorInfo.moveToFirst() ) {
+        if (sensorInfo == null || !sensorInfo.moveToFirst()) {
             ContentValues rowData = new ContentValues();
-            rowData.put(Proximity_Sensor.DEVICE_ID, Aware.getSetting(getApplicationContext(),Aware_Preferences.DEVICE_ID));
+            rowData.put(Proximity_Sensor.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
             rowData.put(Proximity_Sensor.TIMESTAMP, System.currentTimeMillis());
             rowData.put(Proximity_Sensor.MAXIMUM_RANGE, sensor.getMaximumRange());
             rowData.put(Proximity_Sensor.MINIMUM_DELAY, sensor.getMinDelay());
@@ -164,129 +164,131 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
             rowData.put(Proximity_Sensor.TYPE, sensor.getType());
             rowData.put(Proximity_Sensor.VENDOR, sensor.getVendor());
             rowData.put(Proximity_Sensor.VERSION, sensor.getVersion());
-            
-            try {
-            	if( Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("false") ) {
-            		getContentResolver().insert(Proximity_Sensor.CONTENT_URI, rowData);
-            	}
-            	
-            	Intent proxy_dev = new Intent(ACTION_AWARE_PROXIMITY);
-            	proxy_dev.putExtra(EXTRA_SENSOR, rowData);
-            	sendBroadcast(proxy_dev);
-            	
-                if( Aware.DEBUG ) Log.d(TAG, "Proximity sensor: "+ rowData.toString());
-            }catch( SQLiteException e ) {
-                if(Aware.DEBUG) Log.d(TAG,e.getMessage());
-            }catch( SQLException e ) {
-                if(Aware.DEBUG) Log.d(TAG,e.getMessage());
-            }
-        }else sensorInfo.close();
+
+            getContentResolver().insert(Proximity_Sensor.CONTENT_URI, rowData);
+
+            Intent proxy_dev = new Intent(ACTION_AWARE_PROXIMITY);
+            proxy_dev.putExtra(EXTRA_SENSOR, rowData);
+            sendBroadcast(proxy_dev);
+
+            if (Aware.DEBUG) Log.d(TAG, "Proximity sensor: " + rowData.toString());
+        }
+        if (sensorInfo != null && !sensorInfo.isClosed()) sensorInfo.close();
     }
-    
+
     @Override
     public void onCreate() {
         super.onCreate();
-        
+
         TAG = "AWARE::Proximity";
-        
+
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-        
-        mProximity = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
 
-        TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
-        if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY).length() > 0 ) {
-            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROXIMITY));
-        } else {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY, SAMPLING_RATE);
-        }
-        
+        mProximity = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+        FIFO_SIZE = mProximity.getFifoReservedEventCount();
+
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
-        
+
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
         wakeLock.acquire();
-        
+
         sensorHandler = new Handler(sensorThread.getLooper());
-        mSensorManager.registerListener(this, mProximity, SAMPLING_RATE, sensorHandler);
 
         DATABASE_TABLES = Proximity_Provider.DATABASE_TABLES;
         TABLES_FIELDS = Proximity_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{ Proximity_Sensor.CONTENT_URI, Proximity_Data.CONTENT_URI };
+        CONTEXT_URIS = new Uri[]{Proximity_Sensor.CONTENT_URI, Proximity_Data.CONTENT_URI};
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_PROXIMITY_LABEL);
         registerReceiver(dataLabeler, filter);
 
-        if(mProximity == null) {
-            if(Aware.DEBUG) Log.w(TAG,"This device does not have a proximity sensor!");
-            Aware.setSetting(this, Aware_Preferences.STATUS_PROXIMITY, false);
-            stopSelf();
-            return;
-        } else {
-            saveSensorDevice(mProximity);
-        }
-
-        Aware.setSetting(this, Aware_Preferences.STATUS_PROXIMITY, true);
-
-        if(Aware.DEBUG) Log.d(TAG,"Proximity service created!");
+        if (Aware.DEBUG) Log.d(TAG, "Proximity service created!");
     }
-    
+
     @Override
     public void onDestroy() {
         super.onDestroy();
-        
+
         sensorHandler.removeCallbacksAndMessages(null);
         mSensorManager.unregisterListener(this, mProximity);
         sensorThread.quit();
-        
+
         wakeLock.release();
 
         unregisterReceiver(dataLabeler);
 
-        if(Aware.DEBUG) Log.d(TAG,"Proximity service terminated...");
+        if (Aware.DEBUG) Log.d(TAG, "Proximity service terminated...");
     }
-    
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        
-        TAG = Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):"AWARE::Proximity";
 
-        if( Aware.getSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY).length() == 0 ) {
-            Aware.setSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY, SAMPLING_RATE);
+        boolean permissions_ok = true;
+        for (String p : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+                permissions_ok = false;
+                break;
+            }
         }
 
-        if(SAMPLING_RATE != Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROXIMITY))) {
-            SAMPLING_RATE = Integer.parseInt(Aware.getSetting(getApplicationContext(),Aware_Preferences.FREQUENCY_PROXIMITY));
-            sensorHandler.removeCallbacksAndMessages(null);
-            mSensorManager.unregisterListener(this, mProximity);
-            mSensorManager.registerListener(this, mProximity, SAMPLING_RATE, sensorHandler);
+        if (permissions_ok) {
+            if (mProximity == null) {
+                if (Aware.DEBUG) Log.w(TAG, "This device does not have a proximity sensor!");
+                Aware.setSetting(this, Aware_Preferences.STATUS_PROXIMITY, false);
+                stopSelf();
+            } else {
+
+                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+                Aware.setSetting(this, Aware_Preferences.STATUS_PROXIMITY, true);
+                saveSensorDevice(mProximity);
+
+                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY, 200000);
+                }
+
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY))) {
+                    sensorHandler.removeCallbacksAndMessages(null);
+                    mSensorManager.unregisterListener(this, mProximity);
+                    mSensorManager.registerListener(this, mProximity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY)), FIFO_SIZE, sensorHandler);
+
+                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY));
+                }
+
+                if (Aware.DEBUG) Log.d(TAG, "Proximity service active: " + FREQUENCY + "ms");
+            }
+        } else {
+            Intent permissions = new Intent(this, PermissionsHandler.class);
+            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
+            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(permissions);
         }
 
-        if(Aware.DEBUG) Log.d(TAG,"Proximity service active...");
-        
-        return START_STICKY;
+        return super.onStartCommand(intent, flags, startId);
     }
 
     //Singleton instance of this service
     private static Proximity proximitySrv = Proximity.getService();
-    
+
     /**
      * Get singleton instance to service
+     *
      * @return Proximity obj
      */
     public static Proximity getService() {
-        if( proximitySrv == null ) proximitySrv = new Proximity();
+        if (proximitySrv == null) proximitySrv = new Proximity();
         return proximitySrv;
     }
-    
+
     private final IBinder serviceBinder = new ServiceBinder();
+
     public class ServiceBinder extends Binder {
         Proximity getService() {
             return Proximity.getService();
         }
     }
-    
+
     @Override
     public IBinder onBind(Intent intent) {
         return serviceBinder;
