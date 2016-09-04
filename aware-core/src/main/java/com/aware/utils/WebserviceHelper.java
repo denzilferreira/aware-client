@@ -190,8 +190,8 @@ public class WebserviceHelper extends IntentService {
                         study_condition = " AND timestamp > " + Long.parseLong(Aware.getSetting(getApplicationContext(), Aware.STUDY_START));
                     }
 
-                    //However, we always want to sync the device's profile for any study
-                    if (DATABASE_TABLE.equalsIgnoreCase("aware_device")) study_condition = "";
+                    //However, we always want to sync the device's profile and hardware sensor profiles for any study, no matter when we join it
+                    if (DATABASE_TABLE.equalsIgnoreCase("aware_device") || DATABASE_TABLE.matches("sensor_.*")) study_condition = "";
 
                     JSONArray remoteData = new JSONArray(latest);
 
@@ -328,7 +328,7 @@ public class WebserviceHelper extends IntentService {
                                 if (DEBUG)
                                     Log.d(Aware.TAG, DATABASE_TABLE + " FAILED to upload. Server down?");
                                 break;
-                            } else { //perform database space maintenance
+                            } else { //Are we performing database space maintenance?
                                 ArrayList<String> highFrequencySensors = new ArrayList<>();
                                 highFrequencySensors.add("accelerometer");
                                 highFrequencySensors.add("gyroscope");
@@ -342,18 +342,12 @@ public class WebserviceHelper extends IntentService {
                                 highFrequencySensors.add("proximity");
 
                                 //Clean the local database, now that it is uploaded to the server, if required
-                                if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0 && Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA)) == 4
+                                if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0
+                                        && Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA)) == 4
                                         && highFrequencySensors.contains(DATABASE_TABLE)) {
 
-                                    long last = rows.getJSONObject(rows.length()).getLong("timestamp");
-
-                                    if (exists(columnsStr, "double_end_timestamp")) {
-                                        getContentResolver().delete(CONTENT_URI, "double_end_timestamp <= " + last, null);
-                                    } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
-                                        getContentResolver().delete(CONTENT_URI, "double_esm_user_answer_timestamp <= " + last, null);
-                                    } else {
-                                        getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null); //high-frequency sensors are timestamp-based
-                                    }
+                                    long last = rows.getJSONObject(rows.length()-1).getLong("timestamp");
+                                    getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null);
 
                                     if (DEBUG)
                                         Log.d(Aware.TAG, "Deleted local old records for " + DATABASE_TABLE);
