@@ -34,6 +34,7 @@ import com.aware.utils.Converters;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.lang.Math;
 
 /**
  * AWARE Light module
@@ -56,7 +57,9 @@ public class Light extends Aware_Sensor implements SensorEventListener {
     private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
     private static int FIFO_SIZE = 0;
+    private static float LAST_VALUE_0 = 0;
     private static int FREQUENCY = -1;
+    private static double THRESHOLD = 0;
 
     /**
      * Broadcasted event: new light values
@@ -95,6 +98,13 @@ public class Light extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        // Apply threshold.  If change of values is not enough, do nothing.
+        if (Math.abs(event.values[0] - LAST_VALUE_0 ) < THRESHOLD) {
+            return;
+        }
+        // Update last values with new values for the next round.
+        LAST_VALUE_0 = event.values[0];
+        // Proceed with saving as usual.
         ContentValues rowData = new ContentValues();
         rowData.put(Light_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
         rowData.put(Light_Data.TIMESTAMP, System.currentTimeMillis());
@@ -255,12 +265,18 @@ public class Light extends Aware_Sensor implements SensorEventListener {
                     Aware.setSetting(this, Aware_Preferences.FREQUENCY_LIGHT, 200000);
                 }
 
-                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT))) {
+                if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_LIGHT).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.THRESHOLD_LIGHT, 0.0);
+                }
+
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT))
+                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_LIGHT))) {
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mLight);
                     mSensorManager.registerListener(this, mLight, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT)), FIFO_SIZE, sensorHandler);
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT));
+                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_LIGHT));
                 }
 
                 if (Aware.DEBUG) Log.d(TAG, "Light service active: " + FREQUENCY + "ms");

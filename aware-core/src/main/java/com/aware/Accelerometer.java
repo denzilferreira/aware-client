@@ -33,6 +33,7 @@ import com.aware.utils.Aware_Sensor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.lang.Math;
 
 /**
  * AWARE Accelerometer module
@@ -53,8 +54,12 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     private static PowerManager.WakeLock wakeLock = null;
     private static String LABEL = "";
     private static int FIFO_SIZE = 0;
+    private static float LAST_VALUE_0 = 0;
+    private static float LAST_VALUE_1 = 0;
+    private static float LAST_VALUE_2 = 0;
 
     private static int FREQUENCY = -1;
+    private static double THRESHOLD = 0;
 
     /**
      * Broadcasted event: new accelerometer values
@@ -88,6 +93,19 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        // Apply threshold.  This applies to each axis independently.  We could
+        // alternatively use Euclidian distance.  If change of values is not
+        // enough, do nothing.
+        if (Math.abs(event.values[0] - LAST_VALUE_0 ) < THRESHOLD
+            && Math.abs(event.values[1] - LAST_VALUE_1) < THRESHOLD
+            && Math.abs(event.values[2] - LAST_VALUE_2) < THRESHOLD) {
+            return;
+        }
+        // Update last values with new values for the next round.
+        LAST_VALUE_0 = event.values[0];
+        LAST_VALUE_1 = event.values[1];
+        LAST_VALUE_2 = event.values[2];
+        // Proceed with saving as usual.
         ContentValues rowData = new ContentValues();
         rowData.put(Accelerometer_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
         rowData.put(Accelerometer_Data.TIMESTAMP, System.currentTimeMillis());
@@ -247,12 +265,18 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
                     Aware.setSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER, 200000);
                 }
 
-                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER))) {
+                if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_ACCELEROMETER).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.THRESHOLD_ACCELEROMETER, 0.0);
+                }
+
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER))
+                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ACCELEROMETER))) {
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mAccelerometer);
                     mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), FIFO_SIZE, sensorHandler);
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER));
+                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ACCELEROMETER));
                 }
 
                 if (Aware.DEBUG) Log.d(TAG, "Accelerometer service active: " + FREQUENCY + "ms");

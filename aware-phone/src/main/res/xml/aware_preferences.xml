@@ -77,6 +77,14 @@
                 android:key="frequency_accelerometer"
                 android:persistent="true"
                 android:title="Sampling rate" />
+
+            <EditTextPreference
+                android:defaultValue="0"
+                android:dependency="status_accelerometer"
+                android:inputType="numberDecimal"
+                android:key="threshold_accelerometer"
+                android:persistent="true"
+                android:title="Threshold for recording changes" />
         </PreferenceScreen>
         <PreferenceScreen
             android:icon="@drawable/ic_action_applications"
@@ -156,6 +164,14 @@
                 android:key="frequency_barometer"
                 android:persistent="true"
                 android:title="Sampling rate" />
+
+            <EditTextPreference
+                android:defaultValue="0"
+                android:dependency="status_barometer"
+                android:inputType="numberDecimal"
+                android:key="threshold_barometer"
+                android:persistent="true"
+                android:title="Threshold for recording changes" />
         </PreferenceScreen>
         <PreferenceScreen
             android:icon="@drawable/ic_action_battery"
@@ -279,6 +295,14 @@
                 android:persistent="true"
                 android:title="Sampling rate" />
 
+            <EditTextPreference
+                android:defaultValue="0"
+                android:dependency="status_gravity"
+                android:inputType="numberDecimal"
+                android:key="threshold_gravity"
+                android:persistent="true"
+                android:title="Threshold for recording changes" />
+
         </PreferenceScreen>
         <PreferenceScreen
             android:icon="@drawable/ic_action_gyroscope"
@@ -304,6 +328,14 @@
                 android:key="frequency_gyroscope"
                 android:persistent="true"
                 android:title="Sampling rate" />
+
+            <EditTextPreference
+                android:defaultValue="0"
+                android:dependency="status_gyroscope"
+                android:inputType="numberDecimal"
+                android:key="threshold_gyroscope"
+                android:persistent="true"
+                android:title="Threshold for recording changes" />
 
         </PreferenceScreen>
         <PreferenceScreen
@@ -397,6 +429,14 @@
                 android:persistent="true"
                 android:title="Sampling rate" />
 
+            <EditTextPreference
+                android:defaultValue="0"
+                android:dependency="status_light"
+                android:inputType="numberDecimal"
+                android:key="threshold_light"
+                android:persistent="true"
+                android:title="Threshold for recording changes" />
+
         </PreferenceScreen>
         <PreferenceScreen
             android:icon="@drawable/ic_action_linear_acceleration"
@@ -422,6 +462,14 @@
                 android:key="frequency_linear_accelerometer"
                 android:persistent="true"
                 android:title="Sampling rate" />
+
+            <EditTextPreference
+                android:defaultValue="0"
+                android:dependency="status_linear_accelerometer"
+                android:inputType="numberDecimal"
+                android:key="threshold_linear_accelerometer"
+                android:persistent="true"
+                android:title="Threshold for recording changes" />
 
         </PreferenceScreen>
         <PreferenceScreen
@@ -479,6 +527,14 @@
                 android:key="frequency_magnetometer"
                 android:persistent="true"
                 android:title="Sampling rate" />
+
+            <EditTextPreference
+                android:defaultValue="0"
+                android:dependency="status_magnetometer"
+                android:inputType="numberDecimal"
+                android:key="threshold_magnetometer"
+                android:persistent="true"
+                android:title="Threshold for recording changes" />
 
         </PreferenceScreen>
         <PreferenceScreen
@@ -556,6 +612,14 @@
                 android:persistent="true"
                 android:title="Sampling rate" />
 
+            <EditTextPreference
+                android:defaultValue="0"
+                android:dependency="status_proximity"
+                android:inputType="numberDecimal"
+                android:key="threshold_proximity"
+                android:persistent="true"
+                android:title="Threshold for recording changes" />
+
         </PreferenceScreen>
         <PreferenceScreen
             android:icon="@drawable/ic_action_rotation"
@@ -581,6 +645,14 @@
                 android:key="frequency_rotation"
                 android:persistent="true"
                 android:title="Sampling rate" />
+
+            <EditTextPreference
+                android:defaultValue="0"
+                android:dependency="status_rotation"
+                android:inputType="numberDecimal"
+                android:key="threshold_rotation"
+                android:persistent="true"
+                android:title="Threshold for recording changes" />
 
         </PreferenceScreen>
         <PreferenceScreen
@@ -625,6 +697,14 @@
                 android:key="frequency_temperature"
                 android:persistent="true"
                 android:title="Sampling rate" />
+
+            <EditTextPreference
+                android:defaultValue="0"
+                android:dependency="status_temperature"
+                android:inputType="numberDecimal"
+                android:key="threshold_temperature"
+                android:persistent="true"
+                android:title="Threshold for recording changes" />
 
         </PreferenceScreen>
         <PreferenceScreen
