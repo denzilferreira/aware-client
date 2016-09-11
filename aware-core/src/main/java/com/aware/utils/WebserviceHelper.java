@@ -91,6 +91,8 @@ public class WebserviceHelper extends IntentService {
 
         String WEBSERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
         String protocol = WEBSERVER.substring(0, WEBSERVER.indexOf(":"));
+        boolean WEBSERVICE_SIMPLE = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SIMPLE).equals("true");
+        boolean WEBSERVICE_REMOVE_DATA = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_REMOVE_DATA).equals("true");
 
         //Fixed: not using webservices
         if (WEBSERVER.length() == 0) return;
@@ -147,19 +149,22 @@ public class WebserviceHelper extends IntentService {
             fields.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
             fields.put(EXTRA_FIELDS, TABLES_FIELDS);
 
-            //Create table if doesn't exist on the remote webservice server
-            String response;
-            if (protocol.equals("https")) {
-                try {
-                    response = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
-                } catch (FileNotFoundException e) {
-                    response = null;
+            String response = null;
+            // Do not run /create_table if webservice_simple == true
+            if (! WEBSERVICE_SIMPLE) {
+                //Create table if doesn't exist on the remote webservice server
+                if (protocol.equals("https")) {
+                    try {
+                        response = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
+                    } catch (FileNotFoundException e) {
+                        response = null;
+                    }
+                } else {
+                    response = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
                 }
-            } else {
-                response = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
             }
 
-            if (response != null) {
+            if (response != null || WEBSERVICE_SIMPLE) {
                 String[] columnsStr = new String[]{};
                 Cursor columnsDB = getContentResolver().query(CONTENT_URI, null, null, null, null);
                 if (columnsDB != null && columnsDB.moveToFirst()) {
@@ -172,17 +177,24 @@ public class WebserviceHelper extends IntentService {
                     request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
 
                     //check the latest entry in remote database
-                    String latest;
-                    if (protocol.equals("https")) {
-                        try {
-                            latest = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
-                        } catch (FileNotFoundException e) {
-                            latest = null;
+                    String latest = "[]";
+                    // Default aware has this condition as TRUE and does the /latest call.
+                    // Only if WEBSERVICE_REMOVE_DATA is true can we safely do this, and
+                    // we also require WEBSERVICE_SIMPLE so that we can remove data while
+                    // still having safe commits.
+                    if (!(WEBSERVICE_SIMPLE && WEBSERVICE_REMOVE_DATA)) {
+                        // Normal AWARE API always gets here.
+                        if (protocol.equals("https")) {
+                            try {
+                                latest = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
+                            } catch (FileNotFoundException e) {
+                                latest = null;
+                            }
+                        } else {
+                            latest = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
                         }
-                    } else {
-                        latest = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
-                    }
                     if (latest == null) return; //unable to reach the server, cancel this sync
+                    }
 
                     //If in a study, get only data from joined date onwards
                     String study_condition = "";
@@ -342,9 +354,10 @@ public class WebserviceHelper extends IntentService {
                                 highFrequencySensors.add("proximity");
 
                                 //Clean the local database, now that it is uploaded to the server, if required
-                                if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0
+                                if ((Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0
                                         && Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA)) == 4
-                                        && highFrequencySensors.contains(DATABASE_TABLE)) {
+                                        && highFrequencySensors.contains(DATABASE_TABLE))
+                                    || WEBSERVICE_REMOVE_DATA ) {
 
                                     long last = rows.getJSONObject(rows.length()-1).getLong("timestamp");
                                     getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null);
