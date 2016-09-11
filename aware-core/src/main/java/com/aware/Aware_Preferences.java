@@ -417,4 +417,19 @@ public class Aware_Preferences {
      * Activate/deactivate keyboard logging
      */
     public static final String STATUS_KEYBOARD = "status_keyboard";
+
+    /**
+     * Preferred hash function
+     */
+    public static final String HASH_FUNCTION = "hash_function";
+
+    /**
+     * hash function salt
+     */
+    public static final String HASH_SALT = "hash_salt";
+
+    /**
+     * hash function salt.  If "device_id", then salt with this device's device_id.
+     */
+    public static final String HASH_FUNCTION_PHONE = "hash_function_phone";
 }

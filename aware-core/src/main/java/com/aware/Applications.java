@@ -133,7 +133,7 @@ public class Applications extends AccessibilityService {
                 rowData.put(Applications_Notifications.TIMESTAMP, System.currentTimeMillis());
                 rowData.put(Applications_Notifications.PACKAGE_NAME, event.getPackageName().toString());
                 rowData.put(Applications_Notifications.APPLICATION_NAME, getApplicationName(event.getPackageName().toString()));
-                rowData.put(Applications_Notifications.TEXT, Encrypter.hashSHA1(event.getText().toString()));
+                rowData.put(Applications_Notifications.TEXT, Encrypter.hash(getApplicationContext(), event.getText().toString()));
                 rowData.put(Applications_Notifications.SOUND, ((notificationDetails.sound != null) ? notificationDetails.sound.toString() : ""));
                 rowData.put(Applications_Notifications.VIBRATE, ((notificationDetails.vibrate != null) ? notificationDetails.vibrate.toString() : ""));
                 rowData.put(Applications_Notifications.DEFAULTS, notificationDetails.defaults);
