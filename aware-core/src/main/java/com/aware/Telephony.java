@@ -270,9 +270,9 @@ public class Telephony extends Aware_Sensor {
             rowData.put(Telephony_Data.TIMESTAMP, timestamp);
             rowData.put(Telephony_Data.DEVICE_ID, device_id);
             rowData.put(Telephony_Data.DATA_ENABLED, telephonyManager.getDataState());
-            rowData.put(Telephony_Data.IMEI_MEID_ESN, Encrypter.hashSHA1(telephonyManager.getDeviceId()));
+            rowData.put(Telephony_Data.IMEI_MEID_ESN, Encrypter.hash(mContext, telephonyManager.getDeviceId()));
             rowData.put(Telephony_Data.SOFTWARE_VERSION, telephonyManager.getDeviceSoftwareVersion());
-            rowData.put(Telephony_Data.LINE_NUMBER, Encrypter.hashSHA1(telephonyManager.getLine1Number()));
+            rowData.put(Telephony_Data.LINE_NUMBER, Encrypter.hashPhone(mContext, telephonyManager.getLine1Number()));
             rowData.put(Telephony_Data.NETWORK_COUNTRY_ISO_MCC, telephonyManager.getNetworkCountryIso());
             rowData.put(Telephony_Data.NETWORK_OPERATOR_CODE, telephonyManager.getNetworkOperator());
             rowData.put(Telephony_Data.NETWORK_OPERATOR_NAME, telephonyManager.getNetworkOperatorName());
@@ -281,8 +281,8 @@ public class Telephony extends Aware_Sensor {
             rowData.put(Telephony_Data.SIM_STATE, telephonyManager.getSimState());
             rowData.put(Telephony_Data.SIM_OPERATOR_CODE, telephonyManager.getSimOperator());
             rowData.put(Telephony_Data.SIM_OPERATOR_NAME, telephonyManager.getSimOperatorName());
-            rowData.put(Telephony_Data.SIM_SERIAL, Encrypter.hashSHA1(telephonyManager.getSimSerialNumber()));
-            rowData.put(Telephony_Data.SUBSCRIBER_ID, Encrypter.hashSHA1(telephonyManager.getSubscriberId()));
+            rowData.put(Telephony_Data.SIM_SERIAL, Encrypter.hash(mContext, telephonyManager.getSimSerialNumber()));
+            rowData.put(Telephony_Data.SUBSCRIBER_ID, Encrypter.hash(mContext, telephonyManager.getSubscriberId()));
 
             try {
                 mContext.getContentResolver().insert(Telephony_Data.CONTENT_URI, rowData);
