@@ -58,6 +58,12 @@ public class Aware_Preferences {
     public static final String FREQUENCY_ACCELEROMETER = "frequency_accelerometer";
 
     /**
+     * Accelerometer threshold (float).  Do not record consecutive points if
+     * change in value of all axes is less than this.
+     */
+    public static final String THRESHOLD_ACCELEROMETER = "threshold_accelerometer";
+
+    /**
      * Activate/deactivate application usage log (boolean)
      */
     public static final String STATUS_APPLICATIONS = "status_applications";
@@ -127,6 +133,12 @@ public class Aware_Preferences {
     public static final String FREQUENCY_GRAVITY = "frequency_gravity";
 
     /**
+     * Threshold (float).  Do not record consecutive points if
+     * change in value of all axes is less than this.
+     */
+    public static final String THRESHOLD_GRAVITY = "threshold_gravity";
+
+    /**
      * Activate/deactivate gyroscope log (boolean)
      */
     public static final String STATUS_GYROSCOPE = "status_gyroscope";
@@ -139,6 +151,12 @@ public class Aware_Preferences {
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_GYROSCOPE = "frequency_gyroscope";
+
+    /**
+     * Threshold (float).  Do not record consecutive points if
+     * change in value of all axes is less than this.
+     */
+    public static final String THRESHOLD_GYROSCOPE = "threshold_gyroscope";
 
     /**
      * Activate/deactivate GPS location log (boolean)
@@ -190,6 +208,12 @@ public class Aware_Preferences {
     public static final String FREQUENCY_LIGHT = "frequency_light";
 
     /**
+     * Light threshold (float).  Do not record consecutive points if
+     * change in value is less than this.
+     */
+    public static final String THRESHOLD_LIGHT = "threshold_light";
+
+    /**
      * Activate/deactivate linear accelerometer log (boolean)
      */
     public static final String STATUS_LINEAR_ACCELEROMETER = "status_linear_accelerometer";
@@ -202,6 +226,13 @@ public class Aware_Preferences {
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_LINEAR_ACCELEROMETER = "frequency_linear_accelerometer";
+
+
+    /**
+     * Linear accelerometer threshold (float).  Do not record consecutive points if
+     * change in value of all axes is less than this.
+     */
+    public static final String THRESHOLD_LINEAR_ACCELEROMETER = "threshold_linear_accelerometer";
 
     /**
      * Activate/deactivate network usage events (boolean)
@@ -233,6 +264,12 @@ public class Aware_Preferences {
     public static final String FREQUENCY_MAGNETOMETER = "frequency_magnetometer";
 
     /**
+     * Threshold (float).  Do not record consecutive points if
+     * change in value of all axes is less than this.
+     */
+    public static final String THRESHOLD_MAGNETOMETER = "threshold_magnetometer";
+
+    /**
      * Activate/deactivate barometer log (boolean)
      */
     public static final String STATUS_BAROMETER = "status_barometer";
@@ -245,6 +282,12 @@ public class Aware_Preferences {
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_BAROMETER = "frequency_barometer";
+
+    /**
+     * Threshold (float).  Do not record consecutive points if
+     * change in value of all axes is less than this.
+     */
+    public static final String THRESHOLD_BAROMETER = "threshold_barometer";
 
     /**
      * Activate/deactivate processor log (boolean)
@@ -281,6 +324,12 @@ public class Aware_Preferences {
     public static final String FREQUENCY_PROXIMITY = "frequency_proximity";
 
     /**
+     * Threshold (float).  Do not record consecutive points if
+     * change in value of all axes is less than this.
+     */
+    public static final String THRESHOLD_PROXIMITY = "threshold_proximity";
+
+    /**
      * Activate/deactivate rotation log (boolean)
      */
     public static final String STATUS_ROTATION = "status_rotation";
@@ -293,6 +342,12 @@ public class Aware_Preferences {
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_ROTATION = "frequency_rotation";
+
+    /**
+     * Threshold (float).  Do not record consecutive points if
+     * change in value of all axes is less than this.
+     */
+    public static final String THRESHOLD_ROTATION = "threshold_rotation";
 
     /**
      * Activate/deactivate screen usage log (boolean)
@@ -312,6 +367,12 @@ public class Aware_Preferences {
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_TEMPERATURE = "frequency_temperature";
+
+    /**
+     * Threshold (float).  Do not record consecutive points if
+     * change in value of all axes is less than this.
+     */
+    public static final String THRESHOLD_TEMPERATURE = "threshold_temperature";
 
     /**
      * Activate/deactivate telephony log (boolean)

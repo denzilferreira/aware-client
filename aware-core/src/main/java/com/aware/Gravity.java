@@ -34,6 +34,7 @@ import com.aware.utils.Converters;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.lang.Math;
 
 /**
  * AWARE Gravity module
@@ -56,7 +57,12 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
     private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
     private static int FIFO_SIZE = 0;
+    private static float LAST_VALUE_0 = 0;
+    private static float LAST_VALUE_1 = 0;
+    private static float LAST_VALUE_2 = 0;
+
     private static int FREQUENCY = -1;
+    private static double THRESHOLD = 0;
     
     /**
      * Broadcasted event: new sensor values
@@ -94,6 +100,19 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        // Apply threshold.  This applies to each axis independently.  We could
+        // alternatively use Euclidian distance.  If change of values is not
+        // enough, do nothing.
+        if (Math.abs(event.values[0] - LAST_VALUE_0 ) < THRESHOLD
+                && Math.abs(event.values[1] - LAST_VALUE_1) < THRESHOLD
+                && Math.abs(event.values[2] - LAST_VALUE_2) < THRESHOLD) {
+            return;
+        }
+        // Update last values with new values for the next round.
+        LAST_VALUE_0 = event.values[0];
+        LAST_VALUE_1 = event.values[1];
+        LAST_VALUE_2 = event.values[2];
+        // Proceed with saving as usual.
         ContentValues rowData = new ContentValues();
         rowData.put(Gravity_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
         rowData.put(Gravity_Data.TIMESTAMP, System.currentTimeMillis());
@@ -253,12 +272,18 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
                     Aware.setSetting(this, Aware_Preferences.FREQUENCY_GRAVITY, 200000);
                 }
 
-                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY))) {
+                if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_GRAVITY).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.THRESHOLD_GRAVITY, 0.0);
+                }
+
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY))
+                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GRAVITY))) {
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mGravity);
                     mSensorManager.registerListener(this, mGravity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY)), FIFO_SIZE, sensorHandler);
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY));
+                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GRAVITY));
                 }
 
                 if(Aware.DEBUG) Log.d(TAG,"Gravity service active: " + FREQUENCY + "ms");

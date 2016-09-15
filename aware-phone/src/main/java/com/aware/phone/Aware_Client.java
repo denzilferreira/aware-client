@@ -348,6 +348,23 @@ public class Aware_Client extends Aware_Activity {
             }
         });
         if (Aware.isStudy(awareContext)) frequency_temperature.setSelectable(false);
+
+        final EditTextPreference threshold_temperature = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_TEMPERATURE);
+        if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_TEMPERATURE).length() > 0) {
+            String threshold = Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_TEMPERATURE);
+            threshold_temperature.setSummary(threshold);
+        }
+        threshold_temperature.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_TEMPERATURE));
+        threshold_temperature.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                Aware.setSetting(awareContext, Aware_Preferences.THRESHOLD_TEMPERATURE, (String) newValue);
+                threshold_temperature.setSummary((String) newValue);
+                Aware.startTemperature(awareContext);
+                return true;
+            }
+        });
+        if (Aware.isStudy(awareContext)) threshold_temperature.setSelectable(false);
     }
 
     /**
@@ -409,6 +426,23 @@ public class Aware_Client extends Aware_Activity {
             }
         });
         if (Aware.isStudy(awareContext)) frequency_accelerometer.setSelectable(false);
+
+        final EditTextPreference threshold_accelerometer = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_ACCELEROMETER);
+        if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_ACCELEROMETER).length() > 0) {
+            String threshold = Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_ACCELEROMETER);
+            threshold_accelerometer.setSummary(threshold);
+        }
+        threshold_accelerometer.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_ACCELEROMETER));
+        threshold_accelerometer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                Aware.setSetting(awareContext, Aware_Preferences.THRESHOLD_ACCELEROMETER, (String) newValue);
+                threshold_accelerometer.setSummary((String) newValue);
+                Aware.startAccelerometer(awareContext);
+                return true;
+            }
+        });
+        if (Aware.isStudy(awareContext)) threshold_accelerometer.setSelectable(false);
     }
 
     /**
@@ -471,6 +505,23 @@ public class Aware_Client extends Aware_Activity {
             }
         });
         if (Aware.isStudy(awareContext)) frequency_linear_accelerometer.setSelectable(false);
+
+        final EditTextPreference threshold_linear_accelerometer = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_LINEAR_ACCELEROMETER);
+        if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_LINEAR_ACCELEROMETER).length() > 0) {
+            String threshold = Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_LINEAR_ACCELEROMETER);
+            threshold_linear_accelerometer.setSummary(threshold);
+        }
+        threshold_linear_accelerometer.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_LINEAR_ACCELEROMETER));
+        threshold_linear_accelerometer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                Aware.setSetting(awareContext, Aware_Preferences.THRESHOLD_LINEAR_ACCELEROMETER, (String) newValue);
+                threshold_linear_accelerometer.setSummary((String) newValue);
+                Aware.startLinearAccelerometer(awareContext);
+                return true;
+            }
+        });
+        if (Aware.isStudy(awareContext)) threshold_linear_accelerometer.setSelectable(false);
     }
 
     /**
@@ -811,6 +862,23 @@ public class Aware_Client extends Aware_Activity {
             }
         });
         if (Aware.isStudy(awareContext)) frequency_gravity.setSelectable(false);
+
+        final EditTextPreference threshold_gravity = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_GRAVITY);
+        if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_GRAVITY).length() > 0) {
+            String threshold = Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_GRAVITY);
+            threshold_gravity.setSummary(threshold);
+        }
+        threshold_gravity.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_GRAVITY));
+        threshold_gravity.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                Aware.setSetting(awareContext, Aware_Preferences.THRESHOLD_GRAVITY, (String) newValue);
+                threshold_gravity.setSummary((String) newValue);
+                Aware.startGravity(awareContext);
+                return true;
+            }
+        });
+        if (Aware.isStudy(awareContext)) threshold_gravity.setSelectable(false);
     }
 
     /**
@@ -872,6 +940,23 @@ public class Aware_Client extends Aware_Activity {
             }
         });
         if (Aware.isStudy(awareContext)) frequency_gyroscope.setSelectable(false);
+
+        final EditTextPreference threshold_gyroscope = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_GYROSCOPE);
+        if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_GYROSCOPE).length() > 0) {
+            String threshold = Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_GYROSCOPE);
+            threshold_gyroscope.setSummary(threshold);
+        }
+        threshold_gyroscope.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_GYROSCOPE));
+        threshold_gyroscope.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                Aware.setSetting(awareContext, Aware_Preferences.THRESHOLD_GYROSCOPE, (String) newValue);
+                threshold_gyroscope.setSummary((String) newValue);
+                Aware.startGyroscope(awareContext);
+                return true;
+            }
+        });
+        if (Aware.isStudy(awareContext)) threshold_gyroscope.setSelectable(false);
     }
 
     /**
@@ -1319,6 +1404,23 @@ public class Aware_Client extends Aware_Activity {
             }
         });
         if (Aware.isStudy(awareContext)) frequency_light.setSelectable(false);
+
+        final EditTextPreference threshold_light = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_LIGHT);
+        if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_LIGHT).length() > 0) {
+            String threshold = Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_LIGHT);
+            threshold_light.setSummary(threshold);
+        }
+        threshold_light.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_LIGHT));
+        threshold_light.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                Aware.setSetting(awareContext, Aware_Preferences.THRESHOLD_LIGHT, (String) newValue);
+                threshold_light.setSummary((String) newValue);
+                Aware.startLight(awareContext);
+                return true;
+            }
+        });
+        if (Aware.isStudy(awareContext)) threshold_light.setSelectable(false);
     }
 
     /**
@@ -1381,6 +1483,23 @@ public class Aware_Client extends Aware_Activity {
             }
         });
         if (Aware.isStudy(awareContext)) frequency_magnetometer.setSelectable(false);
+
+        final EditTextPreference threshold_magnetometer = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_MAGNETOMETER);
+        if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_MAGNETOMETER).length() > 0) {
+            String threshold = Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_MAGNETOMETER);
+            threshold_magnetometer.setSummary(threshold);
+        }
+        threshold_magnetometer.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_MAGNETOMETER));
+        threshold_magnetometer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                Aware.setSetting(awareContext, Aware_Preferences.THRESHOLD_MAGNETOMETER, (String) newValue);
+                threshold_magnetometer.setSummary((String) newValue);
+                Aware.startMagnetometer(awareContext);
+                return true;
+            }
+        });
+        if (Aware.isStudy(awareContext)) threshold_magnetometer.setSelectable(false);
     }
 
     /**
@@ -1443,6 +1562,23 @@ public class Aware_Client extends Aware_Activity {
             }
         });
         if (Aware.isStudy(awareContext)) frequency_pressure.setSelectable(false);
+
+        final EditTextPreference threshold_barometer = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_BAROMETER);
+        if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_BAROMETER).length() > 0) {
+            String threshold = Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_BAROMETER);
+            threshold_barometer.setSummary(threshold);
+        }
+        threshold_barometer.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_BAROMETER));
+        threshold_barometer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                Aware.setSetting(awareContext, Aware_Preferences.THRESHOLD_BAROMETER, (String) newValue);
+                threshold_barometer.setSummary((String) newValue);
+                Aware.startBarometer(awareContext);
+                return true;
+            }
+        });
+        if (Aware.isStudy(awareContext)) threshold_barometer.setSelectable(false);
     }
 
     /**
@@ -1506,6 +1642,23 @@ public class Aware_Client extends Aware_Activity {
             }
         });
         if (Aware.isStudy(awareContext)) frequency_proximity.setSelectable(false);
+
+        final EditTextPreference threshold_proximity = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_PROXIMITY);
+        if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_PROXIMITY).length() > 0) {
+            String threshold = Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_PROXIMITY);
+            threshold_proximity.setSummary(threshold);
+        }
+        threshold_proximity.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_PROXIMITY));
+        threshold_proximity.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                Aware.setSetting(awareContext, Aware_Preferences.THRESHOLD_PROXIMITY, (String) newValue);
+                threshold_proximity.setSummary((String) newValue);
+                Aware.startProximity(awareContext);
+                return true;
+            }
+        });
+        if (Aware.isStudy(awareContext)) threshold_proximity.setSelectable(false);
     }
 
     /**
@@ -1568,6 +1721,23 @@ public class Aware_Client extends Aware_Activity {
             }
         });
         if (Aware.isStudy(awareContext)) frequency_rotation.setSelectable(false);
+
+        final EditTextPreference threshold_rotation = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_ROTATION);
+        if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_ROTATION).length() > 0) {
+            String threshold = Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_ROTATION);
+            threshold_rotation.setSummary(threshold);
+        }
+        threshold_rotation.setDefaultValue(Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_ROTATION));
+        threshold_rotation.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                Aware.setSetting(awareContext, Aware_Preferences.THRESHOLD_ROTATION, (String) newValue);
+                threshold_rotation.setSummary((String) newValue);
+                Aware.startRotation(awareContext);
+                return true;
+            }
+        });
+        if (Aware.isStudy(awareContext)) threshold_rotation.setSelectable(false);
     }
 
     /**

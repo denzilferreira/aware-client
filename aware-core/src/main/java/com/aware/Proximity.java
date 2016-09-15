@@ -32,6 +32,7 @@ import com.aware.utils.Aware_Sensor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.lang.Math;
 
 /**
  * AWARE Proximity module
@@ -49,7 +50,9 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
     private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
     private static int FIFO_SIZE = 0;
+    private static float LAST_VALUE_0 = 0;
     private static int FREQUENCY = -1;
+    private static double THRESHOLD = 0;
 
     /**
      * Broadcasted event: new sensor values
@@ -88,6 +91,13 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        // Apply threshold.  If change of values is not enough, do nothing.
+        if (Math.abs(event.values[0] - LAST_VALUE_0 ) < THRESHOLD) {
+            return;
+        }
+        // Update last values with new values for the next round.
+        LAST_VALUE_0 = event.values[0];
+        // Proceed with saving as usual.
         ContentValues rowData = new ContentValues();
         rowData.put(Proximity_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
         rowData.put(Proximity_Data.TIMESTAMP, System.currentTimeMillis());
@@ -248,12 +258,18 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
                     Aware.setSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY, 200000);
                 }
 
-                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY))) {
+                if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_PROXIMITY).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.THRESHOLD_PROXIMITY, 0.0);
+                }
+
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY))
+                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_PROXIMITY))) {
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mProximity);
                     mSensorManager.registerListener(this, mProximity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY)), FIFO_SIZE, sensorHandler);
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY));
+                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_PROXIMITY));
                 }
 
                 if (Aware.DEBUG) Log.d(TAG, "Proximity service active: " + FREQUENCY + "ms");

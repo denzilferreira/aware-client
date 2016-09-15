@@ -54,7 +54,11 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
     private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
     private static int FIFO_SIZE = 0;
+    private static float LAST_VALUE_0 = 0;
+    private static float LAST_VALUE_1 = 0;
+    private static float LAST_VALUE_2 = 0;
     private static int FREQUENCY = -1;
+    private static double THRESHOLD = 0;
 
     /**
      * Broadcasted event: new gyroscope values
@@ -93,6 +97,19 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        // Apply threshold.  This applies to each axis independently.  We could
+        // alternatively use Euclidian distance.  If change of values is not
+        // enough, do nothing.
+        if (Math.abs(event.values[0] - LAST_VALUE_0 ) < THRESHOLD
+                && Math.abs(event.values[1] - LAST_VALUE_1) < THRESHOLD
+                && Math.abs(event.values[2] - LAST_VALUE_2) < THRESHOLD) {
+            return;
+        }
+        // Update last values with new values for the next round.
+        LAST_VALUE_0 = event.values[0];
+        LAST_VALUE_1 = event.values[1];
+        LAST_VALUE_2 = event.values[2];
+        // Proceed with saving as usual.
         ContentValues rowData = new ContentValues();
         rowData.put(Gyroscope_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
         rowData.put(Gyroscope_Data.TIMESTAMP, System.currentTimeMillis());
@@ -254,12 +271,18 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
                     Aware.setSetting(this, Aware_Preferences.FREQUENCY_GYROSCOPE, 200000);
                 }
 
-                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE))) {
+                if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_GYROSCOPE).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.THRESHOLD_GYROSCOPE, 0.0);
+                }
+
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE))
+                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GYROSCOPE))) {
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mGyroscope);
                     mSensorManager.registerListener(this, mGyroscope, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE)), FIFO_SIZE, sensorHandler); //Note: FIFO for gyroscope in Cyanogenmod is not working.
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE));
+                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GYROSCOPE));
                 }
             }
 
