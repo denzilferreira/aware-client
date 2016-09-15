@@ -139,7 +139,7 @@ public class Aware_Provider extends ContentProvider {
 			+ Aware_Device.SERIAL + " text default '',"
 			+ Aware_Device.RELEASE + " text default '',"
 			+ Aware_Device.RELEASE_TYPE + " text default '',"
-			+ Aware_Device.SDK + " integer default 0,"
+			+ Aware_Device.SDK + " text default '',"
 			+ Aware_Device.LABEL + " text default '',"
 			+ "UNIQUE(" + Aware_Device.DEVICE_ID + ")",
 

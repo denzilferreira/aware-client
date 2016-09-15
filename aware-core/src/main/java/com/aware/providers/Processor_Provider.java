@@ -72,7 +72,7 @@ public class Processor_Provider extends ContentProvider {
 
 	public static final String[] TABLES_FIELDS = {
 	// processor
-	Processor_Data._ID + " integer primary key autoincrement,"
+		Processor_Data._ID + " integer primary key autoincrement,"
 			+ Processor_Data.TIMESTAMP + " real default 0,"
 			+ Processor_Data.DEVICE_ID + " text default '',"
 			+ Processor_Data.LAST_USER + " real default 0,"
@@ -80,7 +80,8 @@ public class Processor_Provider extends ContentProvider {
 			+ Processor_Data.LAST_IDLE + " real default 0,"
 			+ Processor_Data.USER_LOAD + " real default 0,"
 			+ Processor_Data.SYSTEM_LOAD + " real default 0,"
-			+ Processor_Data.IDLE_LOAD + " real default 0" };
+			+ Processor_Data.IDLE_LOAD + " real default 0"
+	};
 
 	private static UriMatcher sUriMatcher = null;
 	private static HashMap<String, String> processorProjectionMap = null;

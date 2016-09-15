@@ -330,7 +330,7 @@ public class Aware extends Service {
             rowData.put(Aware_Device.SERIAL, Build.SERIAL);
             rowData.put(Aware_Device.RELEASE, Build.VERSION.RELEASE);
             rowData.put(Aware_Device.RELEASE_TYPE, Build.TYPE);
-            rowData.put(Aware_Device.SDK, Build.VERSION.SDK_INT);
+            rowData.put(Aware_Device.SDK, String.valueOf(Build.VERSION.SDK_INT));
             rowData.put(Aware_Device.LABEL, Aware.getSetting(awareContext, Aware_Preferences.DEVICE_LABEL));
 
             try {

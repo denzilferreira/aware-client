@@ -68,7 +68,7 @@ public class Screen_Provider extends ContentProvider {
 
 	public static final String[] TABLES_FIELDS = {
 	// screen
-	Screen_Data._ID + " integer primary key autoincrement,"
+		Screen_Data._ID + " integer primary key autoincrement,"
 			+ Screen_Data.TIMESTAMP + " real default 0,"
 			+ Screen_Data.DEVICE_ID + " text default '',"
 			+ Screen_Data.SCREEN_STATUS + " integer default 0" };
