@@ -65,17 +65,25 @@ public class Locations extends Aware_Sensor implements LocationListener {
                         bestLocation = lastGPS;
                     }
 
+                    // Are we within the geofence, if we are given one?
+                    Boolean permitted = testGeoFence(bestLocation.getLatitude(), bestLocation.getLongitude());
+                    if (Aware.DEBUG) Log.d(TAG, "Locations: geofencing: permitted=" + permitted);
+
                     if (bestLocation != null) {
                         ContentValues rowData = new ContentValues();
                         rowData.put(Locations_Data.TIMESTAMP, System.currentTimeMillis());
                         rowData.put(Locations_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-                        rowData.put(Locations_Data.LATITUDE, bestLocation.getLatitude());
-                        rowData.put(Locations_Data.LONGITUDE, bestLocation.getLongitude());
-                        rowData.put(Locations_Data.BEARING, bestLocation.getBearing());
-                        rowData.put(Locations_Data.SPEED, bestLocation.getSpeed());
-                        rowData.put(Locations_Data.ALTITUDE, bestLocation.getAltitude());
                         rowData.put(Locations_Data.PROVIDER, bestLocation.getProvider());
-                        rowData.put(Locations_Data.ACCURACY, bestLocation.getAccuracy());
+                        if (permitted) {
+                            rowData.put(Locations_Data.LATITUDE, bestLocation.getLatitude());
+                            rowData.put(Locations_Data.LONGITUDE, bestLocation.getLongitude());
+                            rowData.put(Locations_Data.BEARING, bestLocation.getBearing());
+                            rowData.put(Locations_Data.SPEED, bestLocation.getSpeed());
+                            rowData.put(Locations_Data.ALTITUDE, bestLocation.getAltitude());
+                            rowData.put(Locations_Data.ACCURACY, bestLocation.getAccuracy());
+                        } else {
+                            rowData.put(Locations_Data.LABEL, "outofbounds");
+                        }
 
                         try {
                             getContentResolver().insert(Locations_Data.CONTENT_URI, rowData);
@@ -120,6 +128,71 @@ public class Locations extends Aware_Sensor implements LocationListener {
 
     private static int FREQUENCY_NETWORK = -1;
     private static int FREQUENCY_GPS = -1;
+
+    /**
+     * Geofencing function.  Tests if a lat and lon is allowed, based
+     * on the Aware "location_geofence" setting.
+     */
+    public Boolean testGeoFence(Double lat0, Double lon0) {
+        // Find fence and if we even need to fence.
+        String geofences = Aware.getSetting(getApplicationContext(), Aware_Preferences.LOCATION_GEOFENCE);
+        if (Aware.DEBUG) Log.d(TAG, "Location geofence: testing against config=" + geofences);
+        // If no value, then always accept locations
+        if (geofences.length() == 0 || geofences.equals("null"))
+            return true;
+
+        // Separate geofence string by spaces, tabs, and semicolon
+        String[] fences = geofences.split("[ \t;]+");
+        // Test each part separately, if any part is true, return true.
+        for (Integer i=0 ; i<fences.length ; i++) {
+            String[] parts = fences[i].split(",");
+            // Circular fences.  Distance in METERS.
+            if (parts.length == 3) {
+                Double lat1 = Double.parseDouble(parts[0]);
+                Double lon1 = Double.parseDouble(parts[1]);
+                Double radius = Double.parseDouble(parts[2]);
+                if (wgs84_dist(lat0, lon0, lat1, lon1) < radius) {
+                    if (Aware.DEBUG) Log.d(TAG, "Location geofence: within " + fences[i]);
+                    return true;
+                }
+            }
+            // Rectungular fence
+            if (parts[0].equals("rect") && parts.length==5) {
+                Double lat1 = Double.parseDouble(parts[1]);
+                Double lon1 = Double.parseDouble(parts[2]);
+                Double lat2 = Double.parseDouble(parts[3]);
+                Double lon2 = Double.parseDouble(parts[4]);
+                // Be safe in case order of xxx1 and xxx2 are reversed,
+                // so test twice.  Is there a better way to do this?
+                if (      ((lat1 < lat0 && lat0 < lat2)
+                        || (lat2 < lat0 && lat0 < lat1))
+                    &&    ((lon1 < lon0 && lon0 < lon2)
+                        || (lon2 < lon0 && lon0 < lon1))
+                       ) {
+                    if (Aware.DEBUG) Log.d(TAG, "Location geofence: within " + fences[i]);
+                    return true;
+                }
+            }
+        }
+        if (Aware.DEBUG) Log.d(TAG, "Location geofence: not in any fences");
+        return false;
+    }
+
+    /**
+     * Haversine formula for geographic distances.  Returns distance in meters.
+     */
+    public static Double wgs84_dist(Double lat1, Double lon1, Double lat2, Double lon2) {
+        Double EARTH_RADIUS = 6378137.;
+
+        Double dLat = Math.toRadians(lat2 - lat1);
+        Double dLon = Math.toRadians(lon2 - lon1);
+        Double a = (Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2));
+        Double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        Double d = EARTH_RADIUS * c;
+        return d;
+    }
 
     /**
      * Singleton instance of Locations service
@@ -320,16 +393,25 @@ public class Locations extends Aware_Sensor implements LocationListener {
             bestLocation = newLocation;
         }
 
+        // Are we within the geofence, if we are given one?
+        Boolean permitted = testGeoFence(bestLocation.getLatitude(), bestLocation.getLongitude());
+        if (Aware.DEBUG) Log.d(TAG, "Locations: geofencing: permitted=" + permitted);
+
+
         ContentValues rowData = new ContentValues();
         rowData.put(Locations_Data.TIMESTAMP, System.currentTimeMillis());
         rowData.put(Locations_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-        rowData.put(Locations_Data.LATITUDE, bestLocation.getLatitude());
-        rowData.put(Locations_Data.LONGITUDE, bestLocation.getLongitude());
-        rowData.put(Locations_Data.BEARING, bestLocation.getBearing());
-        rowData.put(Locations_Data.SPEED, bestLocation.getSpeed());
-        rowData.put(Locations_Data.ALTITUDE, bestLocation.getAltitude());
         rowData.put(Locations_Data.PROVIDER, bestLocation.getProvider());
-        rowData.put(Locations_Data.ACCURACY, bestLocation.getAccuracy());
+        if (permitted) {
+            rowData.put(Locations_Data.LATITUDE, bestLocation.getLatitude());
+            rowData.put(Locations_Data.LONGITUDE, bestLocation.getLongitude());
+            rowData.put(Locations_Data.BEARING, bestLocation.getBearing());
+            rowData.put(Locations_Data.SPEED, bestLocation.getSpeed());
+            rowData.put(Locations_Data.ALTITUDE, bestLocation.getAltitude());
+            rowData.put(Locations_Data.ACCURACY, bestLocation.getAccuracy());
+        } else {
+            rowData.put(Locations_Data.LABEL, "outofbounds");
+        }
 
         try {
             getContentResolver().insert(Locations_Data.CONTENT_URI, rowData);
@@ -422,16 +504,24 @@ public class Locations extends Aware_Sensor implements LocationListener {
             bestLocation = lastGPS;
         }
 
+        // Are we within the geofence, if we are given one?
+        Boolean permitted = testGeoFence(bestLocation.getLatitude(), bestLocation.getLongitude());
+        if (Aware.DEBUG) Log.d(TAG, "Locations: geofencing: permitted=" + permitted);
+
         ContentValues rowData = new ContentValues();
         rowData.put(Locations_Data.TIMESTAMP, System.currentTimeMillis());
         rowData.put(Locations_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-        rowData.put(Locations_Data.LATITUDE, bestLocation.getLatitude());
-        rowData.put(Locations_Data.LONGITUDE, bestLocation.getLongitude());
-        rowData.put(Locations_Data.BEARING, bestLocation.getBearing());
-        rowData.put(Locations_Data.SPEED, bestLocation.getSpeed());
-        rowData.put(Locations_Data.ALTITUDE, bestLocation.getAltitude());
         rowData.put(Locations_Data.PROVIDER, bestLocation.getProvider());
-        rowData.put(Locations_Data.ACCURACY, bestLocation.getAccuracy());
+        if (permitted) {
+            rowData.put(Locations_Data.LATITUDE, bestLocation.getLatitude());
+            rowData.put(Locations_Data.LONGITUDE, bestLocation.getLongitude());
+            rowData.put(Locations_Data.BEARING, bestLocation.getBearing());
+            rowData.put(Locations_Data.SPEED, bestLocation.getSpeed());
+            rowData.put(Locations_Data.ALTITUDE, bestLocation.getAltitude());
+            rowData.put(Locations_Data.ACCURACY, bestLocation.getAccuracy());
+        } else {
+            rowData.put(Locations_Data.LABEL, "outofbounds");
+        }
 
         try {
             getContentResolver().insert(Locations_Data.CONTENT_URI, rowData);
