@@ -444,7 +444,7 @@ public class Applications extends AccessibilityService {
         if (!isAccessibilityEnabled(c)) {
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_accessibility);
-            mBuilder.setContentTitle("AWARE configuration");
+            mBuilder.setContentTitle("Please enable AWARE");
             mBuilder.setContentText(c.getResources().getString(R.string.aware_activate_accessibility));
             mBuilder.setAutoCancel(true);
             mBuilder.setOnlyAlertOnce(true); //notify the user only once
