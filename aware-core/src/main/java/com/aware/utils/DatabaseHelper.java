@@ -41,6 +41,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	private SQLiteDatabase database;
 	private Context mContext;
 
+	/**
+	 * Get the folder for storing all databases.  In a separate method so that it can be
+	 * customized more easily.
+	 *
+	 * @param context Application context
+	 * @return Folder for Aware databases
+     */
+	public File getAwareDatabaseDirectory(Context context) {
+		// sdcard/AWARE/     (shareable)
+		File aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString());
+		// sdcard/Android/<app_name>/Documents/Aware    (not shareable)
+		//File database_file = new File( mContext.getExternalFilesDir(null) + "/Documents/AWARE/" , database_name );
+	}
+
+	/**
+	 * Get a certain database directory.  Thin wrapper over getAwareDatabaseDirectory.
+	 *
+	 * @param context Application context (for getting files dir)
+	 * @param database_name Name of database we want
+     * @return File of database.
+     */
+	public File getAwareDatabaseFile(Context context, String database_name) {
+		return new File(getAwareDatabaseDirectory(context), database_name);
+	}
+
 	public DatabaseHelper(Context context, String database_name, CursorFactory cursor_factory, int database_version, String[] database_tables, String[] table_fields) {
         super(context, database_name, cursor_factory, database_version);
 
@@ -50,7 +75,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         this.new_version = database_version;
 		this.mContext = context;
 
-		File aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString());
+		File aware_folder = getAwareDatabaseDirectory(context);
 		aware_folder.mkdirs();
 
 //        File documents_folder = mContext.getExternalFilesDir(null); //get the root of OS handled app external folder
@@ -170,8 +195,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     	}
     	
     	//Get reference to database file, we might not have it.
-        File database_file = new File( Environment.getExternalStoragePublicDirectory("AWARE").toString(), database_name );
-//    	File database_file = new File( mContext.getExternalFilesDir(null) + "/Documents/AWARE/" , database_name );
+		File database_file = getAwareDatabaseFile(mContext, database_name);
     	try {
     	    SQLiteDatabase current_database = SQLiteDatabase.openDatabase(database_file.getPath(), null, SQLiteDatabase.CREATE_IF_NECESSARY);
     	    int current_version = current_database.getVersion();
@@ -209,8 +233,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     	}
     	
     	//Get reference to database file, we might not have it.
-        File database_file = new File( Environment.getExternalStoragePublicDirectory("AWARE").toString(), database_name );
-//		File database_file = new File( mContext.getExternalFilesDir(null) + "/Documents/AWARE/" , database_name );
+		File database_file = getAwareDatabaseFile(mContext, database_name);
 		try {
 			SQLiteDatabase current_database = SQLiteDatabase.openDatabase(database_file.getPath(), null, SQLiteDatabase.OPEN_READONLY);
 			onOpen(current_database);
