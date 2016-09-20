@@ -194,6 +194,15 @@ public class Aware_Preferences {
     public static final String LOCATION_EXPIRATION_TIME = "location_expiration_time";
 
     /**
+     * Location geofence.  If given and location does NOT fall within, then do not
+     * record location points.
+     * Format: "fence1 fence2 ..." (space separated string)
+     *   Circle fence: "lat,lon,radius".  Radius in METERS.
+     *   Rectangle fence: "rect,lat1,lon1,lat2,lon2". Literal "rect", then lats/lons.
+     */
+    public static final String LOCATION_GEOFENCE = "location_geofence";
+
+    /**
      * Activate/deactivate light sensor log (boolean)
      */
     public static final String STATUS_LIGHT = "status_light";
