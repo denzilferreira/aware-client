@@ -51,8 +51,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public File getAwareDatabaseDirectory(Context context) {
 		// sdcard/AWARE/     (shareable)
 		File aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString());
-		// sdcard/Android/<app_name>/Documents/Aware    (not shareable)
-		//File database_file = new File( mContext.getExternalFilesDir(null) + "/Documents/AWARE/" , database_name );
+		// sdcard/Android/<app_name>/databases/    (not shareable)
+		//File database_file = new File(mContext.getExternalFilesDir(null) + "/databases/" , database_name);
+		return aware_folder;
 	}
 
 	/**
