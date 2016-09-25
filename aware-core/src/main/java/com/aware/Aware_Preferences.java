@@ -474,6 +474,20 @@ public class Aware_Preferences {
     public static final String FREQUENCY_WEBSERVICE = "frequency_webservice";
 
     /**
+     * AWARE webservice simple: don't sync tables.  See webservice_remove_data for how
+     * this interacts with /latest.
+     */
+    public static final String WEBSERVICE_SIMPLE = "webservice_simple";
+
+    /**
+     * AWARE webservice remove data: Always delete data after it is uploaded.  User beware,
+     * this may break some plugins!  If this AND webservice_simple are true, then do not do
+     * the /latest calls, and the client only contacts servers if there is new data (as
+     * detected by more than zero rows in the database).
+     */
+    public static final String WEBSERVICE_REMOVE_DATA = "webservice_remove_data";
+
+    /**
      * How frequently to clean old data?
      * 0 - never
      * 1 - weekly

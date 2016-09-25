@@ -2101,5 +2101,29 @@ public class Aware_Client extends Aware_Activity {
             }
         });
         if (Aware.isStudy(awareContext)) device_label.setSelectable(false);
+
+
+        final CheckBoxPreference webservice_simple = (CheckBoxPreference) findPreference(Aware_Preferences.WEBSERVICE_SIMPLE);
+        webservice_simple.setChecked(Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SIMPLE).equals("true"));
+        webservice_simple.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                Aware.setSetting(awareContext, Aware_Preferences.WEBSERVICE_SIMPLE, webservice_simple.isChecked());
+                return true;
+            }
+        });
+        if (Aware.isStudy(awareContext)) webservice_simple.setSelectable(false);
+
+        final CheckBoxPreference webservice_remove_data = (CheckBoxPreference) findPreference(Aware_Preferences.WEBSERVICE_REMOVE_DATA);
+        webservice_remove_data.setChecked(Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_REMOVE_DATA).equals("true"));
+        webservice_remove_data.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                Aware.setSetting(awareContext, Aware_Preferences.WEBSERVICE_REMOVE_DATA, webservice_remove_data.isChecked());
+                return true;
+            }
+        });
+        if (Aware.isStudy(awareContext)) webservice_remove_data.setSelectable(false);
+
     }
 }
