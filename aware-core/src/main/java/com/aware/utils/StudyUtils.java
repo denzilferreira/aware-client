@@ -80,14 +80,7 @@ public class StudyUtils extends IntentService {
                 return;
             }
 
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
-            mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
-            mBuilder.setContentTitle("AWARE");
-            mBuilder.setContentText("Thanks for joining the study!");
-            mBuilder.setAutoCancel(true);
-
-            NotificationManager notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            notManager.notify(33, mBuilder.build());
+            Toast.makeText(getApplicationContext(), "Thanks for joining the study!", Toast.LENGTH_LONG).show();
 
             if (Aware.DEBUG) Log.d(Aware.TAG, "Study configs: " + configs_study.toString(5));
 
