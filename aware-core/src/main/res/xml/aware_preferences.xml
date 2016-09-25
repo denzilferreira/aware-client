@@ -4,7 +4,7 @@
     android:title="@string/app_name">
     <PreferenceCategory
         android:key="device_ids"
-        android:title="Device" >
+        android:title="Device">
         <EditTextPreference
             android:key="device_id"
             android:persistent="true"
@@ -28,7 +28,7 @@
     <PreferenceCategory
         android:key="sensors"
         android:summary="AWARE default sensors"
-        android:title="Sensors" >
+        android:title="Sensors">
 
         <PreferenceScreen
             android:key="accelerometer"
@@ -211,10 +211,11 @@
 
             <PreferenceScreen
                 android:key="esm_creator"
-                android:title="ESM Creator - beta"
-                android:summary="Create and schedule questionnaires">
-                <intent android:targetPackage="com.niels.esmgenerator"
-                    android:targetClass="com.niels.esmgenerator.MainActivity"/>
+                android:summary="Create and schedule questionnaires"
+                android:title="ESM Creator - beta">
+                <intent
+                    android:targetClass="com.niels.esmgenerator.MainActivity"
+                    android:targetPackage="com.niels.esmgenerator" />
             </PreferenceScreen>
 
         </PreferenceScreen>
@@ -302,9 +303,9 @@
             <EditTextPreference
                 android:defaultValue="150"
                 android:dependency="status_location_gps"
+                android:inputType="number"
                 android:key="min_location_gps_accuracy"
                 android:persistent="true"
-                android:inputType="number"
                 android:summary="Desired GPS accuracy in meters (default = 150). 0 keeps GPS always on."
                 android:title="GPS accuracy" />
 
@@ -334,9 +335,9 @@
             <EditTextPreference
                 android:defaultValue="300"
                 android:dependency="status_location_gps"
+                android:inputType="number"
                 android:key="location_expiration_time"
                 android:persistent="true"
-                android:inputType="number"
                 android:summary="300 seconds"
                 android:title="Location expires after..." />
         </PreferenceScreen>
@@ -639,7 +640,7 @@
     <PreferenceCategory
         android:key="data_exchange"
         android:summary="Webservices, MQTT"
-        android:title="Context exchange protocols" >
+        android:title="Context exchange protocols">
         <PreferenceScreen
             android:key="mqtt"
             android:summary="Allows remove questionnaires, P2P context exchange"
@@ -650,7 +651,7 @@
                 android:defaultValue="false"
                 android:key="status_mqtt"
                 android:persistent="true"
-                android:title="Active" />
+                android:title="Connect" />
 
             <EditTextPreference
                 android:key="mqtt_server"
@@ -722,6 +723,13 @@
                 android:summary="Sync only on Wi-Fi"
                 android:title="Wi-Fi only" />
 
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="webservice_charging"
+                android:persistent="true"
+                android:summary="Sync only while charging"
+                android:title="Charging only" />
+
             <EditTextPreference
                 android:defaultValue="30"
                 android:inputType="number"
@@ -729,13 +737,6 @@
                 android:persistent="true"
                 android:summary="30 minutes"
                 android:title="Sync interval (in minutes, 0 to disable)." />
-
-            <CheckBoxPreference
-                android:defaultValue="false"
-                android:key="webservice_charging"
-                android:persistent="true"
-                android:summary="Only sync while charging"
-                android:title="Charging only" />
 
             <ListPreference
                 android:defaultValue="0"

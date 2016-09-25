@@ -12,10 +12,10 @@
             android:summary="UUID:"
             android:title="@string/aware_device_id" />
         <EditTextPreference
-            android:defaultValue=""
             android:key="device_label"
             android:persistent="true"
             android:summary=""
+            android:defaultValue=""
             android:title="@string/aware_device_label" />
         <EditTextPreference
             android:defaultValue=""
@@ -47,8 +47,8 @@
                 android:title="Activate" />
 
             <ListPreference
-                android:defaultValue="200000"
                 android:dependency="status_accelerometer"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_accelerometer"
@@ -97,8 +97,8 @@
                 android:title="Application installations" />
             <CheckBoxPreference
                 android:defaultValue="false"
-                android:dependency="status_applications"
                 android:key="status_keyboard"
+                android:dependency="status_applications"
                 android:persistent="true"
                 android:summary="Logs keyboard input (no passwords)"
                 android:title="Keyboard" />
@@ -134,8 +134,8 @@
                 android:title="Activate" />
 
             <ListPreference
-                android:defaultValue="200000"
                 android:dependency="status_barometer"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_barometer"
@@ -264,8 +264,8 @@
                 android:title="Active" />
 
             <ListPreference
-                android:defaultValue="200000"
                 android:dependency="status_gravity"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_gravity"
@@ -298,8 +298,8 @@
                 android:title="Active" />
 
             <ListPreference
-                android:defaultValue="200000"
                 android:dependency="status_gyroscope"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_gyroscope"
@@ -335,9 +335,9 @@
             <EditTextPreference
                 android:defaultValue="180"
                 android:dependency="status_location_gps"
-                android:inputType="number"
                 android:key="frequency_location_gps"
                 android:persistent="true"
+                android:inputType="number"
                 android:summary="X in seconds (default = 180). 0 is always on."
                 android:title="GPS update frequency" />
             <EditTextPreference
@@ -359,17 +359,17 @@
             <EditTextPreference
                 android:defaultValue="300"
                 android:dependency="status_location_network"
-                android:inputType="number"
                 android:key="frequency_location_network"
                 android:persistent="true"
+                android:inputType="number"
                 android:summary="X in seconds (default = 300). 0 will keep network triangulation always on."
                 android:title="Network update frequency" />
             <EditTextPreference
                 android:defaultValue="1500"
                 android:dependency="status_location_network"
-                android:inputType="number"
                 android:key="min_location_network_accuracy"
                 android:persistent="true"
+                android:inputType="number"
                 android:summary="Desired network accuracy in meters (default = 1500). 0 keeps network triangulation always on."
                 android:title="Network accuracy" />
             <EditTextPreference
@@ -398,8 +398,8 @@
                 android:title="Active" />
 
             <ListPreference
-                android:defaultValue="200000"
                 android:dependency="status_light"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_light"
@@ -432,8 +432,8 @@
                 android:title="Active" />
 
             <ListPreference
-                android:defaultValue="200000"
                 android:dependency="status_linear_accelerometer"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_linear_accelerometer"
@@ -497,8 +497,8 @@
                 android:title="Active" />
 
             <ListPreference
-                android:defaultValue="200000"
                 android:dependency="status_magnetometer"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_magnetometer"
@@ -581,8 +581,8 @@
                 android:title="Active" />
 
             <ListPreference
-                android:defaultValue="200000"
                 android:dependency="status_proximity"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_proximity"
@@ -615,8 +615,8 @@
                 android:title="Active" />
 
             <ListPreference
-                android:defaultValue="200000"
                 android:dependency="status_rotation"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_rotation"
@@ -667,8 +667,8 @@
                 android:title="Active" />
 
             <ListPreference
-                android:defaultValue="200000"
                 android:dependency="status_temperature"
+                android:defaultValue="200000"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_temperature"
@@ -807,11 +807,11 @@
                 android:title="Active" />
 
             <EditTextPreference
-                android:defaultValue="https://api.awareframework.com/index.php"
                 android:key="webservice_server"
                 android:persistent="true"
                 android:summary="URL"
-                android:title="Study URL" />
+                android:title="Study URL"
+                android:defaultValue="https://api.awareframework.com/index.php"/>
 
             <CheckBoxPreference
                 android:defaultValue="false"
