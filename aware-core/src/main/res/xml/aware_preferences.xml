@@ -3,36 +3,6 @@
     android:key="aware_preferences"
     android:title="@string/app_name">
     <PreferenceCategory
-        android:key="debug_flags"
-        android:title="Developer" >
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="debug_flag"
-            android:persistent="true"
-            android:summary="@string/aware_debug_summary"
-            android:title="@string/aware_debug_title" />
-        <EditTextPreference
-            android:defaultValue="AWARE"
-            android:dependency="debug_flag"
-            android:key="debug_tag"
-            android:persistent="true"
-            android:summary="@string/aware_debug_tag_summary"
-            android:title="@string/aware_debug_tag" />
-        <EditTextPreference
-            android:defaultValue=""
-            android:selectable="false"
-            android:key="aware_version"
-            android:persistent="true"
-            android:summary="@string/aware_auto_update_version"
-            android:title="@string/aware_version" />
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="debug_db_slow"
-            android:persistent="true"
-            android:summary="No database storage with high-performance sensors (e.g., accelerometer, gyroscope, etc.)"
-            android:title="Lightweight I/O" />
-    </PreferenceCategory>
-    <PreferenceCategory
         android:key="device_ids"
         android:title="Device" >
         <EditTextPreference
@@ -47,6 +17,13 @@
             android:summary=""
             android:defaultValue=""
             android:title="@string/aware_device_label" />
+        <EditTextPreference
+            android:defaultValue=""
+            android:selectable="false"
+            android:key="aware_version"
+            android:persistent="true"
+            android:summary="@string/aware_auto_update_version"
+            android:title="@string/aware_version" />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="sensors"
@@ -769,6 +746,54 @@
                 android:summary="Never"
                 android:title="Clean-up old data?" />
         </PreferenceScreen>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="advanced"
+        android:summary="Advanced"
+        android:title="Advanced">
+        <PreferenceScreen
+            android:key="advanced"
+            android:summary="For advanced users and developers"
+            android:title="Advanced options">
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="debug_flag"
+                android:persistent="true"
+                android:summary="@string/aware_debug_summary"
+                android:title="@string/aware_debug_title" />
+
+            <EditTextPreference
+                android:defaultValue="AWARE"
+                android:dependency="debug_flag"
+                android:key="debug_tag"
+                android:persistent="true"
+                android:summary="@string/aware_debug_tag_summary"
+                android:title="@string/aware_debug_tag" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="debug_db_slow"
+                android:persistent="true"
+                android:summary="No database storage with high-performance sensors (e.g., accelerometer, gyroscope, etc.)"
+                android:title="Lightweight I/O" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="webservice_simple"
+                android:persistent="true"
+                android:summary="Don't sync table metadata"
+                android:title="Simple webservice" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="webservice_remove_data"
+                android:persistent="true"
+                android:summary="This may cause problems with some sensors or plugins."
+                android:title="Remove all data once uploaded" />
+        </PreferenceScreen>
+
     </PreferenceCategory>
 
 </PreferenceScreen>
