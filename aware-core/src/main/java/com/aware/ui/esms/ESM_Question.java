@@ -6,6 +6,7 @@ package com.aware.ui.esms;
 
 import android.app.Dialog;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -357,6 +358,27 @@ public class ESM_Question extends DialogFragment {
         if (esm_dialog != null) esm_dialog.dismiss();
     }
 
+    /**
+     * When dropping one ESM, the rest of the queue gets dropped
+     */
+    public static void dropESM(Context context) {
+        ContentValues rowData;
+
+        Cursor esm = context.getContentResolver().query(ESM_Provider.ESM_Data.CONTENT_URI, null, ESM_Provider.ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
+        if (esm != null && esm.moveToFirst()) {
+            do {
+                rowData = new ContentValues();
+                rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
+                rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_DROPPED);
+                context.getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, null, null);
+            } while (esm.moveToNext());
+        }
+        if (esm != null && !esm.isClosed()) esm.close();
+
+        Intent answer = new Intent(ESM.ACTION_AWARE_ESM_DROPPED);
+        context.sendBroadcast(answer);
+    }
+
     @Override
     public void onCancel(DialogInterface dialog) {
         super.onCancel(dialog);
@@ -376,7 +398,6 @@ public class ESM_Question extends DialogFragment {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
     }
 
     @Override

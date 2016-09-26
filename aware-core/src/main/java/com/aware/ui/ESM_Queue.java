@@ -1,5 +1,6 @@
 package com.aware.ui;
 
+import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
@@ -10,11 +11,13 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.util.Log;
 import android.view.Window;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.ESM;
+import com.aware.providers.ESM_Provider;
 import com.aware.providers.ESM_Provider.ESM_Data;
 import com.aware.ui.esms.ESMFactory;
 import com.aware.ui.esms.ESM_Question;
@@ -35,12 +38,14 @@ public class ESM_Queue extends FragmentActivity {
 
     private ESMFactory esmFactory = new ESMFactory();
 
+    private NotificationManager manager;
+
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
 
         //Clear notification if it exists, since we are going through the ESMs
-        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         manager.cancel(ESM.ESM_NOTIFICATION_ID);
 
         TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG) : TAG;
@@ -58,6 +63,8 @@ public class ESM_Queue extends FragmentActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        Log.d("Niels", "onResume called");
 
         try {
             FragmentManager fragmentManager = getSupportFragmentManager();
@@ -89,6 +96,15 @@ public class ESM_Queue extends FragmentActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    public void removeQueue(Context c) {
+        Log.d(TAG, "remove queue called");
+        ESM_Question.dropESM(c);
+
+        // remove ESM notification - TODO
+        manager = (NotificationManager) c.getSystemService(NOTIFICATION_SERVICE);
+        manager.cancel(ESM.ESM_NOTIFICATION_ID);
     }
 
     public class ESM_State extends BroadcastReceiver {

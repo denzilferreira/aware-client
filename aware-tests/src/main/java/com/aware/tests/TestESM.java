@@ -1,9 +1,12 @@
 package com.aware.tests;
 
+import android.app.Activity;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 
 import com.aware.ESM;
+import com.aware.ui.ESM_Queue;
 import com.aware.ui.esms.ESMFactory;
 import com.aware.ui.esms.ESM_Checkbox;
 import com.aware.ui.esms.ESM_Freetext;
@@ -22,9 +25,14 @@ public class TestESM implements AwareTest {
 
     @Override
     public void test(Context context) {
+
+
 //        testESMS(context);
 //        trialESMS(context);
         testFlow(context);
+
+        ESM_Queue esm_queue = new ESM_Queue();
+        esm_queue.removeQueue(context);
     }
 
     private void testFlow(Context context) {

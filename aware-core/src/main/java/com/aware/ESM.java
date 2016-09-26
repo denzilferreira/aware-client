@@ -71,6 +71,11 @@ public class ESM extends Aware_Sensor {
     public static final String ACTION_AWARE_ESM_DISMISSED = "ACTION_AWARE_ESM_DISMISSED";
 
     /**
+     * Broadcasted event: the system has dropped the entire ESM queue
+     */
+    public static final String ACTION_AWARE_ESM_DROPPED = "ACTION_AWARE_ESM_DROPPED";
+
+    /**
      * Broadcasted event: the user did not answer the ESM on time from ESM queue
      */
     public static final String ACTION_AWARE_ESM_EXPIRED = "ACTION_AWARE_ESM_EXPIRED";
@@ -114,6 +119,11 @@ public class ESM extends Aware_Sensor {
      * ESM status: esm was not visible because of flow condition, branching to another esm
      */
     public static final int STATUS_BRANCHED = 5;
+
+    /**
+     * ESM status: esm is dropped by the system
+     */
+    public static final int STATUS_DROPPED = 6;
 
     /**
      * ESM Dialog with free text
