@@ -276,6 +276,7 @@ public class Aware extends Service {
 //        }
 
         // Set sync schedule to Aware server every day around midnight
+        Aware.setSetting(this, Aware_Preferences.STATUS_BATTERY, true);
         Aware.setSetting(this, Aware_Preferences.WEBSERVICE_WIFI_ONLY, true);
 
         Scheduler.Schedule schedule = new Scheduler.Schedule("serverSync");
