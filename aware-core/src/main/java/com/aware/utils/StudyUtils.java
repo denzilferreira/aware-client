@@ -37,6 +37,9 @@ public class StudyUtils extends IntentService {
      */
     public static final String EXTRA_JOIN_STUDY = "study_url";
 
+    // Toast upon joining, must save to dismiss onDestroy.
+    private static Toast JOIN_TOAST;
+
     public StudyUtils() {
         super("StudyUtils Service");
     }
@@ -69,7 +72,8 @@ public class StudyUtils extends IntentService {
         }
 
         if (answer == null) {
-            Toast.makeText(getApplicationContext(), "Failed to connect to server... try again.", Toast.LENGTH_LONG).show();
+            JOIN_TOAST = Toast.makeText(getApplicationContext(), "Failed to connect to server... try again.", Toast.LENGTH_LONG);
+            JOIN_TOAST.show();
             return;
         }
 
@@ -80,7 +84,8 @@ public class StudyUtils extends IntentService {
                 return;
             }
 
-            Toast.makeText(getApplicationContext(), "Thanks for joining the study!", Toast.LENGTH_LONG).show();
+            JOIN_TOAST = Toast.makeText(getApplicationContext(), "Thanks for joining the study!", Toast.LENGTH_LONG);
+            JOIN_TOAST.show();
 
             if (Aware.DEBUG) Log.d(Aware.TAG, "Study configs: " + configs_study.toString(5));
 
@@ -169,5 +174,10 @@ public class StudyUtils extends IntentService {
         //Send data to server
         Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
         context.sendBroadcast(sync);
+    }
+
+    public void onDestroy() {
+        // The toast may stay living forever if the service is destroyed before it starts.
+        JOIN_TOAST.cancel();
     }
 }
