@@ -60,9 +60,10 @@ public class WebserviceHelper extends IntentService {
         if (Aware.DEBUG)
             Log.d(Aware.TAG, "Synching all the databases...");
 
-        notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notifyUser("Synching initiated...", false, true);
-
+        if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
+            notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            notifyUser("Synching initiated...", false, true);
+        }
         sync_start = System.currentTimeMillis();
     }
 
@@ -261,7 +262,9 @@ public class WebserviceHelper extends IntentService {
                     if (DEBUG)
                         Log.d(Aware.TAG, "Syncing " + TOTAL_RECORDS + " records from " + DATABASE_TABLE);
 
-                    notifyUser("Syncing " + TOTAL_RECORDS + " from " + DATABASE_TABLE, false, true);
+                    if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
+                        notifyUser("Syncing " + TOTAL_RECORDS + " from " + DATABASE_TABLE, false, true);
+                    }
 
                     long start = System.currentTimeMillis();
 
@@ -365,7 +368,9 @@ public class WebserviceHelper extends IntentService {
                                     if (DEBUG)
                                         Log.d(Aware.TAG, "Deleted local old records for " + DATABASE_TABLE);
 
-                                    notifyUser("Cleaned old records from " + DATABASE_TABLE, false, true);
+                                    if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
+                                        notifyUser("Cleaned old records from " + DATABASE_TABLE, false, true);
+                                    }
                                 }
                             }
                         }
@@ -410,6 +415,8 @@ public class WebserviceHelper extends IntentService {
         if (Aware.DEBUG)
             Log.d(Aware.TAG, "Finished synching all the databases in " + DateUtils.formatElapsedTime((System.currentTimeMillis() - sync_start) / 1000));
 
-        notifyUser("Finished syncing", true, false);
+        if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
+            notifyUser("Finished syncing", true, false);
+        }
     }
 }

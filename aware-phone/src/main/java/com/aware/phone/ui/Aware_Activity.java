@@ -149,6 +149,7 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
             startActivity(about_us);
         }
         if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_sync))) {
+            Toast.makeText(getApplicationContext(), "AWARE: Syncing data...", Toast.LENGTH_SHORT).show();
             Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
             sendBroadcast(sync);
         }
