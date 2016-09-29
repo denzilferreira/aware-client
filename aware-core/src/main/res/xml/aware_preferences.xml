@@ -24,6 +24,13 @@
             android:persistent="true"
             android:summary="@string/aware_auto_update_version"
             android:title="@string/aware_version" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="aware_donate_usage"
+            android:persistent="true"
+            android:title="Send AWARE team usage information"
+            android:summary="Send usage information (device id, application info), NOT actual data.  This supports AWARE funding."
+            />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="sensors"

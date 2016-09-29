@@ -2137,5 +2137,16 @@ public class Aware_Client extends Aware_Activity {
         // Users can always adjust this!  But it might be overwritten on next config update.
         //if (Aware.isStudy(awareContext)) webservice_silent.setSelectable(false);
 
+        final CheckBoxPreference aware_donate_usage = (CheckBoxPreference) findPreference(Aware_Preferences.AWARE_DONATE_USAGE);
+        aware_donate_usage.setChecked(Aware.getSetting(awareContext, Aware_Preferences.AWARE_DONATE_USAGE).equals("true"));
+        aware_donate_usage.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                Aware.setSetting(awareContext, Aware_Preferences.AWARE_DONATE_USAGE, aware_donate_usage.isChecked());
+                return true;
+            }
+        });
+        // Users can always choose to donate data, even if in a study.
+        //if (Aware.isStudy(awareContext)) aware_donate_data.setSelectable(false);
     }
 }

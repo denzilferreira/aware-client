@@ -278,11 +278,6 @@ public class Aware extends Service {
             Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php");
         }
 
-        //Load default awareframework.com SSL certificate for shared public plugins
-        Intent aware_SSL = new Intent(this, SSLManager.class);
-        aware_SSL.putExtra(SSLManager.EXTRA_SERVER, "https://api.awareframework.com/index.php");
-        startService(aware_SSL);
-
         DEBUG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_FLAG).equals("true");
         TAG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG) : TAG;
 
@@ -290,7 +285,10 @@ public class Aware extends Service {
 
         if (Aware.DEBUG) Log.d(TAG, "AWARE framework is created!");
 
-        new AsyncPing().execute();
+
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.AWARE_DONATE_USAGE).equals("true")) {
+            new AsyncPing().execute();
+        }
 
         awareStatusMonitor = new Intent(this, Aware.class);
         repeatingIntent = PendingIntent.getService(getApplicationContext(), 0, awareStatusMonitor, 0);
@@ -300,6 +298,10 @@ public class Aware extends Service {
     private class AsyncPing extends AsyncTask<Void, Void, Boolean> {
         @Override
         protected Boolean doInBackground(Void... params) {
+            // Download the certificate, and block since we are already running in background
+            // and we need the certificate immediately.
+            SSLManager.downloadCertificate(awareContext, "api.awareframework.com", true);
+
             //Ping AWARE's server with awareContext device's information for framework's statistics log
             Hashtable<String, String> device_ping = new Hashtable<>();
             device_ping.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID));

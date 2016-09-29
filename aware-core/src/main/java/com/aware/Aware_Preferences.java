@@ -44,6 +44,12 @@ public class Aware_Preferences {
     public static final String AWARE_VERSION = "aware_version";
 
     /**
+     * Donate usage data to AWARE project.  Note that this only sends device ID and
+     * version information, no actual data of any sort.
+     */
+    public static final String AWARE_DONATE_USAGE = "aware_donate_usage";
+
+    /**
      * Activate/deactivate accelerometer log (boolean)
      */
     public static final String STATUS_ACCELEROMETER = "status_accelerometer";
