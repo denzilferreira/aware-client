@@ -178,6 +178,7 @@ public class StudyUtils extends IntentService {
 
     public void onDestroy() {
         // The toast may stay living forever if the service is destroyed before it starts.
-        JOIN_TOAST.cancel();
+        if (JOIN_TOAST != null)
+            JOIN_TOAST.cancel();
     }
 }
