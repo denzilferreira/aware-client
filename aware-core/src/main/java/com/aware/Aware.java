@@ -778,6 +778,9 @@ public class Aware extends Service {
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
         global_settings.add(Aware_Preferences.WEBSERVICE_SERVER);
+        global_settings.add(Aware_Preferences.WEBSERVICE_SIMPLE);
+        global_settings.add(Aware_Preferences.WEBSERVICE_REMOVE_DATA);
+        global_settings.add(Aware_Preferences.WEBSERVICE_SILENT);
         global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
         global_settings.add(Applications.STATUS_AWARE_ACCESSIBILITY);
 

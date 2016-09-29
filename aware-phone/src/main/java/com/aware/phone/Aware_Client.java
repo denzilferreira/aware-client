@@ -2125,5 +2125,17 @@ public class Aware_Client extends Aware_Activity {
         });
         if (Aware.isStudy(awareContext)) webservice_remove_data.setSelectable(false);
 
+        final CheckBoxPreference webservice_silent = (CheckBoxPreference) findPreference(Aware_Preferences.WEBSERVICE_SILENT);
+        webservice_silent.setChecked(Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SILENT).equals("true"));
+        webservice_silent.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                Aware.setSetting(awareContext, Aware_Preferences.WEBSERVICE_SILENT, webservice_silent.isChecked());
+                return true;
+            }
+        });
+        // Users can always adjust this!  But it might be overwritten on next config update.
+        //if (Aware.isStudy(awareContext)) webservice_silent.setSelectable(false);
+
     }
 }

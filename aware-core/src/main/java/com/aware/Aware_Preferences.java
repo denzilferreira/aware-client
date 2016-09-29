@@ -487,6 +487,13 @@ public class Aware_Preferences {
      */
     public static final String WEBSERVICE_REMOVE_DATA = "webservice_remove_data";
 
+
+    /**
+     * AWARE webservice silence: If "true", then don't show a notification when uploading
+     * data.  This only affects tasks that interact with webservice in the background.
+     */
+    public static final String WEBSERVICE_SILENT = "webservice_silent";
+
     /**
      * How frequently to clean old data?
      * 0 - never

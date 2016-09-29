@@ -890,6 +890,13 @@
                 android:persistent="true"
                 android:summary="This may cause problems with some sensors or plugins."
                 android:title="Remove all data once uploaded" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="webservice_silent"
+                android:persistent="true"
+                android:summary="Don't show a notification every time data uploaded"
+                android:title="Quiet webservice" />
         </PreferenceScreen>
 
     </PreferenceCategory>
