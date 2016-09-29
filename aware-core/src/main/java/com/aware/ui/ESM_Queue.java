@@ -36,7 +36,7 @@ public class ESM_Queue extends FragmentActivity {
 
     public ESM_State esmStateListener = new ESM_State();
 
-    private static ESMFactory esmFactory = new ESMFactory();
+    private ESMFactory esmFactory = new ESMFactory();
 
     @Override
     protected void onCreate(Bundle bundle) {
@@ -62,8 +62,6 @@ public class ESM_Queue extends FragmentActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        Log.d("Niels", "onResume called: queue=" + ESM_Queue.getQueueSize(this));
 
         try {
             FragmentManager fragmentManager = getSupportFragmentManager();
@@ -101,13 +99,7 @@ public class ESM_Queue extends FragmentActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE)) {
-                Log.d("NIELS", "Complete intent caught!");
                 //Clean-up trials from database
-                getContentResolver().delete(ESM_Data.CONTENT_URI, ESM_Data.TRIGGER + " LIKE 'TRIAL'", null);
-            }
-            if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_TIMEOUT)) {
-                //Clean-up trials from database
-                Log.d("NIELS", "Dropped intent caught!");
                 getContentResolver().delete(ESM_Data.CONTENT_URI, ESM_Data.TRIGGER + " LIKE 'TRIAL'", null);
             }
             finish();

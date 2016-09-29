@@ -16,7 +16,6 @@ import com.aware.ui.ESM_Queue;
 import com.aware.ui.esms.ESMFactory;
 import com.aware.ui.esms.ESM_Freetext;
 import com.aware.ui.esms.ESM_Question;
-import com.facebook.stetho.Stetho;
 
 import org.json.JSONException;
 
@@ -36,21 +35,6 @@ public class TestActivity extends Activity {
         setContentView(R.layout.activity_test);
 
         button_ESMNotification=(Button)findViewById(R.id.button_ESMNotification);
-        button_CancelESM=(Button)findViewById(R.id.button_CancelESM);
-        button_CancelESMTimer=(Button)findViewById(R.id.button_CancelESMTimer);
-
-        button_ESMNotification.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                //Test ESMs functionalities
-                new TestESM().test(getApplicationContext());
-            }
-        });
-
-        button_CancelESM.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Log.d("Niels", "cancel ESM called");
-            }
-        });
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE);

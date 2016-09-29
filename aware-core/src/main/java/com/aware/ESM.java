@@ -5,7 +5,6 @@ import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -16,9 +15,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.Binder;
-import android.os.Handler;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -343,7 +340,7 @@ public class ESM extends Aware_Sensor {
         public void onReceive(Context context, Intent intent) {
             // Remove from queue
             ESM_Question esm_question = new ESM_Question();
-            esm_question.removeESM(context);
+            esm_question.timeoutQueue(context);
 
             // Remove notification
             String ns = Context.NOTIFICATION_SERVICE;

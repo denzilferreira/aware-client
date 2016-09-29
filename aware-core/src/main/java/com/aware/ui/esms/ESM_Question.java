@@ -383,7 +383,7 @@ public class ESM_Question extends DialogFragment {
     /**
      * When one of the ESM's has timed out, the entire queue gets removed.
      */
-    public void removeESM(Context context) {
+    public void timeoutQueue(Context context) {
         ContentValues rowData;
 
         Cursor esm = context.getContentResolver().query(ESM_Provider.ESM_Data.CONTENT_URI, null, ESM_Provider.ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
