@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
@@ -304,6 +305,17 @@ public class Aware extends Service {
             Hashtable<String, String> device_ping = new Hashtable<>();
             device_ping.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID));
             device_ping.put("ping", String.valueOf(System.currentTimeMillis()));
+            device_ping.put("platform", "android");
+            try {
+                PackageInfo package_info = awareContext.getPackageManager().getPackageInfo(awareContext.getPackageName(), 0);
+                device_ping.put("package_name", package_info.packageName);
+                if (package_info.packageName.equals("com.aware.phone")) {
+                    device_ping.put("package_version_code", String.valueOf(package_info.versionCode));
+                    device_ping.put("package_version_name", String.valueOf(package_info.versionName));
+                }
+            } catch (PackageManager.NameNotFoundException e) {
+            }
+
             try {
                 new Https(awareContext, SSLManager.getHTTPS(getApplicationContext(), "https://api.awareframework.com/index.php")).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
             } catch (FileNotFoundException e) {
@@ -1025,6 +1037,16 @@ public class Aware extends Service {
             //Request study settings
             Hashtable<String, String> data = new Hashtable<>();
             data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+            data.put("platform", "android");
+            try {
+                PackageInfo package_info = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), 0);
+                data.put("package_name", package_info.packageName);
+                data.put("package_version_code", String.valueOf(package_info.versionCode));
+                data.put("package_version_name", String.valueOf(package_info.versionName));
+            } catch (PackageManager.NameNotFoundException e) {
+                Log.d(Aware.TAG, "Failed to put package info: " + e);
+                e.printStackTrace();
+            }
 
             String protocol = study_url.substring(0, study_url.indexOf(":"));
 

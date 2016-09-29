@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -58,6 +59,16 @@ public class StudyUtils extends IntentService {
         //Request study settings
         Hashtable<String, String> data = new Hashtable<>();
         data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+        data.put("platform", "android");
+        try {
+            PackageInfo package_info = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), 0);
+            data.put("package_name", package_info.packageName);
+            data.put("package_version_code", String.valueOf(package_info.versionCode));
+            data.put("package_version_name", String.valueOf(package_info.versionName));
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.d(Aware.TAG, "Failed to put package info: " + e);
+            e.printStackTrace();
+        }
 
         String protocol = study_url.substring(0, study_url.indexOf(":"));
         String answer;
