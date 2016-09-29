@@ -31,7 +31,7 @@ import java.util.Hashtable;
  */
 public class ESM_Provider extends ContentProvider {
 
-    public static final int DATABASE_VERSION = 7;
+    public static final int DATABASE_VERSION = 8;
 
     /**
      * Authority of content provider
@@ -61,10 +61,10 @@ public class ESM_Provider extends ContentProvider {
         public static final String JSON = "esm_json";
         public static final String STATUS = "esm_status";
         public static final String EXPIRATION_THRESHOLD = "esm_expiration_threshold";
+        public static final String NOTIFICATION_TIMEOUT = "esm_notification_timeout";
         public static final String ANSWER_TIMESTAMP = "double_esm_user_answer_timestamp";
         public static final String ANSWER = "esm_user_answer";
         public static final String TRIGGER = "esm_trigger";
-
     }
 
     public static String DATABASE_NAME = "esms.db";
@@ -77,6 +77,7 @@ public class ESM_Provider extends ContentProvider {
             + ESM_Data.JSON + " text default '',"
             + ESM_Data.STATUS + " integer default 0,"
             + ESM_Data.EXPIRATION_THRESHOLD + " integer default 0,"
+            + ESM_Data.NOTIFICATION_TIMEOUT + " integer default 0,"
             + ESM_Data.ANSWER_TIMESTAMP + " real default 0,"
             + ESM_Data.ANSWER + " text default '',"
             + ESM_Data.TRIGGER + " text default ''"
@@ -201,6 +202,7 @@ public class ESM_Provider extends ContentProvider {
         questionsMap.put(ESM_Data.STATUS, ESM_Data.STATUS);
         questionsMap.put(ESM_Data.ANSWER_TIMESTAMP, ESM_Data.ANSWER_TIMESTAMP);
         questionsMap.put(ESM_Data.ANSWER, ESM_Data.ANSWER);
+        questionsMap.put(ESM_Data.NOTIFICATION_TIMEOUT, ESM_Data.NOTIFICATION_TIMEOUT);
         questionsMap.put(ESM_Data.TRIGGER, ESM_Data.TRIGGER);
 
         return true;

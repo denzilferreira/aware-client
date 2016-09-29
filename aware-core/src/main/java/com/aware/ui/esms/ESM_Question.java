@@ -38,6 +38,7 @@ public class ESM_Question extends DialogFragment {
     public static final String esm_instructions = "esm_instructions";
     public static final String esm_submit = "esm_submit";
     public static final String esm_expiration_threshold = "esm_expiration_threshold";
+    public static final String esm_notification_timeout = "esm_notification_timeout";
     public static final String esm_trigger = "esm_trigger";
     public static final String esm_flows = "esm_flows";
     public static final String flow_user_answer = "user_answer";
@@ -125,6 +126,13 @@ public class ESM_Question extends DialogFragment {
         return this.esm.getInt(esm_expiration_threshold);
     }
 
+    public int getNotificationTimeout() throws JSONException {
+        if (!this.esm.has(esm_notification_timeout)) {
+            this.esm.put(esm_notification_timeout, 0);
+        }
+        return this.esm.getInt(esm_notification_timeout);
+    }
+
     /**
      * For how long this question is visible waiting for the users' interaction
      *
@@ -134,6 +142,18 @@ public class ESM_Question extends DialogFragment {
      */
     public ESM_Question setExpirationThreshold(int expiration_threshold) throws JSONException {
         this.esm.put(esm_expiration_threshold, expiration_threshold);
+        return this;
+    }
+
+    /**
+     * For how long this question is visible waiting for the users' interaction
+     *
+     * @param notification_timeout
+     * @return
+     * @throws JSONException
+     */
+    public ESM_Question setNotificationTimeout(int notification_timeout) throws JSONException {
+        this.esm.put(esm_notification_timeout, notification_timeout);
         return this;
     }
 
@@ -308,6 +328,9 @@ public class ESM_Question extends DialogFragment {
                             case ESM.STATUS_DISMISSED:
                                 if (Aware.DEBUG) Log.d(Aware.TAG, "ESM has been dismissed!");
                                 break;
+                            case ESM.STATUS_TIMEOUT:
+                                if (Aware.DEBUG) Log.d(Aware.TAG, "ESM has timed out!");
+                                break;
                         }
                     }
                     if (esm != null && !esm.isClosed()) esm.close();
@@ -335,7 +358,6 @@ public class ESM_Question extends DialogFragment {
      * When dismissing one ESM by pressing cancel, the rest of the queue gets dismissed
      */
     private void dismissESM() {
-
         ContentValues rowData = new ContentValues();
         rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
         rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_DISMISSED);
@@ -359,9 +381,9 @@ public class ESM_Question extends DialogFragment {
     }
 
     /**
-     * When dropping one ESM, the rest of the queue gets dropped
+     * When one of the ESM's has timed out, the entire queue gets removed.
      */
-    public static void dropESM(Context context) {
+    public void removeESM(Context context) {
         ContentValues rowData;
 
         Cursor esm = context.getContentResolver().query(ESM_Provider.ESM_Data.CONTENT_URI, null, ESM_Provider.ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
@@ -369,14 +391,11 @@ public class ESM_Question extends DialogFragment {
             do {
                 rowData = new ContentValues();
                 rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
-                rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_DROPPED);
+                rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_TIMEOUT);
                 context.getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, null, null);
             } while (esm.moveToNext());
         }
         if (esm != null && !esm.isClosed()) esm.close();
-
-        Intent answer = new Intent(ESM.ACTION_AWARE_ESM_DROPPED);
-        context.sendBroadcast(answer);
     }
 
     @Override

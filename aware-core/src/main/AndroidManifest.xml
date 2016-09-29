@@ -182,6 +182,9 @@
                 <data android:scheme="file" />
             </intent-filter>
         </receiver>
+        <receiver
+            android:name="com.aware.ESM$RemoveESM"
+            android:exported="true" />
 
         <!-- Core providers -->
         <provider

@@ -11,6 +11,7 @@ import com.aware.ui.esms.ESMFactory;
 import com.aware.ui.esms.ESM_Checkbox;
 import com.aware.ui.esms.ESM_Freetext;
 import com.aware.ui.esms.ESM_Likert;
+import com.aware.ui.esms.ESM_Question;
 import com.aware.ui.esms.ESM_QuickAnswer;
 import com.aware.ui.esms.ESM_Radio;
 import com.aware.ui.esms.ESM_Scale;
@@ -25,14 +26,9 @@ public class TestESM implements AwareTest {
 
     @Override
     public void test(Context context) {
-
-
-//        testESMS(context);
+        testESMS(context);
 //        trialESMS(context);
-        testFlow(context);
-
-        ESM_Queue esm_queue = new ESM_Queue();
-        esm_queue.removeQueue(context);
+//        testFlow(context);
     }
 
     private void testFlow(Context context) {
@@ -101,7 +97,8 @@ public class TestESM implements AwareTest {
             ESM_Freetext esmFreetext = new ESM_Freetext();
             esmFreetext.setTitle("Freetext")
                     .setTrigger("test")
-                    .setExpirationThreshold(0)
+                    .setExpirationThreshold(20)
+                    .setNotificationTimeout(30)
                     .setSubmitButton("OK")
                     .setInstructions("Freetext ESM");
 
@@ -156,9 +153,9 @@ public class TestESM implements AwareTest {
             factory.addESM(esmFreetext);
             factory.addESM(esmCheckbox);
             factory.addESM(esmLikert);
-            factory.addESM(esmQuickAnswer);
-            factory.addESM(esmRadio);
-            factory.addESM(esmScale);
+//            factory.addESM(esmQuickAnswer);
+//            factory.addESM(esmRadio);
+//            factory.addESM(esmScale);
 
             Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
             queue.putExtra(ESM.EXTRA_ESM, factory.build());

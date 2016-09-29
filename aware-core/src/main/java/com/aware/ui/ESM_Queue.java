@@ -36,16 +36,14 @@ public class ESM_Queue extends FragmentActivity {
 
     public ESM_State esmStateListener = new ESM_State();
 
-    private ESMFactory esmFactory = new ESMFactory();
-
-    private NotificationManager manager;
+    private static ESMFactory esmFactory = new ESMFactory();
 
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
 
         //Clear notification if it exists, since we are going through the ESMs
-        manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         manager.cancel(ESM.ESM_NOTIFICATION_ID);
 
         TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG) : TAG;
@@ -57,6 +55,7 @@ public class ESM_Queue extends FragmentActivity {
         filter.addAction(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
         filter.addAction(ESM.ACTION_AWARE_ESM_DISMISSED);
         filter.addAction(ESM.ACTION_AWARE_ESM_EXPIRED);
+        filter.addAction(ESM.ACTION_AWARE_ESM_TIMEOUT);
         registerReceiver(esmStateListener, filter);
     }
 
@@ -64,7 +63,7 @@ public class ESM_Queue extends FragmentActivity {
     protected void onResume() {
         super.onResume();
 
-        Log.d("Niels", "onResume called");
+        Log.d("Niels", "onResume called: queue=" + ESM_Queue.getQueueSize(this));
 
         try {
             FragmentManager fragmentManager = getSupportFragmentManager();
@@ -98,20 +97,17 @@ public class ESM_Queue extends FragmentActivity {
         }
     }
 
-    public void removeQueue(Context c) {
-        Log.d(TAG, "remove queue called");
-        ESM_Question.dropESM(c);
-
-        // remove ESM notification - TODO
-        manager = (NotificationManager) c.getSystemService(NOTIFICATION_SERVICE);
-        manager.cancel(ESM.ESM_NOTIFICATION_ID);
-    }
-
     public class ESM_State extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE)) {
+                Log.d("NIELS", "Complete intent caught!");
                 //Clean-up trials from database
+                getContentResolver().delete(ESM_Data.CONTENT_URI, ESM_Data.TRIGGER + " LIKE 'TRIAL'", null);
+            }
+            if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_TIMEOUT)) {
+                //Clean-up trials from database
+                Log.d("NIELS", "Dropped intent caught!");
                 getContentResolver().delete(ESM_Data.CONTENT_URI, ESM_Data.TRIGGER + " LIKE 'TRIAL'", null);
             }
             finish();
@@ -137,5 +133,21 @@ public class ESM_Queue extends FragmentActivity {
         }
         if (onqueue != null && !onqueue.isClosed()) onqueue.close();
         return size;
+    }
+
+    public static int getTimeout(Context c) {
+        int timeout = 0;
+
+        String[] projection = { ESM_Data.NOTIFICATION_TIMEOUT };
+
+        Cursor onqueue = c.getContentResolver().query(ESM_Data.CONTENT_URI, projection, ESM_Data.STATUS + " IN (" + ESM.STATUS_VISIBLE + "," + ESM.STATUS_NEW + ")", null, null);
+
+        int index = onqueue.getColumnIndex(ESM_Data.NOTIFICATION_TIMEOUT);
+
+        if (onqueue != null && onqueue.moveToFirst()) {
+            timeout = Integer.parseInt(onqueue.getString(index));
+        }
+        if (onqueue != null && !onqueue.isClosed()) onqueue.close();
+        return timeout;
     }
 }
