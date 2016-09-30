@@ -1,6 +1,7 @@
 
 package com.aware;
 
+import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -32,6 +33,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 /**
  * AWARE ESM module
@@ -76,6 +78,11 @@ public class ESM extends Aware_Sensor {
     public static final String ACTION_AWARE_ESM_EXPIRED = "ACTION_AWARE_ESM_EXPIRED";
 
     /**
+     * Broadcasted event: the notification has timed out and ESM queue is cleared
+     */
+    public static final String ACTION_AWARE_ESM_TIMEOUT = "ACTION_AWARE_ESM_TIMEOUT";
+
+    /**
      * Broadcasted event: the user has finished answering the ESM queue
      */
     public static final String ACTION_AWARE_ESM_QUEUE_COMPLETE = "ACTION_AWARE_ESM_QUEUE_COMPLETE";
@@ -114,6 +121,11 @@ public class ESM extends Aware_Sensor {
      * ESM status: esm was not visible because of flow condition, branching to another esm
      */
     public static final int STATUS_BRANCHED = 5;
+
+    /**
+     * ESM status: esm is timed out by the system
+     */
+    public static final int STATUS_TIMEOUT = 6;
 
     /**
      * ESM Dialog with free text
@@ -288,7 +300,7 @@ public class ESM extends Aware_Sensor {
      *
      * @param c
      */
-    public static void notifyESM(Context c) {
+    public static void notifyESM(final Context c) {
         NotificationManager mNotificationManager = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c);
@@ -307,6 +319,38 @@ public class ESM extends Aware_Sensor {
         mBuilder.setContentIntent(pending_ESM);
 
         mNotificationManager.notify(ESM_NOTIFICATION_ID, mBuilder.build());
+
+        int notificationTimeout = ESM_Queue.getTimeout(c);
+
+        if(notificationTimeout != 0) {
+            // Notification timeout set, dismissing ESM's after timeout
+            Intent removeESMNotification = new Intent(c, RemoveESM.class);
+
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.SECOND, notificationTimeout);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(c, 710, removeESMNotification, 0);
+
+            AlarmManager alarmManager = (AlarmManager) c.getSystemService(ALARM_SERVICE);
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), pendingIntent);
+        }
+    }
+
+    public static class RemoveESM extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Remove from queue
+            ESM_Question esm_question = new ESM_Question();
+            esm_question.timeoutQueue(context);
+
+            // Remove notification
+            String ns = Context.NOTIFICATION_SERVICE;
+            NotificationManager nMgr = (NotificationManager) context.getSystemService(ns);
+            nMgr.cancel(777);
+
+            // Send intent
+            Intent expired = new Intent(ESM.ACTION_AWARE_ESM_EXPIRED);
+            context.sendBroadcast(expired);
+        }
     }
 
     //Singleton instance of this service
@@ -477,6 +521,7 @@ public class ESM extends Aware_Sensor {
 
         @Override
         protected void onHandleIntent(Intent intent) {
+
             if (intent.getAction().equals(ESM.ACTION_AWARE_TRY_ESM) && intent.getStringExtra(EXTRA_ESM) != null && intent.getStringExtra(EXTRA_ESM).length() > 0) {
 
                 esm_queue.clear();
@@ -495,6 +540,7 @@ public class ESM extends Aware_Sensor {
                         rowData.put(ESM_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
                         rowData.put(ESM_Data.JSON, esm.toString());
                         rowData.put(ESM_Data.EXPIRATION_THRESHOLD, esm.optInt(ESM_Data.EXPIRATION_THRESHOLD)); //optional, defaults to 0
+                        rowData.put(ESM_Data.NOTIFICATION_TIMEOUT, esm.optInt(ESM_Data.NOTIFICATION_TIMEOUT)); //optional, defaults to 0
                         rowData.put(ESM_Data.STATUS, ESM.STATUS_NEW);
                         rowData.put(ESM_Data.TRIGGER, "TRIAL"); //we use this TRIAL trigger to remove trials from database at the end of the trial
 
@@ -544,6 +590,7 @@ public class ESM extends Aware_Sensor {
                         rowData.put(ESM_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
                         rowData.put(ESM_Data.JSON, esm.toString());
                         rowData.put(ESM_Data.EXPIRATION_THRESHOLD, esm.optInt(ESM_Data.EXPIRATION_THRESHOLD)); //optional, defaults to 0
+                        rowData.put(ESM_Data.NOTIFICATION_TIMEOUT, esm.optInt(ESM_Data.NOTIFICATION_TIMEOUT)); //optional, defaults to 0
                         rowData.put(ESM_Data.STATUS, ESM.STATUS_NEW);
                         rowData.put(ESM_Data.TRIGGER, esm.optString(ESM_Data.TRIGGER)); //optional, defaults to ""
 
@@ -575,4 +622,5 @@ public class ESM extends Aware_Sensor {
             }
         }
     }
+
 }
