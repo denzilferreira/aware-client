@@ -847,13 +847,17 @@
     </PreferenceCategory>
 
     <PreferenceCategory
-        android:key="advanced"
+        android:key="advanced_options"
         android:summary="Advanced"
         android:title="Advanced">
         <PreferenceScreen
             android:key="advanced"
             android:summary="For advanced users and developers"
             android:title="Advanced options">
+
+            <com.aware.phone.ui.Aware_Toolbar
+                android:key="advanced"
+                android:title="Advanced options" />
 
             <CheckBoxPreference
                 android:defaultValue="false"

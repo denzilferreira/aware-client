@@ -750,7 +750,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory
-        android:key="advanced"
+        android:key="advanced_settings"
         android:summary="Advanced"
         android:title="Advanced">
         <PreferenceScreen
