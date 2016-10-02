@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -46,22 +47,24 @@ public class StudyUtils extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        String study_url = intent.getStringExtra(EXTRA_JOIN_STUDY);
+        String full_url = intent.getStringExtra(EXTRA_JOIN_STUDY);
 
-        if (Aware.DEBUG) Log.d(Aware.TAG, "Joining: " + study_url);
+        if (Aware.DEBUG) Log.d(Aware.TAG, "Joining: " + full_url);
 
-        //Load server SSL certificates
-        Intent aware_SSL = new Intent(this, SSLManager.class);
-        aware_SSL.putExtra(SSLManager.EXTRA_SERVER, study_url);
-        startService(aware_SSL);
+        Uri study_uri = Uri.parse(full_url);
+        // New study URL, chopping off query parameters.
+        String study_url = study_uri.getScheme()+"://"+study_uri.getHost()+"/"+study_uri.getPath();
+        String protocol = study_uri.getScheme();
 
         //Request study settings
         Hashtable<String, String> data = new Hashtable<>();
         data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
 
-        String protocol = study_url.substring(0, study_url.indexOf(":"));
         String answer;
         if (protocol.equals("https")) {
+            // Get SSL certs.  Block since we are already in background.
+            SSLManager.handleUrl(getApplicationContext(), full_url, true);
+
             try {
                 answer = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataPOST(study_url, data, true);
             } catch (FileNotFoundException e) {

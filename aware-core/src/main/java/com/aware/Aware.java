@@ -1018,23 +1018,23 @@ public class Aware extends Service {
     public static class JoinStudy extends StudyUtils {
         @Override
         protected void onHandleIntent(Intent intent) {
-            String study_url = intent.getStringExtra(EXTRA_JOIN_STUDY);
+            String full_url = intent.getStringExtra(EXTRA_JOIN_STUDY);
 
-            if (Aware.DEBUG) Log.d(Aware.TAG, "Joining: " + study_url);
+            if (Aware.DEBUG) Log.d(Aware.TAG, "Joining: " + full_url);
+
+            Uri study_uri = Uri.parse(full_url);
+            // New study URL, chopping off query parameters.
+            String study_url = study_uri.getScheme()+"://"+study_uri.getHost()+"/"+study_uri.getPath();
+            String protocol = study_uri.getScheme();
 
             //Request study settings
             Hashtable<String, String> data = new Hashtable<>();
             data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
 
-            String protocol = study_url.substring(0, study_url.indexOf(":"));
-
             String answer;
             if (protocol.equals("https")) {
-
-                //Make sure we have the server's certificates for security
-                Intent ssl = new Intent(getApplicationContext(), SSLManager.class);
-                ssl.putExtra(SSLManager.EXTRA_SERVER, study_url);
-                startService(ssl);
+                // Get SSL certs
+                SSLManager.handleUrl(getApplicationContext(), full_url, true);
 
                 try {
                     answer = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataPOST(study_url, data, true);

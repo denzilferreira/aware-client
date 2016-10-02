@@ -495,6 +495,14 @@ public class Aware_Preferences {
     public static final String WEBSERVICE_SILENT = "webservice_silent";
 
     /**
+     * Key management strategy.
+     * - "once" = keys are not updated once downloaded.
+     * - "" = keys are updated as often as needed.
+     */
+    public static final String KEY_STRATEGY = "key_strategy";
+
+
+    /**
      * How frequently to clean old data?
      * 0 - never
      * 1 - weekly
