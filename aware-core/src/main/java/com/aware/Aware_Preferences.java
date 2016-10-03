@@ -44,6 +44,12 @@ public class Aware_Preferences {
     public static final String AWARE_VERSION = "aware_version";
 
     /**
+     * Donate usage data to AWARE project.  Note that this only sends device ID and
+     * version information, no actual data of any sort.
+     */
+    public static final String AWARE_DONATE_USAGE = "aware_donate_usage";
+
+    /**
      * Activate/deactivate accelerometer log (boolean)
      */
     public static final String STATUS_ACCELEROMETER = "status_accelerometer";
@@ -493,6 +499,14 @@ public class Aware_Preferences {
      * data.  This only affects tasks that interact with webservice in the background.
      */
     public static final String WEBSERVICE_SILENT = "webservice_silent";
+
+    /**
+     * Key management strategy.
+     * - "once" = keys are not updated once downloaded.
+     * - "" = keys are updated as often as needed.
+     */
+    public static final String KEY_STRATEGY = "key_strategy";
+
 
     /**
      * How frequently to clean old data?
