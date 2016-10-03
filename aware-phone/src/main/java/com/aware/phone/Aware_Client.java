@@ -269,24 +269,6 @@ public class Aware_Client extends Aware_Activity {
             }
         });
         if (Aware.isStudy(awareContext)) esm.setSelectable(false);
-
-        final PreferenceScreen esm_creator = (PreferenceScreen) findPreference("esm_creator");
-        if (PluginsManager.isInstalled(this, "com.niels.esmgenerator") == null) {
-            Intent esmCreator = new Intent(Intent.ACTION_VIEW);
-            esmCreator.setData(Uri.parse("market://details?id=com.niels.esmgenerator"));
-            esm_creator.setIntent(esmCreator);
-            esm_creator.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                @Override
-                public boolean onPreferenceClick(Preference preference) {
-                    Toast.makeText(getApplicationContext(), "Please install AWARE: ESM Generator", Toast.LENGTH_LONG).show();
-                    Intent esmCreator = new Intent(Intent.ACTION_VIEW);
-                    esmCreator.setData(Uri.parse("market://details?id=com.niels.esmgenerator"));
-                    startActivity(esmCreator);
-                    return true;
-                }
-            });
-        }
-        if (Aware.isStudy(awareContext)) esm_creator.setSelectable(false);
     }
 
     /**
