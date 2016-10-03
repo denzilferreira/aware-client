@@ -85,7 +85,7 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
         aware_container = (CoordinatorLayout) findViewById(R.id.aware_container);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.aware_toolbar);
-        toolbar.setTitle(getTitle());
+        toolbar.setTitle(getTitle()!=null?getTitle():"");
         toolbar.inflateMenu(R.menu.aware_menu);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
