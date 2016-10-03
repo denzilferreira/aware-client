@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -47,6 +48,7 @@ import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 
 import me.dm7.barcodescanner.zbar.Result;
 import me.dm7.barcodescanner.zbar.ZBarScannerView;
@@ -278,21 +280,19 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
         protected JSONObject doInBackground(String... params) {
             study_url = params[0];
 
-            //Load server SSL certificates
-            Intent aware_SSL = new Intent(getApplicationContext(), SSLManager.class);
-            aware_SSL.putExtra(SSLManager.EXTRA_SERVER, study_url);
-            startService(aware_SSL);
+            if (Aware.DEBUG) Log.d(Aware.TAG, "Aware_QRCode study_url: " + study_url);
+            Uri study_uri = Uri.parse(study_url);
+            String protocol = study_uri.getScheme();
+            String study_host = protocol + "://" + study_uri.getHost();  // misnomer: protocol+host
+            List<String> path_segments = study_uri.getPathSegments();
+            String study_api_key = path_segments.get(path_segments.size()-1);
 
-            String study_api_key = study_url.substring(study_url.lastIndexOf("/") + 1, study_url.length());
-            String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
-            String protocol = study_url.substring(0, study_url.indexOf(":"));
+            // Get SSL certificates in a blocking manner, since we are already in background.
+            // We don't need to sleep to wait for certs.
+            SSLManager.handleUrl(getApplicationContext(), study_url, true);
 
             String request;
             if (protocol.equals("https")) {
-                try {
-                    Thread.sleep(2000); //wait 2 seconds for SSL certificates
-                } catch (InterruptedException e) {
-                }
 
                 try {
                     request = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_host + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
