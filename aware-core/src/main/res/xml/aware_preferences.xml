@@ -216,15 +216,6 @@
                 android:summary="Allow remote and applications ESM requests for human-based sensing"
                 android:title="Active" />
 
-            <PreferenceScreen
-                android:key="esm_creator"
-                android:summary="Create and schedule questionnaires"
-                android:title="ESM Creator - beta">
-                <intent
-                    android:targetClass="com.niels.esmgenerator.MainActivity"
-                    android:targetPackage="com.niels.esmgenerator" />
-            </PreferenceScreen>
-
         </PreferenceScreen>
         <PreferenceScreen
             android:key="gravity"
