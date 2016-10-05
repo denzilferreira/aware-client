@@ -2,16 +2,20 @@ package com.aware.utils;
 
 import android.app.IntentService;
 import android.app.NotificationManager;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContentResolverCompat;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
+import com.aware.BuildConfig;
 import com.aware.R;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
@@ -39,6 +43,8 @@ import javax.net.ssl.TrustManagerFactory;
  * Created by denzil on 17/01/15.
  */
 public class DownloadPluginService extends IntentService {
+
+    private static Toast downloadToast;
 
     public DownloadPluginService() { super(Aware.TAG + " Plugin Downloader"); }
 
@@ -122,43 +128,27 @@ public class DownloadPluginService extends IntentService {
                     Ion.getDefault(getApplicationContext())
                             .getHttpClient()
                             .getSSLSocketMiddleware().setSSLContext(sslContext);
-
-                    Ion.with(getApplicationContext())
-                            .load(package_url)
-                            .write(new File(Environment.getExternalStoragePublicDirectory("AWARE/plugins/" + json_package.getString("package_name")).toString()))
-                            .setCallback(new FutureCallback<File>() {
-                                @Override
-                                public void onCompleted(Exception e, File result) {
-                                    if (result != null) {
-
-                                        notManager.cancel(notID);
-
-                                        Intent promptInstall = new Intent(Intent.ACTION_VIEW);
-                                        promptInstall.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                        promptInstall.setDataAndType(Uri.fromFile(result), "application/vnd.android.package-archive");
-                                        startActivity(promptInstall);
-                                    }
-                                }
-                            });
-                } else {
-                    Ion.with(getApplicationContext())
-                            .load(package_url)
-                            .write(new File(Environment.getExternalStoragePublicDirectory("AWARE/plugins/" + json_package.getString("package_name")).toString()))
-                            .setCallback(new FutureCallback<File>() {
-                                @Override
-                                public void onCompleted(Exception e, File result) {
-                                    if( result != null ) {
-
-                                        notManager.cancel(notID);
-
-                                        Intent promptInstall = new Intent(Intent.ACTION_VIEW);
-                                        promptInstall.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                        promptInstall.setDataAndType(Uri.fromFile(result), "application/vnd.android.package-archive");
-                                        startActivity(promptInstall);
-                                    }
-                                }
-                            });
                 }
+                Ion.with(getApplicationContext())
+                        .load(package_url)
+                        .write(new File(Environment.getExternalStoragePublicDirectory("AWARE/plugins/" + json_package.getString("package_name")).toString()))
+                        .setCallback(new FutureCallback<File>() {
+                            @Override
+                            public void onCompleted(Exception e, File result) {
+                                if (result != null) {
+
+                                    notManager.cancel(notID);
+
+                                    Intent promptInstall = new Intent(Intent.ACTION_VIEW);
+                                    promptInstall.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    promptInstall.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                    promptInstall.setDataAndType(
+                                            FileProvider.getUriForFile(getApplicationContext(), getPackageName() + ".provider.storage", result),
+                                            "application/vnd.android.package-archive");
+                                    startActivity(promptInstall);
+                                }
+                            }
+                        });
             } catch (JSONException e) {
                 e.printStackTrace();
             } catch (CertificateException e) {
@@ -174,11 +164,18 @@ public class DownloadPluginService extends IntentService {
             }
         } else {
             //We don't have it on our server, let's try the Play Store
-            Toast.makeText(getApplicationContext(), "Please install this plugin", Toast.LENGTH_LONG).show();
+            downloadToast = Toast.makeText(getApplicationContext(), "Please install this plugin", Toast.LENGTH_SHORT);
+            downloadToast.show();
             Intent playInstaller = new Intent(Intent.ACTION_VIEW);
             playInstaller.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             playInstaller.setData(Uri.parse("market://details?id=" + package_name));
             startActivity(playInstaller);
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (downloadToast != null) downloadToast.cancel();
     }
 }
