@@ -26,14 +26,16 @@ public class Aware_Join_Study extends Aware_Activity {
         TextView txtStudyResearcher = (TextView) findViewById(R.id.txt_researcher);
 
         study_url = getIntent().getStringExtra("study_url");
-        try {
-            study_json = new JSONObject(getIntent().getStringExtra("study_json"));
-            txtStudyTitle.setText((study_json.getString("study_name").length() > 0 ? study_json.getString("study_name") : "Not available"));
-            txtStudyDescription.setText((study_json.getString("study_description").length() > 0 ? study_json.getString("study_description") : "Not available."));
-            txtStudyResearcher.setText("PI: " + study_json.getString("researcher_first") + " " + study_json.getString("researcher_last") + "\nContact: " + study_json.getString("researcher_contact"));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+
+        //TODO load info directly from database Aware_Studies. Use Aware.getStudy(context, study_url)
+//        try {
+//            study_json = new JSONObject(getIntent().getStringExtra("study_json"));
+//            txtStudyTitle.setText((study_json.getString("study_name").length() > 0 ? study_json.getString("study_name") : "Not available"));
+//            txtStudyDescription.setText((study_json.getString("study_description").length() > 0 ? study_json.getString("study_description") : "Not available."));
+//            txtStudyResearcher.setText("PI: " + study_json.getString("researcher_first") + " " + study_json.getString("researcher_last") + "\nContact: " + study_json.getString("researcher_contact"));
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
 
 
 

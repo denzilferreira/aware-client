@@ -21,12 +21,10 @@ import com.aware.phone.R;
 public class Aware_Toolbar extends Preference {
 
     private Context mContext;
-    private Preference mSelf;
 
     public Aware_Toolbar(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
-        mSelf = this;
     }
 
     @Override

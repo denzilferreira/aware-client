@@ -389,6 +389,16 @@ public class Aware extends Service {
         return (Aware.getSetting(c, Aware.STUDY_ID).length() > 0);
     }
 
+    /**
+     * Fetch the cursor for a study, given the study URL
+     * @param c
+     * @param study_url
+     * @return
+     */
+    public static Cursor getStudy(Context c, String study_url) {
+        return c.getContentResolver().query(Aware_Provider.Aware_Studies.CONTENT_URI, null, Aware_Provider.Aware_Studies.STUDY_URL + " LIKE '" + study_url + "'", null, null);
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {

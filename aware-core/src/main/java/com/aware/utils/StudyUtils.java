@@ -98,9 +98,6 @@ public class StudyUtils extends IntentService {
                 return;
             }
 
-            JOIN_TOAST = Toast.makeText(getApplicationContext(), "Thanks for joining the study!", Toast.LENGTH_LONG);
-            JOIN_TOAST.show();
-
             if (Aware.DEBUG) Log.d(Aware.TAG, "Study configs: " + configs_study.toString(5));
 
             //Apply new configurations in AWARE Client
