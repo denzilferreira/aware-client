@@ -336,6 +336,7 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                 builder.setMessage("This study is no longer available.");
                 builder.show();
             } else {
+                //TEST
                 AlertDialog.Builder builder = new AlertDialog.Builder(Aware_QRCode.this);
                 builder.setPositiveButton("Sign up!", new DialogInterface.OnClickListener() {
                     @Override
