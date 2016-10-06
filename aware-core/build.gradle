@@ -7,7 +7,7 @@ group = "com.awareframework"
 
 android {
     compileSdkVersion 24
-    buildToolsVersion "24.0.2"
+    buildToolsVersion "24.0.3"
 
     defaultConfig {
         versionCode version_code
@@ -46,6 +46,7 @@ bintray {
     configurations = ['archives']
 
     publish = true
+    override = true
 
     pkg {
         repo = 'com.awareframework'
