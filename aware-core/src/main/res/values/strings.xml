@@ -28,4 +28,8 @@
     <string name="aware_esm_other_follow">Can you be more specific, please?</string>
     <string name="aware_dirty">Clean old data?</string>
     <string name="aware_device_label">Device label</string>
+
+    <string name="plugins_required">Plugins required</string>
+    <string name="install_plugins">PLEASE INSTALL THE PLUGINS TO JOIN THE STUDY</string>
+    <string name="sign_up">Sign Up!</string>
 </resources>
