@@ -54,7 +54,7 @@ public class StudyUtils extends IntentService {
 
         Uri study_uri = Uri.parse(full_url);
         // New study URL, chopping off query parameters.
-        String study_url = study_uri.getScheme()+"://"+study_uri.getHost()+study_uri.getPath(); //+"/"
+        String study_url = study_uri.getScheme()+"://"+study_uri.getHost()+study_uri.getPath();
         String protocol = study_uri.getScheme();
 
         //Request study settings
