@@ -336,40 +336,48 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                 builder.setMessage("This study is no longer available.");
                 builder.show();
             } else {
-                //TEST
-                AlertDialog.Builder builder = new AlertDialog.Builder(Aware_QRCode.this);
-                builder.setPositiveButton("Sign up!", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent study_scan = new Intent();
-                        study_scan.putExtra("study_url", study_url);
-                        setResult(Activity.RESULT_OK, study_scan);
-                        finish();
-                    }
-                });
-                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        setResult(Activity.RESULT_CANCELED);
-                        finish();
-                    }
-                });
-                builder.setTitle("Study information");
-                LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                View study_ui = inflater.inflate(R.layout.study_info, null);
-                TextView study_name = (TextView) study_ui.findViewById(R.id.study_name);
-                TextView study_description = (TextView) study_ui.findViewById(R.id.study_description);
-                TextView study_pi = (TextView) study_ui.findViewById(R.id.study_pi);
+                Intent joinStudyIntent = new Intent(Aware_QRCode.this, Aware_Join_Study.class);
 
-                try {
-                    study_name.setText((result.getString("study_name").length() > 0 ? result.getString("study_name") : "Not available"));
-                    study_description.setText((result.getString("study_description").length() > 0 ? result.getString("study_description") : "Not available."));
-                    study_pi.setText("PI: " + result.getString("researcher_first") + " " + result.getString("researcher_last") + "\nContact: " + result.getString("researcher_contact"));
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                builder.setView(study_ui);
-                builder.show();
+                joinStudyIntent.putExtra("study_url", study_url);
+                joinStudyIntent.putExtra("study_json", result.toString());
+
+                //Finish to make back button go back to Aware main activity and not QR Scanner activity
+                finish();
+                startActivity(joinStudyIntent);
+
+//                AlertDialog.Builder builder = new AlertDialog.Builder(Aware_QRCode.this);
+//                builder.setPositiveButton("Sign up!", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        Intent study_scan = new Intent();
+//                        study_scan.putExtra("study_url", study_url);
+//                        setResult(Activity.RESULT_OK, study_scan);
+//                        finish();
+//                    }
+//                });
+//                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        setResult(Activity.RESULT_CANCELED);
+//                        finish();
+//                    }
+//                });
+//                builder.setTitle("Study information");
+//                LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+//                View study_ui = inflater.inflate(R.layout.study_info, null);
+//                TextView study_name = (TextView) study_ui.findViewById(R.id.study_name);
+//                TextView study_description = (TextView) study_ui.findViewById(R.id.study_description);
+//                TextView study_pi = (TextView) study_ui.findViewById(R.id.study_pi);
+
+//                try {
+//                    study_name.setText((result.getString("study_name").length() > 0 ? result.getString("study_name") : "Not available"));
+//                    study_description.setText((result.getString("study_description").length() > 0 ? result.getString("study_description") : "Not available."));
+//                    study_pi.setText("PI: " + result.getString("researcher_first") + " " + result.getString("researcher_last") + "\nContact: " + result.getString("researcher_contact"));
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//                builder.setView(study_ui);
+//                builder.show();
             }
         }
     }
