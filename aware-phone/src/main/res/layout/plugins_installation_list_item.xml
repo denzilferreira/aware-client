@@ -30,6 +30,7 @@
             android:visibility="visible"
             android:layout_centerInParent="true"
             android:checked="true"
+            android:clickable="false"
             android:id="@+id/cb_installed"/>
     </RelativeLayout>
 </LinearLayout>

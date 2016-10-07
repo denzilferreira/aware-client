@@ -178,8 +178,8 @@ public class StudyUtils extends IntentService {
             if (installed != null) {
                 Aware.startPlugin(context, package_name);
             } else {
-                //TODO: wizard to install plugins, step by step
-                Aware.downloadPlugin(context, package_name, false);
+                //TODO: Fallback to error
+//                Aware.downloadPlugin(context, package_name, false);
             }
         }
 

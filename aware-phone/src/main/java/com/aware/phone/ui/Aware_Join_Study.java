@@ -1,5 +1,6 @@
 package com.aware.phone.ui;
 
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -10,12 +11,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.aware.Aware;
 import com.aware.phone.R;
 import com.aware.providers.Aware_Provider;
 import com.aware.utils.PluginsManager;
+import com.aware.utils.StudyUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,6 +37,8 @@ public class Aware_Join_Study extends Aware_Activity {
     private RecyclerView.LayoutManager mLayoutManager;
     private boolean pluginsInstalled;
     private Button btnSignUp;
+    private LinearLayout llPluginsRequired;
+    private TextView tvInstallPlugins;
 
 
     @Override
@@ -51,6 +56,9 @@ public class Aware_Join_Study extends Aware_Activity {
         mLayoutManager = new LinearLayoutManager(this);
         pluginsRecyclerView.setLayoutManager(mLayoutManager);
 
+        llPluginsRequired = (LinearLayout) findViewById(R.id.ll_plugins_required);
+        tvInstallPlugins = (TextView) findViewById(R.id.tv_install_plugins);
+
         study_url = getIntent().getStringExtra("study_url");
 
         //TODO load info directly from database Aware_Studies. Use Aware.getStudy(context, study_url)
@@ -63,38 +71,36 @@ public class Aware_Join_Study extends Aware_Activity {
 //            e.printStackTrace();
 //        }
 
-        JSONObject study_config = null;
+        JSONArray study_config = null;
 
-        //TODO: To make it compile, change it to the below one when changes to the aware provider are merged
-        Cursor qry = this.getContentResolver().query(Aware_Provider.Aware_Plugins.CONTENT_URI, null, null, null, "study_joined DESC LIMIT 1");
+        //TODO: Includes future changes
+        Cursor qry = this.getContentResolver().query(Aware_Provider.Aware_Studies.CONTENT_URI, null, null, null, Aware_Provider.Aware_Studies.STUDY_JOINED + " DESC LIMIT 1");
         if (qry != null && qry.moveToFirst()) {
             try {
-                study_config = new JSONObject(qry.getString(qry.getColumnIndex("study_config")));
+                study_config = new JSONArray(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
             if (qry != null && !qry.isClosed()) qry.close();
         } else {
-            //TODO: Error get json get it again?
+            //Error get json get it again?
         }
-
-//        //TODO: Includes future changes
-//        Cursor qry = this.getContentResolver().query(Aware_Provider.Aware_Studies.CONTENT_URI, null, null, null, Aware_Provider.Aware_Studies.STUDY_JOINED + " DESC LIMIT 1");
-//        if (qry != null && qry.moveToFirst()) {
-//            try {
-//                study_config = new JSONObject(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//            }
-//            if (qry != null && !qry.isClosed()) qry.close();
-//        } else {
-//            //Error get json get it again?
-//        }
 
 
         if(study_config!=null) {
             populateStudyInfo(study_config);
         }
+
+        btnSignUp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Intent study_config = new Intent(Aware_Join_Study.this, StudyUtils.class);
+                study_config.putExtra("study_url", study_url);
+                startService(study_config);
+                finish();
+            }
+        });
 
 
     }
@@ -156,7 +162,15 @@ public class Aware_Join_Study extends Aware_Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        pluginsInstalled = verifyInstalledPlugins();
+        if(active_plugins.size()==0) {
+            pluginsInstalled = true;
+            llPluginsRequired.setVisibility(View.GONE);
+            tvInstallPlugins.setVisibility(View.GONE);
+        } else {
+            pluginsInstalled = verifyInstalledPlugins();
+            llPluginsRequired.setVisibility(View.VISIBLE);
+            tvInstallPlugins.setVisibility(View.VISIBLE);
+        }
         if(pluginsInstalled) {
             btnSignUp.setEnabled(true);
         } else {

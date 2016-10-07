@@ -51,6 +51,7 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:orientation="vertical"
+            android:id="@+id/ll_plugins_required"
             android:layout_margin="5dp">
             <TextView
                 android:layout_width="match_parent"
@@ -68,6 +69,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:id="@+id/tv_install_plugins"
             android:text="@string/install_plugins"
             android:textStyle="bold"
             />
