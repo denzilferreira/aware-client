@@ -31,8 +31,9 @@ public class Aware_Join_Study extends Aware_Activity {
 
     private String study_url;
     private JSONObject study_json;
+
     private ArrayList<PluginInfo> active_plugins;
-    //TODO: Test when the view has many items
+
     private RecyclerView pluginsRecyclerView;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
@@ -76,8 +77,10 @@ public class Aware_Join_Study extends Aware_Activity {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            if (qry != null && !qry.isClosed()) qry.close();
-        } else {
+        }
+        if (qry != null && !qry.isClosed()) qry.close();
+
+        if (qry == null || ! qry.moveToFirst()) {
             Toast.makeText(this, "Error getting study information.", Toast.LENGTH_SHORT).show();
             finish();
         }

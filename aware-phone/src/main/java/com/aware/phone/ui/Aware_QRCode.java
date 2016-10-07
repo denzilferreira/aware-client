@@ -323,7 +323,7 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                     }
                     JSONObject study_data = new JSONObject(request);
 
-                    //Request study settings: note that this will automatically register this device on the study. If user does not sign-up, we clean remotely
+                    //Request study settings. Note: this will automatically register this device on the study and create credentials for this device ID!
                     Hashtable<String, String> data = new Hashtable<>();
                     data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
 
@@ -400,26 +400,42 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                         getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, studyData);
 
                         if (Aware.DEBUG) {
-                            Log.d(Aware.TAG, "Study data: " + studyData.toString());
+                            Log.d(Aware.TAG, "New study data: " + studyData.toString());
                         }
-
                     } else {
                         dbStudy.close();
+
+                        //Update the information to the latest
+                        ContentValues studyData = new ContentValues();
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_KEY, study_id);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_API, study_api_key);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_URL, study_url);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_PI, result.getString("researcher_first") + " " + result.getString("researcher_last") + "\nContact: " + result.getString("researcher_contact"));
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, study_config);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_TITLE, result.getString("study_name"));
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, result.getString("study_description"));
+
+                        getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, studyData, Aware_Provider.Aware_Studies.STUDY_URL + " LIKE '" + study_url + "'", null);
+
+                        if (Aware.DEBUG) {
+                            Log.d(Aware.TAG, "Updated study data: " + studyData.toString());
+                        }
                     }
 
-//                    Intent study_scan = new Intent();
-//                    study_scan.putExtra("study_url", study_url);
-//                    setResult(Activity.RESULT_OK, study_scan);
-//                    finish();
-
-                    Intent joinStudyIntent = new Intent(Aware_QRCode.this, Aware_Join_Study.class);
-
-                    joinStudyIntent.putExtra("study_url", study_url);
-                    joinStudyIntent.putExtra("study_json", result.toString());
-
-                    //Finish to make back button go back to Aware main activity and not QR Scanner activity
+                    Intent study_scan = new Intent();
+                    study_scan.putExtra("study_url", study_url);
+                    setResult(Activity.RESULT_OK, study_scan);
                     finish();
-                    startActivity(joinStudyIntent);
+
+//                    Intent joinStudyIntent = new Intent(Aware_QRCode.this, Aware_Join_Study.class);
+//
+//                    joinStudyIntent.putExtra("study_url", study_url);
+//                    joinStudyIntent.putExtra("study_json", result.toString());
+//
+//                    //Finish to make back button go back to Aware main activity and not QR Scanner activity
+//                    finish();
+//                    startActivity(joinStudyIntent);
 
                 } catch (JSONException e) {
                     e.printStackTrace();
