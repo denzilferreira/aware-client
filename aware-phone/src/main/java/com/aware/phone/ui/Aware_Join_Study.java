@@ -47,7 +47,9 @@ public class Aware_Join_Study extends Aware_Activity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.aware_join_study);
+
         pluginsInstalled = false;
+
         TextView txtStudyTitle = (TextView) findViewById(R.id.txt_title);
         TextView txtStudyDescription = (TextView) findViewById(R.id.txt_description);
         TextView txtStudyResearcher = (TextView) findViewById(R.id.txt_researcher);
@@ -62,11 +64,9 @@ public class Aware_Join_Study extends Aware_Activity {
 
         study_url = getIntent().getStringExtra("study_url");
 
-        Cursor qry = Aware.getStudy(this, study_url);
-
         JSONArray study_config = null;
 
-//        Cursor qry = this.getContentResolver().query(Aware_Provider.Aware_Studies.CONTENT_URI, null, null, null, Aware_Provider.Aware_Studies.STUDY_JOINED + " DESC LIMIT 1");
+        Cursor qry = Aware.getStudy(this, study_url);
         if (qry != null && qry.moveToFirst()) {
             try {
                 study_config = new JSONArray(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
