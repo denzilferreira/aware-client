@@ -28,8 +28,8 @@
             android:defaultValue="false"
             android:key="aware_donate_usage"
             android:persistent="true"
-            android:title="Send AWARE team usage information"
-            android:summary="Send usage information (device id, application info), NOT actual data.  This supports AWARE funding."
+            android:title="Share diagnostics information"
+            android:summary="Device id, installed version number, NOT actual data. Used for diagnostics and analytics (e.g., server demand)"
             />
     </PreferenceCategory>
     <PreferenceCategory

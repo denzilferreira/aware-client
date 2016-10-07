@@ -121,6 +121,17 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.aware.phone.Aware_Client" />
         </activity>
+        <activity
+            android:name="com.aware.phone.ui.Aware_Join_Study"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:exported="true"
+            android:label="Join study"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.Aware">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.aware.phone.Aware_Client" />
+        </activity>
 
         <receiver
             android:name="com.aware.Aware$AndroidPackageMonitor"

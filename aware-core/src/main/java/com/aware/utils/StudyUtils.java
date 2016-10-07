@@ -31,6 +31,7 @@ import java.util.Hashtable;
 
 /**
  * Service that allows plugins/applications to send data to AWARE's dashboard study
+ * Note: This service is meant for plugins/self-contained apps to join a study without requiring a QRCode
  */
 public class StudyUtils extends IntentService {
 
@@ -54,7 +55,7 @@ public class StudyUtils extends IntentService {
 
         Uri study_uri = Uri.parse(full_url);
         // New study URL, chopping off query parameters.
-        String study_url = study_uri.getScheme()+"://"+study_uri.getHost()+study_uri.getPath(); //+"/"
+        String study_url = study_uri.getScheme()+"://"+study_uri.getHost()+study_uri.getPath();
         String protocol = study_uri.getScheme();
 
         //Request study settings
@@ -97,9 +98,6 @@ public class StudyUtils extends IntentService {
                 Toast.makeText(getApplicationContext(), "This study is no longer available.", Toast.LENGTH_LONG).show();
                 return;
             }
-
-            JOIN_TOAST = Toast.makeText(getApplicationContext(), "Thanks for joining the study!", Toast.LENGTH_LONG);
-            JOIN_TOAST.show();
 
             if (Aware.DEBUG) Log.d(Aware.TAG, "Study configs: " + configs_study.toString(5));
 

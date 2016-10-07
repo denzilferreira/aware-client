@@ -5,10 +5,13 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -28,12 +31,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.aware.Aware;
+import com.aware.Aware_Preferences;
 import com.aware.phone.R;
 import com.aware.phone.ui.qrcode.BarcodeGraphic;
 import com.aware.phone.ui.qrcode.BarcodeTrackerFactory;
 import com.aware.phone.ui.qrcode.CameraSource;
 import com.aware.phone.ui.qrcode.CameraSourcePreview;
 import com.aware.phone.ui.qrcode.GraphicOverlay;
+import com.aware.providers.Aware_Provider;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
 import com.aware.utils.SSLManager;
@@ -43,11 +48,13 @@ import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Hashtable;
 import java.util.List;
 
 import me.dm7.barcodescanner.zbar.Result;
@@ -262,8 +269,13 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
      * Fetch study information and ask user to join the study
      */
     private class StudyData extends AsyncTask<String, Void, JSONObject> {
-        private String study_url = "";
+
         private ProgressDialog loader;
+
+        private String study_url = "";
+        private String study_api_key = "";
+        private String study_id = "";
+        private String study_config = "";
 
         @Override
         protected void onPreExecute() {
@@ -285,7 +297,9 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
             String protocol = study_uri.getScheme();
             String study_host = protocol + "://" + study_uri.getHost();  // misnomer: protocol+host
             List<String> path_segments = study_uri.getPathSegments();
-            String study_api_key = path_segments.get(path_segments.size()-1);
+
+            study_api_key = path_segments.get(path_segments.size() - 1);
+            study_id = path_segments.get(path_segments.size() - 2);
 
             // Get SSL certificates in a blocking manner, since we are already in background.
             // We don't need to sleep to wait for certs.
@@ -293,7 +307,6 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
 
             String request;
             if (protocol.equals("https")) {
-
                 try {
                     request = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_host + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
                 } catch (FileNotFoundException e) {
@@ -309,6 +322,33 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                         return null;
                     }
                     JSONObject study_data = new JSONObject(request);
+
+                    //Request study settings: note that this will automatically register this device on the study. If user does not sign-up, we clean remotely
+                    Hashtable<String, String> data = new Hashtable<>();
+                    data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+
+                    String answer;
+                    if (protocol.equals("https")) {
+                        try {
+                            answer = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataPOST(study_url, data, true);
+                        } catch (FileNotFoundException e) {
+                            answer = null;
+                        }
+                    } else {
+                        answer = new Http(getApplicationContext()).dataPOST(study_url, data, true);
+                    }
+
+                    if (answer != null) {
+                        try {
+                            JSONArray configs_study = new JSONArray(answer);
+                            if (!configs_study.getJSONObject(0).has("message")) {
+                                study_config = configs_study.toString();
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    } else return null;
+
                     return study_data;
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -321,7 +361,12 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
         protected void onPostExecute(JSONObject result) {
             super.onPostExecute(result);
 
-            loader.dismiss();
+            try {
+                loader.dismiss();
+            } catch (IllegalArgumentException e) {
+                //It's ok, we might get here if we couldn't get study info.
+                return;
+            }
 
             if (result == null) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(Aware_QRCode.this);
@@ -333,18 +378,54 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                     }
                 });
                 builder.setTitle("Study information");
-                builder.setMessage("This study is no longer available.");
+                builder.setMessage("Unable to retrieve this study information. Try again later.");
                 builder.show();
             } else {
-                Intent joinStudyIntent = new Intent(Aware_QRCode.this, Aware_Join_Study.class);
+                try {
+                    Cursor dbStudy = Aware.getStudy(getApplicationContext(), study_url);
 
-                joinStudyIntent.putExtra("study_url", study_url);
-                joinStudyIntent.putExtra("study_json", result.toString());
+                    Log.d(Aware.TAG, DatabaseUtils.dumpCursorToString(dbStudy));
 
-                //Finish to make back button go back to Aware main activity and not QR Scanner activity
-                finish();
-                startActivity(joinStudyIntent);
+                    if (dbStudy == null || !dbStudy.moveToFirst()) {
+                        ContentValues studyData = new ContentValues();
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_KEY, study_id);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_API, study_api_key);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_URL, study_url);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_PI, result.getString("researcher_first") + " " + result.getString("researcher_last") + "\nContact: " + result.getString("researcher_contact"));
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, study_config);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_TITLE, result.getString("study_name"));
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, result.getString("study_description"));
 
+                        getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, studyData);
+
+                        if (Aware.DEBUG) {
+                            Log.d(Aware.TAG, "Study data: " + studyData.toString());
+                        }
+
+                    } else {
+                        dbStudy.close();
+                    }
+
+//                    Intent study_scan = new Intent();
+//                    study_scan.putExtra("study_url", study_url);
+//                    setResult(Activity.RESULT_OK, study_scan);
+//                    finish();
+
+                    Intent joinStudyIntent = new Intent(Aware_QRCode.this, Aware_Join_Study.class);
+
+                    joinStudyIntent.putExtra("study_url", study_url);
+                    joinStudyIntent.putExtra("study_json", result.toString());
+
+                    //Finish to make back button go back to Aware main activity and not QR Scanner activity
+                    finish();
+                    startActivity(joinStudyIntent);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                //TEST
 //                AlertDialog.Builder builder = new AlertDialog.Builder(Aware_QRCode.this);
 //                builder.setPositiveButton("Sign up!", new DialogInterface.OnClickListener() {
 //                    @Override
@@ -368,7 +449,7 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
 //                TextView study_name = (TextView) study_ui.findViewById(R.id.study_name);
 //                TextView study_description = (TextView) study_ui.findViewById(R.id.study_description);
 //                TextView study_pi = (TextView) study_ui.findViewById(R.id.study_pi);
-
+//
 //                try {
 //                    study_name.setText((result.getString("study_name").length() > 0 ? result.getString("study_name") : "Not available"));
 //                    study_description.setText((result.getString("study_description").length() > 0 ? result.getString("study_description") : "Not available."));

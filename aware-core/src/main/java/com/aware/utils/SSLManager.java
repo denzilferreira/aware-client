@@ -49,13 +49,8 @@ public class SSLManager extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         String server_url = intent.getStringExtra(EXTRA_SERVER);
-
         handleUrl(getApplicationContext(), server_url, true);
     }
-
-    //
-    // Entry point layer
-    //
 
     /**
      * Handle a study URL.  Fetch data from query parameters if it is there.  Otherwise,
@@ -95,11 +90,6 @@ public class SSLManager extends IntentService {
             }
         }
     }
-
-
-    //
-    // Downloading/setting functions
-    //
 
     /**
      * Classic method: Download certificate unconditionally.  This is the old
@@ -160,10 +150,7 @@ public class SSLManager extends IntentService {
             Log.d(Aware.TAG, "crt_sha256=" + crt_sha256);
         }
 
-        if (crt != null) {
-            crt = crt;
-            // use cert directly
-        } else if (crt_url != null) {
+        if (crt != null && crt_url != null) {
             try {
                 InputStream crt_stream = new URL(crt_url).openStream();
                 // Convert input stream to String
@@ -200,11 +187,6 @@ public class SSLManager extends IntentService {
         // Set the certificate
         setCertificate(context, hostname, crt);
     }
-
-
-    //
-    // Utility functions
-    //
 
     /**
      * Do we have a certificate for this hostname?

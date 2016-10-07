@@ -26,7 +26,7 @@ public class TestActivity extends Activity {
 
     int REQUEST_STORAGE = 1;
 
-    Button button_ESMNotification, button_CancelESM, button_CancelESMTimer;
+    Button button_ESMNotification;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +35,12 @@ public class TestActivity extends Activity {
         setContentView(R.layout.activity_test);
 
         button_ESMNotification=(Button)findViewById(R.id.button_ESMNotification);
+        button_ESMNotification.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    TestESM testESM = new TestESM();
+                    testESM.test(getApplicationContext());
+                }
+        });
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE);

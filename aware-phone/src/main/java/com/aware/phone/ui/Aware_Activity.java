@@ -4,11 +4,13 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -36,17 +38,21 @@ import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.phone.Aware_Client;
 import com.aware.phone.R;
+import com.aware.providers.Aware_Provider;
 import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
 import com.aware.utils.SSLManager;
 import com.aware.utils.StudyUtils;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
 
 //PreferenceActivity
 public class Aware_Activity extends AppCompatPreferenceActivity {
@@ -61,11 +67,14 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == Aware_Preferences.REQUEST_JOIN_STUDY) {
             if (resultCode == RESULT_OK) {
-                Intent study_config = new Intent(this, StudyUtils.class);
-                study_config.putExtra("study_url", data.getStringExtra("study_url"));
-                startService(study_config);
+                Intent studyInfo = new Intent(this, Aware_Join_Study.class);
+                studyInfo.putExtra("study_url", data.getStringExtra("study_url"));
+                startActivity(studyInfo);
 
-                Toast.makeText(this, "Joining study...", Toast.LENGTH_LONG).show();
+//                Intent study_config = new Intent(this, StudyUtils.class);
+//                study_config.putExtra("study_url", data.getStringExtra("study_url"));
+//                startService(study_config);
+
                 finish();
             }
         }
@@ -85,7 +94,7 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
         aware_container = (CoordinatorLayout) findViewById(R.id.aware_container);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.aware_toolbar);
-        toolbar.setTitle(getTitle()!=null?getTitle():"");
+        toolbar.setTitle(getTitle() != null ? getTitle() : "");
         toolbar.inflateMenu(R.menu.aware_menu);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -231,8 +240,13 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
     }
 
     public class Async_StudyData extends AsyncTask<String, Void, JSONObject> {
-        private String study_url = "";
+
         private ProgressDialog loader;
+
+        private String study_url = "";
+        private String study_api_key = "";
+        private String study_id = "";
+        private String study_config = "";
 
         @Override
         protected void onPreExecute() {
@@ -249,11 +263,18 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
         protected JSONObject doInBackground(String... params) {
             study_url = params[0];
 
-            String study_api_key = study_url.substring(study_url.lastIndexOf("/") + 1, study_url.length());
-            String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
-            String protocol = study_url.substring(0, study_url.indexOf(":"));
+            if (Aware.DEBUG) Log.d(Aware.TAG, "Aware_QRCode study_url: " + study_url);
+            Uri study_uri = Uri.parse(study_url);
+            String protocol = study_uri.getScheme();
+            String study_host = protocol + "://" + study_uri.getHost();  // misnomer: protocol+host
+            List<String> path_segments = study_uri.getPathSegments();
 
-            if (study_api_key.length() == 0) return null;
+            study_api_key = path_segments.get(path_segments.size() - 1);
+            study_id = path_segments.get(path_segments.size() - 2);
+
+            // Get SSL certificates in a blocking manner, since we are already in background.
+            // We don't need to sleep to wait for certs.
+            SSLManager.handleUrl(getApplicationContext(), study_url, true);
 
             String request;
             if (protocol.equals("https")) {
@@ -271,7 +292,35 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                     if (request.equals("[]")) {
                         return null;
                     }
-                    return new JSONObject(request);
+                    JSONObject study_data = new JSONObject(request);
+
+                    //Request study settings: note that this will automatically register this device on the study. If user does not sign-up, we clean remotely
+                    Hashtable<String, String> data = new Hashtable<>();
+                    data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+
+                    String answer;
+                    if (protocol.equals("https")) {
+                        try {
+                            answer = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataPOST(study_url, data, true);
+                        } catch (FileNotFoundException e) {
+                            answer = null;
+                        }
+                    } else {
+                        answer = new Http(getApplicationContext()).dataPOST(study_url, data, true);
+                    }
+
+                    if (answer != null) {
+                        try {
+                            JSONArray configs_study = new JSONArray(answer);
+                            if (!configs_study.getJSONObject(0).has("message")) {
+                                study_config = configs_study.toString();
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    } else return null;
+
+                    return study_data;
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -290,92 +339,123 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                 return;
             }
 
-            if (result == null) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(Aware_Activity.this);
-                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        //if part of a study, you can't change settings.
-                        if (Aware.getSetting(getApplicationContext(), "study_id").length() > 0) {
-                            Snackbar noChanges = Snackbar.make(aware_container, "Ongoing study, no changes allowed.", Snackbar.LENGTH_LONG);
-                            TextView output = (TextView) noChanges.getView().findViewById(android.support.design.R.id.snackbar_text);
-                            output.setTextColor(Color.WHITE);
-                            noChanges.show();
-                        }
-                    }
-                });
-                builder.setTitle("Study information");
-                builder.setMessage("Unable to retrieve study's information. Please, try again later.");
-                builder.setNegativeButton("Quit study!", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-
-                        Snackbar clear = Snackbar.make(aware_container, "Clearing settings, please wait.", Snackbar.LENGTH_LONG);
-                        TextView output = (TextView) clear.getView().findViewById(android.support.design.R.id.snackbar_text);
-                        output.setTextColor(Color.WHITE);
-                        clear.show();
-
-                        Aware.reset(getApplicationContext());
-
-                        Intent preferences = new Intent(getApplicationContext(), Aware_Client.class);
-                        preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(preferences);
-                    }
-                });
-                builder.setCancelable(false);
-                builder.show();
-            } else {
-                AlertDialog.Builder builder = new AlertDialog.Builder(Aware_Activity.this);
-                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        //if part of a study, you can't change settings.
-                        if (Aware.getSetting(getApplicationContext(), "study_id").length() > 0) {
-                            Snackbar noChanges = Snackbar.make(aware_container, "Ongoing study, no changes allowed.", Snackbar.LENGTH_LONG);
-                            TextView output = (TextView) noChanges.getView().findViewById(android.support.design.R.id.snackbar_text);
-                            output.setTextColor(Color.WHITE);
-                            noChanges.show();
-                        }
-                    }
-                });
-                builder.setNegativeButton("Quit study!", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-
-                        Snackbar clear = Snackbar.make(aware_container, "Clearing settings, please wait.", Snackbar.LENGTH_LONG);
-                        TextView output = (TextView) clear.getView().findViewById(android.support.design.R.id.snackbar_text);
-                        output.setTextColor(Color.WHITE);
-                        clear.show();
-
-                        Aware.reset(getApplicationContext());
-
-                        Intent preferences = new Intent(getApplicationContext(), Aware_Client.class);
-                        preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(preferences);
-                    }
-                });
-                builder.setTitle("Study information");
-                LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                View study_ui = inflater.inflate(R.layout.study_info, null);
-                TextView study_name = (TextView) study_ui.findViewById(R.id.study_name);
-                TextView study_description = (TextView) study_ui.findViewById(R.id.study_description);
-                TextView study_pi = (TextView) study_ui.findViewById(R.id.study_pi);
-
+            if (result != null) {
                 try {
-                    study_name.setText((result.getString("study_name").length() > 0 ? result.getString("study_name") : "Not available"));
-                    study_description.setText((result.getString("study_description").length() > 0 ? result.getString("study_description") : "Not available."));
-                    study_pi.setText(result.getString("researcher_first") + " " + result.getString("researcher_last") + "\nContact: " + result.getString("researcher_contact"));
+                    Cursor dbStudy = Aware.getStudy(getApplicationContext(), study_url);
+                    if (dbStudy == null || !dbStudy.moveToFirst()) {
+                        ContentValues studyData = new ContentValues();
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_KEY, study_id);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_API, study_api_key);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_URL, study_url);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_PI, result.getString("researcher_first") + " " + result.getString("researcher_last") + "\nContact: " + result.getString("researcher_contact"));
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, study_config);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_TITLE, result.getString("study_name"));
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, result.getString("study_description"));
+
+                        getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, studyData);
+
+                        if (Aware.DEBUG) {
+                            Log.d(Aware.TAG, "Study data: " + studyData.toString());
+                        }
+                    } else {
+                        dbStudy.close();
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                builder.setView(study_ui);
-                builder.setCancelable(false);
-                builder.show();
             }
+
+            Intent studyInfo = new Intent(getApplicationContext(), Aware_Join_Study.class);
+            studyInfo.putExtra("study_url", study_url);
+            startActivity(studyInfo);
+
+//            if (result == null) {
+//                AlertDialog.Builder builder = new AlertDialog.Builder(Aware_Activity.this);
+//                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        dialog.dismiss();
+//                        //if part of a study, you can't change settings.
+//                        if (Aware.getSetting(getApplicationContext(), "study_id").length() > 0) {
+//                            Snackbar noChanges = Snackbar.make(aware_container, "Ongoing study, no changes allowed.", Snackbar.LENGTH_LONG);
+//                            TextView output = (TextView) noChanges.getView().findViewById(android.support.design.R.id.snackbar_text);
+//                            output.setTextColor(Color.WHITE);
+//                            noChanges.show();
+//                        }
+//                    }
+//                });
+//                builder.setTitle("Study information");
+//                builder.setMessage("Unable to retrieve study's information. Please, try again later.");
+//                builder.setNegativeButton("Quit study!", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        dialog.dismiss();
+//
+//                        Snackbar clear = Snackbar.make(aware_container, "Clearing settings, please wait.", Snackbar.LENGTH_LONG);
+//                        TextView output = (TextView) clear.getView().findViewById(android.support.design.R.id.snackbar_text);
+//                        output.setTextColor(Color.WHITE);
+//                        clear.show();
+//
+//                        Aware.reset(getApplicationContext());
+//
+//                        Intent preferences = new Intent(getApplicationContext(), Aware_Client.class);
+//                        preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//                        startActivity(preferences);
+//                    }
+//                });
+//                builder.setCancelable(false);
+//                builder.show();
+//            } else {
+//                AlertDialog.Builder builder = new AlertDialog.Builder(Aware_Activity.this);
+//                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        dialog.dismiss();
+//                        //if part of a study, you can't change settings.
+//                        if (Aware.getSetting(getApplicationContext(), "study_id").length() > 0) {
+//                            Snackbar noChanges = Snackbar.make(aware_container, "Ongoing study, no changes allowed.", Snackbar.LENGTH_LONG);
+//                            TextView output = (TextView) noChanges.getView().findViewById(android.support.design.R.id.snackbar_text);
+//                            output.setTextColor(Color.WHITE);
+//                            noChanges.show();
+//                        }
+//                    }
+//                });
+//                builder.setNegativeButton("Quit study!", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        dialog.dismiss();
+//
+//                        Snackbar clear = Snackbar.make(aware_container, "Clearing settings, please wait.", Snackbar.LENGTH_LONG);
+//                        TextView output = (TextView) clear.getView().findViewById(android.support.design.R.id.snackbar_text);
+//                        output.setTextColor(Color.WHITE);
+//                        clear.show();
+//
+//                        Aware.reset(getApplicationContext());
+//
+//                        Intent preferences = new Intent(getApplicationContext(), Aware_Client.class);
+//                        preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//                        startActivity(preferences);
+//                    }
+//                });
+//                builder.setTitle("Study information");
+//                LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+//                View study_ui = inflater.inflate(R.layout.study_info, null);
+//                TextView study_name = (TextView) study_ui.findViewById(R.id.study_name);
+//                TextView study_description = (TextView) study_ui.findViewById(R.id.study_description);
+//                TextView study_pi = (TextView) study_ui.findViewById(R.id.study_pi);
+//
+//                try {
+//                    study_name.setText((result.getString("study_name").length() > 0 ? result.getString("study_name") : "Not available"));
+//                    study_description.setText((result.getString("study_description").length() > 0 ? result.getString("study_description") : "Not available."));
+//                    study_pi.setText(result.getString("researcher_first") + " " + result.getString("researcher_last") + "\nContact: " + result.getString("researcher_contact"));
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//                builder.setView(study_ui);
+//                builder.setCancelable(false);
+//                builder.show();
+//            }
         }
     }
 }
