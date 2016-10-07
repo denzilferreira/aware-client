@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.aware.Aware;
 import com.aware.phone.R;
@@ -61,29 +62,24 @@ public class Aware_Join_Study extends Aware_Activity {
 
         study_url = getIntent().getStringExtra("study_url");
 
-        //TODO load info directly from database Aware_Studies. Use Aware.getStudy(context, study_url)
-//        try {
-//            study_json = new JSONObject(getIntent().getStringExtra("study_json"));
-//            txtStudyTitle.setText((study_json.getString("study_name").length() > 0 ? study_json.getString("study_name") : "Not available"));
-//            txtStudyDescription.setText((study_json.getString("study_description").length() > 0 ? study_json.getString("study_description") : "Not available."));
-//            txtStudyResearcher.setText("PI: " + study_json.getString("researcher_first") + " " + study_json.getString("researcher_last") + "\nContact: " + study_json.getString("researcher_contact"));
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
+        Cursor qry = Aware.getStudy(this, study_url);
 
         JSONArray study_config = null;
 
-        //TODO: Includes future changes
-        Cursor qry = this.getContentResolver().query(Aware_Provider.Aware_Studies.CONTENT_URI, null, null, null, Aware_Provider.Aware_Studies.STUDY_JOINED + " DESC LIMIT 1");
+//        Cursor qry = this.getContentResolver().query(Aware_Provider.Aware_Studies.CONTENT_URI, null, null, null, Aware_Provider.Aware_Studies.STUDY_JOINED + " DESC LIMIT 1");
         if (qry != null && qry.moveToFirst()) {
             try {
                 study_config = new JSONArray(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                txtStudyTitle.setText(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
+                txtStudyDescription.setText(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
+                txtStudyResearcher.setText(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
             if (qry != null && !qry.isClosed()) qry.close();
         } else {
-            //Error get json get it again?
+            Toast.makeText(this, "Error getting study information.", Toast.LENGTH_SHORT).show();
+            finish();
         }
 
 
