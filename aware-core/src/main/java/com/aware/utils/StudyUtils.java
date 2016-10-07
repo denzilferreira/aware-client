@@ -31,6 +31,7 @@ import java.util.Hashtable;
 
 /**
  * Service that allows plugins/applications to send data to AWARE's dashboard study
+ * Note: This service is meant for plugins/self-contained apps to join a study without requiring a QRCode
  */
 public class StudyUtils extends IntentService {
 
