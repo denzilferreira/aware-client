@@ -6,6 +6,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContentResolverCompat;
@@ -139,13 +140,20 @@ public class DownloadPluginService extends IntentService {
 
                                     notManager.cancel(notID);
 
-                                    Intent promptInstall = new Intent(Intent.ACTION_VIEW);
-                                    promptInstall.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    promptInstall.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                    promptInstall.setDataAndType(
-                                            FileProvider.getUriForFile(getApplicationContext(), getPackageName() + ".provider.storage", result),
-                                            "application/vnd.android.package-archive");
-                                    startActivity(promptInstall);
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                        Intent promptInstall = new Intent(Intent.ACTION_VIEW);
+                                        promptInstall.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                        promptInstall.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                        promptInstall.setDataAndType(
+                                                FileProvider.getUriForFile(getApplicationContext(), getPackageName() + ".provider.storage", result),
+                                                "application/vnd.android.package-archive");
+                                        startActivity(promptInstall);
+                                    } else {
+                                        Intent promptInstall = new Intent(Intent.ACTION_VIEW);
+                                        promptInstall.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                        promptInstall.setDataAndType(Uri.fromFile(result), "application/vnd.android.package-archive");
+                                        startActivity(promptInstall);
+                                    }
                                 }
                             }
                         });
