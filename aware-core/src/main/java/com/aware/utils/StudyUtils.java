@@ -31,6 +31,7 @@ import java.util.Hashtable;
 
 /**
  * Service that allows plugins/applications to send data to AWARE's dashboard study
+ * Note: joins a study without requiring a QRCode, just the study URL
  */
 public class StudyUtils extends IntentService {
 
@@ -98,12 +99,9 @@ public class StudyUtils extends IntentService {
                 return;
             }
 
-            JOIN_TOAST = Toast.makeText(getApplicationContext(), "Thanks for joining the study!", Toast.LENGTH_LONG);
-            JOIN_TOAST.show();
-
             if (Aware.DEBUG) Log.d(Aware.TAG, "Study configs: " + configs_study.toString(5));
 
-            //Apply new configurations in AWARE Client
+            //Apply new configurations in AWARE library
             applySettings(getApplicationContext(), configs_study);
 
         } catch (JSONException e) {
@@ -180,7 +178,6 @@ public class StudyUtils extends IntentService {
             if (installed != null) {
                 Aware.startPlugin(context, package_name);
             } else {
-                //TODO: wizard to install plugins, step by step
                 Aware.downloadPlugin(context, package_name, false);
             }
         }

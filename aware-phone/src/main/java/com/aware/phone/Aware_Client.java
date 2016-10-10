@@ -12,11 +12,10 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
@@ -25,19 +24,19 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import com.aware.Applications;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.phone.ui.Aware_Activity;
 import com.aware.ui.PermissionsHandler;
-import com.aware.utils.PluginsManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,11 +55,10 @@ public class Aware_Client extends Aware_Activity {
     private static final int DIALOG_ERROR_MISSING_SENSOR = 3;
 
     private static SensorManager mSensorMgr;
-    private static Context awareContext;
-    private static PreferenceActivity clientUI;
     public static ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
 
-    private Aware_Activity.Async_StudyData studyCheck;
+    private Context awareContext;
+    private PreferenceActivity clientUI;
 
     @Override
     protected Dialog onCreateDialog(int id) {
@@ -165,12 +163,12 @@ public class Aware_Client extends Aware_Activity {
                 Applications.isAccessibilityServiceActive(awareContext);
             }
 
-            //Show study information if on a study
-            if (Aware.getSetting(getApplicationContext(), Aware.STUDY_ID).length() > 0) {
-                if (studyCheck == null) studyCheck = new Aware_Activity.Async_StudyData();
-                if (studyCheck.getStatus() == AsyncTask.Status.PENDING) {
-                    studyCheck.execute(Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
-                }
+            //Notify the user of no changes are allowed, if enrolled on a study.
+            if (Aware.isStudy(getApplicationContext())) {
+                Snackbar noChanges = Snackbar.make(aware_container, "Ongoing study, no changes allowed.", Snackbar.LENGTH_LONG);
+                TextView output = (TextView) noChanges.getView().findViewById(android.support.design.R.id.snackbar_text);
+                output.setTextColor(Color.WHITE);
+                noChanges.show();
             }
 
             defaultSettings();

@@ -26,7 +26,7 @@ import java.util.HashMap;
  */
 public class Aware_Provider extends ContentProvider {
 
-    public static final int DATABASE_VERSION = 10;
+    public static final int DATABASE_VERSION = 14;
 
     /**
      * AWARE framework content authority
@@ -129,15 +129,18 @@ public class Aware_Provider extends ContentProvider {
         public static final String STUDY_ID = "_id";
         public static final String STUDY_JOINED = "timestamp";
         public static final String STUDY_DEVICE_ID = "device_id";
+        public static final String STUDY_URL = "study_url";
         public static final String STUDY_KEY = "study_key";
         public static final String STUDY_API = "study_api";
         public static final String STUDY_PI = "study_pi";
         public static final String STUDY_CONFIG = "study_config";
+        public static final String STUDY_TITLE = "study_title";
+        public static final String STUDY_DESCRIPTION = "study_description";
         public static final String STUDY_EXIT = "double_exit";
     }
 
     public static String DATABASE_NAME = "aware.db";
-    public static final String[] DATABASE_TABLES = {"aware_device", "aware_settings", "aware_plugins"};
+    public static final String[] DATABASE_TABLES = {"aware_device", "aware_settings", "aware_plugins", "aware_studies"};
     public static final String[] TABLES_FIELDS = {
             // Device information
             Aware_Device._ID + " integer primary key autoincrement,"
@@ -177,10 +180,13 @@ public class Aware_Provider extends ContentProvider {
             Aware_Studies.STUDY_ID + " integer primary key autoincrement," +
                     Aware_Studies.STUDY_JOINED + " real default 0," +
                     Aware_Studies.STUDY_DEVICE_ID + " text default ''," +
+                    Aware_Studies.STUDY_URL + " text default ''," +
                     Aware_Studies.STUDY_KEY + " integer default ''," +
                     Aware_Studies.STUDY_API + " text default ''," +
-                    Aware_Studies.STUDY_PI + " text default ''" +
+                    Aware_Studies.STUDY_PI + " text default ''," +
                     Aware_Studies.STUDY_CONFIG + " text default ''," +
+                    Aware_Studies.STUDY_TITLE + " text default ''," +
+                    Aware_Studies.STUDY_DESCRIPTION + " text default ''," +
                     Aware_Studies.STUDY_EXIT + " real default 0"
     };
 
@@ -399,10 +405,13 @@ public class Aware_Provider extends ContentProvider {
         studiesMap.put(Aware_Studies.STUDY_ID, Aware_Studies.STUDY_ID);
         studiesMap.put(Aware_Studies.STUDY_JOINED, Aware_Studies.STUDY_JOINED);
         studiesMap.put(Aware_Studies.STUDY_DEVICE_ID, Aware_Studies.STUDY_DEVICE_ID);
+        studiesMap.put(Aware_Studies.STUDY_URL, Aware_Studies.STUDY_URL);
         studiesMap.put(Aware_Studies.STUDY_KEY, Aware_Studies.STUDY_KEY);
         studiesMap.put(Aware_Studies.STUDY_API, Aware_Studies.STUDY_API);
         studiesMap.put(Aware_Studies.STUDY_PI, Aware_Studies.STUDY_PI);
         studiesMap.put(Aware_Studies.STUDY_CONFIG, Aware_Studies.STUDY_CONFIG);
+        studiesMap.put(Aware_Studies.STUDY_TITLE, Aware_Studies.STUDY_TITLE);
+        studiesMap.put(Aware_Studies.STUDY_DESCRIPTION, Aware_Studies.STUDY_DESCRIPTION);
         studiesMap.put(Aware_Studies.STUDY_EXIT, Aware_Studies.STUDY_EXIT);
 
         return true;

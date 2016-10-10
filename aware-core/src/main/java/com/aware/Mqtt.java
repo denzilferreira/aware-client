@@ -465,7 +465,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
             if (result) {
                 //Study specific subscribes
-                if (Aware.getSetting(getApplicationContext(), Aware.STUDY_ID).length() > 0) {
+                if (Aware.isStudy(getApplicationContext())) {
                     Intent studySubscribe = new Intent(ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
                     studySubscribe.putExtra(EXTRA_TOPIC, Aware.getSetting(getApplicationContext(), "study_id") + "/" + Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/broadcasts");
                     mContext.sendBroadcast(studySubscribe);

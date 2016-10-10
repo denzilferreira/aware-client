@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/aware_container"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <include android:id="@+id/aware_toolbar" layout="@layout/aware_toolbar"/>
+    <include
+        android:id="@+id/aware_toolbar"
+        layout="@layout/aware_toolbar" />
 
     <android.support.v4.widget.DrawerLayout
         android:id="@+id/aware_ui_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="56dp"
-        >
+        android:layout_marginTop="56dp">
 
         <ListView
+            android:id="@android:id/list"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent" android:id="@android:id/list"
-            />
+            android:layout_height="fill_parent" />
 
         <ListView
             android:id="@+id/aware_navigation"

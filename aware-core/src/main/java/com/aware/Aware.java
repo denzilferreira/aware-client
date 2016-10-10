@@ -122,6 +122,13 @@ public class Aware extends Service {
     public static final String ACTION_AWARE_STOP_SENSORS = "ACTION_AWARE_STOP_SENSORS";
 
     /**
+     * Used to check users' compliance in a study
+     */
+    public static final String ACTION_AWARE_PLUGIN_INSTALLED = "ACTION_AWARE_PLUGIN_INSTALLED";
+    public static final String ACTION_AWARE_PLUGIN_UNINSTALLED = "ACTION_AWARE_PLUGIN_UNINSTALLED";
+    public static final String EXTRA_PLUGIN = "extra_plugin";
+
+    /**
      * Received broadcast on all modules
      * - Cleans old data from the content providers
      */
@@ -142,9 +149,6 @@ public class Aware extends Service {
      */
     public static final String SCHEDULE_SPACE_MAINTENANCE = "schedule_aware_space_maintenance";
     public static final String SCHEDULE_SYNC_DATA = "schedule_aware_sync_data";
-
-    public static String STUDY_ID = "study_id";
-    public static String STUDY_START = "study_start";
 
     private static AlarmManager alarmManager = null;
     private static PendingIntent repeatingIntent = null;
@@ -386,7 +390,23 @@ public class Aware extends Service {
      * @return
      */
     public static boolean isStudy(Context c) {
-        return (Aware.getSetting(c, Aware.STUDY_ID).length() > 0);
+        boolean participant = false;
+        Cursor study = Aware.getStudy(c, Aware.getSetting(c, Aware_Preferences.WEBSERVICE_SERVER));
+        if (study != null && study.moveToFirst())
+            participant = true;
+        if (study != null && !study.isClosed()) study.close();
+        return participant;
+    }
+
+    /**
+     * Fetch the cursor for a study, given the study URL
+     *
+     * @param c
+     * @param study_url
+     * @return
+     */
+    public static Cursor getStudy(Context c, String study_url) {
+        return c.getContentResolver().query(Aware_Provider.Aware_Studies.CONTENT_URI, null, Aware_Provider.Aware_Studies.STUDY_URL + " LIKE '" + study_url + "' AND " + Aware_Provider.Aware_Studies.STUDY_EXIT + "=0", null, null);
     }
 
     @Override
@@ -784,8 +804,6 @@ public class Aware extends Service {
         ArrayList<String> global_settings = new ArrayList<String>();
         global_settings.add(Aware_Preferences.DEBUG_FLAG);
         global_settings.add(Aware_Preferences.DEBUG_TAG);
-        global_settings.add(Aware.STUDY_ID);
-        global_settings.add(Aware.STUDY_START);
         global_settings.add(Aware_Preferences.DEVICE_ID);
         global_settings.add(Aware_Preferences.DEVICE_LABEL);
         global_settings.add(Aware_Preferences.STATUS_WEBSERVICE);
@@ -849,8 +867,6 @@ public class Aware extends Service {
         ArrayList<String> global_settings = new ArrayList<String>();
         global_settings.add(Aware_Preferences.DEBUG_FLAG);
         global_settings.add(Aware_Preferences.DEBUG_TAG);
-        global_settings.add(Aware.STUDY_ID);
-        global_settings.add(Aware.STUDY_START);
         global_settings.add(Aware_Preferences.DEVICE_ID);
         global_settings.add(Aware_Preferences.DEVICE_LABEL);
         global_settings.add(Aware_Preferences.STATUS_WEBSERVICE);
@@ -1038,7 +1054,7 @@ public class Aware extends Service {
 
             Uri study_uri = Uri.parse(full_url);
             // New study URL, chopping off query parameters.
-            String study_url = study_uri.getScheme()+"://"+study_uri.getHost()+"/"+study_uri.getPath();
+            String study_url = study_uri.getScheme() + "://" + study_uri.getHost() + "/" + study_uri.getPath();
             String protocol = study_uri.getScheme();
 
             //Request study settings
@@ -1229,6 +1245,11 @@ public class Aware extends Service {
             if (!packageName.matches("com.aware.plugin.*")) return;
 
             if (intent.getAction().equals(Intent.ACTION_PACKAGE_ADDED)) {
+
+                Intent installed = new Intent(ACTION_AWARE_PLUGIN_INSTALLED);
+                installed.putExtra(EXTRA_PLUGIN, packageName);
+                context.sendBroadcast(installed);
+
                 //Updating a package
                 if (extras.getBoolean(Intent.EXTRA_REPLACING)) {
                     if (Aware.DEBUG) Log.d(TAG, packageName + " is updating!");
@@ -1286,6 +1307,10 @@ public class Aware extends Service {
                     //this is an update, bail out.
                     return;
                 }
+
+                Intent installed = new Intent(ACTION_AWARE_PLUGIN_UNINSTALLED);
+                installed.putExtra(EXTRA_PLUGIN, packageName);
+                context.sendBroadcast(installed);
 
                 //clean-up settings & schedules
                 context.getContentResolver().delete(Aware_Settings.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);

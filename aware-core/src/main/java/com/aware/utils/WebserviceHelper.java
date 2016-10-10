@@ -19,6 +19,7 @@ import android.util.Log;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.R;
+import com.aware.providers.Aware_Provider;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -199,8 +200,12 @@ public class WebserviceHelper extends IntentService {
 
                     //If in a study, get only data from joined date onwards
                     String study_condition = "";
-                    if (Aware.getSetting(getApplicationContext(), Aware.STUDY_ID).length() > 0 && Aware.getSetting(getApplicationContext(), Aware.STUDY_START).length() > 0) {
-                        study_condition = " AND timestamp > " + Long.parseLong(Aware.getSetting(getApplicationContext(), Aware.STUDY_START));
+                    if (Aware.isStudy(getApplicationContext())) {
+                        Cursor study = Aware.getStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
+                        if (study != null && study.moveToFirst()) {
+                            study_condition = " AND timestamp > " + study.getLong(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED));
+                        }
+                        if (study != null && ! study.isClosed()) study.close();
                     }
 
                     //However, we always want to sync the device's profile and hardware sensor profiles for any study, no matter when we join it
