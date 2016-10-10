@@ -61,7 +61,9 @@ public class SSLManager extends IntentService {
      * @param block if true, this method blocks, otherwise downloading is in background.
      */
     public static void handleUrl(Context context, String url, boolean block) {
-        Log.d(Aware.TAG, "Certificates: Handling URL: "+url);
+        if(Aware.DEBUG)
+            Log.d(Aware.TAG, "Certificates: Handling URL: "+url);
+
         // Warning: jelly_bean changes behavior of decoding "+".  Make sure that both
         // " " and "+" are %-encoded.
         Uri study_uri = Uri.parse(url);
@@ -207,6 +209,10 @@ public class SSLManager extends IntentService {
      * @param cert_data certificate data, as String.
      */
     public static void setCertificate(Context context, String hostname, String cert_data) {
+        //Create folder if not existent
+        File host_credentials = new File(context.getExternalFilesDir(null) + "/Documents/", "credentials/"+ hostname );
+        host_credentials.mkdirs();
+
         File cert_file = new File(context.getExternalFilesDir(null) + "/Documents/credentials/" + hostname + "/server.crt");
         try {
             FileOutputStream stream = new FileOutputStream(cert_file);
