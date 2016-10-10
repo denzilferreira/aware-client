@@ -10,6 +10,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.graphics.Color;
@@ -301,12 +303,11 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
             study_api_key = path_segments.get(path_segments.size() - 1);
             study_id = path_segments.get(path_segments.size() - 2);
 
-            // Get SSL certificates in a blocking manner, since we are already in background.
-            // We don't need to sleep to wait for certs.
-            SSLManager.handleUrl(getApplicationContext(), study_url, true);
-
             String request;
             if (protocol.equals("https")) {
+
+                SSLManager.handleUrl(getApplicationContext(), study_url, true);
+
                 try {
                     request = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_host + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
                 } catch (FileNotFoundException e) {
@@ -326,6 +327,16 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                     //Automatically register this device on the study and create credentials for this device ID!
                     Hashtable<String, String> data = new Hashtable<>();
                     data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                    data.put("platform", "android");
+                    try {
+                        PackageInfo package_info = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), 0);
+                        data.put("package_name", package_info.packageName);
+                        data.put("package_version_code", String.valueOf(package_info.versionCode));
+                        data.put("package_version_name", String.valueOf(package_info.versionName));
+                    } catch (PackageManager.NameNotFoundException e) {
+                        Log.d(Aware.TAG, "Failed to put package info: " + e);
+                        e.printStackTrace();
+                    }
 
                     String answer;
                     if (protocol.equals("https")) {

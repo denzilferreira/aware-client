@@ -20,7 +20,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.aware.Aware;
-import com.aware.Aware_Preferences;
 import com.aware.phone.Aware_Client;
 import com.aware.phone.R;
 import com.aware.providers.Aware_Provider;
@@ -96,6 +95,14 @@ public class Aware_Join_Study extends Aware_Activity {
         btnAction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Cursor study = Aware.getStudy(getApplicationContext(), study_url);
+                if (study != null && study.moveToFirst()) {
+                    ContentValues studyData = new ContentValues();
+                    studyData.put(Aware_Provider.Aware_Studies.STUDY_JOINED, System.currentTimeMillis());
+                    getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, studyData, Aware_Provider.Aware_Studies.STUDY_ID + "=" +study.getInt(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_ID)), null);
+                }
+                if (study != null && ! study.isClosed()) study.close();
+
                 Toast.makeText(getApplicationContext(), "Applying settings, please wait.", Toast.LENGTH_SHORT).show();
                 StudyUtils.applySettings(getApplicationContext(), study_configs);
                 finish();
@@ -105,14 +112,13 @@ public class Aware_Join_Study extends Aware_Activity {
         btnQuit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(getApplicationContext(), "Quitting from study, please wait.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Quitting study, please wait.", Toast.LENGTH_SHORT).show();
 
-                Cursor study = Aware.getStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
+                Cursor study = Aware.getStudy(getApplicationContext(), study_url);
                 if (study != null && study.moveToFirst()) {
                     ContentValues data = new ContentValues();
                     data.put(Aware_Provider.Aware_Studies.STUDY_EXIT, System.currentTimeMillis());
 
-                    //Set quit date for the study
                     getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, data, Aware_Provider.Aware_Studies.STUDY_ID + "=" + study.getInt(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_ID)), null);
                 }
                 if (study != null && !study.isClosed()) study.close();
