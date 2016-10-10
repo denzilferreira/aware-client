@@ -323,7 +323,7 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                     }
                     JSONObject study_data = new JSONObject(request);
 
-                    //Request study settings. Note: this will automatically register this device on the study and create credentials for this device ID!
+                    //Automatically register this device on the study and create credentials for this device ID!
                     Hashtable<String, String> data = new Hashtable<>();
                     data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
 
@@ -383,8 +383,8 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
             } else {
                 try {
                     Cursor dbStudy = Aware.getStudy(getApplicationContext(), study_url);
-
-                    Log.d(Aware.TAG, DatabaseUtils.dumpCursorToString(dbStudy));
+                    if (Aware.DEBUG)
+                        Log.d(Aware.TAG, DatabaseUtils.dumpCursorToString(dbStudy));
 
                     if (dbStudy == null || !dbStudy.moveToFirst()) {
                         ContentValues studyData = new ContentValues();
@@ -424,57 +424,13 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                     }
 
                     Intent study_scan = new Intent();
-                    study_scan.putExtra("study_url", study_url);
+                    study_scan.putExtra(Aware_Join_Study.EXTRA_STUDY_URL, study_url);
                     setResult(Activity.RESULT_OK, study_scan);
                     finish();
-
-//                    Intent joinStudyIntent = new Intent(Aware_QRCode.this, Aware_Join_Study.class);
-//
-//                    joinStudyIntent.putExtra("study_url", study_url);
-//                    joinStudyIntent.putExtra("study_json", result.toString());
-//
-//                    //Finish to make back button go back to Aware main activity and not QR Scanner activity
-//                    finish();
-//                    startActivity(joinStudyIntent);
 
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
-                //TEST
-//                AlertDialog.Builder builder = new AlertDialog.Builder(Aware_QRCode.this);
-//                builder.setPositiveButton("Sign up!", new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        Intent study_scan = new Intent();
-//                        study_scan.putExtra("study_url", study_url);
-//                        setResult(Activity.RESULT_OK, study_scan);
-//                        finish();
-//                    }
-//                });
-//                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        setResult(Activity.RESULT_CANCELED);
-//                        finish();
-//                    }
-//                });
-//                builder.setTitle("Study information");
-//                LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-//                View study_ui = inflater.inflate(R.layout.study_info, null);
-//                TextView study_name = (TextView) study_ui.findViewById(R.id.study_name);
-//                TextView study_description = (TextView) study_ui.findViewById(R.id.study_description);
-//                TextView study_pi = (TextView) study_ui.findViewById(R.id.study_pi);
-//
-//                try {
-//                    study_name.setText((result.getString("study_name").length() > 0 ? result.getString("study_name") : "Not available"));
-//                    study_description.setText((result.getString("study_description").length() > 0 ? result.getString("study_description") : "Not available."));
-//                    study_pi.setText("PI: " + result.getString("researcher_first") + " " + result.getString("researcher_last") + "\nContact: " + result.getString("researcher_contact"));
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//                builder.setView(study_ui);
-//                builder.show();
             }
         }
     }

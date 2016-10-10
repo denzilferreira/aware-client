@@ -1,6 +1,10 @@
 package com.aware.phone.ui;
 
+import android.content.BroadcastReceiver;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -16,6 +20,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.aware.Aware;
+import com.aware.Aware_Preferences;
+import com.aware.phone.Aware_Client;
 import com.aware.phone.R;
 import com.aware.providers.Aware_Provider;
 import com.aware.utils.PluginsManager;
@@ -29,19 +35,19 @@ import java.util.ArrayList;
 
 public class Aware_Join_Study extends Aware_Activity {
 
-    private String study_url;
-    private JSONObject study_json;
-
     private ArrayList<PluginInfo> active_plugins;
 
     private RecyclerView pluginsRecyclerView;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private boolean pluginsInstalled;
-    private Button btnSignUp;
+    private Button btnAction, btnQuit;
     private LinearLayout llPluginsRequired;
-    private TextView tvInstallPlugins;
 
+    public static final String EXTRA_STUDY_URL = "study_url";
+
+    private static String study_url;
+    private JSONArray study_configs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,23 +60,21 @@ public class Aware_Join_Study extends Aware_Activity {
         TextView txtStudyTitle = (TextView) findViewById(R.id.txt_title);
         TextView txtStudyDescription = (TextView) findViewById(R.id.txt_description);
         TextView txtStudyResearcher = (TextView) findViewById(R.id.txt_researcher);
-        btnSignUp = (Button) findViewById(R.id.btn_sign_up);
+        btnAction = (Button) findViewById(R.id.btn_sign_up);
+        btnQuit = (Button) findViewById(R.id.btn_quit_study);
 
         pluginsRecyclerView = (RecyclerView) findViewById(R.id.rv_plugins);
         mLayoutManager = new LinearLayoutManager(this);
         pluginsRecyclerView.setLayoutManager(mLayoutManager);
 
         llPluginsRequired = (LinearLayout) findViewById(R.id.ll_plugins_required);
-        tvInstallPlugins = (TextView) findViewById(R.id.tv_install_plugins);
 
-        study_url = getIntent().getStringExtra("study_url");
-
-        JSONArray study_config = null;
+        study_url = getIntent().getStringExtra(EXTRA_STUDY_URL);
 
         Cursor qry = Aware.getStudy(this, study_url);
         if (qry != null && qry.moveToFirst()) {
             try {
-                study_config = new JSONArray(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                study_configs = new JSONArray(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
                 txtStudyTitle.setText(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
                 txtStudyDescription.setText(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
                 txtStudyResearcher.setText(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
@@ -80,28 +84,71 @@ public class Aware_Join_Study extends Aware_Activity {
         }
         if (qry != null && !qry.isClosed()) qry.close();
 
-        if (qry == null || ! qry.moveToFirst()) {
+        if (qry == null || !qry.moveToFirst()) {
             Toast.makeText(this, "Error getting study information.", Toast.LENGTH_SHORT).show();
             finish();
         }
 
-
-        if(study_config!=null) {
-            populateStudyInfo(study_config);
+        if (study_configs != null) {
+            populateStudyInfo(study_configs);
         }
 
-        btnSignUp.setOnClickListener(new View.OnClickListener() {
+        btnAction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                Intent study_config = new Intent(Aware_Join_Study.this, StudyUtils.class);
-                study_config.putExtra("study_url", study_url);
-                startService(study_config);
+                Toast.makeText(getApplicationContext(), "Applying settings, please wait.", Toast.LENGTH_SHORT).show();
+                StudyUtils.applySettings(getApplicationContext(), study_configs);
                 finish();
             }
         });
 
+        btnQuit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getApplicationContext(), "Quitting from study, please wait.", Toast.LENGTH_SHORT).show();
 
+                Cursor study = Aware.getStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
+                if (study != null && study.moveToFirst()) {
+                    ContentValues data = new ContentValues();
+                    data.put(Aware_Provider.Aware_Studies.STUDY_EXIT, System.currentTimeMillis());
+
+                    //Set quit date for the study
+                    getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, data, Aware_Provider.Aware_Studies.STUDY_ID + "=" + study.getInt(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_ID)), null);
+                }
+                if (study != null && !study.isClosed()) study.close();
+
+                Aware.reset(getApplicationContext());
+
+                Intent preferences = new Intent(getApplicationContext(), Aware_Client.class);
+                preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(preferences);
+            }
+        });
+
+        IntentFilter pluginStatuses = new IntentFilter();
+        pluginStatuses.addAction(Aware.ACTION_AWARE_PLUGIN_INSTALLED);
+        pluginStatuses.addAction(Aware.ACTION_AWARE_PLUGIN_UNINSTALLED);
+        registerReceiver(pluginCompliance, pluginStatuses);
+    }
+
+    private static PluginCompliance pluginCompliance = new PluginCompliance();
+    public static class PluginCompliance extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equalsIgnoreCase(Aware.ACTION_AWARE_PLUGIN_INSTALLED)) {
+                Intent joinStudy = new Intent(context, Aware_Join_Study.class);
+                joinStudy.putExtra(EXTRA_STUDY_URL, study_url);
+                context.startActivity(joinStudy);
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (pluginCompliance != null) {
+            unregisterReceiver(pluginCompliance);
+        }
     }
 
     private void populateStudyInfo(JSONArray study_config) {
@@ -123,32 +170,18 @@ public class Aware_Join_Study extends Aware_Activity {
             }
         }
 
-        //Show the sensors' icons
-//        for (int i = 0; i < sensors.length(); i++) {
-//            try {
-//                JSONObject sensor_config = sensors.getJSONObject(i);
-//                Aware.setSetting(context, sensor_config.getString("setting"), sensor_config.get("value"));
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//            }
-//        }
-
         //Show the plugins' information
         active_plugins = new ArrayList<>();
         for (int i = 0; i < plugins.length(); i++) {
             try {
                 JSONObject plugin_config = plugins.getJSONObject(i);
-
                 String package_name = plugin_config.getString("plugin");
-
-
                 PackageInfo installed = PluginsManager.isInstalled(this, package_name);
                 if (installed != null) {
-                    active_plugins.add(new PluginInfo(package_name, package_name, "", true));
+                    active_plugins.add(new PluginInfo(PluginsManager.getPluginName(getApplicationContext(), package_name), package_name, true));
                 } else {
-                    active_plugins.add(new PluginInfo(package_name, package_name, "", false));
+                    active_plugins.add(new PluginInfo(package_name, package_name, false));
                 }
-
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -161,25 +194,38 @@ public class Aware_Join_Study extends Aware_Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        if(active_plugins.size()==0) {
+        if (active_plugins.size() == 0) {
             pluginsInstalled = true;
             llPluginsRequired.setVisibility(View.GONE);
-            tvInstallPlugins.setVisibility(View.GONE);
         } else {
             pluginsInstalled = verifyInstalledPlugins();
             llPluginsRequired.setVisibility(View.VISIBLE);
-            tvInstallPlugins.setVisibility(View.VISIBLE);
         }
-        if(pluginsInstalled) {
-            btnSignUp.setEnabled(true);
+        if (pluginsInstalled) {
+            btnAction.setAlpha(1f);
+            btnAction.setEnabled(true);
         } else {
-            btnSignUp.setEnabled(false);
+            btnAction.setEnabled(false);
+            btnAction.setAlpha(.3f);
+        }
+
+        if (Aware.isStudy(getApplicationContext())) {
+            btnQuit.setVisibility(View.VISIBLE);
+            btnAction.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    finish();
+                }
+            });
+            btnAction.setText("OK");
+        } else {
+            btnQuit.setVisibility(View.GONE);
         }
     }
 
     private boolean verifyInstalledPlugins() {
         boolean result = true;
-        for(PluginInfo plugin : active_plugins) {
+        for (PluginInfo plugin : active_plugins) {
             PackageInfo installed = PluginsManager.isInstalled(this, plugin.packageName);
             if (installed != null) {
                 plugin.installed = true;
@@ -192,16 +238,10 @@ public class Aware_Join_Study extends Aware_Activity {
         return result;
     }
 
-    private void downloadPlugin(String package_name) {
-        Aware.downloadPlugin(this, package_name, false);
-    }
-
     public class PluginsAdapter extends RecyclerView.Adapter<PluginsAdapter.ViewHolder> {
-
         private ArrayList<PluginInfo> mDataset;
 
         public class ViewHolder extends RecyclerView.ViewHolder {
-
             public TextView txtPackageName;
             public Button btnInstall;
             public CheckBox cbInstalled;
@@ -218,10 +258,8 @@ public class Aware_Join_Study extends Aware_Activity {
             mDataset = myDataset;
         }
 
-
         @Override
-        public PluginsAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
-                                                       int viewType) {
+        public PluginsAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View v = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.plugins_installation_list_item, parent, false);
 
@@ -231,42 +269,37 @@ public class Aware_Join_Study extends Aware_Activity {
 
         @Override
         public void onBindViewHolder(ViewHolder holder, final int position) {
-
             holder.txtPackageName.setText(mDataset.get(position).pluginName);
             holder.btnInstall.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    //TODO: Test that it works
-                    downloadPlugin(mDataset.get(position).packageName);
+                    Toast.makeText(getApplicationContext(), "Installing...", Toast.LENGTH_SHORT).show();
+                    Aware.downloadPlugin(getApplicationContext(), mDataset.get(position).packageName, false);
                 }
             });
-            if(mDataset.get(position).installed) {
+            if (mDataset.get(position).installed) {
                 holder.btnInstall.setVisibility(View.INVISIBLE);
                 holder.cbInstalled.setVisibility(View.VISIBLE);
             } else {
                 holder.btnInstall.setVisibility(View.VISIBLE);
                 holder.cbInstalled.setVisibility(View.INVISIBLE);
             }
-
         }
 
         @Override
         public int getItemCount() {
             return mDataset.size();
         }
-
     }
 
     public class PluginInfo {
         public String pluginName;
         public String packageName;
-        public String img;
         public boolean installed;
 
-        public PluginInfo(String pluginName, String packageName, String img, boolean installed) {
+        public PluginInfo(String pluginName, String packageName, boolean installed) {
             this.pluginName = pluginName;
             this.packageName = packageName;
-            this.img = img;
             this.installed = installed;
         }
     }

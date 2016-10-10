@@ -54,28 +54,22 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
-//PreferenceActivity
 public class Aware_Activity extends AppCompatPreferenceActivity {
 
     private DrawerLayout navigationDrawer;
     private ListView navigationList;
     private ActionBarDrawerToggle navigationToggle;
-    private CoordinatorLayout aware_container;
+    public CoordinatorLayout aware_container;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == Aware_Preferences.REQUEST_JOIN_STUDY) {
             if (resultCode == RESULT_OK) {
-
+                //Load join study wizard. We already have the study info on the database.
                 Intent studyInfo = new Intent(this, Aware_Join_Study.class);
-                studyInfo.putExtra("study_url", data.getStringExtra("study_url"));
+                studyInfo.putExtra(Aware_Join_Study.EXTRA_STUDY_URL, data.getStringExtra(Aware_Join_Study.EXTRA_STUDY_URL));
                 startActivity(studyInfo);
-
-//                Intent study_config = new Intent(this, StudyUtils.class);
-//                study_config.putExtra("study_url", data.getStringExtra("study_url"));
-//                startService(study_config);
-
                 finish();
             }
         }
@@ -86,6 +80,12 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                 startActivity(preferences);
             }
         }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        aware_container = (CoordinatorLayout) findViewById(R.id.aware_container);
     }
 
     @Override
@@ -131,7 +131,11 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                 item.setVisible(false);
             if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_team)) && Aware.is_watch(this))
                 item.setVisible(false);
+            if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_study)) && Aware.is_watch(this))
+                item.setVisible(false);
             if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_sync)) && !Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true"))
+                item.setVisible(false);
+            if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_study)) && !Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true"))
                 item.setVisible(false);
         }
         return true;
@@ -140,7 +144,6 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_qrcode))) {
-
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 ArrayList<String> permission = new ArrayList<>();
                 permission.add(Manifest.permission.CAMERA);
@@ -154,12 +157,17 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                 startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
             }
         }
+        if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_study))) {
+            Intent studyInfo = new Intent(Aware_Activity.this, Aware_Join_Study.class);
+            studyInfo.putExtra(Aware_Join_Study.EXTRA_STUDY_URL, Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
+            startActivity(studyInfo);
+        }
         if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_team))) {
             Intent about_us = new Intent(Aware_Activity.this, About.class);
             startActivity(about_us);
         }
         if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_sync))) {
-            Toast.makeText(getApplicationContext(), "AWARE: Syncing data...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Syncing data...", Toast.LENGTH_SHORT).show();
             Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
             sendBroadcast(sync);
         }
