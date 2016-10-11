@@ -84,7 +84,7 @@ public class Aware_Join_Study extends Aware_Activity {
         if (qry != null && !qry.isClosed()) qry.close();
 
         if (qry == null || !qry.moveToFirst()) {
-            Toast.makeText(this, "Error getting study information.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(Aware_Join_Study.this, "Error getting study information.", Toast.LENGTH_SHORT).show();
             finish();
         }
 
@@ -95,6 +95,12 @@ public class Aware_Join_Study extends Aware_Activity {
         btnAction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                Toast.makeText(Aware_Join_Study.this, "Joining study!", Toast.LENGTH_LONG).show();
+
+                btnAction.setEnabled(false);
+                btnAction.setAlpha(0.5f);
+
                 Cursor study = Aware.getStudy(getApplicationContext(), study_url);
                 if (study != null && study.moveToFirst()) {
                     ContentValues studyData = new ContentValues();
@@ -103,7 +109,6 @@ public class Aware_Join_Study extends Aware_Activity {
                 }
                 if (study != null && ! study.isClosed()) study.close();
 
-                Toast.makeText(getApplicationContext(), "Applying settings, please wait.", Toast.LENGTH_SHORT).show();
                 StudyUtils.applySettings(getApplicationContext(), study_configs);
                 finish();
             }
@@ -112,22 +117,18 @@ public class Aware_Join_Study extends Aware_Activity {
         btnQuit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(getApplicationContext(), "Quitting study, please wait.", Toast.LENGTH_SHORT).show();
 
-                Cursor study = Aware.getStudy(getApplicationContext(), study_url);
-                if (study != null && study.moveToFirst()) {
-                    ContentValues data = new ContentValues();
-                    data.put(Aware_Provider.Aware_Studies.STUDY_EXIT, System.currentTimeMillis());
+                Toast.makeText(Aware_Join_Study.this, "Quitting study!", Toast.LENGTH_LONG).show();
 
-                    getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, data, Aware_Provider.Aware_Studies.STUDY_ID + "=" + study.getInt(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_ID)), null);
-                }
-                if (study != null && !study.isClosed()) study.close();
+                btnQuit.setEnabled(false);
+                btnQuit.setAlpha(0.5f);
 
                 Aware.reset(getApplicationContext());
 
                 Intent preferences = new Intent(getApplicationContext(), Aware_Client.class);
                 preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(preferences);
+                finish();
             }
         });
 
@@ -279,7 +280,7 @@ public class Aware_Join_Study extends Aware_Activity {
             holder.btnInstall.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(getApplicationContext(), "Installing...", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(Aware_Join_Study.this, "Installing...", Toast.LENGTH_SHORT).show();
                     Aware.downloadPlugin(getApplicationContext(), mDataset.get(position).packageName, false);
                 }
             });

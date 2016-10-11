@@ -426,6 +426,7 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, study_config);
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_TITLE, result.getString("study_name"));
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, result.getString("study_description"));
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_EXIT, 0); //make sure the user is on the study
 
                         getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, studyData, Aware_Provider.Aware_Studies.STUDY_URL + " LIKE '" + study_url + "'", null);
 

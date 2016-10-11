@@ -2,6 +2,7 @@
 package com.aware.phone;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
@@ -36,6 +37,7 @@ import com.aware.Applications;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.phone.ui.Aware_Activity;
+import com.aware.phone.ui.Aware_Join_Study;
 import com.aware.ui.PermissionsHandler;
 
 import java.util.ArrayList;
@@ -1785,6 +1787,11 @@ public class Aware_Client extends Aware_Activity {
                     Aware.setSetting(awareContext, Aware_Preferences.STATUS_WEBSERVICE, webservice.isChecked());
                     if (webservice.isChecked() && Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER).length() > 0) {
                         Aware.joinStudy(awareContext, Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER));
+
+                        Intent study_scan = new Intent();
+                        study_scan.putExtra(Aware_Join_Study.EXTRA_STUDY_URL, Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER));
+                        setResult(Activity.RESULT_OK, study_scan);
+                        finish();
                     }
                     return true;
                 }

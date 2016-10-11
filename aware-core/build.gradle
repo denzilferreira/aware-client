@@ -46,7 +46,6 @@ bintray {
     configurations = ['archives']
 
     publish = true
-    override = true
 
     pkg {
         repo = 'com.awareframework'

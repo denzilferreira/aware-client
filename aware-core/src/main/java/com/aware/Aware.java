@@ -642,6 +642,8 @@ public class Aware extends Service {
                     Log.d(TAG, "Added self-package " + package_name + " to " + context.getPackageName());
             }
             if (cached != null && !cached.isClosed()) cached.close();
+
+            return;
         }
 
         //Check if plugin is cached
@@ -1125,7 +1127,7 @@ public class Aware extends Service {
                     JSONArray study_config = new JSONArray(answer);
 
                     if (study_config.getJSONObject(0).has("message")) {
-                        Toast.makeText(getApplicationContext(), "This study is no longer available.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), study_config.getJSONObject(0).getString("message"), Toast.LENGTH_LONG).show();
                         return;
                     }
 
@@ -1164,6 +1166,7 @@ public class Aware extends Service {
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, study_config.toString());
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString("study_name"));
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString("study_description"));
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_EXIT, 0); //make sure the device is still part of the study
 
                         getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, studyData, Aware_Provider.Aware_Studies.STUDY_URL + " LIKE '" + full_url + "'", null);
 
@@ -1256,6 +1259,17 @@ public class Aware extends Service {
         String device_id = Aware.getSetting(c, Aware_Preferences.DEVICE_ID);
         String device_label = Aware.getSetting(c, Aware_Preferences.DEVICE_LABEL);
 
+        //We were in a study, let's quit now
+        if (Aware.isStudy(c)) {
+            Cursor study = Aware.getStudy(c, Aware.getSetting(c, Aware_Preferences.WEBSERVICE_SERVER));
+            if (study != null && study.moveToFirst()) {
+                ContentValues data = new ContentValues();
+                data.put(Aware_Provider.Aware_Studies.STUDY_EXIT, System.currentTimeMillis());
+                c.getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, data, Aware_Provider.Aware_Studies.STUDY_ID + "=" + study.getInt(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_ID)), null);
+            }
+            if (study != null && !study.isClosed()) study.close();
+        }
+
         //Remove all settings
         c.getContentResolver().delete(Aware_Settings.CONTENT_URI, null, null);
         c.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, null);
@@ -1271,8 +1285,8 @@ public class Aware extends Service {
         }
 
         //Keep previous AWARE Device ID and label
-        Aware.setSetting(c, Aware_Preferences.DEVICE_ID, device_id);
-        Aware.setSetting(c, Aware_Preferences.DEVICE_LABEL, device_label);
+        Aware.setSetting(c, Aware_Preferences.DEVICE_ID, device_id, "com.aware.phone");
+        Aware.setSetting(c, Aware_Preferences.DEVICE_LABEL, device_label, "com.aware.phone");
 
         ContentValues update_label = new ContentValues();
         update_label.put(Aware_Device.LABEL, device_label);
