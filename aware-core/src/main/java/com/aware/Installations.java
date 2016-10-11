@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
@@ -24,6 +25,7 @@ import com.aware.providers.Installations_Provider;
 import com.aware.providers.Installations_Provider.Installations_Data;
 import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
+import com.aware.utils.PluginsManager;
 
 /**
  * Service that logs application installations on the device. 
@@ -209,7 +211,15 @@ public class Installations extends Aware_Sensor {
                     } catch( final NameNotFoundException e ) {
                         appInfo = null;
                     }
+
                     String appName = ( appInfo != null ) ? (String) packageManager.getApplicationLabel(appInfo):"";
+
+                    PackageInfo pkgInfo;
+                    try {
+                        pkgInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_META_DATA);
+                    } catch (PackageManager.NameNotFoundException e){
+                        pkgInfo = null;
+                    }
                     
                     ContentValues rowData = new ContentValues();
                     rowData.put(Installations_Data.TIMESTAMP, System.currentTimeMillis());
@@ -217,6 +227,8 @@ public class Installations extends Aware_Sensor {
                     rowData.put(Installations_Data.PACKAGE_NAME, packageName);
                     rowData.put(Installations_Data.APPLICATION_NAME, appName);
                     rowData.put(Installations_Data.INSTALLATION_STATUS, STATUS_ADDED);
+                    rowData.put(Installations_Data.PACKAGE_VERSION_NAME, (pkgInfo != null)? pkgInfo.versionName : "");
+                    rowData.put(Installations_Data.PACKAGE_VERSION_CODE, (pkgInfo != null)? pkgInfo.versionCode : -1);
                     
                     try {
                         context.getContentResolver().insert(Installations_Data.CONTENT_URI, rowData);
@@ -299,6 +311,13 @@ public class Installations extends Aware_Sensor {
                         appInfo = null;
                     }
                     String appName = ( appInfo != null ) ? (String) packageManager.getApplicationLabel(appInfo):"";
+
+                    PackageInfo pkgInfo;
+                    try {
+                        pkgInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_META_DATA);
+                    } catch (PackageManager.NameNotFoundException e){
+                        pkgInfo = null;
+                    }
                     
                     ContentValues rowData = new ContentValues();
                     rowData.put(Installations_Data.TIMESTAMP, System.currentTimeMillis());
@@ -306,6 +325,8 @@ public class Installations extends Aware_Sensor {
                     rowData.put(Installations_Data.PACKAGE_NAME, packageName);
                     rowData.put(Installations_Data.APPLICATION_NAME, appName);
                     rowData.put(Installations_Data.INSTALLATION_STATUS, STATUS_UPDATED);
+                    rowData.put(Installations_Data.PACKAGE_VERSION_NAME, (pkgInfo != null)? pkgInfo.versionName : "");
+                    rowData.put(Installations_Data.PACKAGE_VERSION_CODE, (pkgInfo != null)? pkgInfo.versionCode : -1);
                     
                     try {
                         context.getContentResolver().insert(Installations_Data.CONTENT_URI, rowData);
