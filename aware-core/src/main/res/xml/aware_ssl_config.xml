@@ -6,7 +6,4 @@
             <certificates src="user" />
         </trust-anchors>
     </base-config>
-    <domain-config>
-        <domain includeSubdomains="true">awareframework.com</domain>
-    </domain-config>
 </network-security-config>

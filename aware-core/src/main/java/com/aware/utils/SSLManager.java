@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.icu.util.Output;
 import android.net.Uri;
+import android.security.KeyChain;
+import android.security.KeyChainException;
 import android.util.Log;
 
 import com.aware.Aware;
@@ -24,6 +26,13 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -112,20 +121,32 @@ public class SSLManager extends IntentService {
             cert_host = "awareframework.com";
         } else cert_host = hostname;
 
-        Future downloader = Ion.with(context.getApplicationContext())
+        Future https = Ion.with(context.getApplicationContext())
                 .load("http://" + cert_host + "/public/server.crt")
                 .write(new File(context.getExternalFilesDir(null) + "/Documents/credentials/" + hostname + "/server.crt"))
                 .setCallback(new FutureCallback<File>() {
                     @Override
                     public void onCompleted(Exception e, File result) {
                         if( e == null ) {
-                            Log.d(Aware.TAG, "SSL certificate " + result.toString());
+                            Log.d(Aware.TAG, "SSL certificate: " + result.toString());
+                        }
+                    }
+                });
+        Future ca = Ion.with(context.getApplicationContext())
+                .load("http://" + cert_host + "/public/ca.crt")
+                .write(new File(context.getExternalFilesDir(null) + "/Documents/credentials/" + hostname + "/ca.crt"))
+                .setCallback(new FutureCallback<File>() {
+                    @Override
+                    public void onCompleted(Exception e, File result) {
+                        if( e == null ) {
+                            Log.d(Aware.TAG, "CA certificate: " + result.toString());
                         }
                     }
                 });
         if (block) {
             try {
-                downloader.get();
+                https.get();
+                ca.get();
             } catch (java.lang.InterruptedException | ExecutionException e) {
                 // What to do here?
             }
@@ -229,7 +250,7 @@ public class SSLManager extends IntentService {
 
 
     /**
-     * Load the server.crt for HTTPS
+     * Load HTTPS certificate from server: server.crt
      * @param c context
      * @param server server URL, http://{hostname}/index.php
      * @return FileInputStream of certificate
@@ -250,7 +271,7 @@ public class SSLManager extends IntentService {
     }
 
     /**
-     * Load the server.crt for MQTT
+     * Load Certificate Authority from server: ca.crt
      * @param c context
      * @param server server hostname
      * @return Input stream of opened certificate.
@@ -261,7 +282,7 @@ public class SSLManager extends IntentService {
         if( host_credentials.exists() ) {
             File[] certs = host_credentials.listFiles();
             for(File crt : certs ) {
-                if( crt.getName().equals("server.crt") ) return new FileInputStream(crt);
+                if( crt.getName().equals("ca.crt") ) return new FileInputStream(crt);
             }
         }
         return null;

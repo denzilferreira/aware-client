@@ -16,6 +16,7 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.security.KeyChain;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
@@ -30,6 +31,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -67,6 +73,27 @@ public class StudyUtils extends IntentService {
         String request;
         if (protocol.equals("https")) {
             SSLManager.handleUrl(getApplicationContext(), full_url, true);
+
+            try {
+                Intent installHTTPS = KeyChain.createInstallIntent();
+                installHTTPS.putExtra(KeyChain.EXTRA_NAME, study_host);
+
+                //Convert .crt to X.509 so Android knows what it is.
+                CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                InputStream caInput = SSLManager.getHTTPS(getApplicationContext(), full_url);
+                Certificate ca = cf.generateCertificate(caInput);
+
+                installHTTPS.putExtra(KeyChain.EXTRA_CERTIFICATE, ca.getEncoded());
+                installHTTPS.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(installHTTPS);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (CertificateException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             try {
                 request = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), full_url)).dataGET(study_host + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
             } catch (FileNotFoundException e) {
@@ -115,7 +142,6 @@ public class StudyUtils extends IntentService {
                     Toast.makeText(getApplicationContext(), "Failed to connect to server, try again.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
 
                 JSONArray study_config = new JSONArray(answer);
 
