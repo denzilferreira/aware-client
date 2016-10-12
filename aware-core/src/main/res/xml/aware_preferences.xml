@@ -28,8 +28,8 @@
             android:defaultValue="false"
             android:key="aware_donate_usage"
             android:persistent="true"
-            android:title="Share diagnostics information"
-            android:summary="Device id, installed version number, NOT actual data. Used for diagnostics and analytics (e.g., server demand)"
+            android:title="Ping AWARE server"
+            android:summary="Used for diagnostics and analytics (e.g., server demand)"
             />
     </PreferenceCategory>
     <PreferenceCategory

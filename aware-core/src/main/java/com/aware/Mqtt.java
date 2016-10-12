@@ -18,6 +18,7 @@ import android.os.IBinder;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
+import com.aware.providers.Aware_Provider;
 import com.aware.providers.Mqtt_Provider;
 import com.aware.providers.Mqtt_Provider.Mqtt_Messages;
 import com.aware.providers.Mqtt_Provider.Mqtt_Subscriptions;
@@ -184,18 +185,27 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         if (Aware.DEBUG)
             Log.d(TAG, "MQTT: Message received: \n topic = " + topic + "\n message = " + message.toString());
 
-        if (topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/broadcasts") || topic.equals(Aware.getSetting(mContext, "study_id") + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/broadcasts")) {
+        String study_id = "";
+        if (Aware.isStudy(getApplicationContext())) {
+            Cursor studyInfo = Aware.getStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
+            if (studyInfo != null && studyInfo.moveToFirst()) {
+                study_id = String.valueOf(studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
+            }
+            if (studyInfo != null && ! studyInfo.isClosed()) studyInfo.close();
+        }
+
+        if (topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/broadcasts") || topic.equals(study_id + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/broadcasts")) {
             Intent broadcast = new Intent(message.toString());
             mContext.sendBroadcast(broadcast);
         }
 
-        if (topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/esm") || topic.equals(Aware.getSetting(mContext, "study_id") + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/esm")) {
+        if (topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/esm") || topic.equals(study_id + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/esm")) {
             Intent queueESM = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
             queueESM.putExtra(ESM.EXTRA_ESM, message.toString());
             mContext.sendBroadcast(queueESM);
         }
 
-        if (topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/configuration") || topic.equals(Aware.getSetting(mContext, "study_id") + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/configuration")) {
+        if (topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/configuration") || topic.equals(study_id + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/configuration")) {
             JSONArray configs = new JSONArray(message.toString());
             Aware.tweakSettings(mContext, configs);
         }
@@ -275,6 +285,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                             rowData.put(Mqtt_Subscriptions.TIMESTAMP, System.currentTimeMillis());
                             rowData.put(Mqtt_Subscriptions.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
                             rowData.put(Mqtt_Subscriptions.TOPIC, topic);
+
                             try {
                                 context.getContentResolver().insert(Mqtt_Subscriptions.CONTENT_URI, rowData);
                                 if (Aware.DEBUG) Log.w(TAG, "Subscribed: " + topic);
@@ -461,21 +472,25 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
             if (result) {
                 //Study specific subscribes
                 if (Aware.isStudy(getApplicationContext())) {
-                    Intent studySubscribe = new Intent(ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
-                    studySubscribe.putExtra(EXTRA_TOPIC, Aware.getSetting(getApplicationContext(), "study_id") + "/" + Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/broadcasts");
-                    mContext.sendBroadcast(studySubscribe);
+                    Cursor studyInfo = Aware.getStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
+                    if (studyInfo != null && studyInfo.moveToFirst()) {
+                        Intent studySubscribe = new Intent(ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
+                        studySubscribe.putExtra(EXTRA_TOPIC, studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)) + "/" + Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/broadcasts");
+                        mContext.sendBroadcast(studySubscribe);
 
-                    studySubscribe = new Intent(ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
-                    studySubscribe.putExtra(EXTRA_TOPIC, Aware.getSetting(getApplicationContext(), "study_id") + "/" + Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/esm");
-                    mContext.sendBroadcast(studySubscribe);
+                        studySubscribe = new Intent(ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
+                        studySubscribe.putExtra(EXTRA_TOPIC, studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)) + "/" + Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/esm");
+                        mContext.sendBroadcast(studySubscribe);
 
-                    studySubscribe = new Intent(ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
-                    studySubscribe.putExtra(EXTRA_TOPIC, Aware.getSetting(getApplicationContext(), "study_id") + "/" + Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/configuration");
-                    mContext.sendBroadcast(studySubscribe);
+                        studySubscribe = new Intent(ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
+                        studySubscribe.putExtra(EXTRA_TOPIC, studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)) + "/" + Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/configuration");
+                        mContext.sendBroadcast(studySubscribe);
 
-                    studySubscribe = new Intent(ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
-                    studySubscribe.putExtra(EXTRA_TOPIC, Aware.getSetting(getApplicationContext(), "study_id") + "/" + Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/#");
-                    mContext.sendBroadcast(studySubscribe);
+                        studySubscribe = new Intent(ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
+                        studySubscribe.putExtra(EXTRA_TOPIC, studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)) + "/" + Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/#");
+                        mContext.sendBroadcast(studySubscribe);
+                    }
+                    if (studyInfo != null && ! studyInfo.isClosed()) studyInfo.close();
                 }
 
                 //Self-subscribes
