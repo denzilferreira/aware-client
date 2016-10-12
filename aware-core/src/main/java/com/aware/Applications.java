@@ -193,7 +193,7 @@ public class Applications extends AccessibilityService {
                 rowData.put(Applications_Foreground.APPLICATION_NAME, appName);
                 rowData.put(Applications_Foreground.IS_SYSTEM_APP, pkgInfo != null && isSystemPackage(pkgInfo));
 
-                if (Aware.DEBUG) Log.d(Aware.TAG, "FOREGROUND: " + rowData.toString());
+                if (Aware.DEBUG) Log.d(TAG, "FOREGROUND: " + rowData.toString());
 
                 try {
                     getContentResolver().insert(Applications_Foreground.CONTENT_URI, rowData);
@@ -240,7 +240,7 @@ public class Applications extends AccessibilityService {
 
                             getContentResolver().insert(Applications_Crashes.CONTENT_URI, crashData);
 
-                            if (Aware.DEBUG) Log.d(Aware.TAG, "Crashed: " + crashData.toString());
+                            if (Aware.DEBUG) Log.d(TAG, "Crashed: " + crashData.toString());
 
                             Intent crashed = new Intent(ACTION_AWARE_APPLICATIONS_CRASHES);
                             crashed.putExtra(EXTRA_DATA, crashData);
@@ -269,7 +269,7 @@ public class Applications extends AccessibilityService {
 
             getContentResolver().insert(Keyboard_Provider.Keyboard_Data.CONTENT_URI, keyboard);
 
-            if (Aware.DEBUG) Log.d(Aware.TAG, "Keyboard: " + keyboard.toString());
+            if (Aware.DEBUG) Log.d(TAG, "Keyboard: " + keyboard.toString());
 
             Intent keyboard_data = new Intent(Keyboard.ACTION_AWARE_KEYBOARD);
             sendBroadcast(keyboard_data);
@@ -289,14 +289,14 @@ public class Applications extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
 
-        if (Aware.DEBUG) Log.d("AWARE", "Aware service connected to accessibility services...");
+        if (Aware.DEBUG) Log.d(Aware.TAG, "Aware service connected to accessibility services...");
 
         //This makes sure that plugins and apps can check if the accessibility service is active
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, true);
 
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
-        TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG) : TAG;
+        TAG = Aware.getSetting(this, Aware_Preferences.DEBUG_TAG);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
@@ -335,8 +335,7 @@ public class Applications extends AccessibilityService {
         if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
             unregisterReceiver(awareMonitor);
         }
-        Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, false);
-        Log.e(TAG, "Accessibility Service has been interrupted...");
+        Log.w(TAG, "Accessibility Service has been interrupted...");
     }
 
     @Override
@@ -345,7 +344,7 @@ public class Applications extends AccessibilityService {
             unregisterReceiver(awareMonitor);
         }
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, false);
-        Log.e(TAG, "Accessibility Service has been interrupted...");
+        Log.e(TAG, "Accessibility Service has been unbound...");
         return super.onUnbind(intent);
     }
 
@@ -376,9 +375,7 @@ public class Applications extends AccessibilityService {
         alarmManager.cancel(repeatingIntent);
         try {
             unregisterReceiver(awareMonitor);
-        } catch (Exception e) {
-            Log.e(TAG, "Tried to unregister Applications receiver not registered.");
-        }
+        } catch (IllegalArgumentException e) {}
     }
 
     private static boolean isAccessibilityEnabled(Context c) {
@@ -457,7 +454,6 @@ public class Applications extends AccessibilityService {
             mBuilder.setContentIntent(clickIntent);
             NotificationManager notManager = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
             notManager.notify(Applications.ACCESSIBILITY_NOTIFICATION_ID, mBuilder.build());
-
             return false;
         }
         return true;
