@@ -329,8 +329,6 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                     e.printStackTrace();
                 } catch (CertificateException e) {
                     e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
 
                 try {

@@ -90,8 +90,6 @@ public class StudyUtils extends IntentService {
                 e.printStackTrace();
             } catch (CertificateException e) {
                 e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
             }
 
             try {
