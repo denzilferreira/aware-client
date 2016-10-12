@@ -277,9 +277,7 @@ public class SSLManager extends IntentService {
      * @throws FileNotFoundException
      */
     public static InputStream getCA(Context c, String server) throws FileNotFoundException {
-        Uri study_uri = Uri.parse(server);
-        String hostname = study_uri.getHost();
-        File host_credentials = new File( c.getExternalFilesDir(null) + "/Documents/", "credentials/"+ hostname );
+        File host_credentials = new File( c.getExternalFilesDir(null) + "/Documents/", "credentials/"+ server );
         if( host_credentials.exists() ) {
             File[] certs = host_credentials.listFiles();
             for(File crt : certs ) {
