@@ -1101,12 +1101,12 @@ public class Aware extends Service {
                 }
 
                 try {
-                    request = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), full_url)).dataGET(study_host + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                    request = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), full_url)).dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
                 } catch (FileNotFoundException e) {
                     request = null;
                 }
             } else {
-                request = new Http(getApplicationContext()).dataGET(study_host + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                request = new Http(getApplicationContext()).dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
             }
 
             if (request != null) {
