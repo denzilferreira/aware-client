@@ -36,6 +36,7 @@ import com.aware.Aware;
 import com.aware.Aware_Preferences;
 
 import com.aware.phone.R;
+import com.aware.providers.Aware_Provider;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
@@ -335,6 +336,10 @@ public class Plugins_Manager extends Aware_Activity {
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(plugins_listener);
+
+        //Fixed: leak when leaving plugin manager
+        if (installed_plugins != null && !installed_plugins.isClosed()) installed_plugins.close();
+        pluginAdapter.changeCursor(null);
     }
 
     /**
@@ -387,16 +392,23 @@ public class Plugins_Manager extends Aware_Activity {
             String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
             String protocol = study_url.substring(0, study_url.indexOf(":"));
 
+            int study_key = 0;
+            Cursor studyInfo = Aware.getStudy(getApplicationContext(), study_url);
+            if (studyInfo != null && studyInfo.moveToFirst()) {
+                study_key = studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY));
+            }
+            if (studyInfo != null && ! studyInfo.isClosed()) studyInfo.close();
+
             //Check for updates on the server side
             String response;
             if (protocol.equals("https")) {
                 try {
-                    response = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_host + "/index.php/plugins/get_plugins" + ((Aware.getSetting(getApplicationContext(), "study_id").length() > 0) ? "/" + Aware.getSetting(getApplicationContext(), "study_id") : ""), true);
+                    response = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_host + "/index.php/plugins/get_plugins" + ((study_key > 0) ? "/" + study_key : ""), true);
                 } catch (FileNotFoundException e) {
                     response = null;
                 }
             } else {
-                response = new Http(getApplicationContext()).dataGET(study_host + "/index.php/plugins/get_plugins" + ((Aware.getSetting(getApplicationContext(), "study_id").length() > 0) ? "/" + Aware.getSetting(getApplicationContext(), "study_id") : ""), true);
+                response = new Http(getApplicationContext()).dataGET(study_host + "/index.php/plugins/get_plugins" + ((study_key > 0) ? "/" + study_key : ""), true);
             }
 
             if (response != null) {
