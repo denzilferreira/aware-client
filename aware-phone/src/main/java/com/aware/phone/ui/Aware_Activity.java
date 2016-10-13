@@ -2,26 +2,17 @@ package com.aware.phone.ui;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.ProgressDialog;
-import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.database.Cursor;
-import android.graphics.Color;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -38,21 +29,9 @@ import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.phone.Aware_Client;
 import com.aware.phone.R;
-import com.aware.providers.Aware_Provider;
 import com.aware.ui.PermissionsHandler;
-import com.aware.utils.Http;
-import com.aware.utils.Https;
-import com.aware.utils.SSLManager;
-import com.aware.utils.StudyUtils;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
 
 public class Aware_Activity extends AppCompatPreferenceActivity {
 

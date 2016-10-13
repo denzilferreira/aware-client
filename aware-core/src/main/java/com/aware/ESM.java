@@ -187,6 +187,8 @@ public class ESM extends Aware_Sensor {
      */
     public static final String EXTRA_ESM = "esm";
 
+    public static final String NOTIFICATION_TIMEOUT = "notification_timeout";
+
     /**
      * Extra for ACTION_AWARE_ESM_ANSWERED as String
      */
@@ -218,6 +220,8 @@ public class ESM extends Aware_Sensor {
         if (isESMWaiting(getApplicationContext()) || isESMVisible(getApplicationContext())) {
             notifyESM(getApplicationContext());
         }
+
+        Aware.setSetting(this, ESM.NOTIFICATION_TIMEOUT, false, "com.aware.phone");
     }
 
     @Override
@@ -301,55 +305,61 @@ public class ESM extends Aware_Sensor {
      * @param c
      */
     public static void notifyESM(final Context c) {
-        NotificationManager mNotificationManager = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+        if(Aware.getSetting(c, ESM.NOTIFICATION_TIMEOUT, "com.aware.phone").equals("false")) {
+            NotificationManager mNotificationManager = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c);
-        mBuilder.setSmallIcon(R.drawable.ic_stat_aware_esm);
-        mBuilder.setContentTitle("AWARE");
-        mBuilder.setContentText(c.getResources().getText(R.string.aware_esm_questions));
-        mBuilder.setNumber(ESM_Queue.getQueueSize(c));
-        mBuilder.setOnlyAlertOnce(true); //notify the user only once for the same notification ID
-        mBuilder.setOngoing(true);
-        mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c);
+            mBuilder.setSmallIcon(R.drawable.ic_stat_aware_esm);
+            mBuilder.setContentTitle("AWARE");
+            mBuilder.setContentText(c.getResources().getText(R.string.aware_esm_questions));
+            mBuilder.setNumber(ESM_Queue.getQueueSize(c));
+            mBuilder.setOnlyAlertOnce(true); //notify the user only once for the same notification ID
+            mBuilder.setOngoing(true);
+            mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
 
-        Intent intent_ESM = new Intent(c, ESM_Queue.class);
-        intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            Intent intent_ESM = new Intent(c, ESM_Queue.class);
+            intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        PendingIntent pending_ESM = PendingIntent.getActivity(c, 0, intent_ESM, PendingIntent.FLAG_UPDATE_CURRENT);
-        mBuilder.setContentIntent(pending_ESM);
+            PendingIntent pending_ESM = PendingIntent.getActivity(c, 0, intent_ESM, PendingIntent.FLAG_UPDATE_CURRENT);
+            mBuilder.setContentIntent(pending_ESM);
 
-        mNotificationManager.notify(ESM_NOTIFICATION_ID, mBuilder.build());
+            mNotificationManager.notify(ESM_NOTIFICATION_ID, mBuilder.build());
 
-        int notificationTimeout = ESM_Queue.getTimeout(c);
+            int notificationTimeout = ESM_Queue.getTimeout(c);
 
-        if(notificationTimeout != 0) {
-            // Notification timeout set, dismissing ESM's after timeout
-            Intent removeESMNotification = new Intent(c, RemoveESM.class);
+            if(notificationTimeout != 0) {
+                Aware.setSetting(c, ESM.NOTIFICATION_TIMEOUT, "true", "com.aware.phone");
 
-            Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.SECOND, notificationTimeout);
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(c, 710, removeESMNotification, 0);
+                // Notification timeout set, dismissing ESM's after timeout
+                Intent removeESMNotification = new Intent(c, RemoveESM.class);
 
-            AlarmManager alarmManager = (AlarmManager) c.getSystemService(ALARM_SERVICE);
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), pendingIntent);
+                Calendar cal = Calendar.getInstance();
+                cal.add(Calendar.SECOND, notificationTimeout);
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(c, 710, removeESMNotification, 0);
+
+                AlarmManager alarmManager = (AlarmManager) c.getSystemService(ALARM_SERVICE);
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), pendingIntent);
+            }
         }
     }
 
     public static class RemoveESM extends BroadcastReceiver {
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public void onReceive(Context c, Intent intent) {
+            Aware.setSetting(c, ESM.NOTIFICATION_TIMEOUT, "false", "com.aware.phone");
+
             // Remove from queue
             ESM_Question esm_question = new ESM_Question();
-            esm_question.timeoutQueue(context);
+            esm_question.timeoutQueue(c);
 
             // Remove notification
             String ns = Context.NOTIFICATION_SERVICE;
-            NotificationManager nMgr = (NotificationManager) context.getSystemService(ns);
+            NotificationManager nMgr = (NotificationManager) c.getSystemService(ns);
             nMgr.cancel(777);
 
             // Send intent
             Intent expired = new Intent(ESM.ACTION_AWARE_ESM_EXPIRED);
-            context.sendBroadcast(expired);
+            c.sendBroadcast(expired);
         }
     }
 

@@ -248,7 +248,7 @@ public class TestESM implements AwareTest {
             esmFreetext.setTitle("Freetext")
                     .setTrigger("test")
                     .setExpirationThreshold(0)
-                    .setNotificationTimeout(30)
+                    .setNotificationTimeout(300)
                     .setSubmitButton("OK")
                     .setInstructions("Freetext ESM");
 
@@ -259,7 +259,7 @@ public class TestESM implements AwareTest {
                     .setTitle("Checkbox")
                     .setTrigger("test")
                     .setExpirationThreshold(0)
-                    .setNotificationTimeout(30)
+                    .setNotificationTimeout(300)
                     .setSubmitButton("OK")
                     .setInstructions("Checkbox ESM");
 
@@ -272,7 +272,7 @@ public class TestESM implements AwareTest {
                     .setInstructions("Likert ESM")
                     .setTrigger("test")
                     .setExpirationThreshold(0)
-                    .setNotificationTimeout(30)
+                    .setNotificationTimeout(300)
                     .setSubmitButton("OK");
 
             ESM_QuickAnswer esmQuickAnswer = new ESM_QuickAnswer();
@@ -280,7 +280,7 @@ public class TestESM implements AwareTest {
                     .addQuickAnswer("No")
                     .setTrigger("test")
                     .setExpirationThreshold(0)
-                    .setNotificationTimeout(30)
+                    .setNotificationTimeout(300)
                     .setInstructions("Quick Answers ESM");
 
             ESM_Radio esmRadio = new ESM_Radio();
@@ -289,7 +289,7 @@ public class TestESM implements AwareTest {
                     .setTitle("Radios")
                     .setInstructions("Radios ESM")
                     .setExpirationThreshold(0)
-                    .setNotificationTimeout(30)
+                    .setNotificationTimeout(300)
                     .setSubmitButton("OK");
 
             ESM_Scale esmScale = new ESM_Scale();
@@ -302,7 +302,7 @@ public class TestESM implements AwareTest {
                     .setTitle("Scale")
                     .setInstructions("Scale ESM")
                     .setExpirationThreshold(0)
-                    .setNotificationTimeout(30)
+                    .setNotificationTimeout(300  )
                     .setSubmitButton("OK");
 
             factory.addESM(esmFreetext);
