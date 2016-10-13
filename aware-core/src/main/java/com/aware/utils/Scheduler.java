@@ -967,6 +967,36 @@ public class Scheduler extends Service {
         }
     }
 
+    public static ArrayList<Long> random_times(Calendar leftLimit, Calendar rightLimit, int size, int minDifference) {
+        if (size <= 0) {
+            return null;
+        }
+
+        ArrayList<Long> randomList = new ArrayList<>();
+        int minDifferenceMillis = minDifference * 60 * 1000;
+
+        while (randomList.size() < size) {
+            boolean valid_random = true;
+
+            long random = leftLimit.getTimeInMillis() + (long) (Math.random() * (rightLimit.getTimeInMillis() - leftLimit.getTimeInMillis()));
+
+            if (randomList.size() == 0) {
+                randomList.add(random);
+            } else {
+                for (int i = 0; i < randomList.size(); i++) {
+                    Long timestamp = randomList.get(i);
+                    if (Math.abs(timestamp - random) < minDifferenceMillis) {
+                        valid_random = false;
+                    }
+                }
+                if(valid_random) {
+                    randomList.add(random);
+                }
+            }
+        }
+        return randomList;
+    }
+
     @Override
     public IBinder onBind(Intent intent) {
         return null;
