@@ -378,21 +378,17 @@ public class Applications extends AccessibilityService {
         } catch (IllegalArgumentException e) {}
     }
 
-    private static boolean isAccessibilityEnabled(Context c) {
+    private synchronized static boolean isAccessibilityEnabled(Context c) {
         boolean enabled = false;
 
         AccessibilityManager accessibilityManager = (AccessibilityManager) c.getSystemService(ACCESSIBILITY_SERVICE);
 
         //Try to fetch active accessibility services directly from Android OS database instead of broken API...
-        TextUtils.SimpleStringSplitter splitter = new TextUtils.SimpleStringSplitter(':');
         String settingValue = Settings.Secure.getString(c.getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
         if (settingValue != null) {
-            splitter.setString(settingValue);
-            while (splitter.hasNext()) {
-                if (splitter.next().matches(c.getPackageName())) {
-                    enabled = true;
-                    break;
-                }
+            Log.d("ACCESSIBILITY", "Settings secure: " + settingValue);
+            if (settingValue.contains(c.getPackageName())) {
+                enabled = true;
             }
         }
         if (!enabled) {
@@ -400,7 +396,7 @@ public class Applications extends AccessibilityService {
                 List<AccessibilityServiceInfo> enabledServices = AccessibilityManagerCompat.getEnabledAccessibilityServiceList(accessibilityManager, AccessibilityEventCompat.TYPES_ALL_MASK);
                 if (!enabledServices.isEmpty()) {
                     for (AccessibilityServiceInfo service : enabledServices) {
-                        Log.d(Aware.TAG, service.toString());
+                        Log.d("ACCESSIBILITY", "AccessibilityManagerCompat enabled: " + service.toString());
                         if (service.getId().contains(c.getPackageName())) {
                             enabled = true;
                             break;
@@ -415,7 +411,7 @@ public class Applications extends AccessibilityService {
                 List<AccessibilityServiceInfo> enabledServices = accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityEvent.TYPES_ALL_MASK);
                 if (!enabledServices.isEmpty()) {
                     for (AccessibilityServiceInfo service : enabledServices) {
-                        Log.d(Aware.TAG, service.toString());
+                        Log.d("ACCESSIBILITY", "AccessibilityManager enabled: " + service.toString());
                         if (service.getId().contains(c.getPackageName())) {
                             enabled = true;
                             break;
@@ -427,7 +423,7 @@ public class Applications extends AccessibilityService {
         }
 
         //Keep the global setting up-to-date
-        Aware.setSetting(c, Applications.STATUS_AWARE_ACCESSIBILITY, enabled);
+        Aware.setSetting(c, Applications.STATUS_AWARE_ACCESSIBILITY, enabled, "com.aware.phone");
 
         return enabled;
     }
