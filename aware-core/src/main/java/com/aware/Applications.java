@@ -386,7 +386,7 @@ public class Applications extends AccessibilityService {
         //Try to fetch active accessibility services directly from Android OS database instead of broken API...
         String settingValue = Settings.Secure.getString(c.getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
         if (settingValue != null) {
-            Log.d("ACCESSIBILITY", "Settings secure: " + settingValue);
+            if (Aware.DEBUG) Log.d("ACCESSIBILITY", "Settings secure: " + settingValue);
             if (settingValue.contains(c.getPackageName())) {
                 enabled = true;
             }
@@ -396,7 +396,7 @@ public class Applications extends AccessibilityService {
                 List<AccessibilityServiceInfo> enabledServices = AccessibilityManagerCompat.getEnabledAccessibilityServiceList(accessibilityManager, AccessibilityEventCompat.TYPES_ALL_MASK);
                 if (!enabledServices.isEmpty()) {
                     for (AccessibilityServiceInfo service : enabledServices) {
-                        Log.d("ACCESSIBILITY", "AccessibilityManagerCompat enabled: " + service.toString());
+                        if (Aware.DEBUG) Log.d("ACCESSIBILITY", "AccessibilityManagerCompat enabled: " + service.toString());
                         if (service.getId().contains(c.getPackageName())) {
                             enabled = true;
                             break;
@@ -411,7 +411,7 @@ public class Applications extends AccessibilityService {
                 List<AccessibilityServiceInfo> enabledServices = accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityEvent.TYPES_ALL_MASK);
                 if (!enabledServices.isEmpty()) {
                     for (AccessibilityServiceInfo service : enabledServices) {
-                        Log.d("ACCESSIBILITY", "AccessibilityManager enabled: " + service.toString());
+                        if (Aware.DEBUG) Log.d("ACCESSIBILITY", "AccessibilityManager enabled: " + service.toString());
                         if (service.getId().contains(c.getPackageName())) {
                             enabled = true;
                             break;
