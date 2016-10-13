@@ -26,7 +26,7 @@ import java.util.HashMap;
  */
 public class Aware_Provider extends ContentProvider {
 
-    public static final int DATABASE_VERSION = 15;
+    public static final int DATABASE_VERSION = 16;
 
     /**
      * AWARE framework content authority
@@ -83,8 +83,7 @@ public class Aware_Provider extends ContentProvider {
         private Aware_Settings() {
         }
 
-        public static final Uri CONTENT_URI = Uri.parse("content://"
-                + Aware_Provider.AUTHORITY + "/aware_settings");
+        public static final Uri CONTENT_URI = Uri.parse("content://" + Aware_Provider.AUTHORITY + "/aware_settings");
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.aware.settings";
         public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.aware.settings";
 
@@ -103,8 +102,7 @@ public class Aware_Provider extends ContentProvider {
         private Aware_Plugins() {
         }
 
-        public static final Uri CONTENT_URI = Uri.parse("content://"
-                + Aware_Provider.AUTHORITY + "/aware_plugins");
+        public static final Uri CONTENT_URI = Uri.parse("content://" + Aware_Provider.AUTHORITY + "/aware_plugins");
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.aware.plugins";
         public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.aware.plugins";
 
@@ -178,12 +176,12 @@ public class Aware_Provider extends ContentProvider {
                     + Aware_Plugins.PLUGIN_AUTHOR + " text default '',"
                     + Aware_Plugins.PLUGIN_ICON + " blob default null,"
                     + Aware_Plugins.PLUGIN_DESCRIPTION + " text default ''",
-
+            // Studies
             Aware_Studies.STUDY_ID + " integer primary key autoincrement," +
                     Aware_Studies.STUDY_TIMESTAMP + " real default 0," +
                     Aware_Studies.STUDY_DEVICE_ID + " text default ''," +
                     Aware_Studies.STUDY_URL + " text default ''," +
-                    Aware_Studies.STUDY_KEY + " integer default ''," +
+                    Aware_Studies.STUDY_KEY + " integer default -1," +
                     Aware_Studies.STUDY_API + " text default ''," +
                     Aware_Studies.STUDY_PI + " text default ''," +
                     Aware_Studies.STUDY_CONFIG + " text default ''," +
@@ -371,7 +369,7 @@ public class Aware_Provider extends ContentProvider {
         sUriMatcher.addURI(Aware_Provider.AUTHORITY, DATABASE_TABLES[3], STUDY);
         sUriMatcher.addURI(Aware_Provider.AUTHORITY, DATABASE_TABLES[3] + "/#", STUDY_ID);
 
-        deviceMap = new HashMap<String, String>();
+        deviceMap = new HashMap<>();
         deviceMap.put(Aware_Device._ID, Aware_Device._ID);
         deviceMap.put(Aware_Device.TIMESTAMP, Aware_Device.TIMESTAMP);
         deviceMap.put(Aware_Device.DEVICE_ID, Aware_Device.DEVICE_ID);
@@ -389,13 +387,13 @@ public class Aware_Provider extends ContentProvider {
         deviceMap.put(Aware_Device.SDK, Aware_Device.SDK);
         deviceMap.put(Aware_Device.LABEL, Aware_Device.LABEL);
 
-        settingsMap = new HashMap<String, String>();
+        settingsMap = new HashMap<>();
         settingsMap.put(Aware_Settings.SETTING_ID, Aware_Settings.SETTING_ID);
         settingsMap.put(Aware_Settings.SETTING_KEY, Aware_Settings.SETTING_KEY);
         settingsMap.put(Aware_Settings.SETTING_VALUE, Aware_Settings.SETTING_VALUE);
         settingsMap.put(Aware_Settings.SETTING_PACKAGE_NAME, Aware_Settings.SETTING_PACKAGE_NAME);
 
-        pluginsMap = new HashMap<String, String>();
+        pluginsMap = new HashMap<>();
         pluginsMap.put(Aware_Plugins.PLUGIN_ID, Aware_Plugins.PLUGIN_ID);
         pluginsMap.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, Aware_Plugins.PLUGIN_PACKAGE_NAME);
         pluginsMap.put(Aware_Plugins.PLUGIN_NAME, Aware_Plugins.PLUGIN_NAME);

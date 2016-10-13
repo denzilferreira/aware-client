@@ -92,12 +92,12 @@ public class WebserviceHelper extends IntentService {
     protected void onHandleIntent(Intent intent) {
 
         String WEBSERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
+        //Fixed: not using webservices
+        if (WEBSERVER.length() == 0) return;
+
         String protocol = WEBSERVER.substring(0, WEBSERVER.indexOf(":"));
         boolean WEBSERVICE_SIMPLE = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SIMPLE).equals("true");
         boolean WEBSERVICE_REMOVE_DATA = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_REMOVE_DATA).equals("true");
-
-        //Fixed: not using webservices
-        if (WEBSERVER.length() == 0) return;
 
         /**
          * Max number of rows to place on the HTTP(s) post
@@ -117,10 +117,9 @@ public class WebserviceHelper extends IntentService {
             Uri CONTENT_URI = Uri.parse(intent.getStringExtra(EXTRA_CONTENT_URI));
 
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_CHARGING).equals("true")) {
-                IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-                Intent batteryStatus = registerReceiver(null, ifilter);
-                int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-                boolean isCharging = (status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL);
+                Intent batt = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+                int plugged = batt.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+                boolean isCharging = (plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB);
 
                 if (!isCharging) {
                     if (Aware.DEBUG)
@@ -200,14 +199,19 @@ public class WebserviceHelper extends IntentService {
                     if (Aware.isStudy(getApplicationContext())) {
                         Cursor study = Aware.getStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
                         if (study != null && study.moveToFirst()) {
-                            study_condition = " AND timestamp > " + study.getLong(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED));
+                            study_condition = " AND timestamp >= " + study.getLong(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED));
                         }
                         if (study != null && !study.isClosed()) study.close();
                     }
 
                     //However, we always want to sync the device's profile and hardware sensor profiles for any study, no matter when we join it
-                    if (DATABASE_TABLE.equalsIgnoreCase("aware_device") || DATABASE_TABLE.matches("sensor_.*"))
+                    if (DATABASE_TABLE.equalsIgnoreCase("aware_device")
+                            || DATABASE_TABLE.matches("sensor_.*")
+                            || DATABASE_TABLE.equalsIgnoreCase("aware_studies"))
                         study_condition = "";
+
+                    if (DEBUG)
+                        Log.d(Aware.TAG, "Study config: " + study_condition + " in " + DATABASE_TABLE);
 
                     JSONArray remoteData = new JSONArray(latest);
 
@@ -259,6 +263,8 @@ public class WebserviceHelper extends IntentService {
                     }
 
                     if (TOTAL_RECORDS == 0) {
+                        if (DEBUG)
+                            Log.d(Aware.TAG, TOTAL_RECORDS + " records in " + DATABASE_TABLE + " [done]");
                         return; //nothing to upload, no need to do anything now.
                     }
 
@@ -392,7 +398,6 @@ public class WebserviceHelper extends IntentService {
 
         //Clear database table remotely
         if (intent.getAction().equals(ACTION_AWARE_WEBSERVICE_CLEAR_TABLE)) {
-
             if (Aware.DEBUG)
                 Log.d(Aware.TAG, "Clearing data..." + DATABASE_TABLE);
 

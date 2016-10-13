@@ -196,8 +196,18 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                             break;
                         case 3: //Join study
                             //TODO: make ui for listing available studies
-                            Intent join_study = new Intent(getApplicationContext(), Aware_QRCode.class);
-                            startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
+                            if (ContextCompat.checkSelfPermission(Aware_Activity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                                ArrayList<String> permission = new ArrayList<>();
+                                permission.add(Manifest.permission.CAMERA);
+
+                                Intent permissions = new Intent(Aware_Activity.this, PermissionsHandler.class);
+                                permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, permission);
+                                permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(permissions);
+                            } else {
+                                Intent join_study = new Intent(Aware_Activity.this, Aware_QRCode.class);
+                                startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
+                            }
                             break;
                     }
                     navigationDrawer.closeDrawer(navigationList);
