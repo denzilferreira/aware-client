@@ -313,23 +313,23 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
 
                 SSLManager.handleUrl(getApplicationContext(), study_url, true);
 
-                try {
-                    Intent installHTTPS = KeyChain.createInstallIntent();
-                    installHTTPS.putExtra(KeyChain.EXTRA_NAME, study_host);
-
-                    //Convert .crt to X.509 so Android knows what it is.
-                    CertificateFactory cf = CertificateFactory.getInstance("X.509");
-                    InputStream caInput = SSLManager.getHTTPS(getApplicationContext(), study_url);
-                    Certificate ca = cf.generateCertificate(caInput);
-
-                    installHTTPS.putExtra(KeyChain.EXTRA_CERTIFICATE, ca.getEncoded());
-                    installHTTPS.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(installHTTPS);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (CertificateException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    Intent installHTTPS = KeyChain.createInstallIntent();
+//                    installHTTPS.putExtra(KeyChain.EXTRA_NAME, study_host);
+//
+//                    //Convert .crt to X.509 so Android knows what it is.
+//                    CertificateFactory cf = CertificateFactory.getInstance("X.509");
+//                    InputStream caInput = SSLManager.getHTTPS(getApplicationContext(), study_url);
+//                    Certificate ca = cf.generateCertificate(caInput);
+//
+//                    installHTTPS.putExtra(KeyChain.EXTRA_CERTIFICATE, ca.getEncoded());
+//                    installHTTPS.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                    startActivity(installHTTPS);
+//                } catch (FileNotFoundException e) {
+//                    e.printStackTrace();
+//                } catch (CertificateException e) {
+//                    e.printStackTrace();
+//                }
 
                 try {
                     request = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);

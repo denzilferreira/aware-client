@@ -126,9 +126,6 @@ public class WebserviceHelper extends IntentService {
                     if (Aware.DEBUG)
                         Log.d(Aware.TAG, "Only synching data if charging...");
                     return;
-                } else {
-                    if (Aware.DEBUG)
-                        Log.d(Aware.TAG, "Device is charging, can we sync?");
                 }
             }
 
@@ -153,7 +150,7 @@ public class WebserviceHelper extends IntentService {
 
             String response = null;
             // Do not run /create_table if webservice_simple == true
-            if (! WEBSERVICE_SIMPLE) {
+            if (!WEBSERVICE_SIMPLE) {
                 //Create table if doesn't exist on the remote webservice server
                 if (protocol.equals("https")) {
                     try {
@@ -195,7 +192,7 @@ public class WebserviceHelper extends IntentService {
                         } else {
                             latest = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
                         }
-                    if (latest == null) return; //unable to reach the server, cancel this sync
+                        if (latest == null) return; //unable to reach the server, cancel this sync
                     }
 
                     //If in a study, get only data from joined date onwards
@@ -205,11 +202,12 @@ public class WebserviceHelper extends IntentService {
                         if (study != null && study.moveToFirst()) {
                             study_condition = " AND timestamp > " + study.getLong(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED));
                         }
-                        if (study != null && ! study.isClosed()) study.close();
+                        if (study != null && !study.isClosed()) study.close();
                     }
 
                     //However, we always want to sync the device's profile and hardware sensor profiles for any study, no matter when we join it
-                    if (DATABASE_TABLE.equalsIgnoreCase("aware_device") || DATABASE_TABLE.matches("sensor_.*")) study_condition = "";
+                    if (DATABASE_TABLE.equalsIgnoreCase("aware_device") || DATABASE_TABLE.matches("sensor_.*"))
+                        study_condition = "";
 
                     JSONArray remoteData = new JSONArray(latest);
 
@@ -365,9 +363,9 @@ public class WebserviceHelper extends IntentService {
                                 if ((Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0
                                         && Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA)) == 4
                                         && highFrequencySensors.contains(DATABASE_TABLE))
-                                    || WEBSERVICE_REMOVE_DATA ) {
+                                        || WEBSERVICE_REMOVE_DATA) {
 
-                                    long last = rows.getJSONObject(rows.length()-1).getLong("timestamp");
+                                    long last = rows.getJSONObject(rows.length() - 1).getLong("timestamp");
                                     getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null);
 
                                     if (DEBUG)

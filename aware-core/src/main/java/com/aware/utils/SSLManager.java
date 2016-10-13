@@ -132,21 +132,21 @@ public class SSLManager extends IntentService {
                         }
                     }
                 });
-        Future ca = Ion.with(context.getApplicationContext())
-                .load("http://" + cert_host + "/public/ca.crt")
-                .write(new File(context.getExternalFilesDir(null) + "/Documents/credentials/" + hostname + "/ca.crt"))
-                .setCallback(new FutureCallback<File>() {
-                    @Override
-                    public void onCompleted(Exception e, File result) {
-                        if( e == null ) {
-                            Log.d(Aware.TAG, "CA certificate: " + result.toString());
-                        }
-                    }
-                });
+//        Future ca = Ion.with(context.getApplicationContext())
+//                .load("http://" + cert_host + "/public/ca.crt")
+//                .write(new File(context.getExternalFilesDir(null) + "/Documents/credentials/" + hostname + "/ca.crt"))
+//                .setCallback(new FutureCallback<File>() {
+//                    @Override
+//                    public void onCompleted(Exception e, File result) {
+//                        if( e == null ) {
+//                            Log.d(Aware.TAG, "CA certificate: " + result.toString());
+//                        }
+//                    }
+//                });
         if (block) {
             try {
                 https.get();
-                ca.get();
+//                ca.get();
             } catch (java.lang.InterruptedException | ExecutionException e) {
                 // What to do here?
             }
@@ -270,18 +270,19 @@ public class SSLManager extends IntentService {
     }
 
     /**
-     * Load Certificate Authority from server: ca.crt
+     * Load certificate for MQTT server: server.crt
+     * NOTE: different from getHTTPS. Here, we have the MQTT server address/IP as input parameter.
      * @param c context
      * @param server server hostname
      * @return Input stream of opened certificate.
      * @throws FileNotFoundException
      */
-    public static InputStream getCA(Context c, String server) throws FileNotFoundException {
+    public static InputStream getCertificate(Context c, String server) throws FileNotFoundException {
         File host_credentials = new File( c.getExternalFilesDir(null) + "/Documents/", "credentials/"+ server );
         if( host_credentials.exists() ) {
             File[] certs = host_credentials.listFiles();
             for(File crt : certs ) {
-                if( crt.getName().equals("ca.crt") ) return new FileInputStream(crt);
+                if( crt.getName().equals("server.crt") ) return new FileInputStream(crt);
             }
         }
         return null;

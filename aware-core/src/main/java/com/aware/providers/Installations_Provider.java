@@ -32,7 +32,7 @@ import java.util.HashMap;
  */
 public class Installations_Provider extends ContentProvider {
 
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 5;
 
     /**
      * Authority of Installations content provider
@@ -80,7 +80,7 @@ public class Installations_Provider extends ContentProvider {
                     + Installations_Data.APPLICATION_NAME + " text default '',"
                     + Installations_Data.INSTALLATION_STATUS + " integer default -1,"
                     + Installations_Data.PACKAGE_VERSION_NAME + " text default '',"
-                    + Installations_Data.PACKAGE_VERSION_CODE + " integer default ''"
+                    + Installations_Data.PACKAGE_VERSION_CODE + " integer default -1"
     };
 
     private static UriMatcher sUriMatcher = null;

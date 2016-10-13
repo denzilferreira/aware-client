@@ -29,7 +29,7 @@ public class SSLUtils {
     public SSLSocketFactory getSocketFactory( String host ) {
         try {
             //load SSL certificate
-            InputStream crt = SSLManager.getCA(mContext, host);
+            InputStream crt = SSLManager.getCertificate(mContext, host);
 
             //Load SSL public certificate so we can talk with the server
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
