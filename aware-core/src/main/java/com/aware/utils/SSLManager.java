@@ -173,7 +173,16 @@ public class SSLManager extends IntentService {
             Log.d(Aware.TAG, "crt_sha256=" + crt_sha256);
         }
 
-        if (crt != null && crt_url != null) {
+        // There are two independent options here.  crt can have the binary data directly, or it
+        // can be downloaded from crt_url.  These are mutually exclusive
+        if (crt != null) {
+            // Nop: crt already contains the binary crt data, use it directly.
+            // This block is here only to make the logic immediately clear, so that
+            // in the future, should this need to be adjusted, both cases can be handling.
+            // If this was not here, there wolud have to be an extra conditional in the
+            // else clause (making it an elif), so instead we make the logic directly obvious.
+            //crt = crt;
+        } else if (crt_url != null) {
             try {
                 InputStream crt_stream = new URL(crt_url).openStream();
                 // Convert input stream to String
@@ -187,6 +196,9 @@ public class SSLManager extends IntentService {
                 br.close();
                 // Final result that we actually need.
                 crt = sb.toString();
+                if (Aware.DEBUG) {
+                    Log.d(Aware.TAG, "Downloaded crt=" + crt);
+                }
             } catch (IOException e) {
                 Log.e(Aware.TAG, "Certificates: Can not download crt: " + crt_url);
                 // TODO: error handling
@@ -195,7 +207,7 @@ public class SSLManager extends IntentService {
         } else {
             // TODO: error handling
             Log.e(Aware.TAG, "Certificates: Both crt and crt_url are null: ");
-            return ;
+            return;
         }
 
         // Validate certificate using hash
