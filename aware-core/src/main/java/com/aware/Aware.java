@@ -411,6 +411,16 @@ public class Aware extends Service {
     }
 
     /**
+     * Identifies if the user can modify the sensors while on a study
+     * @param c
+     * @return
+     */
+    public static boolean isLocked(Context c) {
+
+        return false;
+    }
+
+    /**
      * Fetch the cursor for a study, given the study URL
      *
      * @param c
