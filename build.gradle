@@ -2,7 +2,7 @@
 project.ext {
     support_libs = (System.getenv("support_libs") as String ?: "24.2.1")
     google_libs = (System.getenv("google_libs") ?: "9.6.1")
-    version_code = 500 + (System.getenv("BUILD_NUMBER") as Integer ?: 0)
+    version_code = (500 - (System.getenv("development") as Boolean ? 500 : 0)) + (System.getenv("BUILD_NUMBER") as Integer ?: 0)
     version_readable = "4.0." + version_code
     aware_libs = (System.getenv("aware_libs") as String ?: "4.0.+")
 }
