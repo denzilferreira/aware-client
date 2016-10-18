@@ -1,7 +1,6 @@
 
 package com.aware;
 
-import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -31,7 +30,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.security.KeyChain;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -61,12 +59,8 @@ import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -418,6 +412,18 @@ public class Aware extends Service {
     public static boolean isLocked(Context c) {
 
         return false;
+    }
+
+    public static void debug(Context c, String message) {
+        ContentValues log = new ContentValues();
+        log.put(Aware_Provider.Aware_Log.LOG_TIMESTAMP, System.currentTimeMillis());
+        log.put(Aware_Provider.Aware_Log.LOG_DEVICE_ID, Aware.getSetting(c, Aware_Preferences.DEVICE_ID));
+        log.put(Aware_Provider.Aware_Log.LOG_MESSAGE, message);
+
+        if (Aware.DEBUG)
+            Log.d(TAG, "Aware_Log: \n" + log.toString());
+
+        c.getContentResolver().insert(Aware_Provider.Aware_Log.CONTENT_URI, log);
     }
 
     /**
@@ -1393,6 +1399,55 @@ public class Aware extends Service {
                 if (extras.getBoolean(Intent.EXTRA_REPLACING)) {
                     if (Aware.DEBUG) Log.d(TAG, packageName + " is updating!");
 
+                    //Check study compliance
+                    if (Aware.isStudy(context)) {
+                        Cursor studyInfo = Aware.getStudy(context, Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SERVER));
+                        if (studyInfo != null && studyInfo.moveToFirst()) {
+                            try {
+                                JSONArray studyConfig = new JSONArray(studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                                JSONArray plugins = new JSONArray();
+                                for (int i = 0; i < studyConfig.length(); i++) {
+                                    try {
+                                        JSONObject element = studyConfig.getJSONObject(i);
+                                        if (element.has("plugins")) {
+                                            plugins = element.getJSONArray("plugins");
+                                        }
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                for (int j = 0; j < plugins.length(); j++) {
+                                    JSONObject plugin_config = plugins.getJSONObject(j);
+                                    String package_name = plugin_config.getString("plugin");
+
+                                    //Log the updated plugin
+                                    if (package_name.equalsIgnoreCase(packageName)) {
+                                        ContentValues complianceEntry = new ContentValues();
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_KEY, studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_API, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_API)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_URL, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_URL)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, studyInfo.getLong(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "updated plugin: "+ package_name);
+
+                                        context.getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
+
+                                        if (Aware.DEBUG)
+                                            Log.d(Aware.TAG, "Study compliance check: " + complianceEntry.toString());
+                                    }
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        if (studyInfo != null && ! studyInfo.isClosed()) studyInfo.close();
+                    }
+
                     ContentValues rowData = new ContentValues();
                     rowData.put(Aware_Plugins.PLUGIN_VERSION, PluginsManager.getPluginVersion(context, packageName));
                     rowData.put(Aware_Plugins.PLUGIN_ICON, PluginsManager.getPluginIcon(context, packageName));
@@ -1432,6 +1487,55 @@ public class Aware extends Service {
 
                     if (Aware.DEBUG)
                         Log.d(TAG, "AWARE plugin added and activated:" + app.packageName);
+
+                    //Check study compliance
+                    if (Aware.isStudy(context)) {
+                        Cursor studyInfo = Aware.getStudy(context, Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SERVER));
+                        if (studyInfo != null && studyInfo.moveToFirst()) {
+                            try {
+                                JSONArray studyConfig = new JSONArray(studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                                JSONArray plugins = new JSONArray();
+                                for (int i = 0; i < studyConfig.length(); i++) {
+                                    try {
+                                        JSONObject element = studyConfig.getJSONObject(i);
+                                        if (element.has("plugins")) {
+                                            plugins = element.getJSONArray("plugins");
+                                        }
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                for (int j = 0; j < plugins.length(); j++) {
+                                    JSONObject plugin_config = plugins.getJSONObject(j);
+                                    String package_name = plugin_config.getString("plugin");
+
+                                    //Participant installed necessary plugin
+                                    if (package_name.equalsIgnoreCase(packageName)) {
+                                        ContentValues complianceEntry = new ContentValues();
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_KEY, studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_API, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_API)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_URL, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_URL)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, studyInfo.getLong(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "installed plugin: "+ package_name);
+
+                                        context.getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
+
+                                        if (Aware.DEBUG)
+                                            Log.d(Aware.TAG, "Study compliance check: " + complianceEntry.toString());
+                                    }
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        if (studyInfo != null && ! studyInfo.isClosed()) studyInfo.close();
+                    }
 
                     Aware.startPlugin(context, app.packageName);
 

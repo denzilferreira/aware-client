@@ -79,9 +79,7 @@ public class Aware_Plugin extends Service {
 
         TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length()>0?Aware.getSetting(getApplicationContext(),Aware_Preferences.DEBUG_TAG):TAG;
         DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
-        
-        if( DEBUG ) Log.d(TAG, TAG + " plugin created!");
-        
+
         //Register Context Broadcaster
         IntentFilter filter = new IntentFilter();
         filter.addAction(Aware.ACTION_AWARE_CURRENT_CONTEXT);
@@ -101,8 +99,16 @@ public class Aware_Plugin extends Service {
             study_SSL.putExtra(SSLManager.EXTRA_SERVER, Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
             startService(study_SSL);
         }
+
+        Aware.debug(this, "created: " + getClass().getName());
     }
-    
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Aware.debug(this, "active: " + getClass().getName());
+        return super.onStartCommand(intent, flags, startId);
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -111,10 +117,9 @@ public class Aware_Plugin extends Service {
         if( contextBroadcaster != null ) {
             unregisterReceiver(contextBroadcaster);
         }
-
         if( aware != null ) stopService(aware);
 
-        if(DEBUG) Log.d(TAG, TAG + " plugin terminated...");
+        Aware.debug(this, "destroyed: " + getClass().getName());
     }
 
     /**

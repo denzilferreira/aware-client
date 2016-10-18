@@ -54,7 +54,7 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
     private static Handler sensorHandler = null;
     private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
-    private static int FIFO_SIZE = 0;
+//    private static int FIFO_SIZE = 0;
     private static float LAST_VALUE_0 = 0;
     private static float LAST_VALUE_1 = 0;
     private static float LAST_VALUE_2 = 0;
@@ -203,7 +203,7 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
 
         mMagnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        FIFO_SIZE = mMagnetometer.getFifoReservedEventCount();
+//        FIFO_SIZE = mMagnetometer.getFifoReservedEventCount();
 
         DATABASE_TABLES = Magnetometer_Provider.DATABASE_TABLES;
         TABLES_FIELDS = Magnetometer_Provider.TABLES_FIELDS;
@@ -273,7 +273,8 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
                         || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_MAGNETOMETER))) {
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mMagnetometer);
-                    mSensorManager.registerListener(this, mMagnetometer, Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER)), FIFO_SIZE, sensorHandler);
+//                    mSensorManager.registerListener(this, mMagnetometer, Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER)), FIFO_SIZE, sensorHandler);
+                    mSensorManager.registerListener(this, mMagnetometer, Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER)), sensorHandler);
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER));
                     THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_MAGNETOMETER));

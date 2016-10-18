@@ -283,6 +283,8 @@ public class Applications extends AccessibilityService {
         updateApps = new Intent(getApplicationContext(), BackgroundService.class);
         updateApps.setAction(ACTION_AWARE_APPLICATIONS_HISTORY);
         repeatingIntent = PendingIntent.getService(getApplicationContext(), 0, updateApps, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Aware.debug(this, "created: " + getClass().getName());
     }
 
     @Override
@@ -366,6 +368,8 @@ public class Applications extends AccessibilityService {
             if (Aware.DEBUG) Log.d(TAG, "Applications Background: " + FREQUENCY + "s check");
         }
 
+        Aware.debug(this, "active: " + getClass().getName());
+
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -376,6 +380,8 @@ public class Applications extends AccessibilityService {
         try {
             unregisterReceiver(awareMonitor);
         } catch (IllegalArgumentException e) {}
+
+        Aware.debug(this, "destroyed: " + getClass().getName());
     }
 
     private synchronized static boolean isAccessibilityEnabled(Context c) {

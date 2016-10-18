@@ -17,6 +17,7 @@ import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -53,7 +54,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     private static PowerManager powerManager;
     private static PowerManager.WakeLock wakeLock = null;
     private static String LABEL = "";
-    private static int FIFO_SIZE = 0;
+//    private static int FIFO_SIZE = 0;
     private static float LAST_VALUE_0 = 0;
     private static float LAST_VALUE_1 = 0;
     private static float LAST_VALUE_2 = 0;
@@ -108,7 +109,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         // Proceed with saving as usual.
         ContentValues rowData = new ContentValues();
         rowData.put(Accelerometer_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-        rowData.put(Accelerometer_Data.TIMESTAMP, System.currentTimeMillis());
+        rowData.put(Accelerometer_Data.TIMESTAMP, System.currentTimeMillis()); //convert from nano to milliseconds
         rowData.put(Accelerometer_Data.VALUES_0, event.values[0]);
         rowData.put(Accelerometer_Data.VALUES_1, event.values[1]);
         rowData.put(Accelerometer_Data.VALUES_2, event.values[2]);
@@ -205,7 +206,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        FIFO_SIZE = mAccelerometer.getFifoReservedEventCount();
+//        FIFO_SIZE = mAccelerometer.getFifoReservedEventCount();
 
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
@@ -273,7 +274,8 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
                         || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ACCELEROMETER))) {
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mAccelerometer);
-                    mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), FIFO_SIZE, sensorHandler);
+//                    mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), FIFO_SIZE, sensorHandler);
+                    mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), sensorHandler);
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER));
                     THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ACCELEROMETER));

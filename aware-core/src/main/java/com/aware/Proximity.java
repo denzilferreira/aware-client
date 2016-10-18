@@ -49,7 +49,7 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
     private static Handler sensorHandler = null;
     private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
-    private static int FIFO_SIZE = 0;
+//    private static int FIFO_SIZE = 0;
     private static float LAST_VALUE_0 = 0;
     private static int FREQUENCY = -1;
     private static double THRESHOLD = 0;
@@ -196,7 +196,7 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
 
         mProximity = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-        FIFO_SIZE = mProximity.getFifoReservedEventCount();
+//        FIFO_SIZE = mProximity.getFifoReservedEventCount();
 
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
@@ -266,7 +266,8 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
                         || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_PROXIMITY))) {
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mProximity);
-                    mSensorManager.registerListener(this, mProximity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY)), FIFO_SIZE, sensorHandler);
+//                    mSensorManager.registerListener(this, mProximity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY)), FIFO_SIZE, sensorHandler);
+                    mSensorManager.registerListener(this, mProximity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY)), sensorHandler);
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY));
                     THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_PROXIMITY));

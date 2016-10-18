@@ -56,7 +56,7 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
     private static Handler sensorHandler = null;
     private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
-    private static int FIFO_SIZE = 0;
+//    private static int FIFO_SIZE = 0;
     private static float LAST_VALUE_0 = 0;
     private static int FREQUENCY = -1;
     private static double THRESHOLD = 0;
@@ -258,7 +258,7 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
                 DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
                 Aware.setSetting(this, Aware_Preferences.STATUS_TEMPERATURE, true);
 
-                FIFO_SIZE = mTemperature.getFifoReservedEventCount();
+//                FIFO_SIZE = mTemperature.getFifoReservedEventCount();
                 saveSensorDevice(mTemperature);
 
                 if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_TEMPERATURE).length() == 0) {
@@ -273,7 +273,8 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
                         || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_TEMPERATURE))) {
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mTemperature);
-                    mSensorManager.registerListener(this, mTemperature, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE)), FIFO_SIZE, sensorHandler);
+//                    mSensorManager.registerListener(this, mTemperature, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE)), FIFO_SIZE, sensorHandler);
+                    mSensorManager.registerListener(this, mTemperature, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE)), sensorHandler);
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE));
                     THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_TEMPERATURE));
