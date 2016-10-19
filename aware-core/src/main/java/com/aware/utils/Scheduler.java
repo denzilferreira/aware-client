@@ -161,6 +161,22 @@ public class Scheduler extends Service {
     }
 
     /**
+     * Allow for setting predetermined schedules from MQTT, study configs or other applications
+     * @param schedules
+     */
+    public static void setSchedules(Context c, JSONArray schedules) {
+        for (int i = 0; i < schedules.length(); i++) {
+            try {
+                JSONObject schedule = schedules.getJSONObject(i);
+                Schedule s = new Schedule(schedule);
+                saveSchedule(c, s);
+            } catch (JSONException e) {
+                if (Aware.DEBUG) Log.d(Scheduler.TAG, "Error in JSON: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
      * Scheduler object that contains<br/>
      * - schedule ID<br/>
      * - schedule action<br/>
