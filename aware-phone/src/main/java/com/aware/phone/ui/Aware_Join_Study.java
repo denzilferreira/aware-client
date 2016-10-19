@@ -77,6 +77,11 @@ public class Aware_Join_Study extends Aware_Activity {
         study_url = getIntent().getStringExtra(EXTRA_STUDY_URL);
 
         Cursor qry = Aware.getStudy(this, study_url);
+        if (qry == null || !qry.moveToFirst()) {
+            Toast.makeText(Aware_Join_Study.this, "Error getting study information.", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+
         if (qry != null && qry.moveToFirst()) {
             try {
                 study_configs = new JSONArray(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
@@ -88,11 +93,6 @@ public class Aware_Join_Study extends Aware_Activity {
             }
         }
         if (qry != null && !qry.isClosed()) qry.close();
-
-        if (qry == null || !qry.moveToFirst()) {
-            Toast.makeText(Aware_Join_Study.this, "Error getting study information.", Toast.LENGTH_SHORT).show();
-            finish();
-        }
 
         if (study_configs != null) {
             populateStudyInfo(study_configs);
