@@ -1232,6 +1232,7 @@ public class Aware extends Service {
                     //Apply study settings
                     JSONArray plugins = new JSONArray();
                     JSONArray sensors = new JSONArray();
+                    JSONArray schedulers = new JSONArray();
 
                     for (int i = 0; i < study_config.length(); i++) {
                         try {
@@ -1241,6 +1242,9 @@ public class Aware extends Service {
                             }
                             if (element.has("sensors")) {
                                 sensors = element.getJSONArray("sensors");
+                            }
+                            if (element.has("schedulers")) {
+                                schedulers = element.getJSONArray("schedulers");
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -1275,6 +1279,10 @@ public class Aware extends Service {
                             e.printStackTrace();
                         }
                     }
+
+                    //Set schedulers
+                    if (schedulers.length() > 0)
+                        Scheduler.setSchedules(getApplicationContext(), schedulers);
 
                     //Start bundled plugins
                     for (String p : active_plugins) {

@@ -62,11 +62,9 @@ public class StudyUtils extends IntentService {
         if (Aware.DEBUG) Log.d(Aware.TAG, "Joining: " + full_url);
 
         Uri study_uri = Uri.parse(full_url);
-        // New study URL, chopping off query parameters.
-        String protocol = study_uri.getScheme();
-        String study_host = protocol + "://" + study_uri.getHost();  // misnomer: protocol+host
-        List<String> path_segments = study_uri.getPathSegments();
 
+        List<String> path_segments = study_uri.getPathSegments();
+        String protocol = study_uri.getScheme();
         String study_api_key = path_segments.get(path_segments.size() - 1);
         String study_id = path_segments.get(path_segments.size() - 2);
 
@@ -238,6 +236,7 @@ public class StudyUtils extends IntentService {
         //Now apply the new settings
         JSONArray plugins = new JSONArray();
         JSONArray sensors = new JSONArray();
+        JSONArray schedulers = new JSONArray();
 
         for (int i = 0; i < configs.length(); i++) {
             try {
@@ -247,6 +246,9 @@ public class StudyUtils extends IntentService {
                 }
                 if (element.has("sensors")) {
                     sensors = element.getJSONArray("sensors");
+                }
+                if (element.has("schedulers")) {
+                    schedulers = element.getJSONArray("schedulers");
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -281,6 +283,10 @@ public class StudyUtils extends IntentService {
                 e.printStackTrace();
             }
         }
+
+        //Set schedulers
+        if (schedulers.length() > 0)
+            Scheduler.setSchedules(context, schedulers);
 
         for(String package_name : active_plugins) {
             PackageInfo installed = PluginsManager.isInstalled(context, package_name);

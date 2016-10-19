@@ -114,6 +114,36 @@ public class Scheduler extends Service {
     }
 
     /**
+     * Allow setting a schedule for a specific package (e.g., plugin-specific schedulers)
+     * @param context
+     * @param schedule
+     * @param package_name
+     */
+    public static void saveSchedule(Context context, Schedule schedule, String package_name) {
+        try {
+            ContentValues data = new ContentValues();
+            data.put(Scheduler_Provider.Scheduler_Data.TIMESTAMP, System.currentTimeMillis());
+            data.put(Scheduler_Provider.Scheduler_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
+            data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID, schedule.getScheduleID());
+            data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE, schedule.build().toString());
+            data.put(Scheduler_Provider.Scheduler_Data.PACKAGE_NAME, package_name);
+
+            Cursor schedules = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+            if (schedules != null && schedules.getCount() == 1) {
+                Log.d(Aware.TAG, "Updating already existing schedule...");
+                context.getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+            } else {
+                Log.d(Aware.TAG, "New schedule: " + data.toString());
+                context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
+            }
+            if (schedules != null && !schedules.isClosed()) schedules.close();
+
+        } catch (JSONException e) {
+            Log.e(Aware.TAG, "Error saving schedule");
+        }
+    }
+
+    /**
      * Remove previously defined schedule
      *
      * @param context
@@ -128,6 +158,16 @@ public class Scheduler extends Service {
         boolean is_global = global_settings.contains(schedule_id);
 
         context.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + ((is_global) ? "com.aware.phone" : context.getPackageName()) + "'", null);
+    }
+
+    /**
+     * Allow removing a schedule for a specific package
+     * @param context
+     * @param schedule_id
+     * @param package_name
+     */
+    public static void removeSchedule(Context context, String schedule_id, String package_name) {
+        context.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + package_name + "'", null);
     }
 
     /**
@@ -161,15 +201,38 @@ public class Scheduler extends Service {
     }
 
     /**
+     * Allow retrieving a schedule for a specific package
+     * @param context
+     * @param schedule_id
+     * @param package_name
+     * @return
+     */
+    public static Schedule getSchedule(Context context, String schedule_id, String package_name) {
+        Schedule output = null;
+        Cursor scheduleData = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+        if (scheduleData != null && scheduleData.moveToFirst()) {
+            try {
+                JSONObject jsonSchedule = new JSONObject(scheduleData.getString(scheduleData.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE)));
+                output = new Schedule(jsonSchedule);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            scheduleData.close();
+        }
+        return output;
+    }
+
+    /**
      * Allow for setting predetermined schedules from MQTT, study configs or other applications
+     * JSONArray contains an object with two variables: schedule and package
      * @param schedules
      */
     public static void setSchedules(Context c, JSONArray schedules) {
         for (int i = 0; i < schedules.length(); i++) {
             try {
                 JSONObject schedule = schedules.getJSONObject(i);
-                Schedule s = new Schedule(schedule);
-                saveSchedule(c, s);
+                Schedule s = new Schedule(schedule.getJSONObject("schedule"));
+                saveSchedule(c, s, schedule.getString("package"));
             } catch (JSONException e) {
                 if (Aware.DEBUG) Log.d(Scheduler.TAG, "Error in JSON: " + e.getMessage());
             }
