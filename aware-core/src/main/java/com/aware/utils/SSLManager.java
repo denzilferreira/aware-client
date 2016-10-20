@@ -77,6 +77,7 @@ public class SSLManager extends IntentService {
         // " " and "+" are %-encoded.
         Uri study_uri = Uri.parse(url);
         String hostname = study_uri.getHost();
+
         if (study_uri.getQuery() != null) {
             // If it is in URL parameters, always unconditionally handle it
             String crt = study_uri.getQueryParameter("crt");
@@ -121,6 +122,12 @@ public class SSLManager extends IntentService {
             cert_host = "awareframework.com";
         } else cert_host = hostname;
 
+        //Fix: delete old certificate, get always newest
+        File cert = new File(context.getExternalFilesDir(null) + "/Documents/credentials/" + hostname + "/server.crt");
+        boolean deleted = cert.delete();
+        if (deleted && Aware.DEBUG)
+            Log.d(Aware.TAG, "Renew certificates...");
+
         Future https = Ion.with(context.getApplicationContext())
                 .load("http://" + cert_host + "/public/server.crt")
                 .write(new File(context.getExternalFilesDir(null) + "/Documents/credentials/" + hostname + "/server.crt"))
@@ -132,21 +139,9 @@ public class SSLManager extends IntentService {
                         }
                     }
                 });
-//        Future ca = Ion.with(context.getApplicationContext())
-//                .load("http://" + cert_host + "/public/ca.crt")
-//                .write(new File(context.getExternalFilesDir(null) + "/Documents/credentials/" + hostname + "/ca.crt"))
-//                .setCallback(new FutureCallback<File>() {
-//                    @Override
-//                    public void onCompleted(Exception e, File result) {
-//                        if( e == null ) {
-//                            Log.d(Aware.TAG, "CA certificate: " + result.toString());
-//                        }
-//                    }
-//                });
         if (block) {
             try {
                 https.get();
-//                ca.get();
             } catch (java.lang.InterruptedException | ExecutionException e) {
                 // What to do here?
             }

@@ -210,9 +210,6 @@ public class WebserviceHelper extends IntentService {
                             || DATABASE_TABLE.equalsIgnoreCase("aware_studies"))
                         study_condition = "";
 
-                    if (DEBUG)
-                        Log.d(Aware.TAG, "Study config: " + study_condition + " in " + DATABASE_TABLE);
-
                     JSONArray remoteData = new JSONArray(latest);
 
                     int TOTAL_RECORDS = 0;
@@ -263,8 +260,6 @@ public class WebserviceHelper extends IntentService {
                     }
 
                     if (TOTAL_RECORDS == 0) {
-                        if (DEBUG)
-                            Log.d(Aware.TAG, TOTAL_RECORDS + " records in " + DATABASE_TABLE + " [done]");
                         return; //nothing to upload, no need to do anything now.
                     }
 

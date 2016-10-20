@@ -7,7 +7,10 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.ContentObserver;
 import android.database.Cursor;
+import android.net.Uri;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.util.Log;
@@ -21,6 +24,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -45,13 +49,16 @@ public class Scheduler extends Service {
     public static final String TRIGGER_WEEKDAY = "weekday";
     public static final String TRIGGER_MONTH = "month";
     public static final String TRIGGER_CONTEXT = "context";
-    public static final String TRIGGER_CONDITION = "condition"; //TODO
+    public static final String TRIGGER_CONDITION = "condition";
     public static final String TRIGGER_RANDOM = "random";
 
     public static final int RANDOM_TYPE_HOUR = 0;
     public static final int RANDOM_TYPE_WEEKDAY = 1;
     public static final int RANDOM_TYPE_MONTH = 2;
     public static final int RANDOM_TYPE_MINUTE = 3;
+
+    public static final String CONDITION_URI = "condition_uri";
+    public static final String CONDITION_WHERE = "condition_where";
 
     public static final String RANDOM_MINUTE = "random_minute";
     public static final String RANDOM_HOUR = "random_hour";
@@ -115,6 +122,7 @@ public class Scheduler extends Service {
 
     /**
      * Allow setting a schedule for a specific package (e.g., plugin-specific schedulers)
+     *
      * @param context
      * @param schedule
      * @param package_name
@@ -162,6 +170,7 @@ public class Scheduler extends Service {
 
     /**
      * Allow removing a schedule for a specific package
+     *
      * @param context
      * @param schedule_id
      * @param package_name
@@ -202,6 +211,7 @@ public class Scheduler extends Service {
 
     /**
      * Allow retrieving a schedule for a specific package
+     *
      * @param context
      * @param schedule_id
      * @param package_name
@@ -225,13 +235,14 @@ public class Scheduler extends Service {
     /**
      * Allow for setting predetermined schedules from MQTT, study configs or other applications
      * JSONArray contains an object with two variables: schedule and package
+     *
      * @param schedules
      */
     public static void setSchedules(Context c, JSONArray schedules) {
         for (int i = 0; i < schedules.length(); i++) {
             try {
                 JSONObject schedule = schedules.getJSONObject(i);
-                Schedule s = new Schedule(schedule.getJSONObject("schedule"));
+                Schedule s = new Schedule(schedule);
                 saveSchedule(c, s, schedule.getString("package"));
             } catch (JSONException e) {
                 if (Aware.DEBUG) Log.d(Scheduler.TAG, "Error in JSON: " + e.getMessage());
@@ -473,6 +484,22 @@ public class Scheduler extends Service {
             return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONObject(TRIGGER_RANDOM);
         }
 
+        public Schedule addCondition(Uri content_uri, String where) throws JSONException {
+            JSONArray conditions = getConditions();
+            JSONObject condition = new JSONObject();
+            condition.put(CONDITION_URI, content_uri.toString());
+            condition.put(CONDITION_WHERE, where);
+            conditions.put(condition);
+            return this;
+        }
+
+        public JSONArray getConditions() throws JSONException {
+            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_CONDITION)) {
+                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_CONDITION, new JSONArray());
+            }
+            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_CONDITION);
+        }
+
         /**
          * Listen for this contextual broadcast to trigger this schedule
          *
@@ -567,12 +594,47 @@ public class Scheduler extends Service {
                             if (Aware.DEBUG)
                                 Log.d(Aware.TAG, "Registered a contextual trigger for " + contexts.toString());
                         }
-                    } else {
-                        if (is_trigger(schedule)) {
-                            if (Aware.DEBUG)
-                                Log.d(Aware.TAG, "Triggering scheduled task: " + schedule.toString());
-                            performAction(schedule);
+                    }
+                    if (schedule.getConditions().length() > 0) {
+
+                        final JSONArray conditions = schedule.getConditions();
+
+                        if (Aware.DEBUG)
+                            Log.d(Aware.TAG, "Checking conditional triggers: " + conditions.toString());
+
+                        Boolean[] triggered = new Boolean[conditions.length()];
+                        for (int i = 0; i < conditions.length(); i++) {
+                            JSONObject condition = conditions.getJSONObject(i);
+
+                            Uri content_uri = Uri.parse(condition.getString(CONDITION_URI));
+                            String content_where = condition.getString(CONDITION_WHERE);
+
+                            Cursor result = getContentResolver().query(content_uri, null, content_where, null, "timestamp DESC LIMIT 1");
+                            if (result == null || ! result.moveToFirst()) {
+                                triggered[i] = false;
+                            } else {
+                                triggered[i] = true;
+                            }
+                            if (result != null && ! result.isClosed()) result.close();
                         }
+
+                        //Do we have a failed condition?
+                        if (!Arrays.asList(triggered).contains(false)) {
+                            if (Aware.DEBUG)
+                                Log.d(Aware.TAG, "ALL conditional triggers are true: " + triggered.toString());
+
+                            performAction(schedule);
+                            return super.onStartCommand(intent, flags, startId);
+                        } else {
+                            if (Aware.DEBUG)
+                                Log.d(Aware.TAG, "Failed to match all conditional triggers: " + triggered.toString());
+                        }
+                    }
+
+                    if (is_trigger(schedule)) {
+                        if (Aware.DEBUG)
+                            Log.d(Aware.TAG, "Triggering scheduled task: " + schedule.toString());
+                        performAction(schedule);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -624,7 +686,7 @@ public class Scheduler extends Service {
             if (schedule.getTimer() != -1 && last_triggered == 0) { //not been triggered yet
                 if (Aware.DEBUG)
                     Log.d(Aware.TAG, "Checking trigger set for a specific timestamp: " + schedule.getTimer());
-                if ( Math.abs(now.getTimeInMillis()-schedule.getTimer()) < 5 * 60 * 1000)
+                if (Math.abs(now.getTimeInMillis() - schedule.getTimer()) < 5 * 60 * 1000)
                     return true; //trigger within a 5-minute window
             }
 
@@ -745,7 +807,7 @@ public class Scheduler extends Service {
     }
 
     private boolean is_interval_elapsed(Calendar date_one, Calendar date_two, long required_minutes) {
-        long elapsed = (date_one.getTimeInMillis()-date_two.getTimeInMillis())/1000/60;
+        long elapsed = (date_one.getTimeInMillis() - date_two.getTimeInMillis()) / 1000 / 60;
         if (Aware.DEBUG)
             Log.d(Aware.TAG, "Checking interval elapsed: " + elapsed + " vs " + required_minutes + " minutes elapsed");
         return (elapsed >= required_minutes);
@@ -1068,7 +1130,7 @@ public class Scheduler extends Service {
                         valid_random = false;
                     }
                 }
-                if(valid_random) {
+                if (valid_random) {
                     randomList.add(random);
                 }
             }

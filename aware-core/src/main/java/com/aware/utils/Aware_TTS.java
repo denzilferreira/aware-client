@@ -22,6 +22,7 @@ public class Aware_TTS extends Service implements OnInitListener {
     private TextToSpeech tts;
     private boolean ready = false;
     private String text;
+    private String package_requester;
 
     /**
      * Speak the given text
@@ -62,6 +63,10 @@ public class Aware_TTS extends Service implements OnInitListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if( intent != null ) {
             text = intent.getStringExtra(EXTRA_TTS_TEXT);
+            package_requester = intent.getStringExtra(EXTRA_TTS_REQUESTER);
+
+            if (!getPackageName().equalsIgnoreCase(package_requester)) return super.onStartCommand(intent, flags, startId);
+
             if( tts != null && text != null && text.length() > 0 ) {
                 speak(intent.getStringExtra(EXTRA_TTS_TEXT));
             }

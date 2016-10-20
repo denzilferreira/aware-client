@@ -36,6 +36,7 @@ import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.json.JSONArray;
+import org.json.JSONException;
 
 /**
  * Service that connects to the MQTT P2P network for AWARE
@@ -189,24 +190,29 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
             if (studyInfo != null && ! studyInfo.isClosed()) studyInfo.close();
         }
 
-        if (topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/broadcasts") || topic.equals(study_id + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/broadcasts")) {
+        if (topic.equalsIgnoreCase(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/broadcasts") || topic.equalsIgnoreCase(study_id + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/broadcasts")) {
             Intent broadcast = new Intent(message.toString());
             mContext.sendBroadcast(broadcast);
         }
 
-        if (topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/esm") || topic.equals(study_id + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/esm")) {
+        if (topic.equalsIgnoreCase(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/esm") || topic.equalsIgnoreCase(study_id + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/esm")) {
             Intent queueESM = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
             queueESM.putExtra(ESM.EXTRA_ESM, message.toString());
             mContext.sendBroadcast(queueESM);
         }
 
-        if (topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/configuration") || topic.equals(study_id + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/configuration")) {
+        if (topic.equalsIgnoreCase(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/configuration") || topic.equalsIgnoreCase(study_id + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/configuration")) {
             JSONArray configs = new JSONArray(message.toString());
             Aware.tweakSettings(mContext, configs);
         }
 
-        if (topic.equals(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/schedulers") || topic.equals(study_id + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/schedulers")) {
+        if (topic.equalsIgnoreCase(Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/schedulers") || topic.equalsIgnoreCase(study_id + "/" + Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID) + "/schedulers")) {
             JSONArray schedules = new JSONArray(message.toString());
+            try {
+                Log.d(TAG, "Setting schedules: " + schedules.toString(5));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
             Scheduler.setSchedules(mContext, schedules);
         }
     }
@@ -414,6 +420,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         MQTT_OPTIONS.setCleanSession(false); //resume pending messages from server
         MQTT_OPTIONS.setConnectionTimeout(Integer.parseInt(MQTT_KEEPALIVE) + 10); //add 10 seconds to keep alive as options timeout
         MQTT_OPTIONS.setKeepAliveInterval(Integer.parseInt(MQTT_KEEPALIVE));
+        MQTT_OPTIONS.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
 
         if (MQTT_USERNAME.length() > 0)
             MQTT_OPTIONS.setUserName(MQTT_USERNAME);
