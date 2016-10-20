@@ -2,21 +2,18 @@ package com.aware.utils;
 
 import android.app.IntentService;
 import android.app.NotificationManager;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.ContentResolverCompat;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
-import com.aware.BuildConfig;
 import com.aware.R;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
@@ -105,7 +102,6 @@ public class DownloadPluginService extends IntentService {
                 notManager.notify(notID, mBuilder.build());
 
                 if( protocol.equals("https") ) { //Load SSL public certificate so we can talk with server
-
                     CertificateFactory cf = CertificateFactory.getInstance("X.509");
                     InputStream caInput = SSLManager.getHTTPS(getApplicationContext(), study_url);
                     Certificate ca = cf.generateCertificate(caInput);
@@ -130,8 +126,8 @@ public class DownloadPluginService extends IntentService {
                             .getHttpClient()
                             .getSSLSocketMiddleware().setSSLContext(sslContext);
                 }
-                Ion.with(getApplicationContext())
-                        .load(package_url)
+
+                Ion.with(getApplicationContext()).load(package_url).noCache()
                         .write(new File(Environment.getExternalStoragePublicDirectory("AWARE/plugins/" + json_package.getString("package_name")).toString()))
                         .setCallback(new FutureCallback<File>() {
                             @Override

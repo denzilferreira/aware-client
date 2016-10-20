@@ -17,6 +17,7 @@ import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
@@ -32,6 +33,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.aware.Applications;
 import com.aware.Aware;
@@ -39,8 +41,12 @@ import com.aware.Aware_Preferences;
 import com.aware.phone.ui.Aware_Activity;
 import com.aware.phone.ui.Aware_Join_Study;
 import com.aware.ui.PermissionsHandler;
+import com.aware.utils.Https;
+import com.aware.utils.SSLManager;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -2084,7 +2090,7 @@ public class Aware_Client extends Aware_Activity {
         device_label.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Aware.setSetting(awareContext, Aware_Preferences.DEVICE_LABEL, (String) newValue);
+                Aware.setSetting(awareContext, Aware_Preferences.DEVICE_LABEL, newValue);
                 device_label.setSummary(Aware.getSetting(awareContext, Aware_Preferences.DEVICE_LABEL));
                 return true;
             }
@@ -2132,10 +2138,45 @@ public class Aware_Client extends Aware_Activity {
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 Aware.setSetting(awareContext, Aware_Preferences.AWARE_DONATE_USAGE, aware_donate_usage.isChecked());
+                if (aware_donate_usage.isChecked()) {
+                    Toast.makeText(awareContext, "Thanks!", Toast.LENGTH_SHORT).show();
+                    new AsyncPing().execute();
+                }
                 return true;
             }
         });
         // Users can always choose to donate data, even if in a study.
         //if (Aware.isStudy(awareContext)) aware_donate_data.setSelectable(false);
+    }
+
+    private class AsyncPing extends AsyncTask<Void, Void, Boolean> {
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            // Download the certificate, and block since we are already running in background
+            // and we need the certificate immediately.
+            SSLManager.downloadCertificate(awareContext, "api.awareframework.com", true);
+
+            //Ping AWARE's server with awareContext device's information for framework's statistics log
+            Hashtable<String, String> device_ping = new Hashtable<>();
+            device_ping.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID));
+            device_ping.put("ping", String.valueOf(System.currentTimeMillis()));
+            device_ping.put("platform", "android");
+            try {
+                PackageInfo package_info = awareContext.getPackageManager().getPackageInfo(awareContext.getPackageName(), 0);
+                device_ping.put("package_name", package_info.packageName);
+                if (package_info.packageName.equals("com.aware.phone")) {
+                    device_ping.put("package_version_code", String.valueOf(package_info.versionCode));
+                    device_ping.put("package_version_name", String.valueOf(package_info.versionName));
+                }
+            } catch (PackageManager.NameNotFoundException e) {
+            }
+
+            try {
+                new Https(awareContext, SSLManager.getHTTPS(getApplicationContext(), "https://api.awareframework.com/index.php")).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            return true;
+        }
     }
 }
