@@ -1817,9 +1817,7 @@ public class Aware extends Service {
             startKeyboard(awareContext);
         } else stopKeyboard(awareContext);
 
-        //Start task scheduler
-        scheduler = new Intent(awareContext, Scheduler.class);
-        awareContext.startService(scheduler);
+        startScheduler(awareContext);
     }
 
     /**
@@ -1852,7 +1850,18 @@ public class Aware extends Service {
         stopESM(awareContext);
         stopInstallations(awareContext);
         stopKeyboard(awareContext);
-        awareContext.stopService(scheduler);
+        stopScheduler(awareContext);
+    }
+
+    public static void startScheduler(Context context) {
+        awareContext = context;
+        if (scheduler == null) scheduler = new Intent(awareContext, Scheduler.class);
+        awareContext.startService(scheduler);
+    }
+
+    public static void stopScheduler(Context context) {
+        awareContext = context;
+        if (scheduler!=null) awareContext.stopService(scheduler);
     }
 
     /**

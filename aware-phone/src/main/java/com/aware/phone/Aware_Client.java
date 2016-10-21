@@ -184,6 +184,7 @@ public class Aware_Client extends Aware_Activity {
         } else {
             Intent permissionsHandler = new Intent(this, PermissionsHandler.class);
             permissionsHandler.putStringArrayListExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
+            permissionsHandler.putExtra(PermissionsHandler.EXTRA_REDIRECT_ACTIVITY, getPackageName() + "/" + getClass().getName());
             startActivityForResult(permissionsHandler, PermissionsHandler.RC_PERMISSIONS);
             finish();
         }
