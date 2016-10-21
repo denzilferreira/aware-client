@@ -77,6 +77,8 @@ public class Scheduler extends Service {
 
     //String is the scheduler ID, and hashtable contains list of intentfilters and broadcastreceivers
     private static final Hashtable<String, Hashtable<IntentFilter, BroadcastReceiver>> schedulerListeners = new Hashtable<>();
+    //String is the scheduler ID, and hashtable contains list of table content_uri and created contentobservers
+    private static final Hashtable<String, Hashtable<Uri, ContentObserver>> schedulerContentObservers = new Hashtable<>();
 
     @Override
     public void onCreate() {
@@ -593,41 +595,36 @@ public class Scheduler extends Service {
 
                             if (Aware.DEBUG)
                                 Log.d(Aware.TAG, "Registered a contextual trigger for " + contexts.toString());
+                        } else {
+                            //TODO: update to latest definition
                         }
                     }
                     if (schedule.getConditions().length() > 0) {
+                        if (!schedulerContentObservers.containsKey(schedule.getScheduleID())) {
+                            final JSONArray conditions = schedule.getConditions();
 
-                        final JSONArray conditions = schedule.getConditions();
+                            for (int i = 0; i < conditions.length(); i++) {
+                                JSONObject condition = conditions.getJSONObject(i);
 
-                        if (Aware.DEBUG)
-                            Log.d(Aware.TAG, "Checking conditional triggers: " + conditions.toString());
+                                Uri content_uri = Uri.parse(condition.getString(CONDITION_URI));
+                                String content_where = condition.getString(CONDITION_WHERE);
 
-                        Boolean[] triggered = new Boolean[conditions.length()];
-                        for (int i = 0; i < conditions.length(); i++) {
-                            JSONObject condition = conditions.getJSONObject(i);
+                                DBObservers dbObserver = new DBObservers(new Handler());
+                                dbObserver.setCondition(content_where);
+                                dbObserver.setSchedule(schedule);
+                                dbObserver.setTable(content_uri);
 
-                            Uri content_uri = Uri.parse(condition.getString(CONDITION_URI));
-                            String content_where = condition.getString(CONDITION_WHERE);
+                                Hashtable<Uri, ContentObserver> scheduler_observer = new Hashtable<>();
+                                scheduler_observer.put(content_uri, dbObserver);
+                                schedulerContentObservers.put(schedule.getScheduleID(), scheduler_observer);
 
-                            Cursor result = getContentResolver().query(content_uri, null, content_where, null, "timestamp DESC LIMIT 1");
-                            if (result == null || ! result.moveToFirst()) {
-                                triggered[i] = false;
-                            } else {
-                                triggered[i] = true;
+                                getContentResolver().registerContentObserver(content_uri, true, dbObserver);
+
+                                if (Aware.DEBUG)
+                                    Log.d(Aware.TAG, "Registered a conditional trigger for: " + content_uri.toString() + " where: " + content_where);
                             }
-                            if (result != null && ! result.isClosed()) result.close();
-                        }
-
-                        //Do we have a failed condition?
-                        if (!Arrays.asList(triggered).contains(false)) {
-                            if (Aware.DEBUG)
-                                Log.d(Aware.TAG, "ALL conditional triggers are true: " + triggered.toString());
-
-                            performAction(schedule);
-                            return super.onStartCommand(intent, flags, startId);
                         } else {
-                            if (Aware.DEBUG)
-                                Log.d(Aware.TAG, "Failed to match all conditional triggers: " + triggered.toString());
+                            //TODO: update to latest definition
                         }
                     }
 
@@ -648,14 +645,84 @@ public class Scheduler extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
+    /**
+     * Used by the conditional schedulers
+     */
+    private class DBObservers extends ContentObserver {
+        private Uri table;
+        private String condition;
+        private Schedule schedule;
+
+        public DBObservers(Handler handler) {
+            super(handler);
+        }
+
+        public DBObservers setSchedule(Schedule s) {
+            this.schedule = s;
+            return this;
+        }
+
+        public DBObservers setTable(Uri content_uri) {
+            this.table = content_uri;
+            return this;
+        }
+
+        public DBObservers setCondition(String where) {
+            this.condition = where;
+            return this;
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            this.onChange(selfChange, null);
+        }
+
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            super.onChange(selfChange, uri);
+
+            if (table != null && condition.length() > 0) {
+                boolean condition_met = false;
+                int records = 0;
+                Cursor data = getContentResolver().query(table, null, condition, null, null);
+                if (data != null && data.moveToFirst()) {
+                    condition_met = true;
+                    records = data.getCount();
+                }
+                if (data != null && ! data.isClosed()) data.close();
+
+                if (condition_met) {
+                    if (is_trigger(schedule)) {
+                        if (Aware.DEBUG)
+                            Log.d(Aware.TAG, "Condition triggered: " + table.toString() + " where: " + condition + " records match: " + records);
+                        performAction(schedule);
+                    }
+                }
+            }
+        }
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
+        //Remove broadcast receivers
         for (String schedule_id : schedulerListeners.keySet()) {
             Hashtable<IntentFilter, BroadcastReceiver> scheduled = schedulerListeners.get(schedule_id);
             for (IntentFilter filter : scheduled.keySet()) {
                 try {
                     unregisterReceiver(scheduled.get(filter));
+                } catch (NullPointerException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        //Remove content observers
+        for (String schedule_id : schedulerContentObservers.keySet()) {
+            Hashtable<Uri, ContentObserver> scheduled = schedulerContentObservers.get(schedule_id);
+            for (Uri table : scheduled.keySet()) {
+                try {
+                    getContentResolver().unregisterContentObserver(scheduled.get(table));
                 } catch (NullPointerException e) {
                     e.printStackTrace();
                 }
@@ -668,8 +735,8 @@ public class Scheduler extends Service {
         now.setTimeInMillis(System.currentTimeMillis());
 
         try {
-            //Context schedulers do not have time constrains and it is handled by the broadcast receiver
-            if (schedule.getContexts().length() > 0) {
+            //Context and condition schedulers do not have time constrains and it is handled by the broadcast receiver or the content observer
+            if (schedule.getContexts().length() > 0 || schedule.getConditions().length() > 0) {
                 return true;
             }
 
@@ -743,63 +810,7 @@ public class Scheduler extends Service {
                 Log.d(Aware.TAG, "Trigger month: " + execute);
 
             return execute;
-//            if (schedule.getInterval() > 0
-//                    && schedule.getMinutes().length() == 0 && schedule.getHours().length() == 0
-//                    && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0
-//            ) {
-//                if (Aware.DEBUG)
-//                    Log.d(Aware.TAG, "Checking trigger interval, regardless of minute, hour, weekday or month");
-//                if (previous == null) return true;
-//                return is_interval_elapsed(now, previous, schedule.getInterval());
-//            } //triggered at the given minutes, regardless of hour, weekday or month
-//            else if (schedule.getMinutes().length() > 0 && schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0) {
-//                if (Aware.DEBUG)
-//                    Log.d(Aware.TAG, "Checking trigger at given minute, regardless of hour, weekday or month");
-//                if (previous != null && is_same_minute_hour(now, previous)) return false;
-//                return is_trigger_minute(schedule);
-//            } //triggered at the given hours, regardless of weekday or month
-//            else if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() == 0) {
-//                if (Aware.DEBUG)
-//                    Log.d(Aware.TAG, "Checking trigger at given hour, regardless of weekday or month");
-//                if (previous != null && is_same_hour_day(now, previous)) return false;
-//                return is_trigger_hour(schedule);
-//            } //triggered at given hours and week day
-//            else if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() == 0) {
-//                if (Aware.DEBUG) Log.d(Aware.TAG, "Checking trigger at given hour, and weekday");
-//                if (previous != null && is_same_hour_day(now, previous) && is_same_weekday(now, previous))
-//                    return false;
-//                return is_trigger_hour(schedule) && is_trigger_weekday(schedule);
-//                //triggered at given hours, week day and month
-//            } else if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() > 0) {
-//                if (Aware.DEBUG)
-//                    Log.d(Aware.TAG, "Checking trigger at given hour, weekday and month");
-//                if (previous != null && is_same_hour_day(now, previous) && is_same_weekday(now, previous) && is_same_month(now, previous))
-//                    return false;
-//                return is_trigger_hour(schedule) && is_trigger_weekday(schedule) && is_trigger_month(schedule);
-//                //triggered at given weekday, regardless of time or month
-//            } else if (schedule.getHours().length() == 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() == 0) {
-//                if (Aware.DEBUG)
-//                    Log.d(Aware.TAG, "Checking trigger at given weekday, regardless of hour or month");
-//                if (previous != null && is_same_weekday(now, previous)) return false;
-//                return is_trigger_weekday(schedule);
-//                //triggered at given weekday and month
-//            } else if (schedule.getHours().length() == 0 && schedule.getWeekdays().length() > 0 && schedule.getMonths().length() > 0) {
-//                if (Aware.DEBUG) Log.d(Aware.TAG, "Checking trigger at given weekday, and month");
-//                if (previous != null && is_same_weekday(now, previous) && is_same_month(now, previous))
-//                    return false;
-//                return is_trigger_weekday(schedule) && is_trigger_month(schedule);
-//                //triggered at given month
-//            } else if (schedule.getHours().length() == 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() > 0) {
-//                if (Aware.DEBUG) Log.d(Aware.TAG, "Checking trigger at given month");
-//                if (previous != null && is_same_month(now, previous)) return false;
-//                return is_trigger_month(schedule);
-//                //Triggered at given hour and months
-//            } else if (schedule.getHours().length() > 0 && schedule.getWeekdays().length() == 0 && schedule.getMonths().length() > 0) {
-//                if (Aware.DEBUG) Log.d(Aware.TAG, "Checking trigger at given hour and month");
-//                if (previous != null && is_same_hour_day(now, previous) && is_same_month(now, previous))
-//                    return false;
-//                return is_trigger_hour(schedule) && is_trigger_month(schedule);
-//            }
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -1108,6 +1119,14 @@ public class Scheduler extends Service {
         }
     }
 
+    /**
+     * Given a timeframe, a number of randoms and a minimum time interval, return a list of timestamps
+     * @param leftLimit
+     * @param rightLimit
+     * @param size
+     * @param minDifference
+     * @return
+     */
     public static ArrayList<Long> random_times(Calendar leftLimit, Calendar rightLimit, int size, int minDifference) {
         if (size <= 0) {
             return null;
