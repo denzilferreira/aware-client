@@ -113,13 +113,13 @@ public class Aware_Plugin extends Service {
     public void onDestroy() {
         super.onDestroy();
 
+        Aware.debug(this, "destroyed: " + getClass().getName());
+
         //Unregister Context Broadcaster
         if( contextBroadcaster != null ) {
             unregisterReceiver(contextBroadcaster);
         }
         if( aware != null ) stopService(aware);
-
-        Aware.debug(this, "destroyed: " + getClass().getName());
     }
 
     /**

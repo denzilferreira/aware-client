@@ -302,7 +302,6 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
             if (Aware.DEBUG) Log.d(Aware.TAG, "Aware_QRCode study_url: " + study_url);
             Uri study_uri = Uri.parse(study_url);
             String protocol = study_uri.getScheme();
-            String study_host = protocol + "://" + study_uri.getHost();  // misnomer: protocol+host
             List<String> path_segments = study_uri.getPathSegments();
 
             study_api_key = path_segments.get(path_segments.size() - 1);

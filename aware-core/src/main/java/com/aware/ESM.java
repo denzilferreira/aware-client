@@ -300,6 +300,18 @@ public class ESM extends Aware_Sensor {
     }
 
     /**
+     * Queue an ESM without a broadcast receiver
+     * @param c
+     * @param esm
+     */
+    public static void queueESM(Context c, String esm) {
+        Intent backgroundService = new Intent(c, QueueESM.class);
+        backgroundService.setAction(ESM.ACTION_AWARE_QUEUE_ESM);
+        backgroundService.putExtra(EXTRA_ESM, esm);
+        c.startService(backgroundService);
+    }
+
+    /**
      * Show notification with ESM waiting
      *
      * @param c
@@ -404,17 +416,14 @@ public class ESM extends Aware_Sensor {
             if (Aware.getSetting(context, Aware_Preferences.STATUS_ESM).equals("false")) return;
 
             if (intent.getAction().equals(ESM.ACTION_AWARE_TRY_ESM)) {
-                Intent backgroundService = new Intent(context, BackgroundService.class);
+                Intent backgroundService = new Intent(context, QueueESM.class);
                 backgroundService.setAction(ESM.ACTION_AWARE_TRY_ESM);
                 backgroundService.putExtra(EXTRA_ESM, intent.getStringExtra(ESM.EXTRA_ESM));
                 context.startService(backgroundService);
             }
 
             if (intent.getAction().equals(ESM.ACTION_AWARE_QUEUE_ESM)) {
-                Intent backgroundService = new Intent(context, BackgroundService.class);
-                backgroundService.setAction(ESM.ACTION_AWARE_QUEUE_ESM);
-                backgroundService.putExtra(EXTRA_ESM, intent.getStringExtra(ESM.EXTRA_ESM));
-                context.startService(backgroundService);
+                queueESM(context, intent.getStringExtra(ESM.EXTRA_ESM));
             }
 
             if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_ANSWERED)) {
@@ -524,9 +533,9 @@ public class ESM extends Aware_Sensor {
      *
      * @author df
      */
-    public static class BackgroundService extends IntentService {
-        public BackgroundService() {
-            super(TAG + " background service");
+    public static class QueueESM extends IntentService {
+        public QueueESM() {
+            super(TAG + " queueing service");
         }
 
         @Override

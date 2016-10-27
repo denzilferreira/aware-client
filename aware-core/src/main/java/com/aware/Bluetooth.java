@@ -242,7 +242,7 @@ public class Bluetooth extends Aware_Sensor {
                 rowData.put(Bluetooth_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
                 rowData.put(Bluetooth_Data.TIMESTAMP, System.currentTimeMillis());
                 rowData.put(Bluetooth_Data.BT_ADDRESS, btDevice.getAddress());
-                rowData.put(Bluetooth_Data.BT_NAME, btDevice.getName());
+                rowData.put(Bluetooth_Data.BT_NAME, ((btDevice.getName()!=null)?btDevice.getName():""));
                 rowData.put(Bluetooth_Data.BT_RSSI, btDeviceRSSI);
                 rowData.put(Bluetooth_Data.BT_LABEL, scanTimestamp);
 
@@ -294,7 +294,7 @@ public class Bluetooth extends Aware_Sensor {
             rowData.put(Bluetooth_Sensor.TIMESTAMP, System.currentTimeMillis());
             rowData.put(Bluetooth_Sensor.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
             rowData.put(Bluetooth_Sensor.BT_ADDRESS, btAdapter.getAddress());
-            rowData.put(Bluetooth_Sensor.BT_NAME, btAdapter.getName());
+            rowData.put(Bluetooth_Sensor.BT_NAME, ((btAdapter.getName()!=null)?btAdapter.getName():""));
 
             getContentResolver().insert(Bluetooth_Sensor.CONTENT_URI, rowData);
 
@@ -320,6 +320,8 @@ public class Bluetooth extends Aware_Sensor {
                         ContentValues rowData = new ContentValues();
                         rowData.put(Bluetooth_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
                         rowData.put(Bluetooth_Data.TIMESTAMP, System.currentTimeMillis());
+                        rowData.put(Bluetooth_Data.BT_NAME, "disabled");
+                        rowData.put(Bluetooth_Data.BT_ADDRESS, "disabled");
                         rowData.put(Bluetooth_Data.BT_LABEL, "disabled");
                         getContentResolver().insert(Bluetooth_Data.CONTENT_URI, rowData);
                     }

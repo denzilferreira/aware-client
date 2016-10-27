@@ -143,28 +143,28 @@ public class Aware_Client extends Aware_Activity {
             Intent startAware = new Intent(awareContext, Aware.class);
             startService(startAware);
 
-            SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-            if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
-                PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
-                prefs.edit().commit(); //commit changes
-            } else {
-                PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, false);
-            }
-
-            Map<String, ?> defaults = prefs.getAll();
-            for (Map.Entry<String, ?> entry : defaults.entrySet()) {
-                if (Aware.getSetting(getApplicationContext(), entry.getKey(), "com.aware.phone").length() == 0) {
-                    Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue(), "com.aware.phone");
-                }
-            }
-
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
-                UUID uuid = UUID.randomUUID();
-                Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString(), "com.aware.phone");
-            }
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
-                Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php", "com.aware.phone");
-            }
+//            SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+//            if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
+//                PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
+//                prefs.edit().commit(); //commit changes
+//            } else {
+//                PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, false);
+//            }
+//
+//            Map<String, ?> defaults = prefs.getAll();
+//            for (Map.Entry<String, ?> entry : defaults.entrySet()) {
+//                if (Aware.getSetting(getApplicationContext(), entry.getKey(), "com.aware.phone").length() == 0) {
+//                    Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue(), "com.aware.phone");
+//                }
+//            }
+//
+//            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
+//                UUID uuid = UUID.randomUUID();
+//                Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString(), "com.aware.phone");
+//            }
+//            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
+//                Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php", "com.aware.phone");
+//            }
 
             //Check if AWARE is active on the accessibility services
             if (!Aware.is_watch(awareContext)) {

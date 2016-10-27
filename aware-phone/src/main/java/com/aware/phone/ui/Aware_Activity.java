@@ -129,7 +129,7 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
 
                 Intent permissions = new Intent(this, PermissionsHandler.class);
                 permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, permission);
-                permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_ACTIVITY, getPackageName() + "/" + getPackageName() + ".Aware_Client");
+                permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_ACTIVITY, getPackageName() + "/" + getPackageName() + ".ui.Aware_QRCode");
                 permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(permissions);
             } else {
@@ -203,7 +203,7 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
 
                                 Intent permissions = new Intent(Aware_Activity.this, PermissionsHandler.class);
                                 permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, permission);
-                                permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_ACTIVITY, getPackageName() + "/" + getPackageName() + ".Aware_Client");
+                                permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_ACTIVITY, getPackageName() + "/" + getPackageName() + ".ui.Aware_QRCode");
                                 permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                 startActivity(permissions);
                             } else {
