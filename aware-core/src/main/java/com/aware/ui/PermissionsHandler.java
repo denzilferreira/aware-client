@@ -32,7 +32,7 @@ public class PermissionsHandler extends Activity {
      */
     public static final int RC_PERMISSIONS = 112;
 
-    private Intent activity;
+    private Intent redirect;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,13 +41,13 @@ public class PermissionsHandler extends Activity {
             ArrayList<String> permissionsNeeded = (ArrayList<String>) getIntent().getSerializableExtra(EXTRA_REQUIRED_PERMISSIONS);
             ActivityCompat.requestPermissions(PermissionsHandler.this, permissionsNeeded.toArray(new String[permissionsNeeded.size()]), RC_PERMISSIONS);
             if (getIntent().hasExtra(EXTRA_REDIRECT_ACTIVITY)) {
-                activity = new Intent();
+                redirect = new Intent();
                 String[] component = getIntent().getStringExtra(EXTRA_REDIRECT_ACTIVITY).split("/");
-                activity.setComponent(new ComponentName(component[0], component[1]));
-                activity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                redirect.setComponent(new ComponentName(component[0], component[1]));
+                redirect.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             }
         } else {
-            activity = new Intent();
+            Intent activity = new Intent();
             setResult(Activity.RESULT_OK, activity);
             finish();
         }
@@ -66,21 +66,21 @@ public class PermissionsHandler extends Activity {
                 }
             }
             if (not_granted > 0) {
-                if (activity == null) {
-                    activity = new Intent();
+                if (redirect == null) {
+                    Intent activity = new Intent();
                     setResult(Activity.RESULT_CANCELED, activity);
                 } else {
-                    setResult(Activity.RESULT_CANCELED, activity);
-                    startActivity(activity);
+                    setResult(Activity.RESULT_CANCELED, redirect);
+                    startActivity(redirect);
                 }
                 finish();
             } else {
-                if (activity == null) {
-                    activity = new Intent();
+                if (redirect == null) {
+                    Intent activity = new Intent();
                     setResult(Activity.RESULT_OK, activity);
                 } else {
-                    setResult(Activity.RESULT_OK, activity);
-                    startActivity(activity);
+                    setResult(Activity.RESULT_OK, redirect);
+                    startActivity(redirect);
                 }
                 finish();
             }

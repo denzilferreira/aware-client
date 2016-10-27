@@ -23,6 +23,9 @@ import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
+import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
@@ -32,6 +35,7 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -252,57 +256,22 @@ public class Aware extends Service {
         boot.addAction(Intent.ACTION_BOOT_COMPLETED);
         awareContext.registerReceiver(awareBoot, boot);
 
+        REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_WIFI_STATE);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.CAMERA);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.BLUETOOTH);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.BLUETOOTH_ADMIN);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.READ_PHONE_STATE);
+
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             stopSelf();
             return;
         }
 
-        REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
-//        aware_preferences = getSharedPreferences("aware_core_prefs", MODE_PRIVATE);
-//        if (aware_preferences.getAll().isEmpty()) {
-//            SharedPreferences.Editor editor = aware_preferences.edit();
-//            editor.putInt(PREF_FREQUENCY_WATCHDOG, CONST_FREQUENCY_WATCHDOG);
-//            editor.putLong(PREF_LAST_UPDATE, 0);
-//            editor.commit();
-//        }
-//
-//        //this sets the default settings to all plugins too
-//        SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-//        if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
-//            PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
-//            prefs.edit().commit(); //commit changes
-//        } else {
-//            PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, false);
-//        }
-//
-//        Map<String, ?> defaults = prefs.getAll();
-//        for (Map.Entry<String, ?> entry : defaults.entrySet()) {
-//            if (Aware.getSetting(getApplicationContext(), entry.getKey(), "com.aware.phone").length() == 0) {
-//                Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue(), "com.aware.phone"); //default AWARE settings
-//            }
-//        }
-//
-//        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
-//            UUID uuid = UUID.randomUUID();
-//            Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString(), "com.aware.phone");
-//        }
-//
-//        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
-//            Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php");
-//        }
-//
-//        DEBUG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_FLAG).equals("true");
-//        TAG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG) : TAG;
-//
-//        get_device_info();
-
         if (Aware.DEBUG) Log.d(TAG, "AWARE framework is created!");
-
-
-//        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.AWARE_DONATE_USAGE).equals("true")) {
-//            new AsyncPing().execute();
-//        }
     }
 
     private class AsyncPing extends AsyncTask<Void, Void, Boolean> {
@@ -409,6 +378,7 @@ public class Aware extends Service {
 
     /**
      * Identifies if the user can modify the sensors while on a study
+     *
      * @param c
      * @return
      */
@@ -453,91 +423,72 @@ public class Aware extends Service {
 
         if (permissions_ok) {
 
-            if (Aware.DEBUG) Log.d(TAG, "AWARE framework is active...");
+            if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
 
-            aware_preferences = getSharedPreferences("aware_core_prefs", MODE_PRIVATE);
-            if (aware_preferences.getAll().isEmpty()) {
-                SharedPreferences.Editor editor = aware_preferences.edit();
-                editor.putInt(PREF_FREQUENCY_WATCHDOG, CONST_FREQUENCY_WATCHDOG);
-                editor.putLong(PREF_LAST_UPDATE, 0);
-                editor.commit();
-            }
+                if (Aware.DEBUG) Log.d(TAG, "AWARE framework is active...");
 
-            //this sets the default settings to all plugins too
-            SharedPreferences prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
-            if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
-                PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
-                prefs.edit().commit(); //commit changes
-            }
-//            else {
-//                PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, false);
-//            }
-
-            Map<String, ?> defaults = prefs.getAll();
-            for (Map.Entry<String, ?> entry : defaults.entrySet()) {
-                if (Aware.getSetting(getApplicationContext(), entry.getKey(), "com.aware.phone").length() == 0) {
-                    Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue(), "com.aware.phone"); //default AWARE settings
+                aware_preferences = getSharedPreferences("aware_core_prefs", MODE_PRIVATE);
+                if (aware_preferences.getAll().isEmpty()) {
+                    SharedPreferences.Editor editor = aware_preferences.edit();
+                    editor.putInt(PREF_FREQUENCY_WATCHDOG, CONST_FREQUENCY_WATCHDOG);
+                    editor.putLong(PREF_LAST_UPDATE, 0);
+                    editor.commit();
                 }
-            }
 
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
-                UUID uuid = UUID.randomUUID();
-                Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString(), "com.aware.phone");
-            }
+                //this sets the default settings to all plugins too
+                SharedPreferences prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
+                if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
+                    PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
+                    prefs.edit().commit(); //commit changes
+                }
 
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
-                Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php");
-            }
+                Map<String, ?> defaults = prefs.getAll();
+                for (Map.Entry<String, ?> entry : defaults.entrySet()) {
+                    if (Aware.getSetting(getApplicationContext(), entry.getKey(), "com.aware.phone").length() == 0) {
+                        Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue(), "com.aware.phone"); //default AWARE settings
+                    }
+                }
 
-            DEBUG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_FLAG).equals("true");
-            TAG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG) : TAG;
+                if (Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
+                    UUID uuid = UUID.randomUUID();
+                    Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString(), "com.aware.phone");
+                }
 
-            get_device_info();
+                if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
+                    Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php");
+                }
 
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.AWARE_DONATE_USAGE).equals("true")) {
-                new AsyncPing().execute();
-            }
+                DEBUG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_FLAG).equals("true");
+                TAG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG) : TAG;
 
-            if (awareStatusMonitor == null) {
-                awareStatusMonitor = new Intent(this, Aware.class);
-                repeatingIntent = PendingIntent.getService(getApplicationContext(), 0, awareStatusMonitor, PendingIntent.FLAG_UPDATE_CURRENT);
-                alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000, aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000, repeatingIntent);
-            }
+                get_device_info();
 
-            //Boot AWARE services
-            startAWARE();
+                if (Aware.getSetting(getApplicationContext(), Aware_Preferences.AWARE_DONATE_USAGE).equals("true")) {
+                    new AsyncPing().execute();
+                }
 
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
+                if (awareStatusMonitor == null) {
+                    awareStatusMonitor = new Intent(this, Aware.class);
+                    repeatingIntent = PendingIntent.getService(getApplicationContext(), 0, awareStatusMonitor, PendingIntent.FLAG_UPDATE_CURRENT);
+                    alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000, aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000, repeatingIntent);
+                }
 
-                int frequency_webservice = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_WEBSERVICE));
-                if (frequency_webservice == 0) {
-                    if (DEBUG)
-                        Log.d(TAG, "Data sync is disabled.");
+                //Boot AWARE services
+                startAWARE();
 
-                    Scheduler.removeSchedule(getApplicationContext(), SCHEDULE_SYNC_DATA);
+                if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
 
-                } else {
-                    Scheduler.Schedule sync = Scheduler.getSchedule(this, SCHEDULE_SYNC_DATA);
-                    if (sync == null) { //Set the sync schedule for the first time
-                        try {
-                            Scheduler.Schedule schedule = new Scheduler.Schedule(SCHEDULE_SYNC_DATA)
-                                    .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                    .setActionClass(Aware.ACTION_AWARE_SYNC_DATA)
-                                    .setInterval(frequency_webservice);
+                    int frequency_webservice = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_WEBSERVICE));
+                    if (frequency_webservice == 0) {
+                        if (DEBUG)
+                            Log.d(TAG, "Data sync is disabled.");
 
-                            Scheduler.saveSchedule(getApplicationContext(), schedule);
+                        Scheduler.removeSchedule(getApplicationContext(), SCHEDULE_SYNC_DATA);
 
-                            if (DEBUG) {
-                                Log.d(TAG, "Data sync every " + schedule.getInterval() + " minute(s)");
-                            }
-
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    } else { //check the sync schedule for changes
-                        try {
-                            long interval = sync.getInterval();
-                            if (interval != frequency_webservice) {
+                    } else {
+                        Scheduler.Schedule sync = Scheduler.getSchedule(this, SCHEDULE_SYNC_DATA);
+                        if (sync == null) { //Set the sync schedule for the first time
+                            try {
                                 Scheduler.Schedule schedule = new Scheduler.Schedule(SCHEDULE_SYNC_DATA)
                                         .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
                                         .setActionClass(Aware.ACTION_AWARE_SYNC_DATA)
@@ -546,70 +497,114 @@ public class Aware extends Service {
                                 Scheduler.saveSchedule(getApplicationContext(), schedule);
 
                                 if (DEBUG) {
-                                    Log.d(TAG, "Data sync at " + schedule.getInterval() + " minute(s)");
+                                    Log.d(TAG, "Data sync every " + schedule.getInterval() + " minute(s)");
                                 }
+
+                            } catch (JSONException e) {
+                                e.printStackTrace();
                             }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                        } else { //check the sync schedule for changes
+                            try {
+                                long interval = sync.getInterval();
+                                if (interval != frequency_webservice) {
+                                    Scheduler.Schedule schedule = new Scheduler.Schedule(SCHEDULE_SYNC_DATA)
+                                            .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
+                                            .setActionClass(Aware.ACTION_AWARE_SYNC_DATA)
+                                            .setInterval(frequency_webservice);
+
+                                    Scheduler.saveSchedule(getApplicationContext(), schedule);
+
+                                    if (DEBUG) {
+                                        Log.d(TAG, "Data sync at " + schedule.getInterval() + " minute(s)");
+                                    }
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }
-            }
 
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0) {
-                String[] frequency = new String[]{"never", "weekly", "monthly", "daily", "always"};
-                int frequency_space_maintenance = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA));
+                if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0) {
+                    String[] frequency = new String[]{"never", "weekly", "monthly", "daily", "always"};
+                    int frequency_space_maintenance = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA));
 
-                if (DEBUG && frequency_space_maintenance != 0)
-                    Log.d(TAG, "Space maintenance is: " + frequency[frequency_space_maintenance]);
+                    if (DEBUG && frequency_space_maintenance != 0)
+                        Log.d(TAG, "Space maintenance is: " + frequency[frequency_space_maintenance]);
 
-                try {
-                    if (frequency_space_maintenance == 0 || frequency_space_maintenance == 4) { //if always, we clear old data as soon as we upload to server
-                        Scheduler.removeSchedule(getApplicationContext(), SCHEDULE_SPACE_MAINTENANCE);
-                    } else {
-                        Scheduler.Schedule cleanup = new Scheduler.Schedule(SCHEDULE_SPACE_MAINTENANCE);
-                        switch (frequency_space_maintenance) {
-                            case 1: //weekly, by default every Sunday
-                                cleanup.addWeekday("Sunday")
-                                        .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                        .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
-                                break;
-                            case 2: //monthly
-                                cleanup.addMonth("January")
-                                        .addMonth("February")
-                                        .addMonth("March")
-                                        .addMonth("April")
-                                        .addMonth("May")
-                                        .addMonth("June")
-                                        .addMonth("July")
-                                        .addMonth("August")
-                                        .addMonth("September")
-                                        .addMonth("October")
-                                        .addMonth("November")
-                                        .addMonth("December")
-                                        .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                        .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
-                                break;
-                            case 3: //daily
-                                cleanup.addWeekday("Monday")
-                                        .addWeekday("Tuesday")
-                                        .addWeekday("Wednesday")
-                                        .addWeekday("Thursday")
-                                        .addWeekday("Friday")
-                                        .addWeekday("Saturday")
-                                        .addWeekday("Sunday")
-                                        .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                        .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
-                                break;
+                    try {
+                        if (frequency_space_maintenance == 0 || frequency_space_maintenance == 4) { //if always, we clear old data as soon as we upload to server
+                            Scheduler.removeSchedule(getApplicationContext(), SCHEDULE_SPACE_MAINTENANCE);
+                        } else {
+                            Scheduler.Schedule cleanup = new Scheduler.Schedule(SCHEDULE_SPACE_MAINTENANCE);
+                            switch (frequency_space_maintenance) {
+                                case 1: //weekly, by default every Sunday
+                                    cleanup.addWeekday("Sunday")
+                                            .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
+                                            .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
+                                    break;
+                                case 2: //monthly
+                                    cleanup.addMonth("January")
+                                            .addMonth("February")
+                                            .addMonth("March")
+                                            .addMonth("April")
+                                            .addMonth("May")
+                                            .addMonth("June")
+                                            .addMonth("July")
+                                            .addMonth("August")
+                                            .addMonth("September")
+                                            .addMonth("October")
+                                            .addMonth("November")
+                                            .addMonth("December")
+                                            .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
+                                            .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
+                                    break;
+                                case 3: //daily
+                                    cleanup.addWeekday("Monday")
+                                            .addWeekday("Tuesday")
+                                            .addWeekday("Wednesday")
+                                            .addWeekday("Thursday")
+                                            .addWeekday("Friday")
+                                            .addWeekday("Saturday")
+                                            .addWeekday("Sunday")
+                                            .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
+                                            .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
+                                    break;
+                            }
+                            Scheduler.saveSchedule(getApplicationContext(), cleanup);
                         }
-                        Scheduler.saveSchedule(getApplicationContext(), cleanup);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
-            }
 
-            //Get the active plugins
+                //Get the active plugins
+                ArrayList<String> active_plugins = new ArrayList<>();
+                Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
+                if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
+                    do {
+                        String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+                        active_plugins.add(package_name);
+                    } while (enabled_plugins.moveToNext());
+                }
+                if (enabled_plugins != null && !enabled_plugins.isClosed()) enabled_plugins.close();
+
+                if (active_plugins.size() > 0) {
+                    for (String package_name : active_plugins) {
+                        startPlugin(getApplicationContext(), package_name);
+                    }
+                }
+
+            } else {
+                Intent permissionsHandler = new Intent(this, PermissionsHandler.class);
+                permissionsHandler.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                permissionsHandler.putStringArrayListExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
+                permissionsHandler.putExtra(PermissionsHandler.EXTRA_REDIRECT_ACTIVITY, getPackageName() + "/" + getClass().getName());
+                startActivity(permissionsHandler);
+            }
+        } else {
+            stopAWARE();
+
             ArrayList<String> active_plugins = new ArrayList<>();
             Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
             if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
@@ -622,166 +617,12 @@ public class Aware extends Service {
 
             if (active_plugins.size() > 0) {
                 for (String package_name : active_plugins) {
-                    startPlugin(getApplicationContext(), package_name);
+                    stopPlugin(getApplicationContext(), package_name);
                 }
+                if (Aware.DEBUG) Log.w(TAG, "AWARE plugins disabled...");
             }
-
-        } else {
-            Intent permissionsHandler = new Intent(this, PermissionsHandler.class);
-            permissionsHandler.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            permissionsHandler.putStringArrayListExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissionsHandler.putExtra(PermissionsHandler.EXTRA_REDIRECT_ACTIVITY, getPackageName() + "/" + getClass().getName());
-            startActivity(permissionsHandler);
         }
 
-//        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-//            DEBUG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_FLAG).equals("true");
-//            TAG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG) : TAG;
-//
-//            if (Aware.DEBUG) Log.d(TAG, "AWARE framework is active...");
-
-            //Boot AWARE services
-//            startAWARE();
-//
-//            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
-//
-//                int frequency_webservice = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_WEBSERVICE));
-//                if (frequency_webservice == 0) {
-//                    if (DEBUG)
-//                        Log.d(TAG, "Data sync is disabled.");
-//
-//                    Scheduler.removeSchedule(getApplicationContext(), SCHEDULE_SYNC_DATA);
-//
-//                } else {
-//                    Scheduler.Schedule sync = Scheduler.getSchedule(this, SCHEDULE_SYNC_DATA);
-//                    if (sync == null) { //Set the sync schedule for the first time
-//                        try {
-//                            Scheduler.Schedule schedule = new Scheduler.Schedule(SCHEDULE_SYNC_DATA)
-//                                    .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-//                                    .setActionClass(Aware.ACTION_AWARE_SYNC_DATA)
-//                                    .setInterval(frequency_webservice);
-//
-//                            Scheduler.saveSchedule(getApplicationContext(), schedule);
-//
-//                            if (DEBUG) {
-//                                Log.d(TAG, "Data sync every " + schedule.getInterval() + " minute(s)");
-//                            }
-//
-//                        } catch (JSONException e) {
-//                            e.printStackTrace();
-//                        }
-//                    } else { //check the sync schedule for changes
-//                        try {
-//                            long interval = sync.getInterval();
-//                            if (interval != frequency_webservice) {
-//                                Scheduler.Schedule schedule = new Scheduler.Schedule(SCHEDULE_SYNC_DATA)
-//                                        .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-//                                        .setActionClass(Aware.ACTION_AWARE_SYNC_DATA)
-//                                        .setInterval(frequency_webservice);
-//
-//                                Scheduler.saveSchedule(getApplicationContext(), schedule);
-//
-//                                if (DEBUG) {
-//                                    Log.d(TAG, "Data sync at " + schedule.getInterval() + " minute(s)");
-//                                }
-//                            }
-//                        } catch (JSONException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                }
-//            }
-//
-//            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0) {
-//                String[] frequency = new String[]{"never", "weekly", "monthly", "daily", "always"};
-//                int frequency_space_maintenance = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA));
-//
-//                if (DEBUG && frequency_space_maintenance != 0)
-//                    Log.d(TAG, "Space maintenance is: " + frequency[frequency_space_maintenance]);
-//
-//                try {
-//                    if (frequency_space_maintenance == 0 || frequency_space_maintenance == 4) { //if always, we clear old data as soon as we upload to server
-//                        Scheduler.removeSchedule(getApplicationContext(), SCHEDULE_SPACE_MAINTENANCE);
-//                    } else {
-//                        Scheduler.Schedule cleanup = new Scheduler.Schedule(SCHEDULE_SPACE_MAINTENANCE);
-//                        switch (frequency_space_maintenance) {
-//                            case 1: //weekly, by default every Sunday
-//                                cleanup.addWeekday("Sunday")
-//                                        .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-//                                        .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
-//                                break;
-//                            case 2: //monthly
-//                                cleanup.addMonth("January")
-//                                        .addMonth("February")
-//                                        .addMonth("March")
-//                                        .addMonth("April")
-//                                        .addMonth("May")
-//                                        .addMonth("June")
-//                                        .addMonth("July")
-//                                        .addMonth("August")
-//                                        .addMonth("September")
-//                                        .addMonth("October")
-//                                        .addMonth("November")
-//                                        .addMonth("December")
-//                                        .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-//                                        .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
-//                                break;
-//                            case 3: //daily
-//                                cleanup.addWeekday("Monday")
-//                                        .addWeekday("Tuesday")
-//                                        .addWeekday("Wednesday")
-//                                        .addWeekday("Thursday")
-//                                        .addWeekday("Friday")
-//                                        .addWeekday("Saturday")
-//                                        .addWeekday("Sunday")
-//                                        .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-//                                        .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
-//                                break;
-//                        }
-//                        Scheduler.saveSchedule(getApplicationContext(), cleanup);
-//                    }
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//
-//            //Get the active plugins
-//            ArrayList<String> active_plugins = new ArrayList<>();
-//            Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
-//            if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
-//                do {
-//                    String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-//                    active_plugins.add(package_name);
-//                } while (enabled_plugins.moveToNext());
-//            }
-//            if (enabled_plugins != null && !enabled_plugins.isClosed()) enabled_plugins.close();
-//
-//            if (active_plugins.size() > 0) {
-//                for (String package_name : active_plugins) {
-//                    startPlugin(getApplicationContext(), package_name);
-//                }
-//            }
-//        } else { //Turn off all enabled plugins and services
-//
-//            stopAWARE();
-//
-//            ArrayList<String> active_plugins = new ArrayList<>();
-//            Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
-//            if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
-//                do {
-//                    String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-//                    active_plugins.add(package_name);
-//                } while (enabled_plugins.moveToNext());
-//            }
-//            if (enabled_plugins != null && !enabled_plugins.isClosed()) enabled_plugins.close();
-//
-//            if (active_plugins.size() > 0) {
-//                for (String package_name : active_plugins) {
-//                    stopPlugin(getApplicationContext(), package_name);
-//                }
-//                if (Aware.DEBUG) Log.w(TAG, "AWARE plugins disabled...");
-//            }
-//        }
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -1638,7 +1479,7 @@ public class Aware extends Service {
                                         complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, studyInfo.getLong(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
                                         complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
                                         complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
-                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "updated plugin: "+ package_name);
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "updated plugin: " + package_name);
 
                                         context.getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
 
@@ -1650,7 +1491,7 @@ public class Aware extends Service {
                                 e.printStackTrace();
                             }
                         }
-                        if (studyInfo != null && ! studyInfo.isClosed()) studyInfo.close();
+                        if (studyInfo != null && !studyInfo.isClosed()) studyInfo.close();
                     }
 
                     ContentValues rowData = new ContentValues();
@@ -1727,7 +1568,7 @@ public class Aware extends Service {
                                         complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, studyInfo.getLong(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
                                         complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
                                         complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
-                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "installed plugin: "+ package_name);
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "installed plugin: " + package_name);
 
                                         context.getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
 
@@ -1739,7 +1580,7 @@ public class Aware extends Service {
                                 e.printStackTrace();
                             }
                         }
-                        if (studyInfo != null && ! studyInfo.isClosed()) studyInfo.close();
+                        if (studyInfo != null && !studyInfo.isClosed()) studyInfo.close();
                     }
 
                     Aware.startPlugin(context, app.packageName);
@@ -1794,7 +1635,7 @@ public class Aware extends Service {
                                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, studyInfo.getLong(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
                                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
                                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "uninstalled plugin: "+ package_name);
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "uninstalled plugin: " + package_name);
 
                                     context.getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
 
@@ -1806,7 +1647,7 @@ public class Aware extends Service {
                             e.printStackTrace();
                         }
                     }
-                    if (studyInfo != null && ! studyInfo.isClosed()) studyInfo.close();
+                    if (studyInfo != null && !studyInfo.isClosed()) studyInfo.close();
                 }
 
                 //clean-up settings & schedules
@@ -1825,6 +1666,7 @@ public class Aware extends Service {
      * - ACTION_AWARE_SYNC_DATA = upload data to remote webservice server.
      * - ACTION_AWARE_CLEAR_DATA = clears local device's AWARE modules databases.
      * - ACTION_AWARE_REFRESH - apply changes to the configuration.
+     *
      * @author denzil
      */
     private static final Aware_Broadcaster aware_BR = new Aware_Broadcaster();
@@ -1838,7 +1680,7 @@ public class Aware extends Service {
             Uri[] CONTEXT_URIS = new Uri[]{Aware_Device.CONTENT_URI, Aware_Provider.Aware_Studies.CONTENT_URI, Aware_Provider.Aware_Log.CONTENT_URI};
 
             if (intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA) && Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
-                for( int i=0; i<DATABASE_TABLES.length; i++ ) {
+                for (int i = 0; i < DATABASE_TABLES.length; i++) {
                     Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
                     webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
                     webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
@@ -1849,7 +1691,7 @@ public class Aware extends Service {
             }
 
             if (intent.getAction().equals(Aware.ACTION_AWARE_CLEAR_DATA)) {
-                for( int i=0; i<DATABASE_TABLES.length; i++) {
+                for (int i = 0; i < DATABASE_TABLES.length; i++) {
                     context.getContentResolver().delete(Aware_Provider.Aware_Device.CONTENT_URI, null, null);
                     if (Aware.DEBUG) Log.d(TAG, "Cleared " + CONTEXT_URIS[i]);
 
@@ -1906,10 +1748,69 @@ public class Aware extends Service {
         }
     }
 
+    private static void complianceStatus() {
+        ConnectivityManager connManager = (ConnectivityManager) awareContext.getSystemService(CONNECTIVITY_SERVICE);
+        LocationManager locationManager = (LocationManager) awareContext.getSystemService(LOCATION_SERVICE);
+        TelephonyManager telephonyManager = (TelephonyManager) awareContext.getSystemService(TELEPHONY_SERVICE);
+
+        NetworkInfo active = connManager.getActiveNetworkInfo();
+        if (active != null && active.isConnectedOrConnecting()) {
+            String activeType = "unknown";
+            switch (active.getType()) {
+                case ConnectivityManager.TYPE_WIFI:
+                    activeType = "WIFI";
+                    break;
+                case ConnectivityManager.TYPE_BLUETOOTH:
+                    activeType = "BT";
+                    break;
+                case ConnectivityManager.TYPE_MOBILE:
+                    activeType = "NETWORK";
+                    break;
+                case ConnectivityManager.TYPE_WIMAX:
+                    activeType = "WIMAX";
+                    break;
+                case ConnectivityManager.TYPE_VPN:
+                    activeType = "VPN";
+                    break;
+            }
+            Aware.debug(awareContext, "internet: on; " + activeType);
+        } else {
+            Aware.debug(awareContext, "internet: off");
+        }
+
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if (wifi.isAvailable()) {
+            Aware.debug(awareContext, "wifi: on");
+        } else {
+            Aware.debug(awareContext, "wifi: off");
+        }
+
+        NetworkInfo bt = connManager.getNetworkInfo(ConnectivityManager.TYPE_BLUETOOTH);
+        if (bt.isAvailable()) {
+            Aware.debug(awareContext, "bt: on");
+        } else {
+            Aware.debug(awareContext, "bt: off");
+        }
+
+        NetworkInfo network = connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        if (network.isAvailable()) {
+            Aware.debug(awareContext, "network: on");
+        } else {
+            Aware.debug(awareContext, "network: off");
+        }
+
+        Aware.debug(awareContext, "roaming: " + ((telephonyManager.isNetworkRoaming()) ? "on" : "off"));
+        Aware.debug(awareContext, "gps: " + ((locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) ? "on" : "off"));
+        Aware.debug(awareContext, "triangulation: " + ((locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) ? "on" : "off"));
+    }
+
     /**
      * Start active services
      */
     public static void startAWARE() {
+
+        complianceStatus();
+
         if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true")) {
             startESM(awareContext);
         } else stopESM(awareContext);
@@ -2058,7 +1959,7 @@ public class Aware extends Service {
 
     public static void stopScheduler(Context context) {
         awareContext = context;
-        if (scheduler!=null) awareContext.stopService(scheduler);
+        if (scheduler != null) awareContext.stopService(scheduler);
     }
 
     /**

@@ -255,7 +255,7 @@ public class Bluetooth extends Aware_Sensor {
                 }
 
                 if (Aware.DEBUG)
-                    Log.d(TAG, ACTION_AWARE_BLUETOOTH_NEW_DEVICE + ": " + rowData.toString());
+                    Log.d(Aware.TAG, ACTION_AWARE_BLUETOOTH_NEW_DEVICE + ": " + rowData.toString());
 
                 Intent detectedBT = new Intent(ACTION_AWARE_BLUETOOTH_NEW_DEVICE);
                 detectedBT.putExtra(EXTRA_DEVICE, rowData);
