@@ -1,6 +1,5 @@
 package com.aware.phone.ui;
 
-import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -25,7 +24,6 @@ import android.widget.Toast;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
-import com.aware.phone.Aware_Client;
 import com.aware.phone.R;
 import com.aware.providers.Aware_Provider;
 import com.aware.utils.PluginsManager;

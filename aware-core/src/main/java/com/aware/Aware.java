@@ -464,13 +464,14 @@ public class Aware extends Service {
             }
 
             //this sets the default settings to all plugins too
-            SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+            SharedPreferences prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
             if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
                 PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
                 prefs.edit().commit(); //commit changes
-            } else {
-                PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, false);
             }
+//            else {
+//                PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, false);
+//            }
 
             Map<String, ?> defaults = prefs.getAll();
             for (Map.Entry<String, ?> entry : defaults.entrySet()) {
@@ -1164,8 +1165,10 @@ public class Aware extends Service {
      */
     public static void setSetting(Context context, String key, Object value, String package_name) {
         //We already have a device ID, bail-out!
-        if (key.equals(Aware_Preferences.DEVICE_ID) && Aware.getSetting(context, Aware_Preferences.DEVICE_ID).length() > 0)
+        if (key.equals(Aware_Preferences.DEVICE_ID) && Aware.getSetting(context, Aware_Preferences.DEVICE_ID).length() > 0) {
+            Log.d(Aware.TAG, "AWARE UUID: " + Aware.getSetting(context, Aware_Preferences.DEVICE_ID) + " in " + package_name);
             return;
+        }
 
         ContentValues setting = new ContentValues();
         setting.put(Aware_Settings.SETTING_KEY, key);
@@ -1232,6 +1235,7 @@ public class Aware extends Service {
                 if (element.has("sensors")) {
                     sensors = element.getJSONArray("sensors");
                 }
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -1477,7 +1481,7 @@ public class Aware extends Service {
                     if (schedulers.length() > 0)
                         Scheduler.setSchedules(getApplicationContext(), schedulers);
 
-                    //Start bundled plugins
+                    //Start plugins
                     for (String p : active_plugins) {
                         Aware.startPlugin(getApplicationContext(), p);
                     }
