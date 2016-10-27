@@ -258,7 +258,6 @@ public class Aware extends Service {
         awareContext.registerReceiver(awareBoot, boot);
 
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_WIFI_STATE);
         REQUIRED_PERMISSIONS.add(Manifest.permission.CAMERA);
         REQUIRED_PERMISSIONS.add(Manifest.permission.BLUETOOTH);

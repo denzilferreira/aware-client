@@ -107,6 +107,13 @@ public class Aware_Client extends Aware_Activity {
         clientUI = this;
 
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_WIFI_STATE);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.CAMERA);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.BLUETOOTH);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.BLUETOOTH_ADMIN);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.READ_PHONE_STATE);
 
         addPreferencesFromResource(R.xml.aware_preferences);
         setContentView(R.layout.aware_ui);
@@ -139,6 +146,29 @@ public class Aware_Client extends Aware_Activity {
         }
 
         if (permissions_ok) {
+
+            SharedPreferences prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
+            if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
+                PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, com.aware.R.xml.aware_preferences, true);
+                prefs.edit().commit(); //commit changes
+            }
+
+            Map<String, ?> defaults = prefs.getAll();
+            for (Map.Entry<String, ?> entry : defaults.entrySet()) {
+                if (Aware.getSetting(getApplicationContext(), entry.getKey(), "com.aware.phone").length() == 0) {
+                    Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue(), "com.aware.phone"); //default AWARE settings
+                }
+            }
+
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
+                UUID uuid = UUID.randomUUID();
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString(), "com.aware.phone");
+            }
+
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php");
+            }
+
             //Start AWARE framework background service
             Intent startAware = new Intent(awareContext, Aware.class);
             startService(startAware);
