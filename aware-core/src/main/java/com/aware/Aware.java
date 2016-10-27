@@ -34,6 +34,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.v4.content.ContextCompat;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -1784,6 +1785,14 @@ public class Aware extends Service {
                 complianceStatus.put("network", false);
             }
 
+            boolean airplane = false;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1){
+                airplane = Settings.Global.getInt(awareContext.getContentResolver(), Settings.Global.AIRPLANE_MODE_ON, 0) != 0;
+            } else {
+                airplane = Settings.System.getInt(awareContext.getContentResolver(), Settings.System.AIRPLANE_MODE_ON, 0) != 0;
+            }
+
+            complianceStatus.put("airplane", airplane);
             complianceStatus.put("roaming", telephonyManager.isNetworkRoaming());
             complianceStatus.put("location_gps", locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER));
             complianceStatus.put("location_network", locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER));
