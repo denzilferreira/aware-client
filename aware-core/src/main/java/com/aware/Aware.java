@@ -1753,55 +1753,46 @@ public class Aware extends Service {
         LocationManager locationManager = (LocationManager) awareContext.getSystemService(LOCATION_SERVICE);
         TelephonyManager telephonyManager = (TelephonyManager) awareContext.getSystemService(TELEPHONY_SERVICE);
 
-        NetworkInfo active = connManager.getActiveNetworkInfo();
-        if (active != null && active.isConnectedOrConnecting()) {
-            String activeType = "unknown";
-            switch (active.getType()) {
-                case ConnectivityManager.TYPE_WIFI:
-                    activeType = "WIFI";
-                    break;
-                case ConnectivityManager.TYPE_BLUETOOTH:
-                    activeType = "BT";
-                    break;
-                case ConnectivityManager.TYPE_MOBILE:
-                    activeType = "NETWORK";
-                    break;
-                case ConnectivityManager.TYPE_WIMAX:
-                    activeType = "WIMAX";
-                    break;
-                case ConnectivityManager.TYPE_VPN:
-                    activeType = "VPN";
-                    break;
+        JSONObject complianceStatus = new JSONObject();
+
+        try {
+            NetworkInfo active = connManager.getActiveNetworkInfo();
+            if (active != null && active.isConnectedOrConnecting()) {
+                complianceStatus.put("internet", true);
+            } else {
+                complianceStatus.put("internet", false);
             }
-            Aware.debug(awareContext, "internet: on; " + activeType);
-        } else {
-            Aware.debug(awareContext, "internet: off");
-        }
 
-        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if (wifi.isAvailable()) {
-            Aware.debug(awareContext, "wifi: on");
-        } else {
-            Aware.debug(awareContext, "wifi: off");
-        }
+            NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+            if (wifi.isAvailable()) {
+                complianceStatus.put("wifi", true);
+            } else {
+                complianceStatus.put("wifi", false);
+            }
 
-        NetworkInfo bt = connManager.getNetworkInfo(ConnectivityManager.TYPE_BLUETOOTH);
-        if (bt.isAvailable()) {
-            Aware.debug(awareContext, "bt: on");
-        } else {
-            Aware.debug(awareContext, "bt: off");
-        }
+            NetworkInfo bt = connManager.getNetworkInfo(ConnectivityManager.TYPE_BLUETOOTH);
+            if (bt.isAvailable()) {
+                complianceStatus.put("bt", true);
+            } else {
+                complianceStatus.put("bt", false);
+            }
 
-        NetworkInfo network = connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-        if (network.isAvailable()) {
-            Aware.debug(awareContext, "network: on");
-        } else {
-            Aware.debug(awareContext, "network: off");
-        }
+            NetworkInfo network = connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+            if (network.isAvailable()) {
+                complianceStatus.put("network", true);
+            } else {
+                complianceStatus.put("network", false);
+            }
 
-        Aware.debug(awareContext, "roaming: " + ((telephonyManager.isNetworkRoaming()) ? "on" : "off"));
-        Aware.debug(awareContext, "gps: " + ((locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) ? "on" : "off"));
-        Aware.debug(awareContext, "triangulation: " + ((locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) ? "on" : "off"));
+            complianceStatus.put("roaming", telephonyManager.isNetworkRoaming());
+            complianceStatus.put("location_gps", locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER));
+            complianceStatus.put("location_network", locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER));
+
+            Aware.debug(awareContext, complianceStatus.toString());
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
