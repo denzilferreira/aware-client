@@ -436,10 +436,12 @@ public class Aware extends Service {
                 }
 
                 //this sets the default settings to all plugins too
-                SharedPreferences prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
+                SharedPreferences prefs = getSharedPreferences("com.aware.phone", Context.MODE_WORLD_WRITEABLE);
                 if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
-                    PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
+                    PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_WORLD_WRITEABLE, R.xml.aware_preferences, true);
                     prefs.edit().commit(); //commit changes
+                } else {
+                    PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_WORLD_WRITEABLE, R.xml.aware_preferences, false);
                 }
 
                 Map<String, ?> defaults = prefs.getAll();

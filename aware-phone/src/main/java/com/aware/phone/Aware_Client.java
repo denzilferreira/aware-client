@@ -147,10 +147,12 @@ public class Aware_Client extends Aware_Activity {
 
         if (permissions_ok) {
 
-            SharedPreferences prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
+            SharedPreferences prefs = getSharedPreferences("com.aware.phone", Context.MODE_WORLD_WRITEABLE);
             if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
-                PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, com.aware.R.xml.aware_preferences, true);
+                PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_WORLD_WRITEABLE, com.aware.R.xml.aware_preferences, true);
                 prefs.edit().commit(); //commit changes
+            } else {
+                PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_WORLD_WRITEABLE, R.xml.aware_preferences, false);
             }
 
             Map<String, ?> defaults = prefs.getAll();
