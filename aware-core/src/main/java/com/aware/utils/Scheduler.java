@@ -78,8 +78,12 @@ public class Scheduler extends Service {
 
     //String is the scheduler ID, and hashtable contains list of intentfilters and broadcastreceivers
     private static final Hashtable<String, Hashtable<IntentFilter, BroadcastReceiver>> schedulerListeners = new Hashtable<>();
+
     //String is the scheduler ID, and hashtable contains list of table content_uri and created contentobservers
     private static final Hashtable<String, Hashtable<Uri, ContentObserver>> schedulerContentObservers = new Hashtable<>();
+
+    //String is the scheduler ID, and hashtable contains list of content observers and if they are currently triggered or not
+    private static final Hashtable<String, Hashtable<ContentObserver, Boolean>> schedulerConditionals = new Hashtable<>();
 
     @Override
     public void onCreate() {
@@ -252,7 +256,7 @@ public class Scheduler extends Service {
             }
         }
 
-        //Apply new schedules
+        //Apply new schedules immediately
         Aware.startScheduler(c);
     }
 
@@ -613,6 +617,7 @@ public class Scheduler extends Service {
                         continue;
                     }
                     if (schedule.getConditions().length() > 0) {
+                        //clean-up
                         if (schedulerContentObservers.containsKey(schedule.getScheduleID())) {
                             Hashtable<Uri, ContentObserver> scheduled = schedulerContentObservers.get(schedule.getScheduleID());
                             for (Uri table : scheduled.keySet()) {
@@ -624,9 +629,12 @@ public class Scheduler extends Service {
                             }
                             schedulerContentObservers.remove(schedule.getScheduleID());
                         }
+                        if (schedulerConditionals.containsKey(schedule.getScheduleID())) {
+                            schedulerConditionals.remove(schedule.getScheduleID());
+                        }
 
+                        //set conditions
                         final JSONArray conditions = schedule.getConditions();
-
                         for (int i = 0; i < conditions.length(); i++) {
                             JSONObject condition = conditions.getJSONObject(i);
 
@@ -643,6 +651,10 @@ public class Scheduler extends Service {
                             schedulerContentObservers.put(schedule.getScheduleID(), scheduler_observer);
 
                             getContentResolver().registerContentObserver(content_uri, true, dbObserver);
+
+                            Hashtable<ContentObserver, Boolean> scheduler_trigger = new Hashtable<>();
+                            scheduler_trigger.put(dbObserver, Boolean.FALSE);
+                            schedulerConditionals.put(schedule.getScheduleID(), scheduler_trigger);
 
                             if (Aware.DEBUG)
                                 Log.d(Aware.TAG, "Registered a conditional trigger for: " + content_uri.toString() + " where: " + content_where);
@@ -710,7 +722,26 @@ public class Scheduler extends Service {
                     if (Aware.DEBUG)
                         Log.d(Aware.TAG, "Condition triggered: " + table.toString() + " where: " + condition);
 
-                    performAction(schedule);
+                    try {
+                        schedulerConditionals.get(schedule.getScheduleID()).put(this, Boolean.TRUE);
+                    } catch (JSONException e){
+                        e.printStackTrace();
+                    }
+                }
+
+                //check if all scheduler conditions are met
+                try {
+                    Hashtable<ContentObserver, Boolean> conditionals = schedulerConditionals.get(schedule.getScheduleID());
+                    Boolean[] booleans = new Boolean[conditionals.size()];
+                    for(ContentObserver obs : conditionals.keySet()) {
+                        Boolean cond = conditionals.get(obs);
+                        booleans[booleans.length] = cond;
+                    }
+                    if (!Arrays.asList(booleans).contains(Boolean.FALSE)) {
+                        performAction(schedule);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
             } else {
                 if (Aware.DEBUG)
@@ -744,6 +775,7 @@ public class Scheduler extends Service {
                     e.printStackTrace();
                 }
             }
+            schedulerConditionals.remove(schedule_id);
         }
     }
 

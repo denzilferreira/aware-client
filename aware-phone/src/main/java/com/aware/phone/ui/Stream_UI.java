@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -45,8 +46,6 @@ public class Stream_UI extends Aware_Activity {
 	@Override
 	protected void onCreate(Bundle arg0) {
         super.onCreate(arg0);
-
-        Log.d(Aware.TAG, "onCreate");
 
         setContentView(R.layout.stream_ui);
 
@@ -117,6 +116,10 @@ public class Stream_UI extends Aware_Activity {
 
     private void updateCards() {
         cards = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, Aware_Plugins.PLUGIN_NAME + " ASC");
+
+        if (Aware.DEBUG)
+            Log.d(Aware.TAG, "ContextCards: " + DatabaseUtils.dumpCursorToString(cards));
+
 //        updateCore();
         card_adapter = new CardAdapter(this, cards, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         stream_container.setAdapter(card_adapter);
@@ -146,6 +149,10 @@ public class Stream_UI extends Aware_Activity {
 	protected void onDestroy() {
 		super.onDestroy();
 		unregisterReceiver(stream_updater);
+
+        //Fixed: leak on stream cursor
+        if( cards != null && ! cards.isClosed()) cards.close();
+        card_adapter.changeCursor(null);
 	}
 	
 	private StreamUpdater stream_updater = new StreamUpdater();

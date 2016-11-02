@@ -12,6 +12,7 @@ import org.json.JSONObject;
 public class ESMFactory {
 
     private JSONArray queue;
+
     public ESMFactory() {
         this.queue = new JSONArray();
     }
@@ -44,7 +45,7 @@ public class ESMFactory {
     }
 
     public ESM_Question getESM(int esmType, JSONObject esm, int _id) throws JSONException {
-        switch (esmType){
+        switch (esmType) {
             case ESM.TYPE_ESM_TEXT:
                 return new ESM_Freetext().rebuild(esm).setID(_id);
             case ESM.TYPE_ESM_CHECKBOX:
@@ -57,6 +58,10 @@ public class ESMFactory {
                 return new ESM_Radio().rebuild(esm).setID(_id);
             case ESM.TYPE_ESM_SCALE:
                 return new ESM_Scale().rebuild(esm).setID(_id);
+            case ESM.TYPE_ESM_DATETIME:
+                return new ESM_DateTime().rebuild(esm).setID(_id);
+            case ESM.TYPE_ESM_PAM:
+                return new ESM_PAM().rebuild(esm).setID(_id);
             case ESM.TYPE_ESM_NUMBER:
                 return new ESM_Number().rebuild(esm).setID(_id);
             default:

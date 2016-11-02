@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/RelativeLayout1"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:minWidth="300dip">
+
+    <TextView
+        android:id="@+id/esm_instructions"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:padding="16dp" />
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/datetimepager"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:padding="0dp"
+        android:layout_below="@+id/esm_instructions"
+        android:layout_marginLeft="0dp"
+        android:layout_marginRight="0dp"
+        android:layout_marginTop="0dp">
+
+        <android.support.v4.view.PagerTitleStrip
+            android:id="@+id/datetimepagerstrip"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:paddingBottom="2dp"
+            android:paddingTop="0dp"
+            android:textColor="#FFF" />
+    </android.support.v4.view.ViewPager>
+
+    <LinearLayout
+        android:id="@+id/LinearLayout1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/datetimepager"
+        android:padding="10dp">
+
+        <Button
+            android:id="@+id/esm_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Cancel" />
+
+        <Button
+            android:id="@+id/esm_submit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="Button" />
+    </LinearLayout>
+
+</RelativeLayout>

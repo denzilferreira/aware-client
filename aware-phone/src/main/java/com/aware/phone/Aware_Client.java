@@ -28,6 +28,7 @@ import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -147,12 +148,16 @@ public class Aware_Client extends Aware_Activity {
 
         if (permissions_ok) {
 
-            SharedPreferences prefs = getSharedPreferences("com.aware.phone", Context.MODE_WORLD_WRITEABLE);
+            //Start AWARE framework background service
+            Intent startAware = new Intent(awareContext, Aware.class);
+            startService(startAware);
+
+            SharedPreferences prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
             if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
-                PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_WORLD_WRITEABLE, com.aware.R.xml.aware_preferences, true);
+                PreferenceManager.setDefaultValues(getApplicationContext(), "com.aware.phone", Context.MODE_PRIVATE, com.aware.R.xml.aware_preferences, true);
                 prefs.edit().commit(); //commit changes
             } else {
-                PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_WORLD_WRITEABLE, R.xml.aware_preferences, false);
+                PreferenceManager.setDefaultValues(getApplicationContext(), "com.aware.phone", Context.MODE_PRIVATE, R.xml.aware_preferences, false);
             }
 
             Map<String, ?> defaults = prefs.getAll();
@@ -170,10 +175,6 @@ public class Aware_Client extends Aware_Activity {
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
                 Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php");
             }
-
-            //Start AWARE framework background service
-            Intent startAware = new Intent(awareContext, Aware.class);
-            startService(startAware);
 
             //Check if AWARE is active on the accessibility services
             if (!Aware.is_watch(awareContext)) {

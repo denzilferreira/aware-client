@@ -122,12 +122,12 @@ public class Aware_Sensor extends Service {
     public void onDestroy() {
         super.onDestroy();
 
-        Aware.debug(this, "destroyed: " + getClass().getName());
-
         //Unregister Context Broadcaster
         if (contextBroadcaster != null) {
             unregisterReceiver(contextBroadcaster);
         }
+
+        Aware.debug(this, "destroyed: " + getClass().getName());
     }
 
     /**
