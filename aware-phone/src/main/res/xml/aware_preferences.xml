@@ -858,7 +858,7 @@
                 android:title="Advanced options" />
 
             <CheckBoxPreference
-                android:defaultValue="false"
+                android:defaultValue="true"
                 android:key="debug_flag"
                 android:persistent="true"
                 android:summary="@string/aware_debug_summary"

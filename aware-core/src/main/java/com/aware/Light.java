@@ -56,7 +56,7 @@ public class Light extends Aware_Sensor implements SensorEventListener {
     private static Handler sensorHandler = null;
     private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
-    private static int FIFO_SIZE = 0;
+//    private static int FIFO_SIZE = 0;
     private static float LAST_VALUE_0 = 0;
     private static int FREQUENCY = -1;
     private static double THRESHOLD = 0;
@@ -202,7 +202,7 @@ public class Light extends Aware_Sensor implements SensorEventListener {
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
 
         mLight = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
-        FIFO_SIZE = mLight.getFifoReservedEventCount();
+//        FIFO_SIZE = mLight.getFifoReservedEventCount();
 
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
@@ -273,7 +273,8 @@ public class Light extends Aware_Sensor implements SensorEventListener {
                         || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_LIGHT))) {
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mLight);
-                    mSensorManager.registerListener(this, mLight, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT)), FIFO_SIZE, sensorHandler);
+//                    mSensorManager.registerListener(this, mLight, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT)), FIFO_SIZE, sensorHandler);
+                    mSensorManager.registerListener(this, mLight, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT)), sensorHandler);
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT));
                     THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_LIGHT));

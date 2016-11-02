@@ -1,7 +1,6 @@
 
 package com.aware;
 
-import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -23,6 +22,9 @@ import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
+import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
@@ -31,7 +33,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.security.KeyChain;
+import android.provider.Settings;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -61,12 +64,8 @@ import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -258,54 +257,7 @@ public class Aware extends Service {
             return;
         }
 
-        aware_preferences = getSharedPreferences("aware_core_prefs", MODE_PRIVATE);
-        if (aware_preferences.getAll().isEmpty()) {
-            SharedPreferences.Editor editor = aware_preferences.edit();
-            editor.putInt(PREF_FREQUENCY_WATCHDOG, CONST_FREQUENCY_WATCHDOG);
-            editor.putLong(PREF_LAST_UPDATE, 0);
-            editor.commit();
-        }
-
-        //this sets the default settings to all plugins too
-        SharedPreferences prefs = getSharedPreferences("com.aware", Context.MODE_PRIVATE);
-        if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
-            PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
-            prefs.edit().commit(); //commit changes
-        } else {
-            PreferenceManager.setDefaultValues(getApplicationContext(), getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, false);
-        }
-
-        Map<String, ?> defaults = prefs.getAll();
-        for (Map.Entry<String, ?> entry : defaults.entrySet()) {
-            if (Aware.getSetting(getApplicationContext(), entry.getKey(), "com.aware.phone").length() == 0) {
-                Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue(), "com.aware.phone"); //default AWARE settings
-            }
-        }
-
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
-            UUID uuid = UUID.randomUUID();
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString(), "com.aware.phone");
-        }
-
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php");
-        }
-
-        DEBUG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_FLAG).equals("true");
-        TAG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG) : TAG;
-
-        get_device_info();
-
         if (Aware.DEBUG) Log.d(TAG, "AWARE framework is created!");
-
-
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.AWARE_DONATE_USAGE).equals("true")) {
-            new AsyncPing().execute();
-        }
-
-        awareStatusMonitor = new Intent(this, Aware.class);
-        repeatingIntent = PendingIntent.getService(getApplicationContext(), 0, awareStatusMonitor, 0);
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000, aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000, repeatingIntent);
     }
 
     private class AsyncPing extends AsyncTask<Void, Void, Boolean> {
@@ -411,6 +363,29 @@ public class Aware extends Service {
     }
 
     /**
+     * Identifies if the user can modify the sensors while on a study
+     * TODO
+     *
+     * @param c
+     * @return
+     */
+    public static boolean isLocked(Context c) {
+
+        return false;
+    }
+
+    public static void debug(Context c, String message) {
+        ContentValues log = new ContentValues();
+        log.put(Aware_Provider.Aware_Log.LOG_TIMESTAMP, System.currentTimeMillis());
+        log.put(Aware_Provider.Aware_Log.LOG_DEVICE_ID, Aware.getSetting(c, Aware_Preferences.DEVICE_ID));
+        log.put(Aware_Provider.Aware_Log.LOG_MESSAGE, message);
+
+        if (Aware.DEBUG) Log.d(TAG, "Aware_Log: \n" + log.toString());
+
+        c.getContentResolver().insert(Aware_Provider.Aware_Log.CONTENT_URI, log);
+    }
+
+    /**
      * Fetch the cursor for a study, given the study URL
      *
      * @param c
@@ -423,11 +398,59 @@ public class Aware extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+
+            if (Aware.DEBUG) Log.d(TAG, "AWARE framework is active...");
+
+            aware_preferences = getSharedPreferences("aware_core_prefs", MODE_PRIVATE);
+            if (aware_preferences.getAll().isEmpty()) {
+                SharedPreferences.Editor editor = aware_preferences.edit();
+                editor.putInt(PREF_FREQUENCY_WATCHDOG, CONST_FREQUENCY_WATCHDOG);
+                editor.putLong(PREF_LAST_UPDATE, 0);
+                editor.commit();
+            }
+
+            //this sets the default settings to all plugins too
+            SharedPreferences prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
+            if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
+                PreferenceManager.setDefaultValues(getApplicationContext(), "com.aware.phone", Context.MODE_PRIVATE, R.xml.aware_preferences, true);
+                prefs.edit().commit(); //commit changes
+            } else {
+                PreferenceManager.setDefaultValues(getApplicationContext(), "com.aware.phone", Context.MODE_PRIVATE, R.xml.aware_preferences, false);
+            }
+
+            //this sets the default settings to all plugins too
+            Map<String, ?> defaults = prefs.getAll();
+            for (Map.Entry<String, ?> entry : defaults.entrySet()) {
+                if (Aware.getSetting(getApplicationContext(), entry.getKey(), "com.aware.phone").length() == 0) {
+                    Aware.setSetting(getApplicationContext(), entry.getKey(), entry.getValue(), "com.aware.phone"); //default AWARE settings
+                }
+            }
+
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
+                UUID uuid = UUID.randomUUID();
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID, uuid.toString(), "com.aware.phone");
+            }
+
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php");
+            }
+
             DEBUG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_FLAG).equals("true");
             TAG = Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(awareContext, Aware_Preferences.DEBUG_TAG) : TAG;
 
-            if (Aware.DEBUG) Log.d(TAG, "AWARE framework is active...");
+            get_device_info();
+
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.AWARE_DONATE_USAGE).equals("true")) {
+                new AsyncPing().execute();
+            }
+
+            if (awareStatusMonitor == null) {
+                awareStatusMonitor = new Intent(this, Aware.class);
+                repeatingIntent = PendingIntent.getService(getApplicationContext(), 0, awareStatusMonitor, PendingIntent.FLAG_UPDATE_CURRENT);
+                alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000, aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000, repeatingIntent);
+            }
 
             //Boot AWARE services
             startAWARE();
@@ -551,8 +574,7 @@ public class Aware extends Service {
                 }
             }
 
-        } else { //Turn off all enabled plugins and services
-
+        } else {
             stopAWARE();
 
             ArrayList<String> active_plugins = new ArrayList<>();
@@ -572,7 +594,8 @@ public class Aware extends Service {
                 if (Aware.DEBUG) Log.w(TAG, "AWARE plugins disabled...");
             }
         }
-        return START_STICKY;
+
+        return super.onStartCommand(intent, flags, startId);
     }
 
     /**
@@ -581,23 +604,23 @@ public class Aware extends Service {
      * @param context
      * @param package_name
      */
-    public static void stopPlugin(final Context context, final String package_name) {
+    public synchronized static void stopPlugin(final Context context, final String package_name) {
         if (awareContext == null) awareContext = context;
+
+        if (Aware.DEBUG) Log.d(TAG, "Stopping " + package_name);
 
         //Check if plugin is bundled within an application/plugin
         Intent bundled = new Intent();
-        bundled.setComponent(new ComponentName(context.getPackageName(), package_name + ".Plugin"));
-        boolean result = context.stopService(bundled);
+        bundled.setComponent(new ComponentName(awareContext.getPackageName(), package_name + ".Plugin"));
+        boolean result = awareContext.stopService(bundled);
 
         if (result) {
-            ContentValues rowData = new ContentValues();
-            rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
-            context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
-            return;
+            if (Aware.DEBUG)
+                Log.d(TAG, "Bundled " + package_name + " stopped.");
         }
 
         boolean is_installed = false;
-        Cursor cached = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+        Cursor cached = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
         if (cached != null && cached.moveToFirst()) {
             is_installed = true;
         }
@@ -606,12 +629,22 @@ public class Aware extends Service {
         if (is_installed) {
             Intent plugin = new Intent();
             plugin.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
-            context.stopService(plugin);
+            awareContext.stopService(plugin);
+
+            if (Aware.DEBUG)
+                Log.d(TAG, package_name + " stopped.");
         }
 
         ContentValues rowData = new ContentValues();
         rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
-        context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+        int updated = awareContext.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+
+        if (Aware.DEBUG)
+            Log.d(TAG, "Plugin " + package_name + " stopped: " + updated);
+
+        if (context.getPackageName().equals("com.aware.phone")) {
+            context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
+        }
     }
 
     /**
@@ -621,20 +654,22 @@ public class Aware extends Service {
      * @param context
      * @param package_name
      */
-    public static void startPlugin(final Context context, final String package_name) {
+    public synchronized static void startPlugin(final Context context, final String package_name) {
         if (awareContext == null) awareContext = context;
+
+        if (Aware.DEBUG) Log.d(TAG, "Starting " + package_name);
 
         //Check if plugin is bundled within an application/plugin
         Intent bundled = new Intent();
-        bundled.setComponent(new ComponentName(context.getPackageName(), package_name + ".Plugin"));
-        ComponentName bundledResult = context.startService(bundled);
+        bundled.setComponent(new ComponentName(awareContext.getPackageName(), package_name + ".Plugin"));
+        ComponentName bundledResult = awareContext.startService(bundled);
         if (bundledResult != null) {
             if (Aware.DEBUG) Log.d(TAG, "Bundled " + package_name + ".Plugin started...");
 
             //Check if plugin is cached
-            Cursor cached = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+            Cursor cached = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
             if (cached == null || !cached.moveToFirst()) {
-                //Fixed: add the bundled plugin to the list of installed plugins on the self-contained apps
+                //Fixed: add a bundled plugin to the list of installed plugins on the self-contained apps
                 ContentValues rowData = new ContentValues();
                 rowData.put(Aware_Plugins.PLUGIN_AUTHOR, "Self-packaged");
                 rowData.put(Aware_Plugins.PLUGIN_DESCRIPTION, "Bundled with " + context.getPackageName());
@@ -642,32 +677,39 @@ public class Aware extends Service {
                 rowData.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, package_name);
                 rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
                 rowData.put(Aware_Plugins.PLUGIN_VERSION, 1);
-                context.getContentResolver().insert(Aware_Plugins.CONTENT_URI, rowData);
+                awareContext.getContentResolver().insert(Aware_Plugins.CONTENT_URI, rowData);
                 if (Aware.DEBUG)
-                    Log.d(TAG, "Added self-package " + package_name + " to " + context.getPackageName());
+                    Log.d(TAG, "Added self-package " + package_name + " to " + awareContext.getPackageName());
             }
             if (cached != null && !cached.isClosed()) cached.close();
-
-            return;
         }
 
-        //Check if plugin is cached
-        Cursor cached = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+        //set the plugin as active
+        Cursor cached = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
         if (cached != null && cached.moveToFirst()) {
             //Installed on the phone
             if (isClassAvailable(context, package_name, "Plugin")) {
                 Intent plugin = new Intent();
                 plugin.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
-                ComponentName cachedResult = context.startService(plugin);
+                ComponentName cachedResult = awareContext.startService(plugin);
                 if (cachedResult != null) {
-                    if (Aware.DEBUG) Log.d(TAG, package_name + " started...");
-                    ContentValues rowData = new ContentValues();
-                    rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
-                    context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+                    if (Aware.DEBUG)
+                        Log.d(TAG, package_name + " started...");
                 }
             }
         }
         if (cached != null && !cached.isClosed()) cached.close();
+
+        ContentValues rowData = new ContentValues();
+        rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
+        int updated = awareContext.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+
+        if (Aware.DEBUG)
+            Log.d(TAG, "Plugin " + package_name + " started: " + updated);
+
+        if (context.getPackageName().equals("com.aware.phone")) {
+            context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
+        }
     }
 
     /**
@@ -694,7 +736,7 @@ public class Aware extends Service {
     public static View getContextCard(final Context context, final String package_name) {
 
         if (!isClassAvailable(context, package_name, "ContextCard")) {
-            Log.d(TAG, "No ContextCard: " + package_name);
+            Log.d(Aware.TAG, "No ContextCard: " + package_name);
             return null;
         }
 
@@ -955,8 +997,10 @@ public class Aware extends Service {
      */
     public static void setSetting(Context context, String key, Object value, String package_name) {
         //We already have a device ID, bail-out!
-        if (key.equals(Aware_Preferences.DEVICE_ID) && Aware.getSetting(context, Aware_Preferences.DEVICE_ID).length() > 0)
+        if (key.equals(Aware_Preferences.DEVICE_ID) && Aware.getSetting(context, Aware_Preferences.DEVICE_ID).length() > 0) {
+            Log.d(Aware.TAG, "AWARE UUID: " + Aware.getSetting(context, Aware_Preferences.DEVICE_ID) + " in " + package_name);
             return;
+        }
 
         ContentValues setting = new ContentValues();
         setting.put(Aware_Settings.SETTING_KEY, key);
@@ -1023,6 +1067,7 @@ public class Aware extends Service {
                 if (element.has("sensors")) {
                     sensors = element.getJSONArray("sensors");
                 }
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -1216,6 +1261,7 @@ public class Aware extends Service {
                     //Apply study settings
                     JSONArray plugins = new JSONArray();
                     JSONArray sensors = new JSONArray();
+                    JSONArray schedulers = new JSONArray();
 
                     for (int i = 0; i < study_config.length(); i++) {
                         try {
@@ -1225,6 +1271,9 @@ public class Aware extends Service {
                             }
                             if (element.has("sensors")) {
                                 sensors = element.getJSONArray("sensors");
+                            }
+                            if (element.has("schedulers")) {
+                                schedulers = element.getJSONArray("schedulers");
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -1260,7 +1309,11 @@ public class Aware extends Service {
                         }
                     }
 
-                    //Start bundled plugins
+                    //Set schedulers
+                    if (schedulers.length() > 0)
+                        Scheduler.setSchedules(getApplicationContext(), schedulers);
+
+                    //Start plugins
                     for (String p : active_plugins) {
                         Aware.startPlugin(getApplicationContext(), p);
                     }
@@ -1383,6 +1436,55 @@ public class Aware extends Service {
                 if (extras.getBoolean(Intent.EXTRA_REPLACING)) {
                     if (Aware.DEBUG) Log.d(TAG, packageName + " is updating!");
 
+                    //Check study compliance
+                    if (Aware.isStudy(context)) {
+                        Cursor studyInfo = Aware.getStudy(context, Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SERVER));
+                        if (studyInfo != null && studyInfo.moveToFirst()) {
+                            try {
+                                JSONArray studyConfig = new JSONArray(studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                                JSONArray plugins = new JSONArray();
+                                for (int i = 0; i < studyConfig.length(); i++) {
+                                    try {
+                                        JSONObject element = studyConfig.getJSONObject(i);
+                                        if (element.has("plugins")) {
+                                            plugins = element.getJSONArray("plugins");
+                                        }
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                for (int j = 0; j < plugins.length(); j++) {
+                                    JSONObject plugin_config = plugins.getJSONObject(j);
+                                    String package_name = plugin_config.getString("plugin");
+
+                                    //Log the updated plugin
+                                    if (package_name.equalsIgnoreCase(packageName)) {
+                                        ContentValues complianceEntry = new ContentValues();
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_KEY, studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_API, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_API)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_URL, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_URL)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, studyInfo.getLong(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "updated plugin: " + package_name);
+
+                                        context.getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
+
+                                        if (Aware.DEBUG)
+                                            Log.d(Aware.TAG, "Study compliance check: " + complianceEntry.toString());
+                                    }
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        if (studyInfo != null && !studyInfo.isClosed()) studyInfo.close();
+                    }
+
                     ContentValues rowData = new ContentValues();
                     rowData.put(Aware_Plugins.PLUGIN_VERSION, PluginsManager.getPluginVersion(context, packageName));
                     rowData.put(Aware_Plugins.PLUGIN_ICON, PluginsManager.getPluginIcon(context, packageName));
@@ -1422,6 +1524,55 @@ public class Aware extends Service {
 
                     if (Aware.DEBUG)
                         Log.d(TAG, "AWARE plugin added and activated:" + app.packageName);
+
+                    //Check study compliance
+                    if (Aware.isStudy(context)) {
+                        Cursor studyInfo = Aware.getStudy(context, Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SERVER));
+                        if (studyInfo != null && studyInfo.moveToFirst()) {
+                            try {
+                                JSONArray studyConfig = new JSONArray(studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                                JSONArray plugins = new JSONArray();
+                                for (int i = 0; i < studyConfig.length(); i++) {
+                                    try {
+                                        JSONObject element = studyConfig.getJSONObject(i);
+                                        if (element.has("plugins")) {
+                                            plugins = element.getJSONArray("plugins");
+                                        }
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                for (int j = 0; j < plugins.length(); j++) {
+                                    JSONObject plugin_config = plugins.getJSONObject(j);
+                                    String package_name = plugin_config.getString("plugin");
+
+                                    //Participant installed necessary plugin
+                                    if (package_name.equalsIgnoreCase(packageName)) {
+                                        ContentValues complianceEntry = new ContentValues();
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_KEY, studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_API, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_API)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_URL, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_URL)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, studyInfo.getLong(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "installed plugin: " + package_name);
+
+                                        context.getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
+
+                                        if (Aware.DEBUG)
+                                            Log.d(Aware.TAG, "Study compliance check: " + complianceEntry.toString());
+                                    }
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        if (studyInfo != null && !studyInfo.isClosed()) studyInfo.close();
+                    }
 
                     Aware.startPlugin(context, app.packageName);
 
@@ -1475,7 +1626,7 @@ public class Aware extends Service {
                                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, studyInfo.getLong(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
                                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
                                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "uninstalled plugin: "+ package_name);
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "uninstalled plugin: " + package_name);
 
                                     context.getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
 
@@ -1487,7 +1638,7 @@ public class Aware extends Service {
                             e.printStackTrace();
                         }
                     }
-                    if (studyInfo != null && ! studyInfo.isClosed()) studyInfo.close();
+                    if (studyInfo != null && !studyInfo.isClosed()) studyInfo.close();
                 }
 
                 //clean-up settings & schedules
@@ -1506,6 +1657,7 @@ public class Aware extends Service {
      * - ACTION_AWARE_SYNC_DATA = upload data to remote webservice server.
      * - ACTION_AWARE_CLEAR_DATA = clears local device's AWARE modules databases.
      * - ACTION_AWARE_REFRESH - apply changes to the configuration.
+     *
      * @author denzil
      */
     private static final Aware_Broadcaster aware_BR = new Aware_Broadcaster();
@@ -1514,12 +1666,12 @@ public class Aware extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             //We are only synching the device information and study compliance, not aware's settings and active plugins.
-            String[] DATABASE_TABLES = new String[]{Aware_Provider.DATABASE_TABLES[0], Aware_Provider.DATABASE_TABLES[3]};
-            String[] TABLES_FIELDS = new String[]{Aware_Provider.TABLES_FIELDS[0], Aware_Provider.TABLES_FIELDS[3]};
-            Uri[] CONTEXT_URIS = new Uri[]{Aware_Device.CONTENT_URI, Aware_Provider.Aware_Studies.CONTENT_URI};
+            String[] DATABASE_TABLES = new String[]{Aware_Provider.DATABASE_TABLES[0], Aware_Provider.DATABASE_TABLES[3], Aware_Provider.DATABASE_TABLES[4]};
+            String[] TABLES_FIELDS = new String[]{Aware_Provider.TABLES_FIELDS[0], Aware_Provider.TABLES_FIELDS[3], Aware_Provider.TABLES_FIELDS[4]};
+            Uri[] CONTEXT_URIS = new Uri[]{Aware_Device.CONTENT_URI, Aware_Provider.Aware_Studies.CONTENT_URI, Aware_Provider.Aware_Log.CONTENT_URI};
 
             if (intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA) && Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
-                for( int i=0; i<DATABASE_TABLES.length; i++ ) {
+                for (int i = 0; i < DATABASE_TABLES.length; i++) {
                     Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
                     webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
                     webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
@@ -1530,7 +1682,7 @@ public class Aware extends Service {
             }
 
             if (intent.getAction().equals(Aware.ACTION_AWARE_CLEAR_DATA)) {
-                for( int i=0; i<DATABASE_TABLES.length; i++) {
+                for (int i = 0; i < DATABASE_TABLES.length; i++) {
                     context.getContentResolver().delete(Aware_Provider.Aware_Device.CONTENT_URI, null, null);
                     if (Aware.DEBUG) Log.d(TAG, "Cleared " + CONTEXT_URIS[i]);
 
@@ -1587,10 +1739,68 @@ public class Aware extends Service {
         }
     }
 
+    private static void complianceStatus() {
+        ConnectivityManager connManager = (ConnectivityManager) awareContext.getSystemService(CONNECTIVITY_SERVICE);
+        LocationManager locationManager = (LocationManager) awareContext.getSystemService(LOCATION_SERVICE);
+        TelephonyManager telephonyManager = (TelephonyManager) awareContext.getSystemService(TELEPHONY_SERVICE);
+
+        JSONObject complianceStatus = new JSONObject();
+
+        try {
+            NetworkInfo active = connManager.getActiveNetworkInfo();
+            if (active != null && active.isConnectedOrConnecting()) {
+                complianceStatus.put("internet", true);
+            } else {
+                complianceStatus.put("internet", false);
+            }
+
+            NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+            if (wifi.isAvailable()) {
+                complianceStatus.put("wifi", true);
+            } else {
+                complianceStatus.put("wifi", false);
+            }
+
+            NetworkInfo bt = connManager.getNetworkInfo(ConnectivityManager.TYPE_BLUETOOTH);
+            if (bt.isAvailable()) {
+                complianceStatus.put("bt", true);
+            } else {
+                complianceStatus.put("bt", false);
+            }
+
+            NetworkInfo network = connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+            if (network.isAvailable()) {
+                complianceStatus.put("network", true);
+            } else {
+                complianceStatus.put("network", false);
+            }
+
+            boolean airplane = false;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                airplane = Settings.Global.getInt(awareContext.getContentResolver(), Settings.Global.AIRPLANE_MODE_ON, 0) != 0;
+            } else {
+                airplane = Settings.System.getInt(awareContext.getContentResolver(), Settings.System.AIRPLANE_MODE_ON, 0) != 0;
+            }
+
+            complianceStatus.put("airplane", airplane);
+            complianceStatus.put("roaming", telephonyManager.isNetworkRoaming());
+            complianceStatus.put("location_gps", locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER));
+            complianceStatus.put("location_network", locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER));
+
+            Aware.debug(awareContext, complianceStatus.toString());
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * Start active services
      */
     public static void startAWARE() {
+
+        complianceStatus();
+
         if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true")) {
             startESM(awareContext);
         } else stopESM(awareContext);
@@ -1695,9 +1905,7 @@ public class Aware extends Service {
             startKeyboard(awareContext);
         } else stopKeyboard(awareContext);
 
-        //Start task scheduler
-        scheduler = new Intent(awareContext, Scheduler.class);
-        awareContext.startService(scheduler);
+        startScheduler(awareContext);
     }
 
     /**
@@ -1730,7 +1938,18 @@ public class Aware extends Service {
         stopESM(awareContext);
         stopInstallations(awareContext);
         stopKeyboard(awareContext);
-        awareContext.stopService(scheduler);
+        stopScheduler(awareContext);
+    }
+
+    public static void startScheduler(Context context) {
+        awareContext = context;
+        if (scheduler == null) scheduler = new Intent(awareContext, Scheduler.class);
+        awareContext.startService(scheduler);
+    }
+
+    public static void stopScheduler(Context context) {
+        awareContext = context;
+        if (scheduler != null) awareContext.stopService(scheduler);
     }
 
     /**

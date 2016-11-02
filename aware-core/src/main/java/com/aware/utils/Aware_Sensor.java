@@ -14,6 +14,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.IBinder;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GestureDetectorCompat;
 import android.util.Log;
 
 import com.aware.Aware;
@@ -88,8 +89,6 @@ public class Aware_Sensor extends Service {
         TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG) : TAG;
         DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
 
-        if (DEBUG) Log.d(TAG, TAG + " sensor created!");
-
         //Register Context Broadcaster
         IntentFilter filter = new IntentFilter();
         filter.addAction(Aware.ACTION_AWARE_CURRENT_CONTEXT);
@@ -109,6 +108,14 @@ public class Aware_Sensor extends Service {
             study_SSL.putExtra(SSLManager.EXTRA_SERVER, Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
             startService(study_SSL);
         }
+
+        Aware.debug(this, "created: " + getClass().getName());
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Aware.debug(this, "active: " + getClass().getName());
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
@@ -120,7 +127,7 @@ public class Aware_Sensor extends Service {
             unregisterReceiver(contextBroadcaster);
         }
 
-        if (DEBUG) Log.d(TAG, TAG + " sensor terminated...");
+        Aware.debug(this, "destroyed: " + getClass().getName());
     }
 
     /**

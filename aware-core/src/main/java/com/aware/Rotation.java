@@ -54,7 +54,7 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
     private static Handler sensorHandler = null;
     private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
-    private static int FIFO_SIZE = 0;
+//    private static int FIFO_SIZE = 0;
     private static float LAST_VALUE_0 = 0;
     private static float LAST_VALUE_1 = 0;
     private static float LAST_VALUE_2 = 0;
@@ -215,7 +215,7 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
 
         mRotation = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-        FIFO_SIZE = mRotation.getFifoReservedEventCount();
+//        FIFO_SIZE = mRotation.getFifoReservedEventCount();
 
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
@@ -284,7 +284,8 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
                         || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ROTATION))) {
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mRotation);
-                    mSensorManager.registerListener(this, mRotation, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION)), FIFO_SIZE, sensorHandler);
+//                    mSensorManager.registerListener(this, mRotation, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION)), FIFO_SIZE, sensorHandler);
+                    mSensorManager.registerListener(this, mRotation, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION)), sensorHandler);
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION));
                     THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ROTATION));

@@ -48,9 +48,9 @@ import java.lang.Math;
 public class LinearAccelerometer extends Aware_Sensor implements SensorEventListener {
 
     /**
-     * Logging tag (default = "AWARE::LinearAccelerometer")
+     * Logging tag (default = "AWARE::LinearAcc.")
      */
-    private static String TAG = "AWARE::Linear Accelerometer";
+    private static String TAG = "AWARE::Linear Acc.";
 
     private static SensorManager mSensorManager;
     private static Sensor mLinearAccelerator;
@@ -58,7 +58,7 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
     private static Handler sensorHandler = null;
     private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
-    private static int FIFO_SIZE = 0;
+//    private static int FIFO_SIZE = 0;
     private static float LAST_VALUE_0 = 0;
     private static float LAST_VALUE_1 = 0;
     private static float LAST_VALUE_2 = 0;
@@ -215,7 +215,7 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
 
         mLinearAccelerator = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        FIFO_SIZE = mLinearAccelerator.getFifoReservedEventCount();
+//        FIFO_SIZE = mLinearAccelerator.getFifoReservedEventCount();
 
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
@@ -285,8 +285,8 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
                         || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_LINEAR_ACCELEROMETER))) {
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mLinearAccelerator);
-                    mSensorManager.registerListener(this, mLinearAccelerator, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER)), FIFO_SIZE, sensorHandler);
-
+//                    mSensorManager.registerListener(this, mLinearAccelerator, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER)), FIFO_SIZE, sensorHandler);
+                    mSensorManager.registerListener(this, mLinearAccelerator, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER)), sensorHandler);
                     FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER));
                     THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_LINEAR_ACCELEROMETER));
                 }

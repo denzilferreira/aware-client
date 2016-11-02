@@ -56,7 +56,7 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
     private static Handler sensorHandler = null;
     private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
-    private static int FIFO_SIZE = 0;
+//    private static int FIFO_SIZE = 0;
     private static float LAST_VALUE_0 = 0;
     private static float LAST_VALUE_1 = 0;
     private static float LAST_VALUE_2 = 0;
@@ -211,7 +211,7 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         
         mGravity = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
-        FIFO_SIZE = mGravity.getFifoReservedEventCount();
+//        FIFO_SIZE = mGravity.getFifoReservedEventCount();
 
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
@@ -280,7 +280,8 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
                         || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GRAVITY))) {
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mGravity);
-                    mSensorManager.registerListener(this, mGravity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY)), FIFO_SIZE, sensorHandler);
+//                    mSensorManager.registerListener(this, mGravity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY)), FIFO_SIZE, sensorHandler);
+                    mSensorManager.registerListener(this, mGravity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY)), sensorHandler);
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY));
                     THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GRAVITY));

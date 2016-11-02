@@ -26,7 +26,7 @@ import java.util.HashMap;
  */
 public class Aware_Provider extends ContentProvider {
 
-    public static final int DATABASE_VERSION = 16;
+    public static final int DATABASE_VERSION = 17;
 
     /**
      * AWARE framework content authority
@@ -42,6 +42,8 @@ public class Aware_Provider extends ContentProvider {
     private static final int PLUGIN_ID = 6;
     private static final int STUDY = 7;
     private static final int STUDY_ID = 8;
+    private static final int LOG = 9;
+    private static final int LOG_ID = 10;
 
     /**
      * Information about the device in which the framework is installed.
@@ -139,8 +141,22 @@ public class Aware_Provider extends ContentProvider {
         public static final String STUDY_COMPLIANCE = "study_compliance";
     }
 
+    public static final class Aware_Log implements BaseColumns {
+        private Aware_Log() {
+        }
+
+        public static final Uri CONTENT_URI = Uri.parse("content://" + Aware_Provider.AUTHORITY + "/aware_log");
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.aware.log";
+        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.aware.log";
+
+        public static final String LOG_ID = "_id";
+        public static final String LOG_TIMESTAMP = "timestamp";
+        public static final String LOG_DEVICE_ID = "device_id";
+        public static final String LOG_MESSAGE = "log_message";
+    }
+
     public static String DATABASE_NAME = "aware.db";
-    public static final String[] DATABASE_TABLES = {"aware_device", "aware_settings", "aware_plugins", "aware_studies"};
+    public static final String[] DATABASE_TABLES = {"aware_device", "aware_settings", "aware_plugins", "aware_studies", "aware_log"};
     public static final String[] TABLES_FIELDS = {
             // Device information
             Aware_Device._ID + " integer primary key autoincrement,"
@@ -189,7 +205,12 @@ public class Aware_Provider extends ContentProvider {
                     Aware_Studies.STUDY_DESCRIPTION + " text default ''," +
                     Aware_Studies.STUDY_JOINED + " real default 0," +
                     Aware_Studies.STUDY_EXIT + " real default 0," +
-                    Aware_Studies.STUDY_COMPLIANCE + " text default ''"
+                    Aware_Studies.STUDY_COMPLIANCE + " text default ''",
+
+            Aware_Log.LOG_ID + " integer primary key autoincrement," +
+                    Aware_Log.LOG_TIMESTAMP + " real default 0," +
+                    Aware_Log.LOG_DEVICE_ID + " text default ''," +
+                    Aware_Log.LOG_MESSAGE + " text default ''"
     };
 
     private static UriMatcher sUriMatcher = null;
@@ -197,6 +218,7 @@ public class Aware_Provider extends ContentProvider {
     private static HashMap<String, String> settingsMap = null;
     private static HashMap<String, String> pluginsMap = null;
     private static HashMap<String, String> studiesMap = null;
+    private static HashMap<String, String> logMap = null;
 
     private static DatabaseHelper databaseHelper = null;
     private static SQLiteDatabase database = null;
@@ -252,6 +274,13 @@ public class Aware_Provider extends ContentProvider {
                 database.setTransactionSuccessful();
                 database.endTransaction();
                 break;
+            case LOG:
+                database.beginTransaction();
+                count = database.delete(DATABASE_TABLES[4], selection,
+                        selectionArgs);
+                database.setTransactionSuccessful();
+                database.endTransaction();
+                break;
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
@@ -278,6 +307,10 @@ public class Aware_Provider extends ContentProvider {
                 return Aware_Studies.CONTENT_TYPE;
             case STUDY_ID:
                 return Aware_Studies.CONTENT_ITEM_TYPE;
+            case LOG:
+                return Aware_Log.CONTENT_TYPE;
+            case LOG_ID:
+                return Aware_Log.CONTENT_ITEM_TYPE;
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
@@ -350,6 +383,20 @@ public class Aware_Provider extends ContentProvider {
                     return settUri;
                 }
                 throw new SQLException("Failed to insert row into " + uri);
+
+            case LOG:
+                database.beginTransaction();
+                long log_id = database.insertWithOnConflict(DATABASE_TABLES[4],
+                        Aware_Log.LOG_DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
+                database.setTransactionSuccessful();
+                database.endTransaction();
+                if (log_id > 0) {
+                    Uri settUri = ContentUris.withAppendedId(
+                            Aware_Log.CONTENT_URI, log_id);
+                    getContext().getContentResolver().notifyChange(settUri, null);
+                    return settUri;
+                }
+                throw new SQLException("Failed to insert row into " + uri);
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
@@ -368,6 +415,8 @@ public class Aware_Provider extends ContentProvider {
         sUriMatcher.addURI(Aware_Provider.AUTHORITY, DATABASE_TABLES[2] + "/#", PLUGIN_ID);
         sUriMatcher.addURI(Aware_Provider.AUTHORITY, DATABASE_TABLES[3], STUDY);
         sUriMatcher.addURI(Aware_Provider.AUTHORITY, DATABASE_TABLES[3] + "/#", STUDY_ID);
+        sUriMatcher.addURI(Aware_Provider.AUTHORITY, DATABASE_TABLES[4], LOG);
+        sUriMatcher.addURI(Aware_Provider.AUTHORITY, DATABASE_TABLES[4] + "/#", LOG_ID);
 
         deviceMap = new HashMap<>();
         deviceMap.put(Aware_Device._ID, Aware_Device._ID);
@@ -418,6 +467,12 @@ public class Aware_Provider extends ContentProvider {
         studiesMap.put(Aware_Studies.STUDY_EXIT, Aware_Studies.STUDY_EXIT);
         studiesMap.put(Aware_Studies.STUDY_COMPLIANCE, Aware_Studies.STUDY_COMPLIANCE);
 
+        logMap = new HashMap<>();
+        logMap.put(Aware_Log.LOG_ID, Aware_Log.LOG_ID);
+        logMap.put(Aware_Log.LOG_TIMESTAMP, Aware_Log.LOG_TIMESTAMP);
+        logMap.put(Aware_Log.LOG_DEVICE_ID, Aware_Log.LOG_DEVICE_ID);
+        logMap.put(Aware_Log.LOG_MESSAGE, Aware_Log.LOG_MESSAGE);
+
         return true;
     }
 
@@ -451,6 +506,10 @@ public class Aware_Provider extends ContentProvider {
             case STUDY:
                 qb.setTables(DATABASE_TABLES[3]);
                 qb.setProjectionMap(studiesMap);
+                break;
+            case LOG:
+                qb.setTables(DATABASE_TABLES[4]);
+                qb.setProjectionMap(logMap);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);
@@ -505,6 +564,13 @@ public class Aware_Provider extends ContentProvider {
             case STUDY:
                 database.beginTransaction();
                 count = database.update(DATABASE_TABLES[3], values, selection,
+                        selectionArgs);
+                database.setTransactionSuccessful();
+                database.endTransaction();
+                break;
+            case LOG:
+                database.beginTransaction();
+                count = database.update(DATABASE_TABLES[4], values, selection,
                         selectionArgs);
                 database.setTransactionSuccessful();
                 database.endTransaction();

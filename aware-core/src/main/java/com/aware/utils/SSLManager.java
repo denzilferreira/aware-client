@@ -3,10 +3,7 @@ package com.aware.utils;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
-import android.icu.util.Output;
 import android.net.Uri;
-import android.security.KeyChain;
-import android.security.KeyChainException;
 import android.util.Log;
 
 import com.aware.Aware;
@@ -24,15 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -77,6 +66,7 @@ public class SSLManager extends IntentService {
         // " " and "+" are %-encoded.
         Uri study_uri = Uri.parse(url);
         String hostname = study_uri.getHost();
+
         if (study_uri.getQuery() != null) {
             // If it is in URL parameters, always unconditionally handle it
             String crt = study_uri.getQueryParameter("crt");
@@ -121,32 +111,19 @@ public class SSLManager extends IntentService {
             cert_host = "awareframework.com";
         } else cert_host = hostname;
 
-        Future https = Ion.with(context.getApplicationContext())
-                .load("http://" + cert_host + "/public/server.crt")
+        Future https = Ion.with(context.getApplicationContext()).load("http://" + cert_host + "/public/server.crt").noCache()
                 .write(new File(context.getExternalFilesDir(null) + "/Documents/credentials/" + hostname + "/server.crt"))
                 .setCallback(new FutureCallback<File>() {
                     @Override
                     public void onCompleted(Exception e, File result) {
-                        if( e == null ) {
-                            Log.d(Aware.TAG, "SSL certificate: " + result.toString());
+                        if( e != null ) {
+                            Log.d(Aware.TAG, "ERROR SSL certificate: " + e.getMessage());
                         }
                     }
                 });
-//        Future ca = Ion.with(context.getApplicationContext())
-//                .load("http://" + cert_host + "/public/ca.crt")
-//                .write(new File(context.getExternalFilesDir(null) + "/Documents/credentials/" + hostname + "/ca.crt"))
-//                .setCallback(new FutureCallback<File>() {
-//                    @Override
-//                    public void onCompleted(Exception e, File result) {
-//                        if( e == null ) {
-//                            Log.d(Aware.TAG, "CA certificate: " + result.toString());
-//                        }
-//                    }
-//                });
         if (block) {
             try {
                 https.get();
-//                ca.get();
             } catch (java.lang.InterruptedException | ExecutionException e) {
                 // What to do here?
             }
@@ -271,6 +248,10 @@ public class SSLManager extends IntentService {
     public static InputStream getHTTPS(Context c, String server) throws FileNotFoundException {
         Uri study_uri = Uri.parse(server);
         String hostname = study_uri.getHost();
+
+        //Makes sure we always have the latest certificate
+        downloadCertificate(c, hostname, true);
+
         File host_credentials = new File( c.getExternalFilesDir(null) + "/Documents/", "credentials/"+ hostname );
         if( host_credentials.exists() ) {
             File[] certs = host_credentials.listFiles();
@@ -290,6 +271,10 @@ public class SSLManager extends IntentService {
      * @throws FileNotFoundException
      */
     public static InputStream getCertificate(Context c, String server) throws FileNotFoundException {
+
+        //Makes sure we always have the latest certificate
+        downloadCertificate(c, server, true);
+
         File host_credentials = new File( c.getExternalFilesDir(null) + "/Documents/", "credentials/"+ server );
         if( host_credentials.exists() ) {
             File[] certs = host_credentials.listFiles();

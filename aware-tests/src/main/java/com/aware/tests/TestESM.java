@@ -4,19 +4,24 @@ import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
+import com.aware.Aware;
 import com.aware.ESM;
 import com.aware.ui.ESM_Queue;
 import com.aware.ui.esms.ESMFactory;
 import com.aware.ui.esms.ESM_Checkbox;
+import com.aware.ui.esms.ESM_DateTime;
 import com.aware.ui.esms.ESM_Freetext;
 import com.aware.ui.esms.ESM_Likert;
+import com.aware.ui.esms.ESM_PAM;
 import com.aware.ui.esms.ESM_Question;
 import com.aware.ui.esms.ESM_QuickAnswer;
 import com.aware.ui.esms.ESM_Radio;
 import com.aware.ui.esms.ESM_Scale;
 import com.aware.ui.esms.ESM_Number;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 
 /**
@@ -29,7 +34,97 @@ public class TestESM implements AwareTest {
 //        testESMS(context);
 //        trialESMS(context);
 //        testFlow(context);
-        testTimeoutQueue(context);
+//        testTimeoutQueue(context);
+//        testNumeric(context);
+//        testDateTime(context);
+        testPAM(context);
+    }
+
+    private void testPAM(Context context) {
+        ESMFactory factory = new ESMFactory();
+
+        try {
+            ESM_PAM q1 = new ESM_PAM();
+            JSONArray images = new JSONArray();
+            images.put("http://awareframework.com/public/pam/afraid.jpg");
+            images.put("http://awareframework.com/public/pam/angry.jpg");
+            images.put("http://awareframework.com/public/pam/calm.jpg");
+            images.put("http://awareframework.com/public/pam/delighted.jpg");
+            images.put("http://awareframework.com/public/pam/excited.jpg");
+            images.put("http://awareframework.com/public/pam/frustrated.jpg");
+            images.put("http://awareframework.com/public/pam/glad.jpg");
+            images.put("http://awareframework.com/public/pam/gloomy.jpg");
+            images.put("http://awareframework.com/public/pam/happy.jpg");
+            images.put("http://awareframework.com/public/pam/miserable.jpg");
+            images.put("http://awareframework.com/public/pam/sad.jpg");
+            images.put("http://awareframework.com/public/pam/satisfied.jpg");
+            images.put("http://awareframework.com/public/pam/serene.jpg");
+            images.put("http://awareframework.com/public/pam/sleepy.jpg");
+            images.put("http://awareframework.com/public/pam/tense.jpg");
+            images.put("http://awareframework.com/public/pam/tired.jpg");
+            q1.setPAM(images);
+            q1.setTitle("PAM")
+                    .setInstructions("Pick the closest to how you feel right now.")
+                    .setSubmitButton("OK")
+                    .setTrigger("AWARE Test");
+
+            factory.addESM(q1);
+
+            Log.d(Aware.TAG, factory.build());
+
+            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
+            queue.putExtra(ESM.EXTRA_ESM, factory.build());
+            context.sendBroadcast(queue);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void testDateTime(Context context) {
+        ESMFactory factory = new ESMFactory();
+
+        try {
+            ESM_DateTime q1 = new ESM_DateTime();
+            q1.setTitle("Date and time")
+                    .setInstructions("When did this happen?")
+                    .setSubmitButton("OK")
+                    .setTrigger("AWARE Test");
+
+            factory.addESM(q1);
+
+            Log.d(Aware.TAG, factory.build());
+
+            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
+            queue.putExtra(ESM.EXTRA_ESM, factory.build());
+            context.sendBroadcast(queue);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void testNumeric(Context context) {
+        ESMFactory factory = new ESMFactory();
+
+        try {
+            ESM_Number q1 = new ESM_Number();
+            q1.setTitle("Number")
+                    .setInstructions("We only accept a number!")
+                    .setSubmitButton("OK")
+                    .setTrigger("AWARE Test");
+
+            factory.addESM(q1);
+
+            Log.d(Aware.TAG, factory.build());
+
+            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
+            queue.putExtra(ESM.EXTRA_ESM, factory.build());
+            context.sendBroadcast(queue);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     private void testFlow(Context context) {

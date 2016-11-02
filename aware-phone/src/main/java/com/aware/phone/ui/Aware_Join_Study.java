@@ -1,6 +1,5 @@
 package com.aware.phone.ui;
 
-import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -13,6 +12,7 @@ import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,7 +24,6 @@ import android.widget.Toast;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
-import com.aware.phone.Aware_Client;
 import com.aware.phone.R;
 import com.aware.providers.Aware_Provider;
 import com.aware.utils.PluginsManager;
@@ -76,22 +75,22 @@ public class Aware_Join_Study extends Aware_Activity {
         study_url = getIntent().getStringExtra(EXTRA_STUDY_URL);
 
         Cursor qry = Aware.getStudy(this, study_url);
+        if (qry == null || !qry.moveToFirst()) {
+            Toast.makeText(Aware_Join_Study.this, "Error getting study information.", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+
         if (qry != null && qry.moveToFirst()) {
             try {
                 study_configs = new JSONArray(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
                 txtStudyTitle.setText(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
-                txtStudyDescription.setText(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
+                txtStudyDescription.setText(Html.fromHtml(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)), null, null));
                 txtStudyResearcher.setText(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
         if (qry != null && !qry.isClosed()) qry.close();
-
-        if (qry == null || !qry.moveToFirst()) {
-            Toast.makeText(Aware_Join_Study.this, "Error getting study information.", Toast.LENGTH_SHORT).show();
-            finish();
-        }
 
         if (study_configs != null) {
             populateStudyInfo(study_configs);

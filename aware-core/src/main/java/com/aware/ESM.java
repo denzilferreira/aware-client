@@ -166,11 +166,22 @@ public class ESM extends Aware_Sensor {
     public static final int TYPE_ESM_SCALE = 6;
 
     /**
-     * ESM Dialog with number input only
-     * Example: [{'esm':{'esm_type':7,'esm_title':'ESM Number','esm_instructions':'User can answer with any numeric value','esm_submit':'Next','esm_expiration_threshold':20,'esm_trigger':'esm trigger example'}}]
+     * ESM Dialog with a date and time picker
+     * Example: [{"esm":{"esm_type":7,"esm_title":"Date and time","esm_instructions":"When did this happen?","esm_submit":"OK","esm_trigger":"AWARE Test"}}]
      */
+    public static final int TYPE_ESM_DATETIME = 7;
 
-    public static final int TYPE_ESM_NUMBER = 7;
+    /**
+     * ESM Dialog with PAM (Photographic Affect Meter)
+     * [{"esm":{"esm_type":8,"esm_title":"PAM","esm_instructions":"Select what best illustrates your mood","esm_submit":"OK","esm_trigger":"AWARE Test"}}]
+     */
+    public static final int TYPE_ESM_PAM = 8;
+
+    /**
+     * ESM Dialog with number input only
+     * Example: [{'esm':{'esm_type':9,'esm_title':'ESM Number','esm_instructions':'User can answer with any numeric value','esm_submit':'Next','esm_expiration_threshold':20,'esm_trigger':'esm trigger example'}}]
+     */
+    public static final int TYPE_ESM_NUMBER = 9;
 
 
     /**
@@ -300,6 +311,18 @@ public class ESM extends Aware_Sensor {
     }
 
     /**
+     * Queue an ESM without a broadcast receiver
+     * @param c
+     * @param esm
+     */
+    public static void queueESM(Context c, String esm) {
+        Intent backgroundService = new Intent(c, QueueESM.class);
+        backgroundService.setAction(ESM.ACTION_AWARE_QUEUE_ESM);
+        backgroundService.putExtra(EXTRA_ESM, esm);
+        c.startService(backgroundService);
+    }
+
+    /**
      * Show notification with ESM waiting
      *
      * @param c
@@ -404,17 +427,14 @@ public class ESM extends Aware_Sensor {
             if (Aware.getSetting(context, Aware_Preferences.STATUS_ESM).equals("false")) return;
 
             if (intent.getAction().equals(ESM.ACTION_AWARE_TRY_ESM)) {
-                Intent backgroundService = new Intent(context, BackgroundService.class);
+                Intent backgroundService = new Intent(context, QueueESM.class);
                 backgroundService.setAction(ESM.ACTION_AWARE_TRY_ESM);
                 backgroundService.putExtra(EXTRA_ESM, intent.getStringExtra(ESM.EXTRA_ESM));
                 context.startService(backgroundService);
             }
 
             if (intent.getAction().equals(ESM.ACTION_AWARE_QUEUE_ESM)) {
-                Intent backgroundService = new Intent(context, BackgroundService.class);
-                backgroundService.setAction(ESM.ACTION_AWARE_QUEUE_ESM);
-                backgroundService.putExtra(EXTRA_ESM, intent.getStringExtra(ESM.EXTRA_ESM));
-                context.startService(backgroundService);
+                queueESM(context, intent.getStringExtra(ESM.EXTRA_ESM));
             }
 
             if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_ANSWERED)) {
@@ -524,9 +544,9 @@ public class ESM extends Aware_Sensor {
      *
      * @author df
      */
-    public static class BackgroundService extends IntentService {
-        public BackgroundService() {
-            super(TAG + " background service");
+    public static class QueueESM extends IntentService {
+        public QueueESM() {
+            super(TAG + " queueing service");
         }
 
         @Override
