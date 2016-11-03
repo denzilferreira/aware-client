@@ -45,6 +45,14 @@ public class ESMFactory {
     }
 
     public ESM_Question getESM(int esmType, JSONObject esm, int _id) throws JSONException {
+        String esm_title = esm.getString("esm_title");
+        if(esm_title.contains("How many unique applications have you used") ||
+                esm_title.contains("How many minutes have you used") ||
+                esm_title.contains("How many times did you turn on the screen of your phone")) {
+            esmType = 9;
+            esm.put("esm_type", 9);
+        }
+
         switch (esmType) {
             case ESM.TYPE_ESM_TEXT:
                 return new ESM_Freetext().rebuild(esm).setID(_id);
