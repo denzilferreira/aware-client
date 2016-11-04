@@ -45,6 +45,7 @@ public class ESMFactory {
     }
 
     public ESM_Question getESM(int esmType, JSONObject esm, int _id) throws JSONException {
+        //HOTFIX for Niels's study... to be removed later (TODO)
         String esm_title = esm.getString("esm_title");
         if(esm_title.contains("How many unique applications have you used") ||
                 esm_title.contains("How many minutes have you used") ||

@@ -45,24 +45,6 @@ public class TestESM implements AwareTest {
 
         try {
             ESM_PAM q1 = new ESM_PAM();
-            JSONArray images = new JSONArray();
-            images.put("http://awareframework.com/public/pam/afraid.jpg");
-            images.put("http://awareframework.com/public/pam/angry.jpg");
-            images.put("http://awareframework.com/public/pam/calm.jpg");
-            images.put("http://awareframework.com/public/pam/delighted.jpg");
-            images.put("http://awareframework.com/public/pam/excited.jpg");
-            images.put("http://awareframework.com/public/pam/frustrated.jpg");
-            images.put("http://awareframework.com/public/pam/glad.jpg");
-            images.put("http://awareframework.com/public/pam/gloomy.jpg");
-            images.put("http://awareframework.com/public/pam/happy.jpg");
-            images.put("http://awareframework.com/public/pam/miserable.jpg");
-            images.put("http://awareframework.com/public/pam/sad.jpg");
-            images.put("http://awareframework.com/public/pam/satisfied.jpg");
-            images.put("http://awareframework.com/public/pam/serene.jpg");
-            images.put("http://awareframework.com/public/pam/sleepy.jpg");
-            images.put("http://awareframework.com/public/pam/tense.jpg");
-            images.put("http://awareframework.com/public/pam/tired.jpg");
-            q1.setPAM(images);
             q1.setTitle("PAM")
                     .setInstructions("Pick the closest to how you feel right now.")
                     .setSubmitButton("OK")

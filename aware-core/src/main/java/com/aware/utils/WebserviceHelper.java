@@ -204,11 +204,19 @@ public class WebserviceHelper extends IntentService {
                         if (study != null && !study.isClosed()) study.close();
                     }
 
-                    //However, we always want to sync the device's profile and hardware sensor profiles for any study, no matter when we join it
+                    //We always want to sync the device's profile and hardware sensor profiles for any study, no matter when we joined the study
                     if (DATABASE_TABLE.equalsIgnoreCase("aware_device")
-                            || DATABASE_TABLE.matches("sensor_.*")
-                            || DATABASE_TABLE.equalsIgnoreCase("aware_studies"))
+                            || DATABASE_TABLE.matches("sensor_.*"))
                         study_condition = "";
+
+                    //FIXED: only load the log of the current enrolled study, nothing more.
+                    if (DATABASE_TABLE.equalsIgnoreCase("aware_studies")) {
+                        Cursor study_log = getContentResolver().query(Aware_Provider.Aware_Studies.CONTENT_URI, null, Aware_Provider.Aware_Studies.STUDY_URL + " LIKE '" + Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER) + "'", null, Aware_Provider.Aware_Studies.STUDY_TIMESTAMP + " ASC LIMIT 1");
+                        if (study_log != null && study_log.moveToFirst()) {
+                            study_condition = " AND timestamp >= " + study_log.getLong(study_log.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP));
+                        }
+                        if (study_log != null && ! study_log.isClosed()) study_log.close();
+                    }
 
                     JSONArray remoteData = new JSONArray(latest);
 
