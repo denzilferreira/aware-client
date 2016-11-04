@@ -1799,7 +1799,9 @@ public class Aware extends Service {
      */
     public static void startAWARE() {
 
-        complianceStatus();
+        //Fixed: only the client needs to check the compliance
+        if (awareContext.getPackageName().equals("com.aware.phone"))
+            complianceStatus();
 
         if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true")) {
             startESM(awareContext);

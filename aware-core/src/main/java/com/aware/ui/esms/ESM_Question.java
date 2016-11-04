@@ -318,7 +318,6 @@ public class ESM_Question extends DialogFragment {
     public class DismissNotificationTimeout extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
-            Log.d("AWARE", "do in background called");
             // Remove notification timeout upon ESM being displayed
             Intent removeESMNotification = new Intent(getContext(), ESM.RemoveESM.class);
             PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), 710, removeESMNotification, 0);

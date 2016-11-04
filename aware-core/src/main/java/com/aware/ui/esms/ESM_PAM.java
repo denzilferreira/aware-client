@@ -26,6 +26,7 @@ import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -35,10 +36,9 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class ESM_PAM extends ESM_Question {
 
-    public static final String esm_pam = "esm_pam";
-
     private String pam_selected = "";
 
+    public static final String esm_pam = "esm_pam";
     public ESM_PAM() throws JSONException {
         this.setType(ESM.TYPE_ESM_PAM);
     }
@@ -66,6 +66,45 @@ public class ESM_PAM extends ESM_Question {
     public ESM_PAM setPAM(JSONArray pam) throws JSONException {
         this.esm.put(esm_pam, pam);
         return this;
+    }
+
+    private String moodDescription(int mood) {
+        switch (mood) {
+            case 6:
+                return "glad";
+            case 15:
+                return "tired";
+            case 13:
+                return "sleepy";
+            case 10:
+                return "sad";
+            case 3:
+                return "delighted";
+            case 2:
+                return "calm";
+            case 0:
+                return "afraid";
+            case 5:
+                return "frustrated";
+            case 14:
+                return "tense";
+            case 7:
+                return "gloomy";
+            case 1:
+                return "angry";
+            case 12:
+                return "serene";
+            case 9:
+                return "miserable";
+            case 11:
+                return "satisfied";
+            case 4:
+                return "excited";
+            case 8:
+                return "happy";
+            default:
+                return "-";
+        }
     }
 
     @NonNull
@@ -109,37 +148,40 @@ public class ESM_PAM extends ESM_Question {
             JSONArray moods = getPAM(); //0-indexed
             if (moods.length() == 0) {
                 //Load by default ours
-                moods.put("http://awareframework.com/public/pam/afraid.jpg");
-                moods.put("http://awareframework.com/public/pam/angry.jpg");
-                moods.put("http://awareframework.com/public/pam/calm.jpg");
-                moods.put("http://awareframework.com/public/pam/delighted.jpg");
-                moods.put("http://awareframework.com/public/pam/excited.jpg");
-                moods.put("http://awareframework.com/public/pam/frustrated.jpg");
-                moods.put("http://awareframework.com/public/pam/glad.jpg");
-                moods.put("http://awareframework.com/public/pam/gloomy.jpg");
-                moods.put("http://awareframework.com/public/pam/happy.jpg");
-                moods.put("http://awareframework.com/public/pam/miserable.jpg");
-                moods.put("http://awareframework.com/public/pam/sad.jpg");
-                moods.put("http://awareframework.com/public/pam/satisfied.jpg");
-                moods.put("http://awareframework.com/public/pam/serene.jpg");
-                moods.put("http://awareframework.com/public/pam/sleepy.jpg");
-                moods.put("http://awareframework.com/public/pam/tense.jpg");
-                moods.put("http://awareframework.com/public/pam/tired.jpg");
+                moods.put("http://awareframework.com/public/pam/afraid");
+                moods.put("http://awareframework.com/public/pam/angry");
+                moods.put("http://awareframework.com/public/pam/calm");
+                moods.put("http://awareframework.com/public/pam/delighted");
+                moods.put("http://awareframework.com/public/pam/excited");
+                moods.put("http://awareframework.com/public/pam/frustrated");
+                moods.put("http://awareframework.com/public/pam/glad");
+                moods.put("http://awareframework.com/public/pam/gloomy");
+                moods.put("http://awareframework.com/public/pam/happy");
+                moods.put("http://awareframework.com/public/pam/miserable");
+                moods.put("http://awareframework.com/public/pam/sad");
+                moods.put("http://awareframework.com/public/pam/satisfied");
+                moods.put("http://awareframework.com/public/pam/serene");
+                moods.put("http://awareframework.com/public/pam/sleepy");
+                moods.put("http://awareframework.com/public/pam/tense");
+                moods.put("http://awareframework.com/public/pam/tired");
             }
 
             for (int i = 1; i < 17; i++) {
-                final ImageView moodOption = (ImageView) ui.findViewById(getResources().getIdentifier("pos" + i, "id", getActivity().getPackageName()));
+                ImageView moodOption = (ImageView) ui.findViewById(getResources().getIdentifier("pos" + i, "id", getActivity().getPackageName()));
                 while (true) {
-                    Integer mood = ThreadLocalRandom.current().nextInt(0, 15+1);
+                    Random rand_mood = new Random();
+                    Integer mood = rand_mood.nextInt(16);
                     if (!generated.contains(mood)) {
                         generated.add(mood);
 
                         String mood_picture_url = moods.getString(mood);
 
+                        Random rand_pic = new Random();
+                        Integer pic = 1 + rand_pic.nextInt(2);
                         //Asynchronously download mood image and caches automatically
-                        Ion.with(moodOption).placeholder(R.drawable.square).load(mood_picture_url);
+                        Ion.with(moodOption).placeholder(R.drawable.square).load(mood_picture_url + "/" + pic + ".jpg");
 
-                        moodOption.setTag(mood_picture_url);
+                        moodOption.setTag(moodDescription(mood));
                         moodOption.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
