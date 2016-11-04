@@ -39,6 +39,7 @@ public class ESM_PAM extends ESM_Question {
     private String pam_selected = "";
 
     public static final String esm_pam = "esm_pam";
+
     public ESM_PAM() throws JSONException {
         this.setType(ESM.TYPE_ESM_PAM);
     }
@@ -70,38 +71,38 @@ public class ESM_PAM extends ESM_Question {
 
     private String moodDescription(int mood) {
         switch (mood) {
-            case 6:
-                return "glad";
-            case 15:
-                return "tired";
-            case 13:
-                return "sleepy";
-            case 10:
-                return "sad";
-            case 3:
-                return "delighted";
-            case 2:
-                return "calm";
-            case 0:
+            case 1:
                 return "afraid";
+            case 2:
+                return "tense";
+            case 3:
+                return "excited";
+            case 4:
+                return "delighted";
             case 5:
                 return "frustrated";
-            case 14:
-                return "tense";
-            case 7:
-                return "gloomy";
-            case 1:
+            case 6:
                 return "angry";
-            case 12:
-                return "serene";
+            case 7:
+                return "happy";
+            case 8:
+                return "glad";
             case 9:
                 return "miserable";
+            case 10:
+                return "sad";
             case 11:
+                return "calm";
+            case 12:
                 return "satisfied";
-            case 4:
-                return "excited";
-            case 8:
-                return "happy";
+            case 13:
+                return "gloomy";
+            case 14:
+                return "tired";
+            case 15:
+                return "sleepy";
+            case 16:
+                return "serene";
             default:
                 return "-";
         }
@@ -143,60 +144,51 @@ public class ESM_PAM extends ESM_Question {
                 }
             });
 
-            //Populate affect grid with photos random positions
-            List<Integer> generated = new ArrayList<>();
             JSONArray moods = getPAM(); //0-indexed
             if (moods.length() == 0) {
                 //Load by default ours
                 moods.put("http://awareframework.com/public/pam/afraid");
-                moods.put("http://awareframework.com/public/pam/angry");
-                moods.put("http://awareframework.com/public/pam/calm");
-                moods.put("http://awareframework.com/public/pam/delighted");
+                moods.put("http://awareframework.com/public/pam/tense");
                 moods.put("http://awareframework.com/public/pam/excited");
+                moods.put("http://awareframework.com/public/pam/delighted");
                 moods.put("http://awareframework.com/public/pam/frustrated");
-                moods.put("http://awareframework.com/public/pam/glad");
-                moods.put("http://awareframework.com/public/pam/gloomy");
+                moods.put("http://awareframework.com/public/pam/angry");
                 moods.put("http://awareframework.com/public/pam/happy");
+                moods.put("http://awareframework.com/public/pam/glad");
                 moods.put("http://awareframework.com/public/pam/miserable");
                 moods.put("http://awareframework.com/public/pam/sad");
+                moods.put("http://awareframework.com/public/pam/calm");
                 moods.put("http://awareframework.com/public/pam/satisfied");
-                moods.put("http://awareframework.com/public/pam/serene");
-                moods.put("http://awareframework.com/public/pam/sleepy");
-                moods.put("http://awareframework.com/public/pam/tense");
+                moods.put("http://awareframework.com/public/pam/gloomy");
                 moods.put("http://awareframework.com/public/pam/tired");
+                moods.put("http://awareframework.com/public/pam/sleepy");
+                moods.put("http://awareframework.com/public/pam/serene");
             }
 
             for (int i = 1; i < 17; i++) {
                 ImageView moodOption = (ImageView) ui.findViewById(getResources().getIdentifier("pos" + i, "id", getActivity().getPackageName()));
-                while (true) {
-                    Random rand_mood = new Random();
-                    Integer mood = rand_mood.nextInt(16);
-                    if (!generated.contains(mood)) {
-                        generated.add(mood);
 
-                        String mood_picture_url = moods.getString(mood);
+                String mood_picture_url = moods.getString(i-1);
 
-                        Random rand_pic = new Random();
-                        Integer pic = 1 + rand_pic.nextInt(2);
-                        //Asynchronously download mood image and caches automatically
-                        Ion.with(moodOption).placeholder(R.drawable.square).load(mood_picture_url + "/" + pic + ".jpg");
+                Random rand_pic = new Random(System.currentTimeMillis());
+                Integer pic = 1 + rand_pic.nextInt(3);
 
-                        moodOption.setTag(moodDescription(mood));
-                        moodOption.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                try {
-                                    if (getExpirationThreshold() > 0 && expire_monitor != null)
-                                        expire_monitor.cancel(true);
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                                pam_selected = view.getTag().toString();
-                            }
-                        });
-                        break;
+                //Asynchronously download mood image and caches automatically
+                Ion.with(moodOption).placeholder(R.drawable.square).load(mood_picture_url + "/" + pic + ".jpg");
+
+                moodOption.setTag(moodDescription(i));
+                moodOption.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        try {
+                            if (getExpirationThreshold() > 0 && expire_monitor != null)
+                                expire_monitor.cancel(true);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        pam_selected = view.getTag().toString();
                     }
-                }
+                });
             }
 
             Button cancel_text = (Button) ui.findViewById(R.id.esm_cancel);
