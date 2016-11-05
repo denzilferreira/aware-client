@@ -5,7 +5,6 @@ import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.icu.util.Calendar;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.view.PagerAdapter;
@@ -26,6 +25,8 @@ import com.aware.R;
 import com.aware.providers.ESM_Provider;
 
 import org.json.JSONException;
+
+import java.util.Calendar;
 
 /**
  * Created by denzil on 01/11/2016.
