@@ -166,6 +166,9 @@ public class ESM_PAM extends ESM_Question {
             }
 
             for (int i = 1; i < 17; i++) {
+
+                final int childPos = i;
+
                 ImageView moodOption = (ImageView) ui.findViewById(getResources().getIdentifier("pos" + i, "id", getActivity().getPackageName()));
 
                 String mood_picture_url = moods.getString(i-1);
@@ -187,6 +190,15 @@ public class ESM_PAM extends ESM_Question {
                             e.printStackTrace();
                         }
                         pam_selected = view.getTag().toString();
+
+                        answersHolder.getChildAt(childPos-1).setSelected(true);
+
+                        for (int j=1; j<17; j++){
+                            if (childPos == j) {
+                                continue;
+                            } else
+                                answersHolder.getChildAt(j-1).setSelected(false);
+                        }
                     }
                 });
             }
