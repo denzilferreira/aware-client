@@ -616,6 +616,7 @@ public class Scheduler extends Service {
 
                         continue;
                     }
+
                     if (schedule.getConditions().length() > 0) {
                         //clean-up
                         if (schedulerContentObservers.containsKey(schedule.getScheduleID())) {
@@ -797,13 +798,21 @@ public class Scheduler extends Service {
                 last_time_triggered.close();
             }
 
+            Log.d(TAG, "Timer is: " + schedule.getTimer() + " Last triggered:" + last_triggered);
+
             // This is a scheduled task with a set timestamp.
             // We trigger it within a 5 minute interval (before & after). The framework checks this at inexact 5 minutes
             if (schedule.getTimer() != -1 && last_triggered == 0) { //not been triggered yet
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Checking trigger set for a specific timestamp: " + schedule.getTimer());
-                if (Math.abs(now.getTimeInMillis() - schedule.getTimer()) < 5 * 60 * 1000)
+//                if (Aware.DEBUG)
+
+                Log.d(Aware.TAG, "Checking trigger set for a specific timestamp: " + schedule.getTimer());
+
+                if (Math.abs(now.getTimeInMillis()-schedule.getTimer()) < 5 * 60 * 1000) {
+                    Log.d(Aware.TAG, "Triggered: " + schedule.getScheduleID() + " : time to target: " + Math.abs(now.getTimeInMillis() - schedule.getTimer())/1000/60);
                     return true; //trigger within a 5-minute window
+                } else {
+                    Log.d(Aware.TAG, "Not the right time to trigger... : time to target: " + Math.abs(now.getTimeInMillis() - schedule.getTimer())/1000/60);
+                }
             }
 
             Calendar previous = null;
