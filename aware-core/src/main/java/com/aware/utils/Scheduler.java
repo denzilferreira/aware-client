@@ -27,6 +27,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Locale;
@@ -77,13 +78,13 @@ public class Scheduler extends Service {
     public static final String ACTION_EXTRA_VALUE = "extra_value";
 
     //String is the scheduler ID, and hashtable contains list of intentfilters and broadcastreceivers
-    private static final Hashtable<String, Hashtable<IntentFilter, BroadcastReceiver>> schedulerListeners = new Hashtable<>();
+    private final Hashtable<String, Hashtable<IntentFilter, BroadcastReceiver>> schedulerListeners = new Hashtable<>();
 
     //String is the scheduler ID, and hashtable contains list of table content_uri and created contentobservers
-    private static final Hashtable<String, Hashtable<Uri, ContentObserver>> schedulerContentObservers = new Hashtable<>();
+    private final Hashtable<String, Hashtable<Uri, ContentObserver>> schedulerContentObservers = new Hashtable<>();
 
     //String is the scheduler ID, and hashtable contains list of content observers and if they are currently triggered or not
-    private static final Hashtable<String, Hashtable<ContentObserver, Boolean>> schedulerConditionals = new Hashtable<>();
+    private final Hashtable<String, Hashtable<ContentObserver, Boolean>> schedulerConditionals = new Hashtable<>();
 
     @Override
     public void onCreate() {
@@ -562,19 +563,22 @@ public class Scheduler extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+        //FIXED: enable debugging in service
+        Aware.DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+
         if (Aware.DEBUG) Log.d(TAG, "Checking for scheduled tasks: " + getPackageName());
 
         Cursor scheduled_tasks = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null, Scheduler_Provider.Scheduler_Data.TIMESTAMP + " ASC");
         if (scheduled_tasks != null && scheduled_tasks.moveToFirst()) {
             if (Aware.DEBUG)
                 Log.d(TAG, "Scheduled tasks for " + getPackageName() + ": " + scheduled_tasks.getCount());
+
             do {
                 try {
                     final Schedule schedule = new Schedule(scheduled_tasks.getString(scheduled_tasks.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID)));
                     schedule.rebuild(new JSONObject(scheduled_tasks.getString(scheduled_tasks.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE))));
 
                     if (schedule.getContexts().length() > 0) {
-
                         if (schedulerListeners.containsKey(schedule.getScheduleID())) {
                             Hashtable<IntentFilter, BroadcastReceiver> scheduled = schedulerListeners.get(schedule.getScheduleID());
                             for (IntentFilter filter : scheduled.keySet()) {
@@ -659,6 +663,7 @@ public class Scheduler extends Service {
 
                             if (Aware.DEBUG)
                                 Log.d(Aware.TAG, "Registered a conditional trigger for: " + content_uri.toString() + " where: " + content_where);
+
                         }
 
                         continue;
@@ -667,12 +672,14 @@ public class Scheduler extends Service {
                     if (is_trigger(schedule)) {
                         if (Aware.DEBUG)
                             Log.d(Aware.TAG, "Triggering scheduled task: " + schedule.toString());
+
                         performAction(schedule);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             } while (scheduled_tasks.moveToNext());
+
         } else {
             if (Aware.DEBUG) Log.d(TAG, "No scheduled tasks for " + getPackageName());
         }
@@ -798,20 +805,20 @@ public class Scheduler extends Service {
                 last_time_triggered.close();
             }
 
-            Log.d(TAG, "Timer is: " + schedule.getTimer() + " Last triggered:" + last_triggered);
-
             // This is a scheduled task with a set timestamp.
             // We trigger it within a 5 minute interval (before & after). The framework checks this at inexact 5 minutes
             if (schedule.getTimer() != -1 && last_triggered == 0) { //not been triggered yet
-//                if (Aware.DEBUG)
+                if (Aware.DEBUG)
+                    Log.d(Aware.TAG, "Checking trigger set for a specific timestamp: " + schedule.getTimer());
 
-                Log.d(Aware.TAG, "Checking trigger set for a specific timestamp: " + schedule.getTimer());
+                if (now.getTimeInMillis()-5*60*1000 <= schedule.getTimer() && schedule.getTimer() <= now.getTimeInMillis() + 5*60*1000) { //trigger within a 5-minute window
+                    if(Aware.DEBUG)
+                        Log.d(Aware.TAG, "Triggered: " + schedule.getScheduleID());
 
-                if (Math.abs(now.getTimeInMillis()-schedule.getTimer()) < 5 * 60 * 1000) {
-                    Log.d(Aware.TAG, "Triggered: " + schedule.getScheduleID() + " : time to target: " + Math.abs(now.getTimeInMillis() - schedule.getTimer())/1000/60);
-                    return true; //trigger within a 5-minute window
+                    return true;
                 } else {
-                    Log.d(Aware.TAG, "Not the right time to trigger... : time to target: " + Math.abs(now.getTimeInMillis() - schedule.getTimer())/1000/60);
+                    if(Aware.DEBUG)
+                        Log.d(Aware.TAG, "Not the right time to trigger...: " + new Date(schedule.getTimer()).toString());
                 }
             }
 

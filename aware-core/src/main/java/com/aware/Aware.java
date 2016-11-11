@@ -1856,6 +1856,8 @@ public class Aware extends Service {
         if (awareContext.getPackageName().equals("com.aware.phone") && isStudy(awareContext))
             complianceStatus();
 
+        startScheduler(awareContext);
+
         if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true")) {
             startESM(awareContext);
         } else stopESM(awareContext);
@@ -1959,8 +1961,6 @@ public class Aware extends Service {
         if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_KEYBOARD).equals("true")) {
             startKeyboard(awareContext);
         } else stopKeyboard(awareContext);
-
-        startScheduler(awareContext);
     }
 
     /**
