@@ -333,7 +333,7 @@ public class ESM extends Aware_Sensor {
 
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_esm);
-            mBuilder.setContentTitle("AWARE");
+            mBuilder.setContentTitle(c.getResources().getText(R.string.aware_esm_questions_title));
             mBuilder.setContentText(c.getResources().getText(R.string.aware_esm_questions));
             mBuilder.setNumber(ESM_Queue.getQueueSize(c));
             mBuilder.setOnlyAlertOnce(true); //notify the user only once for the same notification ID

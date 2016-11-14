@@ -1,6 +1,5 @@
 package com.aware.utils;
 
-import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentValues;
@@ -13,7 +12,6 @@ import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.SystemClock;
 import android.util.Log;
 
 import com.aware.Aware;
@@ -27,15 +25,16 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Random;
 
-public class Scheduler extends Service {
+public class Scheduler extends Aware_Sensor {
 
     private static String TAG = "AWARE::Scheduler";
 
+    public static final String ACTION_AWARE_SCHEDULER_CHECK = "ACTION_AWARE_SCHEDULER_CHECK";
     public static final String ACTION_AWARE_SCHEDULER_TRIGGERED = "ACTION_AWARE_SCHEDULER_TRIGGERED";
     public static final String EXTRA_SCHEDULER_ID = "extra_scheduler_id";
 
@@ -77,19 +76,7 @@ public class Scheduler extends Service {
     public static final String ACTION_EXTRA_VALUE = "extra_value";
 
     //String is the scheduler ID, and hashtable contains list of intentfilters and broadcastreceivers
-    private static final Hashtable<String, Hashtable<IntentFilter, BroadcastReceiver>> schedulerListeners = new Hashtable<>();
-
-    //String is the scheduler ID, and hashtable contains list of table content_uri and created contentobservers
-    private static final Hashtable<String, Hashtable<Uri, ContentObserver>> schedulerContentObservers = new Hashtable<>();
-
-    //String is the scheduler ID, and hashtable contains list of content observers and if they are currently triggered or not
-    private static final Hashtable<String, Hashtable<ContentObserver, Boolean>> schedulerConditionals = new Hashtable<>();
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        if (Aware.DEBUG) Log.d(TAG, "Scheduler is created");
-    }
+    private static Hashtable<String, Hashtable<IntentFilter, BroadcastReceiver>> schedulerListeners = new Hashtable<>();
 
     /**
      * Save the defined scheduled task
@@ -114,16 +101,16 @@ public class Scheduler extends Service {
 
             Cursor schedules = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + context.getPackageName() + "'", null, null);
             if (schedules != null && schedules.getCount() == 1) {
-                Log.d(Aware.TAG, "Updating already existing schedule...");
+                Log.d(Scheduler.TAG, "Updating already existing schedule...");
                 context.getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + ((is_global) ? "com.aware.phone" : context.getPackageName()) + "'", null);
             } else {
-                Log.d(Aware.TAG, "New schedule: " + data.toString());
+                Log.d(Scheduler.TAG, "New schedule: " + data.toString());
                 context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
             }
             if (schedules != null && !schedules.isClosed()) schedules.close();
 
         } catch (JSONException e) {
-            Log.e(Aware.TAG, "Error saving schedule");
+            Log.e(Scheduler.TAG, "Error saving schedule");
         }
     }
 
@@ -145,16 +132,16 @@ public class Scheduler extends Service {
 
             Cursor schedules = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
             if (schedules != null && schedules.getCount() == 1) {
-                Log.d(Aware.TAG, "Updating already existing schedule...");
+                Log.d(Scheduler.TAG, "Updating already existing schedule...");
                 context.getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + package_name + "'", null);
             } else {
-                Log.d(Aware.TAG, "New schedule: " + data.toString());
+                Log.d(Scheduler.TAG, "New schedule: " + data.toString());
                 context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
             }
             if (schedules != null && !schedules.isClosed()) schedules.close();
 
         } catch (JSONException e) {
-            Log.e(Aware.TAG, "Error saving schedule");
+            Log.e(Scheduler.TAG, "Error saving schedule");
         }
     }
 
@@ -166,7 +153,7 @@ public class Scheduler extends Service {
      */
     public static void removeSchedule(Context context, String schedule_id) {
 
-        ArrayList<String> global_settings = new ArrayList<String>();
+        ArrayList<String> global_settings = new ArrayList<>();
         global_settings.add(Aware.SCHEDULE_SPACE_MAINTENANCE);
         global_settings.add(Aware.SCHEDULE_SYNC_DATA);
 
@@ -195,7 +182,7 @@ public class Scheduler extends Service {
      */
     public static Schedule getSchedule(Context context, String schedule_id) {
 
-        ArrayList<String> global_settings = new ArrayList<String>();
+        ArrayList<String> global_settings = new ArrayList<>();
         global_settings.add(Aware.SCHEDULE_SPACE_MAINTENANCE);
         global_settings.add(Aware.SCHEDULE_SYNC_DATA);
 
@@ -252,7 +239,7 @@ public class Scheduler extends Service {
                 Schedule s = new Schedule(schedule);
                 saveSchedule(c, s, schedule.getString("package"));
             } catch (JSONException e) {
-                if (Aware.DEBUG) Log.d(Scheduler.TAG, "Error in JSON: " + e.getMessage());
+                if (DEBUG) Log.d(Scheduler.TAG, "Error in JSON: " + e.getMessage());
             }
         }
 
@@ -535,7 +522,7 @@ public class Scheduler extends Service {
         }
 
         /**
-         * Get X random schedules from defined minute/hour/weekday/month triggers
+         * Get random schedules from defined minute/hour/weekday/month triggers
          *
          * @throws JSONException
          */
@@ -559,113 +546,131 @@ public class Scheduler extends Service {
         }
     }
 
+    private SchedulerTicker schedulerTicker = new SchedulerTicker();
+
+    public static class SchedulerTicker extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //Executed every 1-minute. OS will send this tickle automatically
+            if (intent.getAction().equals(Intent.ACTION_TIME_TICK)) {
+                Intent scheduler = new Intent(context, Scheduler.class);
+                scheduler.setAction(Scheduler.ACTION_AWARE_SCHEDULER_CHECK);
+                context.startService(scheduler);
+            }
+        }
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        IntentFilter tick = new IntentFilter();
+        tick.addAction(Intent.ACTION_TIME_TICK);
+        registerReceiver(schedulerTicker, tick);
+
+        if (DEBUG) Log.d(TAG, "Scheduler is created");
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        if (Aware.DEBUG) Log.d(TAG, "Checking for scheduled tasks: " + getPackageName());
+        DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+
+        if (DEBUG) Log.d(TAG, "Checking for scheduled tasks: " + getPackageName());
 
         Cursor scheduled_tasks = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null, Scheduler_Provider.Scheduler_Data.TIMESTAMP + " ASC");
         if (scheduled_tasks != null && scheduled_tasks.moveToFirst()) {
-            if (Aware.DEBUG)
+
+            if (DEBUG)
                 Log.d(TAG, "Scheduled tasks for " + getPackageName() + ": " + scheduled_tasks.getCount());
+
             do {
                 try {
-                    final Schedule schedule = new Schedule(scheduled_tasks.getString(scheduled_tasks.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID)));
-                    schedule.rebuild(new JSONObject(scheduled_tasks.getString(scheduled_tasks.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE))));
 
+                    final Schedule schedule = getSchedule(this, scheduled_tasks.getString(scheduled_tasks.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID)));
+
+                    //unable to load schedule. This should never happen.
+                    if (schedule == null) {
+                        if (DEBUG)
+                            Log.e(TAG, "Failed to load schedule... something is wrong with the database.");
+                        continue;
+                    }
+
+                    //Check schedulers triggered by broadcasts
                     if (schedule.getContexts().length() > 0) {
-
-                        if (schedulerListeners.containsKey(schedule.getScheduleID())) {
-                            Hashtable<IntentFilter, BroadcastReceiver> scheduled = schedulerListeners.get(schedule.getScheduleID());
-                            for (IntentFilter filter : scheduled.keySet()) {
-                                try {
-                                    unregisterReceiver(scheduled.get(filter));
-                                } catch (NullPointerException e) {
-                                    e.printStackTrace();
-                                }
+                        //Check if we already registered the broadcastreceivers for this schedule
+                        if (!schedulerListeners.containsKey(schedule.getScheduleID())) {
+                            //Register broadcast listeners again
+                            final JSONArray contexts = schedule.getContexts();
+                            IntentFilter filter = new IntentFilter();
+                            for (int i = 0; i < contexts.length(); i++) {
+                                String context = contexts.getString(i);
+                                filter.addAction(context);
                             }
-                            schedulerListeners.remove(schedule.getScheduleID());
-                        }
 
-                        final JSONArray contexts = schedule.getContexts();
-                        IntentFilter filter = new IntentFilter();
-                        for (int i = 0; i < contexts.length(); i++) {
-                            String context = contexts.getString(i);
-                            filter.addAction(context);
-                        }
-
-                        BroadcastReceiver listener = new BroadcastReceiver() {
-                            @Override
-                            public void onReceive(Context context, Intent intent) {
-                                if (is_trigger(schedule)) {
-                                    if (Aware.DEBUG)
-                                        Log.d(Aware.TAG, "Received contextual trigger: " + contexts.toString());
-                                    performAction(schedule);
+                            BroadcastReceiver listener = new BroadcastReceiver() {
+                                @Override
+                                public void onReceive(Context context, Intent intent) {
+                                    if (is_trigger(schedule)) {
+                                        if (DEBUG)
+                                            Log.d(TAG, "Triggered contextual trigger: " + contexts.toString());
+                                        performAction(schedule);
+                                    }
                                 }
-                            }
-                        };
+                            };
 
-                        Hashtable<IntentFilter, BroadcastReceiver> scheduler_listener = new Hashtable<>();
-                        scheduler_listener.put(filter, listener);
-                        schedulerListeners.put(schedule.getScheduleID(), scheduler_listener);
+                            Hashtable<IntentFilter, BroadcastReceiver> scheduler_listener = new Hashtable<>();
+                            scheduler_listener.put(filter, listener);
+                            schedulerListeners.put(schedule.getScheduleID(), scheduler_listener);
 
-                        registerReceiver(listener, filter);
+                            registerReceiver(listener, filter);
 
-                        if (Aware.DEBUG)
-                            Log.d(Aware.TAG, "Registered a contextual trigger for " + contexts.toString());
+                            if (DEBUG)
+                                Log.d(TAG, "Registered a contextual trigger for " + contexts.toString());
+                        } else {
+                            if (DEBUG)
+                                Log.d(TAG, "Contextual triggers are active: " + schedule.getContexts().toString());
+                        }
 
                         continue;
                     }
-                    if (schedule.getConditions().length() > 0) {
-                        //clean-up
-                        if (schedulerContentObservers.containsKey(schedule.getScheduleID())) {
-                            Hashtable<Uri, ContentObserver> scheduled = schedulerContentObservers.get(schedule.getScheduleID());
-                            for (Uri table : scheduled.keySet()) {
-                                try {
-                                    getContentResolver().unregisterContentObserver(scheduled.get(table));
-                                } catch (NullPointerException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                            schedulerContentObservers.remove(schedule.getScheduleID());
-                        }
-                        if (schedulerConditionals.containsKey(schedule.getScheduleID())) {
-                            schedulerConditionals.remove(schedule.getScheduleID());
-                        }
 
-                        //set conditions
+                    //Check databases latest value for condition matching
+                    if (schedule.getConditions().length() > 0) {
+
                         final JSONArray conditions = schedule.getConditions();
+                        Boolean[] booleans = new Boolean[conditions.length()];
+
                         for (int i = 0; i < conditions.length(); i++) {
                             JSONObject condition = conditions.getJSONObject(i);
-
                             Uri content_uri = Uri.parse(condition.getString(CONDITION_URI));
                             String content_where = condition.getString(CONDITION_WHERE);
 
-                            DBObservers dbObserver = new DBObservers(new Handler());
-                            dbObserver.setCondition(content_where);
-                            dbObserver.setSchedule(schedule);
-                            dbObserver.setTable(content_uri);
-
-                            Hashtable<Uri, ContentObserver> scheduler_observer = new Hashtable<>();
-                            scheduler_observer.put(content_uri, dbObserver);
-                            schedulerContentObservers.put(schedule.getScheduleID(), scheduler_observer);
-
-                            getContentResolver().registerContentObserver(content_uri, true, dbObserver);
-
-                            Hashtable<ContentObserver, Boolean> scheduler_trigger = new Hashtable<>();
-                            scheduler_trigger.put(dbObserver, Boolean.FALSE);
-                            schedulerConditionals.put(schedule.getScheduleID(), scheduler_trigger);
-
-                            if (Aware.DEBUG)
-                                Log.d(Aware.TAG, "Registered a conditional trigger for: " + content_uri.toString() + " where: " + content_where);
+                            //Checked every 1-minute. Looking back in time for 1 minute.
+                            Cursor rows = getContentResolver().query(content_uri, null, content_where + " AND timestamp BETWEEN " + (System.currentTimeMillis()-60000) + " AND " + System.currentTimeMillis(), null, "timestamp DESC LIMIT 1");
+                            Log.d(TAG, "Database: " + content_uri.toString() + " where: "+ content_where + " Results: \n" + DatabaseUtils.dumpCursorToString(rows));
+                            if (rows != null && rows.moveToFirst()) {
+                                booleans[i] = true;
+                            } else {
+                                booleans[i] = false;
+                            }
+                            if (rows != null && ! rows.isClosed()) rows.close();
                         }
 
+                        if (!Arrays.asList(booleans).contains(Boolean.FALSE)) {
+                            if (DEBUG)
+                                Log.d(TAG, "Triggered conditional triggers: " + schedule.getConditions().toString());
+                            performAction(schedule);
+                        } else {
+                            Log.d(TAG, "Conditions are not all TRUE: " + booleans.toString());
+                        }
                         continue;
                     }
 
+                    //Not contextual or conditional scheduler, it is time-based
                     if (is_trigger(schedule)) {
-                        if (Aware.DEBUG)
-                            Log.d(Aware.TAG, "Triggering scheduled task: " + schedule.toString());
+                        if (DEBUG)
+                            Log.d(TAG, "Triggering scheduled task: " + schedule.getScheduleID() + " in package: " + getPackageName());
                         performAction(schedule);
                     }
                 } catch (JSONException e) {
@@ -673,86 +678,20 @@ public class Scheduler extends Service {
                 }
             } while (scheduled_tasks.moveToNext());
         } else {
-            if (Aware.DEBUG) Log.d(TAG, "No scheduled tasks for " + getPackageName());
+            if (DEBUG) Log.d(TAG, "No scheduled tasks for " + getPackageName());
         }
         if (scheduled_tasks != null && !scheduled_tasks.isClosed()) scheduled_tasks.close();
 
         return super.onStartCommand(intent, flags, startId);
     }
 
-    /**
-     * Used by the conditional schedulers
-     */
-    private class DBObservers extends ContentObserver {
-        private Uri table;
-        private String condition;
-        private Schedule schedule;
-
-        public DBObservers(Handler handler) {
-            super(handler);
-        }
-
-        public DBObservers setSchedule(Schedule s) {
-            this.schedule = s;
-            return this;
-        }
-
-        public DBObservers setTable(Uri content_uri) {
-            this.table = content_uri;
-            return this;
-        }
-
-        public DBObservers setCondition(String where) {
-            this.condition = where;
-            return this;
-        }
-
-        @Override
-        public void onChange(boolean selfChange) {
-            if (table != null && condition.length() > 0) {
-                //Consider the latest data as fresh as the last 1 seconds.
-                boolean condition_met = false;
-                Cursor data = getContentResolver().query(table, null, condition + " AND timestamp BETWEEN " + (System.currentTimeMillis()-1000) + " AND " + System.currentTimeMillis(), null, "timestamp DESC LIMIT 1");
-                if (data != null && data.moveToFirst()) {
-                    condition_met = true;
-                }
-                if (data != null && !data.isClosed()) data.close();
-
-                if (condition_met) {
-                    if (Aware.DEBUG)
-                        Log.d(Aware.TAG, "Condition triggered: " + table.toString() + " where: " + condition);
-
-                    try {
-                        schedulerConditionals.get(schedule.getScheduleID()).put(this, Boolean.TRUE);
-                    } catch (JSONException e){
-                        e.printStackTrace();
-                    }
-                }
-
-                //check if all scheduler conditions are met
-                try {
-                    Hashtable<ContentObserver, Boolean> conditionals = schedulerConditionals.get(schedule.getScheduleID());
-                    Boolean[] booleans = new Boolean[conditionals.size()];
-                    for(ContentObserver obs : conditionals.keySet()) {
-                        Boolean cond = conditionals.get(obs);
-                        booleans[booleans.length] = cond;
-                    }
-                    if (!Arrays.asList(booleans).contains(Boolean.FALSE)) {
-                        performAction(schedule);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Missing parameters");
-            }
-        }
-    }
-
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        //Stop listening to time ticks
+        unregisterReceiver(schedulerTicker);
+
         //Remove broadcast receivers
         for (String schedule_id : schedulerListeners.keySet()) {
             Hashtable<IntentFilter, BroadcastReceiver> scheduled = schedulerListeners.get(schedule_id);
@@ -764,26 +703,24 @@ public class Scheduler extends Service {
                 }
             }
         }
-
-        //Remove content observers
-        for (String schedule_id : schedulerContentObservers.keySet()) {
-            Hashtable<Uri, ContentObserver> scheduled = schedulerContentObservers.get(schedule_id);
-            for (Uri table : scheduled.keySet()) {
-                try {
-                    getContentResolver().unregisterContentObserver(scheduled.get(table));
-                } catch (NullPointerException e) {
-                    e.printStackTrace();
-                }
-            }
-            schedulerConditionals.remove(schedule_id);
-        }
     }
 
+    /**
+     * Checks for time con
+     *
+     * @param schedule
+     * @return
+     */
     private boolean is_trigger(Schedule schedule) {
+
         Calendar now = Calendar.getInstance();
         now.setTimeInMillis(System.currentTimeMillis());
 
+        if (DEBUG)
+            Log.i(TAG, "Time now is: " + now.getTime().toString());
+
         try {
+
             //Context and condition schedulers do not have time constrains and it is handled by the broadcast receiver or the content observer
             if (schedule.getContexts().length() > 0 || schedule.getConditions().length() > 0) {
                 return true;
@@ -797,57 +734,35 @@ public class Scheduler extends Service {
                 last_time_triggered.close();
             }
 
-            // This is a scheduled task with a set timestamp.
+            // This is a scheduled task with a specific timestamp. Once triggered, it's deleted from the database automatically.
             // We trigger it within a 5 minute interval (before & after). The framework checks this at inexact 5 minutes
             if (schedule.getTimer() != -1 && last_triggered == 0) { //not been triggered yet
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Checking trigger set for a specific timestamp: " + schedule.getTimer());
-                if (Math.abs(now.getTimeInMillis() - schedule.getTimer()) < 5 * 60 * 1000)
-                    return true; //trigger within a 5-minute window
+
+                Calendar schedulerTimer = Calendar.getInstance();
+                schedulerTimer.setTimeInMillis(schedule.getTimer());
+
+                if (DEBUG)
+                    Log.d(Scheduler.TAG, "Checking trigger set for a specific timestamp: " + schedulerTimer.getTime().toString());
+
+                //trigger within a 2-minute window
+                if (schedule.getTimer() - 2 * 60 * 1000 <= now.getTimeInMillis() && now.getTimeInMillis() <= schedule.getTimer() + 2 * 60 * 1000) {
+                    return true;
+                } else {
+                    if (DEBUG) Log.d(Scheduler.TAG,
+                            "Not the right time to trigger...: \nNow: " + now.getTime().toString() + " vs trigger: " + new Date(schedule.getTimer()).toString()
+                                    + "\n Time to trigger: " + Converters.readable_elapsed(schedule.getTimer() - now.getTimeInMillis()));
+                }
             }
 
             Calendar previous = null;
             if (last_triggered != 0) {
                 previous = Calendar.getInstance();
                 previous.setTimeInMillis(last_triggered);
+
+                if (DEBUG) Log.i(TAG, "Scheduler last triggered: " + previous.getTime().toString());
             }
 
             boolean execute = false;
-
-            if (schedule.getInterval() > 0 && previous == null) {
-                execute = true;
-            } else if (schedule.getInterval() > 0 && previous != null) {
-                execute = is_interval_elapsed(now, previous, schedule.getInterval());
-            }
-            if (Aware.DEBUG)
-                Log.d(Aware.TAG, "Trigger interval: " + execute);
-
-            if (schedule.getMinutes().length() > 0) {
-                if (previous != null && is_same_minute_hour(now, previous)) {
-                    execute = false;
-                } else
-                    execute = is_trigger_minute(schedule);
-            }
-            if (Aware.DEBUG)
-                Log.d(Aware.TAG, "Trigger minute: " + execute);
-
-            if (schedule.getHours().length() > 0) {
-                if (previous != null && is_same_hour_day(now, previous)) {
-                    execute = false;
-                } else
-                    execute = is_trigger_hour(schedule);
-            }
-            if (Aware.DEBUG)
-                Log.d(Aware.TAG, "Trigger hour: " + execute);
-
-            if (schedule.getWeekdays().length() > 0) {
-                if (previous != null && is_same_weekday(now, previous)) {
-                    execute = false;
-                } else
-                    execute = is_trigger_weekday(schedule);
-            }
-            if (Aware.DEBUG)
-                Log.d(Aware.TAG, "Trigger weekday: " + execute);
 
             if (schedule.getMonths().length() > 0) {
                 if (previous != null && is_same_month(now, previous)) {
@@ -855,8 +770,39 @@ public class Scheduler extends Service {
                 } else
                     execute = is_trigger_month(schedule);
             }
-            if (Aware.DEBUG)
-                Log.d(Aware.TAG, "Trigger month: " + execute);
+            if (DEBUG) Log.d(Scheduler.TAG, "Trigger month: " + execute);
+
+            if (schedule.getWeekdays().length() > 0) {
+                if (previous != null && is_same_weekday(now, previous)) {
+                    execute = false;
+                } else
+                    execute = is_trigger_weekday(schedule);
+            }
+            if (DEBUG) Log.d(Scheduler.TAG, "Trigger weekday: " + execute);
+
+            if (schedule.getHours().length() > 0) {
+                if (previous != null && is_same_hour_day(now, previous)) {
+                    execute = false;
+                } else
+                    execute = is_trigger_hour(schedule);
+            }
+            if (DEBUG) Log.d(Scheduler.TAG, "Trigger hour: " + execute);
+
+            if (schedule.getMinutes().length() > 0) {
+                if (previous != null && is_same_minute_hour(now, previous)) {
+                    execute = false;
+                } else {
+                    execute = is_trigger_minute(schedule);
+                }
+            }
+            if (DEBUG) Log.d(Scheduler.TAG, "Trigger minute: " + execute);
+
+            if (schedule.getInterval() > 0 && previous == null) {
+                execute = true;
+            } else if (previous != null && schedule.getInterval() > 0) {
+                execute = is_interval_elapsed(now, previous, schedule.getInterval());
+            }
+            if (DEBUG) Log.d(Scheduler.TAG, "Trigger interval: " + execute);
 
             return execute;
 
@@ -868,8 +814,9 @@ public class Scheduler extends Service {
 
     private boolean is_interval_elapsed(Calendar date_one, Calendar date_two, long required_minutes) {
         long elapsed = (date_one.getTimeInMillis() - date_two.getTimeInMillis()) / 1000 / 60;
-        if (Aware.DEBUG)
-            Log.d(Aware.TAG, "Checking interval elapsed: " + elapsed + " vs " + required_minutes + " minutes elapsed");
+        if (DEBUG)
+            Log.d(Scheduler.TAG, "Checking interval elapsed: " + elapsed + " vs " + required_minutes + " minutes elapsed");
+
         return (elapsed >= required_minutes);
     }
 
@@ -904,7 +851,7 @@ public class Scheduler extends Service {
      * @return
      */
     private boolean is_trigger_minute(Schedule schedule) {
-        if (Aware.DEBUG) Log.d(Aware.TAG, "Checking minute matching");
+        if (DEBUG) Log.d(Scheduler.TAG, "Checking minute matching");
 
         Calendar now = Calendar.getInstance();
         now.setTimeInMillis(System.currentTimeMillis());
@@ -917,19 +864,19 @@ public class Scheduler extends Service {
                 Random random = new Random();
                 int random_minute = minutes.getInt(random.nextInt(minutes.length()));
 
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Random minute " + random_minute + " vs now " + now.get(Calendar.MINUTE) + " in trigger minutes: " + minutes.toString());
+                if (DEBUG)
+                    Log.d(Scheduler.TAG, "Random minute " + random_minute + " vs now " + now.get(Calendar.MINUTE) + " in trigger minutes: " + minutes.toString());
 
-                if (random_minute == now.get(Calendar.MINUTE)) return true;
+                if (random_minute == (int) now.get(Calendar.MINUTE)) return true;
 
             } else {
                 for (int i = 0; i < minutes.length(); i++) {
                     int minute = minutes.getInt(i);
 
-                    if (Aware.DEBUG)
-                        Log.d(Aware.TAG, "Minute " + minute + " vs now " + now.get(Calendar.MINUTE) + " in trigger minutes: " + minutes.toString());
+                    if (DEBUG)
+                        Log.d(Scheduler.TAG, "Minute " + minute + " vs now " + now.get(Calendar.MINUTE) + " in trigger minutes: " + minutes.toString());
 
-                    if (now.get(Calendar.MINUTE) == minute) return true;
+                    if ((int) now.get(Calendar.MINUTE) == minute) return true;
                 }
             }
         } catch (JSONException e) {
@@ -947,7 +894,7 @@ public class Scheduler extends Service {
      */
     private boolean is_trigger_hour(Schedule schedule) {
 
-        if (Aware.DEBUG) Log.d(Aware.TAG, "Checking hour matching");
+        if (DEBUG) Log.d(Scheduler.TAG, "Checking hour matching");
 
         Calendar now = Calendar.getInstance();
         now.setTimeInMillis(System.currentTimeMillis());
@@ -958,19 +905,19 @@ public class Scheduler extends Service {
                 Random random = new Random();
                 int random_hour = hours.getInt(random.nextInt(hours.length()));
 
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Random hour " + random_hour + " vs now " + now.get(Calendar.HOUR_OF_DAY) + " in trigger hours: " + hours.toString());
+                if (DEBUG)
+                    Log.d(Scheduler.TAG, "Random hour " + random_hour + " vs now " + now.get(Calendar.HOUR_OF_DAY) + " in trigger hours: " + hours.toString());
 
-                if (random_hour == now.get(Calendar.HOUR_OF_DAY)) return true;
+                if (random_hour == (int) now.get(Calendar.HOUR_OF_DAY)) return true;
 
             } else {
                 for (int i = 0; i < hours.length(); i++) {
                     int hour = hours.getInt(i);
 
-                    if (Aware.DEBUG)
-                        Log.d(Aware.TAG, "Hour " + hour + " vs now " + now.get(Calendar.HOUR_OF_DAY) + " in trigger hours: " + hours.toString());
+                    if (DEBUG)
+                        Log.d(Scheduler.TAG, "Hour " + hour + " vs now " + now.get(Calendar.HOUR_OF_DAY) + " in trigger hours: " + hours.toString());
 
-                    if (hour == now.get(Calendar.HOUR_OF_DAY)) return true;
+                    if (hour == (int) now.get(Calendar.HOUR_OF_DAY)) return true;
                 }
             }
         } catch (JSONException e) {
@@ -988,7 +935,7 @@ public class Scheduler extends Service {
      */
     private boolean is_trigger_weekday(Schedule schedule) {
 
-        if (Aware.DEBUG) Log.d(Aware.TAG, "Checking weekday matching");
+        if (DEBUG) Log.d(Scheduler.TAG, "Checking weekday matching");
 
         Calendar now = Calendar.getInstance();
         now.setTimeInMillis(System.currentTimeMillis());
@@ -999,8 +946,8 @@ public class Scheduler extends Service {
                 Random random = new Random();
                 String random_weekday = weekdays.getString(random.nextInt(weekdays.length()));
 
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Random weekday " + random_weekday.toUpperCase() + " vs now " + now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase() + " in trigger weekdays: " + weekdays.toString());
+                if (DEBUG)
+                    Log.d(Scheduler.TAG, "Random weekday " + random_weekday.toUpperCase() + " vs now " + now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase() + " in trigger weekdays: " + weekdays.toString());
 
                 if (random_weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase()))
                     return true;
@@ -1009,8 +956,8 @@ public class Scheduler extends Service {
                 for (int i = 0; i < weekdays.length(); i++) {
                     String weekday = weekdays.getString(i);
 
-                    if (Aware.DEBUG)
-                        Log.d(Aware.TAG, "Weekday " + weekday.toUpperCase() + " vs now " + now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase() + " in trigger weekdays: " + weekdays.toString());
+                    if (DEBUG)
+                        Log.d(Scheduler.TAG, "Weekday " + weekday.toUpperCase() + " vs now " + now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase() + " in trigger weekdays: " + weekdays.toString());
 
                     if (weekday.toUpperCase().equals(now.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).toUpperCase()))
                         return true;
@@ -1031,7 +978,7 @@ public class Scheduler extends Service {
      */
     private boolean is_trigger_month(Schedule schedule) {
 
-        if (Aware.DEBUG) Log.d(Aware.TAG, "Checking month matching");
+        if (DEBUG) Log.d(Scheduler.TAG, "Checking month matching");
 
         Calendar now = Calendar.getInstance();
         now.setTimeInMillis(System.currentTimeMillis());
@@ -1043,8 +990,8 @@ public class Scheduler extends Service {
                 Random random = new Random();
                 String random_month = months.getString(random.nextInt(months.length()));
 
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Random month " + random_month.toUpperCase() + " vs now " + now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase() + " in trigger months: " + months.toString());
+                if (DEBUG)
+                    Log.d(Scheduler.TAG, "Random month " + random_month.toUpperCase() + " vs now " + now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase() + " in trigger months: " + months.toString());
 
                 if (random_month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase()))
                     return true;
@@ -1054,8 +1001,8 @@ public class Scheduler extends Service {
                 for (int i = 0; i < months.length(); i++) {
                     String month = months.getString(i);
 
-                    if (Aware.DEBUG)
-                        Log.d(Aware.TAG, "Month " + month.toUpperCase() + " vs now " + now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase() + " in trigger months: " + months.toString());
+                    if (DEBUG)
+                        Log.d(Scheduler.TAG, "Month " + month.toUpperCase() + " vs now " + now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase() + " in trigger months: " + months.toString());
 
                     if (month.toUpperCase().equals(now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase()))
                         return true;
@@ -1095,7 +1042,6 @@ public class Scheduler extends Service {
                         broadcast.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getBoolean(ACTION_EXTRA_VALUE));
                     }
                 }
-
                 sendBroadcast(broadcast);
             }
 
@@ -1122,7 +1068,6 @@ public class Scheduler extends Service {
                         activity.putExtra(extra.getString(ACTION_EXTRA_KEY), extra.getBoolean(ACTION_EXTRA_VALUE));
                     }
                 }
-
                 startActivity(activity);
             }
 

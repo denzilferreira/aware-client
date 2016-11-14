@@ -241,12 +241,12 @@ public class Aware extends Service {
         storage.addDataScheme("file");
         awareContext.registerReceiver(storage_BR, storage);
 
-        IntentFilter awareactions = new IntentFilter();
-        awareactions.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
-        awareactions.addAction(Aware.ACTION_AWARE_REFRESH);
-        awareactions.addAction(Aware.ACTION_AWARE_SYNC_DATA);
-        awareactions.addAction(Aware.ACTION_QUIT_STUDY);
-        awareContext.registerReceiver(aware_BR, awareactions);
+        IntentFilter aware_actions = new IntentFilter();
+        aware_actions.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
+        aware_actions.addAction(Aware.ACTION_AWARE_REFRESH);
+        aware_actions.addAction(Aware.ACTION_AWARE_SYNC_DATA);
+        aware_actions.addAction(Aware.ACTION_QUIT_STUDY);
+        awareContext.registerReceiver(aware_BR, aware_actions);
 
         IntentFilter boot = new IntentFilter();
         boot.addAction(Intent.ACTION_BOOT_COMPLETED);
@@ -288,6 +288,50 @@ public class Aware extends Service {
                 e.printStackTrace();
             }
             return true;
+        }
+    }
+
+    private class AsyncStudyCheck extends AsyncTask<Void, Void, Boolean> {
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            //Ping AWARE's server with awareContext device's information for framework's statistics log
+            Hashtable<String, String> studyCheck = new Hashtable<>();
+            studyCheck.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID));
+            studyCheck.put("study_check", "1");
+
+            try {
+                String study_status = new Https(awareContext, SSLManager.getHTTPS(getApplicationContext(), Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER)))
+                        .dataPOST(Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER), studyCheck, true);
+
+                if (study_status == null)
+                    return true; //unable to connect to server, timeout, etc. We do nothing.
+
+                Log.d(Aware.TAG, "Study_status: \n" + study_status);
+
+                try {
+                    JSONArray status = new JSONArray(study_status);
+                    JSONObject study = status.getJSONObject(0);
+
+                    if (!status.getBoolean(0))
+                        return false; //study no longer active, make clients quit the study and reset.
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean studyStatus) {
+            super.onPostExecute(studyStatus);
+
+            if (!studyStatus) {
+                sendBroadcast(new Intent(Aware.ACTION_QUIT_STUDY));
+            }
         }
     }
 
@@ -375,6 +419,9 @@ public class Aware extends Service {
     }
 
     public static void debug(Context c, String message) {
+        //Only collect this log if in a study
+        if (!Aware.isStudy(c)) return;
+
         ContentValues log = new ContentValues();
         log.put(Aware_Provider.Aware_Log.LOG_TIMESTAMP, System.currentTimeMillis());
         log.put(Aware_Provider.Aware_Log.LOG_DEVICE_ID, Aware.getSetting(c, Aware_Preferences.DEVICE_ID));
@@ -574,6 +621,11 @@ public class Aware extends Service {
                 }
             }
 
+            //Client checks
+            if (isStudy(this)) {
+                //Check if study is ongoing or any changes to the configuration
+                new AsyncStudyCheck().execute();
+            }
         } else {
             stopAWARE();
 
@@ -873,14 +925,14 @@ public class Aware extends Service {
         global_settings.add(Applications.STATUS_AWARE_ACCESSIBILITY);
 
         //allow plugin's to react to MQTT
-        global_settings.add(Aware_Preferences.STATUS_MQTT);
-        global_settings.add(Aware_Preferences.MQTT_USERNAME);
-        global_settings.add(Aware_Preferences.MQTT_PASSWORD);
-        global_settings.add(Aware_Preferences.MQTT_SERVER);
-        global_settings.add(Aware_Preferences.MQTT_PORT);
-        global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
-        global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
-        global_settings.add(Aware_Preferences.MQTT_QOS);
+//        global_settings.add(Aware_Preferences.STATUS_MQTT);
+//        global_settings.add(Aware_Preferences.MQTT_USERNAME);
+//        global_settings.add(Aware_Preferences.MQTT_PASSWORD);
+//        global_settings.add(Aware_Preferences.MQTT_SERVER);
+//        global_settings.add(Aware_Preferences.MQTT_PORT);
+//        global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
+//        global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
+//        global_settings.add(Aware_Preferences.MQTT_QOS);
 
         is_global = global_settings.contains(key);
 
@@ -935,14 +987,14 @@ public class Aware extends Service {
         global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
 
         //allow plugin's to react to MQTT
-        global_settings.add(Aware_Preferences.STATUS_MQTT);
-        global_settings.add(Aware_Preferences.MQTT_USERNAME);
-        global_settings.add(Aware_Preferences.MQTT_PASSWORD);
-        global_settings.add(Aware_Preferences.MQTT_SERVER);
-        global_settings.add(Aware_Preferences.MQTT_PORT);
-        global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
-        global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
-        global_settings.add(Aware_Preferences.MQTT_QOS);
+//        global_settings.add(Aware_Preferences.STATUS_MQTT);
+//        global_settings.add(Aware_Preferences.MQTT_USERNAME);
+//        global_settings.add(Aware_Preferences.MQTT_PASSWORD);
+//        global_settings.add(Aware_Preferences.MQTT_SERVER);
+//        global_settings.add(Aware_Preferences.MQTT_PORT);
+//        global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
+//        global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
+//        global_settings.add(Aware_Preferences.MQTT_QOS);
 
         is_global = global_settings.contains(key);
 
@@ -1058,6 +1110,7 @@ public class Aware extends Service {
         //Apply study settings
         JSONArray plugins = new JSONArray();
         JSONArray sensors = new JSONArray();
+        JSONArray schedulers = new JSONArray();
         for (int i = 0; i < configs.length(); i++) {
             try {
                 JSONObject element = configs.getJSONObject(i);
@@ -1067,7 +1120,9 @@ public class Aware extends Service {
                 if (element.has("sensors")) {
                     sensors = element.getJSONArray("sensors");
                 }
-
+                if (element.has("schedulers")) {
+                    schedulers = element.getJSONArray("schedulers");
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -1096,6 +1151,10 @@ public class Aware extends Service {
                 e.printStackTrace();
             }
         }
+
+        //Set schedulers
+        if (schedulers.length() > 0)
+            Scheduler.setSchedules(c, schedulers);
 
         Intent apply = new Intent(Aware.ACTION_AWARE_REFRESH);
         c.sendBroadcast(apply);
@@ -1665,7 +1724,7 @@ public class Aware extends Service {
     public static class Aware_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            //We are only synching the device information and study compliance, not aware's settings and active plugins.
+            //We are only synching the device information, study compliance and overall framework execution logs.
             String[] DATABASE_TABLES = new String[]{Aware_Provider.DATABASE_TABLES[0], Aware_Provider.DATABASE_TABLES[3], Aware_Provider.DATABASE_TABLES[4]};
             String[] TABLES_FIELDS = new String[]{Aware_Provider.TABLES_FIELDS[0], Aware_Provider.TABLES_FIELDS[3], Aware_Provider.TABLES_FIELDS[4]};
             Uri[] CONTEXT_URIS = new Uri[]{Aware_Device.CONTENT_URI, Aware_Provider.Aware_Studies.CONTENT_URI, Aware_Provider.Aware_Log.CONTENT_URI};
@@ -1775,7 +1834,7 @@ public class Aware extends Service {
                 complianceStatus.put("network", false);
             }
 
-            boolean airplane = false;
+            boolean airplane;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
                 airplane = Settings.Global.getInt(awareContext.getContentResolver(), Settings.Global.AIRPLANE_MODE_ON, 0) != 0;
             } else {
@@ -1799,9 +1858,11 @@ public class Aware extends Service {
      */
     public static void startAWARE() {
 
-        //Fixed: only the client needs to check the compliance
-        if (awareContext.getPackageName().equals("com.aware.phone"))
+        //Fixed: only the client needs to check the compliance and only if in a study
+        if (awareContext.getPackageName().equals("com.aware.phone") && isStudy(awareContext))
             complianceStatus();
+
+        startScheduler(awareContext);
 
         if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true")) {
             startESM(awareContext);
@@ -1906,8 +1967,6 @@ public class Aware extends Service {
         if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_KEYBOARD).equals("true")) {
             startKeyboard(awareContext);
         } else stopKeyboard(awareContext);
-
-        startScheduler(awareContext);
     }
 
     /**

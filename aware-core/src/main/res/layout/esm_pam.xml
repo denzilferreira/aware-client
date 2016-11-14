@@ -14,6 +14,193 @@
         android:layout_alignParentTop="true"
         android:padding="10dp" />
 
+    <GridLayout
+        android:id="@+id/esm_pam"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/esm_instructions"
+        android:layout_centerHorizontal="true"
+        android:columnCount="4"
+        android:rowCount="4"
+        android:useDefaultMargins="true">
+
+        <ImageView
+            android:id="@+id/pos1"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/grid_selector"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/square" />
+
+        <ImageView
+            android:id="@+id/pos2"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/grid_selector"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/square" />
+
+        <ImageView
+            android:id="@+id/pos3"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/grid_selector"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/square" />
+
+        <ImageView
+            android:id="@+id/pos4"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/grid_selector"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/square" />
+
+        <ImageView
+            android:id="@+id/pos5"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/grid_selector"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/square" />
+
+        <ImageView
+            android:id="@+id/pos6"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/grid_selector"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/square" />
+
+        <ImageView
+            android:id="@+id/pos7"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/grid_selector"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/square" />
+
+        <ImageView
+            android:id="@+id/pos8"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/grid_selector"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/square" />
+
+        <ImageView
+            android:id="@+id/pos9"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/grid_selector"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/square" />
+
+        <ImageView
+            android:id="@+id/pos10"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/grid_selector"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/square" />
+
+        <ImageView
+            android:id="@+id/pos11"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/grid_selector"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/square" />
+
+        <ImageView
+            android:id="@+id/pos12"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/grid_selector"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/square" />
+
+        <ImageView
+            android:id="@+id/pos13"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/grid_selector"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/square" />
+
+        <ImageView
+            android:id="@+id/pos14"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/grid_selector"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/square" />
+
+        <ImageView
+            android:id="@+id/pos15"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/grid_selector"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/square" />
+
+        <ImageView
+            android:id="@+id/pos16"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/grid_selector"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/square" />
+    </GridLayout>
+
     <LinearLayout
         android:id="@+id/LinearLayout1"
         android:layout_width="fill_parent"
@@ -36,192 +223,5 @@
             android:gravity="center_vertical|center_horizontal"
             android:text="Button" />
     </LinearLayout>
-
-    <GridLayout
-        android:id="@+id/esm_pam"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/esm_instructions"
-        android:layout_centerHorizontal="true"
-        android:columnCount="4"
-        android:rowCount="4"
-        android:useDefaultMargins="true">
-
-        <ImageView
-            android:id="@+id/pos1"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/grid_selector"
-            android:clickable="true"
-            android:padding="2dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/square" />
-
-        <ImageView
-            android:id="@+id/pos2"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/grid_selector"
-            android:clickable="true"
-            android:padding="2dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/square" />
-
-        <ImageView
-            android:id="@+id/pos3"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/grid_selector"
-            android:clickable="true"
-            android:padding="2dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/square" />
-
-        <ImageView
-            android:id="@+id/pos4"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/grid_selector"
-            android:clickable="true"
-            android:padding="2dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/square" />
-
-        <ImageView
-            android:id="@+id/pos5"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/grid_selector"
-            android:clickable="true"
-            android:padding="2dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/square" />
-
-        <ImageView
-            android:id="@+id/pos6"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/grid_selector"
-            android:clickable="true"
-            android:padding="2dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/square" />
-
-        <ImageView
-            android:id="@+id/pos7"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/grid_selector"
-            android:clickable="true"
-            android:padding="2dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/square" />
-
-        <ImageView
-            android:id="@+id/pos8"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/grid_selector"
-            android:clickable="true"
-            android:padding="2dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/square" />
-
-        <ImageView
-            android:id="@+id/pos9"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/grid_selector"
-            android:clickable="true"
-            android:padding="2dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/square" />
-
-        <ImageView
-            android:id="@+id/pos10"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/grid_selector"
-            android:clickable="true"
-            android:padding="2dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/square" />
-
-        <ImageView
-            android:id="@+id/pos11"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/grid_selector"
-            android:clickable="true"
-            android:padding="2dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/square" />
-
-        <ImageView
-            android:id="@+id/pos12"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/grid_selector"
-            android:clickable="true"
-            android:padding="2dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/square" />
-
-        <ImageView
-            android:id="@+id/pos13"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/grid_selector"
-            android:clickable="true"
-            android:padding="2dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/square" />
-
-        <ImageView
-            android:id="@+id/pos14"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/grid_selector"
-            android:clickable="true"
-            android:padding="2dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/square" />
-
-        <ImageView
-            android:id="@+id/pos15"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/grid_selector"
-            android:clickable="true"
-            android:padding="2dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/square" />
-
-        <ImageView
-            android:id="@+id/pos16"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/grid_selector"
-            android:clickable="true"
-            android:padding="2dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/square" />
-    </GridLayout>
 
 </RelativeLayout>
