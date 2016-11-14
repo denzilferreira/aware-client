@@ -304,14 +304,17 @@ public class Aware extends Service {
                 String study_status = new Https(awareContext, SSLManager.getHTTPS(getApplicationContext(), Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER)))
                         .dataPOST(Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER), studyCheck, true);
 
+                if (study_status == null)
+                    return true; //unable to connect to server, timeout, etc. We do nothing.
+
                 Log.d(Aware.TAG, "Study_status: \n" + study_status);
 
                 try {
                     JSONArray status = new JSONArray(study_status);
                     JSONObject study = status.getJSONObject(0);
-                    if (!status.getBoolean(0)) return false;
 
-
+                    if (!status.getBoolean(0))
+                        return false; //study no longer active, make clients quit the study and reset.
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -416,6 +419,9 @@ public class Aware extends Service {
     }
 
     public static void debug(Context c, String message) {
+        //Only collect this log if in a study
+        if (!Aware.isStudy(c)) return;
+
         ContentValues log = new ContentValues();
         log.put(Aware_Provider.Aware_Log.LOG_TIMESTAMP, System.currentTimeMillis());
         log.put(Aware_Provider.Aware_Log.LOG_DEVICE_ID, Aware.getSetting(c, Aware_Preferences.DEVICE_ID));

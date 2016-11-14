@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import com.aware.Aware;
 import com.aware.ESM;
 import com.aware.ui.ESM_Queue;
 import com.aware.ui.esms.ESMFactory;
@@ -36,6 +37,9 @@ public class TestActivity extends Activity {
 
         setContentView(R.layout.activity_test);
 
+        Intent aware = new Intent(this, Aware.class);
+        startService(aware);
+
         button_ESMNotification = (Button) findViewById(R.id.button_ESMNotification);
         button_ESMNotification.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -54,13 +58,6 @@ public class TestActivity extends Activity {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE);
-        }
-    }
-
-    public static class TestSchedulerReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d("AWARE-TEST", "Scheduler triggered");
         }
     }
 }

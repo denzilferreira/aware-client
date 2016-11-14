@@ -16,12 +16,6 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-
-        <receiver android:name="com.aware.tests.TestActivity$TestSchedulerReceiver" android:enabled="true" android:exported="true">
-            <intent-filter>
-                <action android:name="TEST_SCHEDULER"/>
-            </intent-filter>
-        </receiver>
     </application>
 
 </manifest>
