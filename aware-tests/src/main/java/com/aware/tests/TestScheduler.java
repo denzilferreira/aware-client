@@ -26,15 +26,12 @@ public class TestScheduler implements AwareTest {
 
     @Override
     public void test(Context context) {
-
-        context.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + context.getPackageName() + "'", null);
-
 //        testTimer(context);
 //        testContextual(context);
 
         testConditional(context);
 
-        Aware.startScheduler(context);
+//        Aware.startScheduler(context);
     }
 
     /**
@@ -46,10 +43,10 @@ public class TestScheduler implements AwareTest {
         try {
             Scheduler.Schedule conditional = new Scheduler.Schedule("test_conditional");
             conditional
-                    .addCondition(Battery_Provider.Battery_Data.CONTENT_URI, Battery_Provider.Battery_Data.PLUG_ADAPTOR + "=" + BatteryManager.BATTERY_PLUGGED_USB)
+                    .addCondition(Battery_Provider.Battery_Data.CONTENT_URI, Battery_Provider.Battery_Data.STATUS + "=" + BatteryManager.BATTERY_STATUS_CHARGING)
                     .setActionType(Scheduler.ACTION_TYPE_SERVICE)
                     .setActionClass(c.getPackageName() + "/" + Aware_TTS.class.getName())
-                    .addActionExtra(Aware_TTS.EXTRA_TTS_TEXT, "Charging by USB!")
+                    .addActionExtra(Aware_TTS.EXTRA_TTS_TEXT, "Charging initiated")
                     .addActionExtra(Aware_TTS.EXTRA_TTS_REQUESTER, c.getPackageName());
 
             Scheduler.saveSchedule(c, conditional);

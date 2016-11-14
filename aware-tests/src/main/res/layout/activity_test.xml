@@ -16,4 +16,10 @@
         android:layout_height="wrap_content"
         android:id="@+id/btn_test_timer" />
 
+    <Button
+        android:text="Delete schedules"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/btn_clear_schedulers" />
+
 </LinearLayout>

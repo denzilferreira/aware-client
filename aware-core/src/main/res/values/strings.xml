@@ -19,7 +19,8 @@
     <string name="aware_version">AWARE version</string>
     <string name="aware_auto_update_version">"???"</string>
     <string name="aware_device_id">AWARE Device ID</string>
-    <string name="aware_esm_questions">Mobile ESM waiting...</string>
+    <string name="aware_esm_questions_title">Questionnaire waiting</string>
+    <string name="aware_esm_questions">Tap to answer</string>
     <string name="aware_activate_accessibility">Click here and activate AWARE in Accessibility Services.</string>
     <string name="aware_team">Team</string>
     <string name="aware_qrcode">QRCode</string>

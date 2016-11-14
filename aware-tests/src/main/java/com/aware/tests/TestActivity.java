@@ -11,9 +11,11 @@ import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.aware.Aware;
 import com.aware.ESM;
+import com.aware.providers.Scheduler_Provider;
 import com.aware.ui.ESM_Queue;
 import com.aware.ui.esms.ESMFactory;
 import com.aware.ui.esms.ESM_Freetext;
@@ -29,7 +31,7 @@ public class TestActivity extends Activity {
 
     int REQUEST_STORAGE = 1;
 
-    Button button_ESMNotification, scheduler_timer;
+    Button button_ESMNotification, scheduler_timer, button_delete_schedules;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +55,14 @@ public class TestActivity extends Activity {
             public void onClick(View v) {
                 TestScheduler testScheduler = new TestScheduler();
                 testScheduler.test(getApplicationContext());
+            }
+        });
+
+        button_delete_schedules = (Button) findViewById(R.id.btn_clear_schedulers);
+        button_delete_schedules.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null);
+                Toast.makeText(getApplicationContext(), "Cleared!", Toast.LENGTH_SHORT).show();
             }
         });
 
