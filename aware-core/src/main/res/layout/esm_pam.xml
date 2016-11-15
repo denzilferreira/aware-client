@@ -1,9 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/RelativeLayout1"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/LinearLayout1"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:minWidth="300dip">
+    android:minWidth="300dip"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/esm_title"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:padding="16dp"
+        android:textStyle="normal|bold"
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/esm_instructions"
@@ -22,7 +33,8 @@
         android:layout_centerHorizontal="true"
         android:columnCount="4"
         android:rowCount="4"
-        android:useDefaultMargins="true">
+        android:useDefaultMargins="true"
+        android:layout_gravity="center_horizontal">
 
         <ImageView
             android:id="@+id/pos1"
@@ -224,4 +236,4 @@
             android:text="Button" />
     </LinearLayout>
 
-</RelativeLayout>
+</LinearLayout>
