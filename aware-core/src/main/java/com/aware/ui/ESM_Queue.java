@@ -99,6 +99,7 @@ public class ESM_Queue extends FragmentActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE)) {
+                Aware.setSetting(context, ESM.NOTIFICATION_TIMEOUT, "false", "com.aware.phone");
                 //Clean-up trials from database
                 getContentResolver().delete(ESM_Data.CONTENT_URI, ESM_Data.TRIGGER + " LIKE 'TRIAL'", null);
             }
