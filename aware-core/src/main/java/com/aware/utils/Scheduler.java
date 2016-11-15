@@ -646,7 +646,9 @@ public class Scheduler extends Aware_Sensor {
                             Uri content_uri = Uri.parse(condition.getString(CONDITION_URI));
                             String content_where = condition.getString(CONDITION_WHERE);
 
-                            Cursor rows = getContentResolver().query(content_uri, null, content_where, null, "timestamp DESC LIMIT 1");
+                            //Checked every 1-minute. Looking back in time for 1 minute.
+                            Cursor rows = getContentResolver().query(content_uri, null, content_where + " AND timestamp BETWEEN " + (System.currentTimeMillis()-60000) + " AND " + System.currentTimeMillis(), null, "timestamp DESC LIMIT 1");
+                            Log.d(TAG, "Database: " + content_uri.toString() + " where: "+ content_where + " Results: \n" + DatabaseUtils.dumpCursorToString(rows));
                             if (rows != null && rows.moveToFirst()) {
                                 booleans[i] = true;
                             } else {

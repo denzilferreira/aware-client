@@ -28,10 +28,26 @@ public class TestScheduler implements AwareTest {
     public void test(Context context) {
 //        testTimer(context);
 //        testContextual(context);
+//        testConditional(context);
 
-        testConditional(context);
+        testTime(context);
+        Aware.startScheduler(context);
+    }
 
-//        Aware.startScheduler(context);
+    private void testTime(Context c) {
+        try {
+            Scheduler.Schedule conditional = new Scheduler.Schedule("time");
+            conditional
+                    .addHour(16)
+                    .addMinute(42)
+                    .setActionType(Scheduler.ACTION_TYPE_SERVICE)
+                    .setActionClass(c.getPackageName() + "/" + Aware_TTS.class.getName())
+                    .addActionExtra(Aware_TTS.EXTRA_TTS_TEXT, "Yay!")
+                    .addActionExtra(Aware_TTS.EXTRA_TTS_REQUESTER, c.getPackageName());
+            Scheduler.saveSchedule(c, conditional);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -41,14 +57,13 @@ public class TestScheduler implements AwareTest {
      */
     private void testConditional(Context c) {
         try {
-            Scheduler.Schedule conditional = new Scheduler.Schedule("test_conditional");
+            Scheduler.Schedule conditional = new Scheduler.Schedule("condition_charging");
             conditional
                     .addCondition(Battery_Provider.Battery_Data.CONTENT_URI, Battery_Provider.Battery_Data.STATUS + "=" + BatteryManager.BATTERY_STATUS_CHARGING)
                     .setActionType(Scheduler.ACTION_TYPE_SERVICE)
                     .setActionClass(c.getPackageName() + "/" + Aware_TTS.class.getName())
-                    .addActionExtra(Aware_TTS.EXTRA_TTS_TEXT, "Charging initiated")
+                    .addActionExtra(Aware_TTS.EXTRA_TTS_TEXT, "Charging...")
                     .addActionExtra(Aware_TTS.EXTRA_TTS_REQUESTER, c.getPackageName());
-
             Scheduler.saveSchedule(c, conditional);
         } catch (JSONException e) {
             e.printStackTrace();

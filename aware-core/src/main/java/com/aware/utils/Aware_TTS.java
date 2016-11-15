@@ -35,6 +35,12 @@ public class Aware_TTS extends Service implements OnInitListener {
             } else {
                 tts.speak(text, TextToSpeech.QUEUE_ADD, null);
             }
+
+            while(tts.isSpeaking()) {
+                //wait
+            }
+            //stop service
+            stopSelf();
         } else {
             Log.d(TAG, TAG +" not ready yet!");
         }
