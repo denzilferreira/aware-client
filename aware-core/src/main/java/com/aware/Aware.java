@@ -279,8 +279,7 @@ public class Aware extends Service {
                     device_ping.put("package_version_code", String.valueOf(package_info.versionCode));
                     device_ping.put("package_version_name", String.valueOf(package_info.versionName));
                 }
-            } catch (PackageManager.NameNotFoundException e) {
-            }
+            } catch (PackageManager.NameNotFoundException e) {}
 
             try {
                 new Https(awareContext, SSLManager.getHTTPS(getApplicationContext(), "https://api.awareframework.com/index.php")).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);

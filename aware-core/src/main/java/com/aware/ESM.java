@@ -197,8 +197,6 @@ public class ESM extends Aware_Sensor {
 
     public static final int ESM_NOTIFICATION_ID = 777;
 
-    private static ArrayList<Long> esm_queue = new ArrayList<>();
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -463,9 +461,6 @@ public class ESM extends Aware_Sensor {
 
             if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_EXPIRED)) {
                 if (ESM_Queue.getQueueSize(context) > 0) {
-
-                    processFlow(context, intent.getStringExtra(EXTRA_ANSWER));
-
                     Intent intent_ESM = new Intent(context, ESM_Queue.class);
                     intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     context.startActivity(intent_ESM);
@@ -478,7 +473,6 @@ public class ESM extends Aware_Sensor {
         }
     }
 
-    //TODO: process the flows
     private static void processFlow(Context context, String current_answer) {
 
         if (ESM.DEBUG) {
@@ -486,8 +480,9 @@ public class ESM extends Aware_Sensor {
         }
 
         try {
+
             //Check flow
-            Cursor last_esm = context.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_ANSWERED + "," + ESM.STATUS_DISMISSED + ")", null, ESM_Data.TIMESTAMP + " DESC LIMIT 1");
+            Cursor last_esm = context.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_ANSWERED + "," + ESM.STATUS_EXPIRED + ")", null, ESM_Data.TIMESTAMP + " DESC LIMIT 1");
             if (last_esm != null && last_esm.moveToFirst()) {
 
                 JSONObject esm_question = new JSONObject(last_esm.getString(last_esm.getColumnIndex(ESM_Data.JSON)));
@@ -498,29 +493,20 @@ public class ESM extends Aware_Sensor {
                 for (int i = 0; i < flows.length(); i++) {
                     JSONObject flow = flows.getJSONObject(i);
                     String flowAnswer = flow.getString(ESM_Question.flow_user_answer);
-
-//                    boolean is_checks_flow = false;
-//                    if (esm.getType() == ESM.TYPE_ESM_CHECKBOX) {
-//                        //This is multiple choice. Check if we are triggering multiple flows
-//                        String[] multiple = current_answer.split(",");
-//                        for (String m : multiple) {
-//                            if (m.trim().equals(flowAnswer)) is_checks_flow = true;
-//                        }
-//                        if (is_checks_flow) continue;
-//                    }
+                    JSONObject nextESM = flow.getJSONObject(ESM_Question.flow_next_esm);
 
                     if (flowAnswer.equals(current_answer)) {
-                        if (ESM.DEBUG) Log.d(ESM.TAG, "Following branch question: " + flow.getInt(ESM_Question.flow_next_esm));
-                        continue;
+                        if (ESM.DEBUG) Log.d(ESM.TAG, "Following next question: " + nextESM);
+                        ContentValues esmFollowing = new ContentValues();
+                        esmFollowing.put(ESM_Data.STATUS, ESM.STATUS_VISIBLE);
+                        context.getContentResolver().update(ESM_Data.CONTENT_URI, esmFollowing, ESM_Data.JSON + " LIKE '" + nextESM.getJSONObject("esm") + "' AND " + ESM_Data.STATUS + "=" + ESM.STATUS_NEW, null);
+                    } else {
+                        if (ESM.DEBUG) Log.d(ESM.TAG, "Branched split: " + flowAnswer + " Skipping: " + nextESM);
+                        ContentValues esmBranched = new ContentValues();
+                        esmBranched.put(ESM_Data.STATUS, ESM.STATUS_BRANCHED);
+                        context.getContentResolver().update(ESM_Data.CONTENT_URI, esmBranched, ESM_Data.JSON + " LIKE '" + nextESM.getJSONObject("esm") + "' AND " + ESM_Data.STATUS + "=" + ESM.STATUS_NEW, null);
                     }
-
-                    if (ESM.DEBUG) Log.d(ESM.TAG, "Branched split: " + flowAnswer + " ESM ID branched: " + esm_queue.get(esm.getFlow(flowAnswer)));
-
-                    ContentValues esmBranched = new ContentValues();
-                    esmBranched.put(ESM_Data.STATUS, ESM.STATUS_BRANCHED);
-                    context.getContentResolver().update(ESM_Data.CONTENT_URI, esmBranched, ESM_Data._ID + "=" + esm_queue.get(esm.getFlow(flowAnswer)), null);
                 }
-
             }
             if (last_esm != null && !last_esm.isClosed()) last_esm.close();
 
@@ -543,11 +529,7 @@ public class ESM extends Aware_Sensor {
 
         @Override
         protected void onHandleIntent(Intent intent) {
-
             if (intent.getAction().equals(ESM.ACTION_AWARE_TRY_ESM) && intent.getStringExtra(EXTRA_ESM) != null && intent.getStringExtra(EXTRA_ESM).length() > 0) {
-
-                esm_queue.clear();
-
                 try {
                     JSONArray esms = new JSONArray(intent.getStringExtra(EXTRA_ESM));
 
@@ -571,8 +553,7 @@ public class ESM extends Aware_Sensor {
                         }
 
                         try {
-                            Uri lastUri = getContentResolver().insert(ESM_Data.CONTENT_URI, rowData);
-                            esm_queue.add(Long.valueOf(lastUri.getLastPathSegment()));
+                            getContentResolver().insert(ESM_Data.CONTENT_URI, rowData);
                             if (Aware.DEBUG) Log.d(TAG, "ESM: " + rowData.toString());
                         } catch (SQLiteException e) {
                             if (Aware.DEBUG) Log.d(TAG, e.getMessage());
@@ -586,16 +567,12 @@ public class ESM extends Aware_Sensor {
                         intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent_ESM);
                     }
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
 
             if (intent.getAction().equals(ESM.ACTION_AWARE_QUEUE_ESM) && intent.getStringExtra(EXTRA_ESM) != null && intent.getStringExtra(EXTRA_ESM).length() > 0) {
-
-                esm_queue.clear();
-
                 try {
                     JSONArray esms = new JSONArray(intent.getStringExtra(EXTRA_ESM));
 
@@ -619,8 +596,7 @@ public class ESM extends Aware_Sensor {
                         }
 
                         try {
-                            Uri lastUri = getContentResolver().insert(ESM_Data.CONTENT_URI, rowData);
-                            esm_queue.add(Long.valueOf(lastUri.getLastPathSegment()));
+                            getContentResolver().insert(ESM_Data.CONTENT_URI, rowData);
                             if (ESM.DEBUG) Log.d(TAG, "ESM: " + rowData.toString());
                         } catch (SQLiteException e) {
                             if (Aware.DEBUG) Log.d(TAG, e.getMessage());

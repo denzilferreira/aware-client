@@ -11,7 +11,7 @@ import org.json.JSONObject;
  */
 public class ESMFactory {
 
-    public static JSONArray queue = new JSONArray();
+    private JSONArray queue = new JSONArray();
 
     public ESMFactory() {}
 
@@ -38,7 +38,7 @@ public class ESMFactory {
     }
 
     public ESMFactory rebuild(JSONArray queue) throws JSONException {
-        ESMFactory.queue = queue;
+        this.queue = queue;
         return this;
     }
 

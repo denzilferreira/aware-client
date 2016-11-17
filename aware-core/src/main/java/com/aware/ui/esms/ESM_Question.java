@@ -214,7 +214,7 @@ public class ESM_Question extends DialogFragment {
      * @return
      * @throws JSONException
      */
-    public ESM_Question addFlow(String user_answer, int nextEsm) throws JSONException {
+    public ESM_Question addFlow(String user_answer, JSONObject nextEsm) throws JSONException {
         JSONArray flows = getFlows();
         flows.put(new JSONObject()
                 .put(flow_user_answer, user_answer)
@@ -231,14 +231,14 @@ public class ESM_Question extends DialogFragment {
      * @return
      * @throws JSONException
      */
-    public int getFlow(String user_answer) throws JSONException {
+    public JSONObject getFlow(String user_answer) throws JSONException {
         JSONArray flows = getFlows();
         for (int i = 0; i < flows.length(); i++) {
             JSONObject flow = flows.getJSONObject(i);
             if (flow.getString(flow_user_answer).equals(user_answer))
-                return flow.getInt(flow_next_esm);
+                return flow.getJSONObject(flow_next_esm);
         }
-        return -1;
+        return null;
     }
 
     /**
