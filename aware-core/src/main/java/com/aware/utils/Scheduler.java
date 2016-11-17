@@ -30,6 +30,7 @@ import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Random;
 
+//TODO: add action support for services and activities
 public class Scheduler extends Aware_Sensor {
 
     private static String TAG = "AWARE::Scheduler";

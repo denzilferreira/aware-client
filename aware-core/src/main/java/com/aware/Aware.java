@@ -1814,21 +1814,21 @@ public class Aware extends Service {
             }
 
             NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-            if (wifi.isAvailable()) {
+            if (wifi != null && wifi.isAvailable()) {
                 complianceStatus.put("wifi", true);
             } else {
                 complianceStatus.put("wifi", false);
             }
 
             NetworkInfo bt = connManager.getNetworkInfo(ConnectivityManager.TYPE_BLUETOOTH);
-            if (bt.isAvailable()) {
+            if (bt!= null && bt.isAvailable()) {
                 complianceStatus.put("bt", true);
             } else {
                 complianceStatus.put("bt", false);
             }
 
             NetworkInfo network = connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-            if (network.isAvailable()) {
+            if (network != null && network.isAvailable()) {
                 complianceStatus.put("network", true);
             } else {
                 complianceStatus.put("network", false);
