@@ -11,14 +11,12 @@ import org.json.JSONObject;
  */
 public class ESMFactory {
 
-    private JSONArray queue;
+    public static JSONArray queue = new JSONArray();
 
-    public ESMFactory() {
-        this.queue = new JSONArray();
-    }
+    public ESMFactory() {}
 
     public JSONArray getQueue() {
-        return this.queue;
+        return queue;
     }
 
     public ESMFactory addESM(ESM_Question esm) {
@@ -36,11 +34,11 @@ public class ESMFactory {
     }
 
     public String build() {
-        return this.queue.toString();
+        return queue.toString();
     }
 
     public ESMFactory rebuild(JSONArray queue) throws JSONException {
-        this.queue = queue;
+        ESMFactory.queue = queue;
         return this;
     }
 

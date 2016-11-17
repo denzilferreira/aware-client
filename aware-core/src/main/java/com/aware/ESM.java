@@ -78,11 +78,6 @@ public class ESM extends Aware_Sensor {
     public static final String ACTION_AWARE_ESM_EXPIRED = "ACTION_AWARE_ESM_EXPIRED";
 
     /**
-     * Broadcasted event: the notification has timed out and ESM queue is cleared
-     */
-    public static final String ACTION_AWARE_ESM_TIMEOUT = "ACTION_AWARE_ESM_TIMEOUT";
-
-    /**
      * Broadcasted event: the user has finished answering the ESM queue
      */
     public static final String ACTION_AWARE_ESM_QUEUE_COMPLETE = "ACTION_AWARE_ESM_QUEUE_COMPLETE";
@@ -483,45 +478,47 @@ public class ESM extends Aware_Sensor {
         }
     }
 
+    //TODO: process the flows
     private static void processFlow(Context context, String current_answer) {
 
-        if (ESM.DEBUG)
+        if (ESM.DEBUG) {
             Log.d(ESM.TAG, "Current answer: " + current_answer);
+        }
 
-        ESMFactory esmFactory = new ESMFactory();
         try {
             //Check flow
             Cursor last_esm = context.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_ANSWERED + "," + ESM.STATUS_DISMISSED + ")", null, ESM_Data.TIMESTAMP + " DESC LIMIT 1");
             if (last_esm != null && last_esm.moveToFirst()) {
 
                 JSONObject esm_question = new JSONObject(last_esm.getString(last_esm.getColumnIndex(ESM_Data.JSON)));
-                ESM_Question esm = esmFactory.getESM(esm_question.getInt(ESM_Question.esm_type), esm_question, last_esm.getInt(last_esm.getColumnIndex(ESM_Data._ID)));
+                ESM_Question esm = new ESMFactory().getESM(esm_question.getInt(ESM_Question.esm_type), esm_question, last_esm.getInt(last_esm.getColumnIndex(ESM_Data._ID)));
 
                 //Set as branched the flow rules that are not triggered
                 JSONArray flows = esm.getFlows();
                 for (int i = 0; i < flows.length(); i++) {
                     JSONObject flow = flows.getJSONObject(i);
-
                     String flowAnswer = flow.getString(ESM_Question.flow_user_answer);
 
-                    boolean is_checks_flow = false;
-                    if (esm.getType() == ESM.TYPE_ESM_CHECKBOX) {
-                        //This is multiple choice. Check if we are triggering multiple flows
-                        String[] multiple = current_answer.split(",");
-                        for (String m : multiple) {
-                            if (m.trim().equals(flowAnswer)) is_checks_flow = true;
-                        }
-                        if (is_checks_flow) continue;
+//                    boolean is_checks_flow = false;
+//                    if (esm.getType() == ESM.TYPE_ESM_CHECKBOX) {
+//                        //This is multiple choice. Check if we are triggering multiple flows
+//                        String[] multiple = current_answer.split(",");
+//                        for (String m : multiple) {
+//                            if (m.trim().equals(flowAnswer)) is_checks_flow = true;
+//                        }
+//                        if (is_checks_flow) continue;
+//                    }
+
+                    if (flowAnswer.equals(current_answer)) {
+                        if (ESM.DEBUG) Log.d(ESM.TAG, "Following branch question: " + flow.getInt(ESM_Question.flow_next_esm));
+                        continue;
                     }
 
-                    if (flowAnswer.equals(current_answer)) continue;
-
-                    if (ESM.DEBUG)
-                        Log.d(ESM.TAG, "Branched split: " + flowAnswer);
+                    if (ESM.DEBUG) Log.d(ESM.TAG, "Branched split: " + flowAnswer + " ESM ID branched: " + esm_queue.get(esm.getFlow(flowAnswer)));
 
                     ContentValues esmBranched = new ContentValues();
                     esmBranched.put(ESM_Data.STATUS, ESM.STATUS_BRANCHED);
-                    context.getContentResolver().update(ESM_Data.CONTENT_URI, esmBranched, ESM_Data._ID + "=" + esm_queue.get(esm.getFlow(flowAnswer) - 1), null);
+                    context.getContentResolver().update(ESM_Data.CONTENT_URI, esmBranched, ESM_Data._ID + "=" + esm_queue.get(esm.getFlow(flowAnswer)), null);
                 }
 
             }
@@ -569,15 +566,13 @@ public class ESM extends Aware_Sensor {
                         rowData.put(ESM_Data.STATUS, ESM.STATUS_NEW);
                         rowData.put(ESM_Data.TRIGGER, "TRIAL"); //we use this TRIAL trigger to remove trials from database at the end of the trial
 
-                        if (rowData.getAsInteger(ESM_Data.EXPIRATION_THRESHOLD) == 0) {
+                        if (i == 0 && (rowData.getAsInteger(ESM_Data.EXPIRATION_THRESHOLD) == 0 || rowData.getAsInteger(ESM_Data.NOTIFICATION_TIMEOUT) > 0)) {
                             is_persistent = true;
                         }
 
                         try {
-
                             Uri lastUri = getContentResolver().insert(ESM_Data.CONTENT_URI, rowData);
                             esm_queue.add(Long.valueOf(lastUri.getLastPathSegment()));
-
                             if (Aware.DEBUG) Log.d(TAG, "ESM: " + rowData.toString());
                         } catch (SQLiteException e) {
                             if (Aware.DEBUG) Log.d(TAG, e.getMessage());
@@ -617,13 +612,9 @@ public class ESM extends Aware_Sensor {
                         rowData.put(ESM_Data.EXPIRATION_THRESHOLD, esm.optInt(ESM_Data.EXPIRATION_THRESHOLD)); //optional, defaults to 0
                         rowData.put(ESM_Data.NOTIFICATION_TIMEOUT, esm.optInt(ESM_Data.NOTIFICATION_TIMEOUT)); //optional, defaults to 0
                         rowData.put(ESM_Data.STATUS, ESM.STATUS_NEW);
+                        rowData.put(ESM_Data.TRIGGER, esm.optString(ESM_Data.TRIGGER)); //optional, defaults to ""
 
-                        String trigger = esm.optString(ESM_Data.TRIGGER); //optional, defaults to ""
-                        if (trigger.length() == 0) trigger = String.valueOf(esm_timestamp);
-
-                        rowData.put(ESM_Data.TRIGGER, trigger);
-
-                        if (rowData.getAsInteger(ESM_Data.EXPIRATION_THRESHOLD) == 0 || rowData.getAsInteger(ESM_Data.NOTIFICATION_TIMEOUT) > 0) { //fixed: if there is a notification timeout, it is also presented as a notification first
+                        if (i == 0 && (rowData.getAsInteger(ESM_Data.EXPIRATION_THRESHOLD) == 0 || rowData.getAsInteger(ESM_Data.NOTIFICATION_TIMEOUT) > 0)) { //fixed: if there is a notification timeout, it is also presented as a notification first
                             is_persistent = true;
                         }
 

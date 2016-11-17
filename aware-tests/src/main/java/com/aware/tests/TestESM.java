@@ -31,14 +31,16 @@ public class TestESM implements AwareTest {
 
     @Override
     public void test(Context context) {
-        testESMS(context);
+//        testESMS(context);
 //        trialESMS(context);
-//        testFlow(context);
+        testFlow(context);
 //        testTimeoutQueue(context);
 //        testNumeric(context);
 //        testDateTime(context);
 //        testPAM(context);
     }
+
+
 
     private void testPAM(Context context) {
         ESMFactory factory = new ESMFactory();
@@ -111,63 +113,29 @@ public class TestESM implements AwareTest {
         ESMFactory factory = new ESMFactory();
 
         try {
-            ESM_Checkbox q1 = new ESM_Checkbox();
-            q1.addCheck("Goto 2")
-                    .addCheck("Goto 3")
-                    .addFlow("Goto 2", 2)
-                    .addFlow("Goto 3", 3)
-                    .setTitle("Question 1")
-                    .setSubmitButton("Next")
-                    .setInstructions("This is question 1");
+            ESM_QuickAnswer q0 = new ESM_QuickAnswer();
+            q0.addQuickAnswer("Yes")
+                    .addQuickAnswer("No")
+                    .setTitle("Is this a good time to answer?")
+                    .addFlow("Yes", 1) //0-base index
+                    .addFlow("No", 2);
 
-            ESM_Freetext q2 = new ESM_Freetext();
-            q2.setTitle("Question 2")
-                    .setSubmitButton("Next")
-                    .setInstructions("This is question 2");
+            ESM_PAM q1 = new ESM_PAM();
+            q1.setTitle("How do you feel today?")
+                    .setSubmitButton("Thanks!");
 
-            ESM_Scale q3 = new ESM_Scale();
-            q3.setScaleMax(100)
-                    .setScaleMin(0)
-                    .setScaleStart(50)
-                    .setScaleMaxLabel("Perfect")
-                    .setScaleMinLabel("Poor")
-                    .setScaleStep(10)
-                    .setTitle("Question 3")
-                    .setInstructions("Scale ESM")
-                    .setSubmitButton("Next");
+            ESM_Radio q2 = new ESM_Radio();
+            q2.addRadio("Eating")
+                    .addRadio("Working")
+                    .addRadio("Not alone")
+                    .setTitle("Why is that?")
+                    .setSubmitButton("Thanks!");
 
-            ESM_Likert q4 = new ESM_Likert();
-            q4.setLikertMax(5)
-                    .setLikertMaxLabel("Great")
-                    .setLikertMinLabel("Poor")
-                    .setLikertStep(1)
-                    .setTitle("Question 4")
-                    .setInstructions("Likert ESM")
-                    .setTrigger("test")
-                    .setSubmitButton("Next");
-
-            ESM_Number q5 = new ESM_Number();
-            q5.setTitle("Question 5")
-                    .setSubmitButton("Finish")
-                    .setInstructions("This is question 5");
-
-            ESM_PAM q6 = new ESM_PAM();
-            q6.setTitle("PAM")
-                    .setInstructions("Pick the closest to how you feel right now.")
-                    .setSubmitButton("OK")
-                    .setNotificationTimeout(10)
-                    .setTrigger("AWARE Test");
-
+            factory.addESM(q0);
             factory.addESM(q1);
             factory.addESM(q2);
-            factory.addESM(q3);
-            factory.addESM(q4);
-            factory.addESM(q5);
-            factory.addESM(q6);
 
-            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
-            queue.putExtra(ESM.EXTRA_ESM, factory.build());
-            context.sendBroadcast(queue);
+            ESM.queueESM(context, factory.build());
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -181,8 +149,8 @@ public class TestESM implements AwareTest {
             ESM_Freetext esmFreetext = new ESM_Freetext();
             esmFreetext.setTitle("Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext ")
                     .setTrigger("test")
-                    .setExpirationThreshold(0)
                     .setSubmitButton("OK")
+                    .setNotificationTimeout(5)
                     .setInstructions("Freetext ESM");
 
             ESM_Checkbox esmCheckbox = new ESM_Checkbox();
@@ -191,7 +159,6 @@ public class TestESM implements AwareTest {
                     .addCheck("Other")
                     .setTitle("Checkbox")
                     .setTrigger("test")
-                    .setExpirationThreshold(0)
                     .setSubmitButton("OK")
                     .setInstructions("Checkbox ESM");
 
@@ -203,14 +170,12 @@ public class TestESM implements AwareTest {
                     .setTitle("Likert")
                     .setInstructions("Likert ESM")
                     .setTrigger("test")
-                    .setExpirationThreshold(0)
                     .setSubmitButton("OK");
 
             ESM_QuickAnswer esmQuickAnswer = new ESM_QuickAnswer();
             esmQuickAnswer.addQuickAnswer("Yes")
                     .addQuickAnswer("No")
                     .setTrigger("test")
-                    .setExpirationThreshold(0)
                     .setInstructions("Quick Answers ESM");
 
             ESM_Radio esmRadio = new ESM_Radio();
@@ -218,7 +183,6 @@ public class TestESM implements AwareTest {
                     .addRadio("Radio 2")
                     .setTitle("Radios")
                     .setInstructions("Radios ESM")
-                    .setExpirationThreshold(0)
                     .setSubmitButton("OK");
 
             ESM_Scale esmScale = new ESM_Scale();
@@ -230,14 +194,12 @@ public class TestESM implements AwareTest {
                     .setScaleStep(10)
                     .setTitle("Scale")
                     .setInstructions("Scale ESM")
-                    .setExpirationThreshold(0)
                     .setSubmitButton("OK");
 
             ESM_PAM esmPAM = new ESM_PAM();
             esmPAM.setTitle("PAM")
                     .setInstructions("Pick the closest to how you feel right now.")
                     .setSubmitButton("OK")
-                    .setNotificationTimeout(10)
                     .setTrigger("AWARE Test");
 
             factory.addESM(esmFreetext);
@@ -248,10 +210,10 @@ public class TestESM implements AwareTest {
             factory.addESM(esmScale);
             factory.addESM(esmPAM);
 
-            ESM.queueESM(context, factory.build());
-//            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
-//            queue.putExtra(ESM.EXTRA_ESM, factory.build());
-//            context.sendBroadcast(queue);
+//            ESM.queueESM(context, factory.build());
+            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
+            queue.putExtra(ESM.EXTRA_ESM, factory.build());
+            context.sendBroadcast(queue);
 
         } catch (JSONException e) {
             e.printStackTrace();

@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -395,6 +396,7 @@ public class ESM_Question extends DialogFragment {
 
         Cursor pendingESM = getActivity().getContentResolver().query(ESM_Provider.ESM_Data.CONTENT_URI, null, ESM_Provider.ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
         if (pendingESM != null && pendingESM.moveToFirst()) {
+            if (Aware.DEBUG) Log.d(Aware.TAG, "Rest of ESM Queue is dismissed!");
             do {
                 rowData = new ContentValues();
                 rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
@@ -411,11 +413,12 @@ public class ESM_Question extends DialogFragment {
     }
 
     /**
-     * When one of the ESM's has timed out, the entire queue gets removed.
+     * When one of the ESM's has timed out, the entire queue gets expired.
      */
     public void timeoutQueue(Context context) {
         Cursor timedOutESM = context.getContentResolver().query(ESM_Provider.ESM_Data.CONTENT_URI, null, ESM_Provider.ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
         if (timedOutESM != null && timedOutESM.moveToFirst()) {
+            if (Aware.DEBUG) Log.d(Aware.TAG, "Rest of ESM Queue is expired!");
             do {
                 ContentValues rowData = new ContentValues();
                 rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
