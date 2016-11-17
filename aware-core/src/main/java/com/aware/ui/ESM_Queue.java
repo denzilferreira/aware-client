@@ -1,6 +1,5 @@
 package com.aware.ui;
 
-import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
@@ -11,13 +10,10 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
-import android.util.Log;
-import android.view.Window;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.ESM;
-import com.aware.providers.ESM_Provider;
 import com.aware.providers.ESM_Provider.ESM_Data;
 import com.aware.ui.esms.ESMFactory;
 import com.aware.ui.esms.ESM_Question;
@@ -128,17 +124,17 @@ public class ESM_Queue extends FragmentActivity {
         return size;
     }
 
-    public static int getTimeout(Context c) {
+    /**
+     * Get notification timeout value
+     * @param c
+     * @return
+     */
+    public static int getNotificationTimeout(Context c) {
         int timeout = 0;
-
         String[] projection = { ESM_Data.NOTIFICATION_TIMEOUT };
-
         Cursor onqueue = c.getContentResolver().query(ESM_Data.CONTENT_URI, projection, ESM_Data.STATUS + " IN (" + ESM.STATUS_VISIBLE + "," + ESM.STATUS_NEW + ")", null, null);
-
-        int index = onqueue.getColumnIndex(ESM_Data.NOTIFICATION_TIMEOUT);
-
         if (onqueue != null && onqueue.moveToFirst()) {
-            timeout = Integer.parseInt(onqueue.getString(index));
+            timeout = onqueue.getInt(onqueue.getColumnIndex(ESM_Data.NOTIFICATION_TIMEOUT));
         }
         if (onqueue != null && !onqueue.isClosed()) onqueue.close();
         return timeout;

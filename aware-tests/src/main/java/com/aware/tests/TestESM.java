@@ -31,10 +31,10 @@ public class TestESM implements AwareTest {
 
     @Override
     public void test(Context context) {
-//        testESMS(context);
+        testESMS(context);
 //        trialESMS(context);
 //        testFlow(context);
-        testTimeoutQueue(context);
+//        testTimeoutQueue(context);
 //        testNumeric(context);
 //        testDateTime(context);
 //        testPAM(context);
@@ -248,9 +248,10 @@ public class TestESM implements AwareTest {
             factory.addESM(esmScale);
             factory.addESM(esmPAM);
 
-            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
-            queue.putExtra(ESM.EXTRA_ESM, factory.build());
-            context.sendBroadcast(queue);
+            ESM.queueESM(context, factory.build());
+//            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
+//            queue.putExtra(ESM.EXTRA_ESM, factory.build());
+//            context.sendBroadcast(queue);
 
         } catch (JSONException e) {
             e.printStackTrace();
