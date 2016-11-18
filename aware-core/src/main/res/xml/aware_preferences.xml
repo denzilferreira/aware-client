@@ -742,12 +742,12 @@
                 android:title="Charging only" />
 
             <EditTextPreference
-                android:defaultValue="30"
+                android:defaultValue="-1"
                 android:inputType="number"
                 android:key="frequency_webservice"
                 android:persistent="true"
-                android:summary="30 minutes"
-                android:title="Sync interval (in minutes, 0 to disable)." />
+                android:summary="At 1am and 3am (random minute)"
+                android:title="Sync interval (in minutes, 0 to disable, -1 to sync every night)." />
 
             <ListPreference
                 android:defaultValue="0"

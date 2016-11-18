@@ -364,6 +364,7 @@ public class WebserviceHelper extends IntentService {
                                 highFrequencySensors.add("rotation");
                                 highFrequencySensors.add("temperature");
                                 highFrequencySensors.add("proximity");
+                                highFrequencySensors.add("tinyblackbox");
 
                                 //Clean the local database, now that it is uploaded to the server, if required
                                 if ((Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0
