@@ -82,9 +82,11 @@ public class WebserviceHelper extends IntentService {
             PendingIntent clickIntent = PendingIntent.getActivity(this, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
             mBuilder.setContentIntent(clickIntent);
 
-            notManager.notify(WEBSERVICES_NOTIFICATION_ID, mBuilder.build());
+            try { notManager.notify(WEBSERVICES_NOTIFICATION_ID, mBuilder.build()); }
+            catch (NullPointerException e) { if(Aware.DEBUG) Log.d(Aware.TAG, "Notification exception: " + e); }
         } else {
-            notManager.cancel(WEBSERVICES_NOTIFICATION_ID);
+            try { notManager.cancel(WEBSERVICES_NOTIFICATION_ID); }
+            catch (NullPointerException e) { if(Aware.DEBUG) Log.d(Aware.TAG, "Notification exception: " + e); }
         }
     }
 

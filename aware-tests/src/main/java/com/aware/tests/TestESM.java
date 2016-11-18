@@ -31,9 +31,9 @@ public class TestESM implements AwareTest {
 
     @Override
     public void test(Context context) {
-//        testESMS(context);
+        testESMS(context);
 //        trialESMS(context);
-        testFlow(context);
+//        testFlow(context);
 //        testTimeoutQueue(context);
 //        testNumeric(context);
 //        testDateTime(context);
@@ -113,6 +113,12 @@ public class TestESM implements AwareTest {
         ESMFactory factory = new ESMFactory();
 
         try {
+            ESM_QuickAnswer q0 = new ESM_QuickAnswer();
+            q0.addQuickAnswer("Yes")
+                    .addQuickAnswer("No")
+                    .setTitle("Is this a good time to answer?")
+                    .addFlow("Yes", 1) //0-base index
+                    .addFlow("No", 2);
 
             ESM_PAM q1 = new ESM_PAM();
             q1.setTitle("How do you feel today?")
@@ -125,14 +131,6 @@ public class TestESM implements AwareTest {
                     .setTitle("Why is that?")
                     .setSubmitButton("Thanks!");
 
-            ESM_QuickAnswer q0 = new ESM_QuickAnswer();
-            q0.addQuickAnswer("Yes")
-                    .addQuickAnswer("No")
-                    .setTitle("Is this a good time to answer?")
-                    .addFlow("Yes", q1.build())
-                    .addFlow("No", q2.build());
-
-            //Forward order
             factory.addESM(q0);
             factory.addESM(q1);
             factory.addESM(q2);

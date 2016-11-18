@@ -312,8 +312,9 @@ public class Aware extends Service {
                     JSONArray status = new JSONArray(study_status);
                     JSONObject study = status.getJSONObject(0);
 
-                    if (!status.getBoolean(0))
+                    if (!study.getBoolean("status")) {
                         return false; //study no longer active, make clients quit the study and reset.
+                    }
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -329,6 +330,7 @@ public class Aware extends Service {
             super.onPostExecute(studyStatus);
 
             if (!studyStatus) {
+                Log.d("Niels", "quit study");
                 sendBroadcast(new Intent(Aware.ACTION_QUIT_STUDY));
             }
         }
