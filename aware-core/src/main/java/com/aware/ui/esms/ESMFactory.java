@@ -11,14 +11,12 @@ import org.json.JSONObject;
  */
 public class ESMFactory {
 
-    private JSONArray queue;
+    private JSONArray queue = new JSONArray();
 
-    public ESMFactory() {
-        this.queue = new JSONArray();
-    }
+    public ESMFactory() {}
 
     public JSONArray getQueue() {
-        return this.queue;
+        return queue;
     }
 
     public ESMFactory addESM(ESM_Question esm) {
@@ -36,7 +34,7 @@ public class ESMFactory {
     }
 
     public String build() {
-        return this.queue.toString();
+        return queue.toString();
     }
 
     public ESMFactory rebuild(JSONArray queue) throws JSONException {
@@ -45,15 +43,6 @@ public class ESMFactory {
     }
 
     public ESM_Question getESM(int esmType, JSONObject esm, int _id) throws JSONException {
-        //HOTFIX for Niels's study... to be removed later (TODO)
-        String esm_title = esm.getString("esm_title");
-        if(esm_title.contains("How many unique applications have you used") ||
-                esm_title.contains("How many minutes have you used") ||
-                esm_title.contains("How many times did you turn on the screen of your phone")) {
-            esmType = 9;
-            esm.put("esm_type", 9);
-        }
-
         switch (esmType) {
             case ESM.TYPE_ESM_TEXT:
                 return new ESM_Freetext().rebuild(esm).setID(_id);

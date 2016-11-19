@@ -18,6 +18,7 @@ import com.aware.providers.ESM_Provider.ESM_Data;
 import com.aware.ui.esms.ESMFactory;
 import com.aware.ui.esms.ESM_Question;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -51,7 +52,6 @@ public class ESM_Queue extends FragmentActivity {
         filter.addAction(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
         filter.addAction(ESM.ACTION_AWARE_ESM_DISMISSED);
         filter.addAction(ESM.ACTION_AWARE_ESM_EXPIRED);
-        filter.addAction(ESM.ACTION_AWARE_ESM_TIMEOUT);
         registerReceiver(esmStateListener, filter);
     }
 
@@ -93,9 +93,9 @@ public class ESM_Queue extends FragmentActivity {
 
     public class ESM_State extends BroadcastReceiver {
         @Override
-        public void onReceive(Context c, Intent intent) {
+        public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE)) {
-                Aware.setSetting(c, ESM.NOTIFICATION_TIMEOUT, "false", "com.aware.phone");
+                Aware.setSetting(context, ESM.NOTIFICATION_TIMEOUT, "false", "com.aware.phone");
                 //Clean-up trials from database
                 getContentResolver().delete(ESM_Data.CONTENT_URI, ESM_Data.TRIGGER + " LIKE 'TRIAL'", null);
             }
@@ -124,17 +124,17 @@ public class ESM_Queue extends FragmentActivity {
         return size;
     }
 
-    public static int getTimeout(Context c) {
+    /**
+     * Get notification timeout value
+     * @param c
+     * @return
+     */
+    public static int getNotificationTimeout(Context c) {
         int timeout = 0;
-
         String[] projection = { ESM_Data.NOTIFICATION_TIMEOUT };
-
         Cursor onqueue = c.getContentResolver().query(ESM_Data.CONTENT_URI, projection, ESM_Data.STATUS + " IN (" + ESM.STATUS_VISIBLE + "," + ESM.STATUS_NEW + ")", null, null);
-
-        int index = onqueue.getColumnIndex(ESM_Data.NOTIFICATION_TIMEOUT);
-
         if (onqueue != null && onqueue.moveToFirst()) {
-            timeout = Integer.parseInt(onqueue.getString(index));
+            timeout = onqueue.getInt(onqueue.getColumnIndex(ESM_Data.NOTIFICATION_TIMEOUT));
         }
         if (onqueue != null && !onqueue.isClosed()) onqueue.close();
         return timeout;

@@ -145,8 +145,8 @@ public class ESM_DateTime extends ESM_Question {
         esm_dialog.setCanceledOnTouchOutside(false);
 
         try {
-
-            esm_dialog.setTitle(getTitle());
+            TextView esm_title = (TextView) ui.findViewById(R.id.esm_title);
+            esm_title.setText(getTitle());
 
             TextView esm_instructions = (TextView) ui.findViewById(R.id.esm_instructions);
             esm_instructions.setText(getInstructions());

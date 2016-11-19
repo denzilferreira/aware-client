@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -25,8 +26,6 @@ import com.aware.providers.ESM_Provider;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.Calendar;
 
 import static android.content.Context.ALARM_SERVICE;
 
@@ -215,7 +214,7 @@ public class ESM_Question extends DialogFragment {
      * @return
      * @throws JSONException
      */
-    public ESM_Question addFlow(String user_answer, int nextEsm) throws JSONException {
+    public ESM_Question addFlow(String user_answer, JSONObject nextEsm) throws JSONException {
         JSONArray flows = getFlows();
         flows.put(new JSONObject()
                 .put(flow_user_answer, user_answer)
@@ -232,14 +231,14 @@ public class ESM_Question extends DialogFragment {
      * @return
      * @throws JSONException
      */
-    public int getFlow(String user_answer) throws JSONException {
+    public JSONObject getFlow(String user_answer) throws JSONException {
         JSONArray flows = getFlows();
         for (int i = 0; i < flows.length(); i++) {
             JSONObject flow = flows.getJSONObject(i);
             if (flow.getString(flow_user_answer).equals(user_answer))
-                return flow.getInt(flow_next_esm);
+                return flow.getJSONObject(flow_next_esm);
         }
-        return -1;
+        return null;
     }
 
     /**
@@ -363,9 +362,6 @@ public class ESM_Question extends DialogFragment {
                             case ESM.STATUS_DISMISSED:
                                 if (Aware.DEBUG) Log.d(Aware.TAG, "ESM has been dismissed!");
                                 break;
-                            case ESM.STATUS_TIMEOUT:
-                                if (Aware.DEBUG) Log.d(Aware.TAG, "ESM has timed out!");
-                                break;
                         }
                     }
                     if (esm != null && !esm.isClosed()) esm.close();
@@ -398,16 +394,17 @@ public class ESM_Question extends DialogFragment {
         rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_DISMISSED);
         getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
 
-        Cursor esm = getActivity().getContentResolver().query(ESM_Provider.ESM_Data.CONTENT_URI, null, ESM_Provider.ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
-        if (esm != null && esm.moveToFirst()) {
+        Cursor pendingESM = getActivity().getContentResolver().query(ESM_Provider.ESM_Data.CONTENT_URI, null, ESM_Provider.ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
+        if (pendingESM != null && pendingESM.moveToFirst()) {
+            if (Aware.DEBUG) Log.d(Aware.TAG, "Rest of ESM Queue is dismissed!");
             do {
                 rowData = new ContentValues();
                 rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
                 rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_DISMISSED);
-                getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, null, null);
-            } while (esm.moveToNext());
+                getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + pendingESM.getInt(pendingESM.getColumnIndex(ESM_Provider.ESM_Data._ID)), null);
+            } while (pendingESM.moveToNext());
         }
-        if (esm != null && !esm.isClosed()) esm.close();
+        if (pendingESM != null && !pendingESM.isClosed()) pendingESM.close();
 
         Intent answer = new Intent(ESM.ACTION_AWARE_ESM_DISMISSED);
         getActivity().sendBroadcast(answer);
@@ -416,21 +413,20 @@ public class ESM_Question extends DialogFragment {
     }
 
     /**
-     * When one of the ESM's has timed out, the entire queue gets removed.
+     * When one of the ESM's has timed out, the entire queue gets expired.
      */
     public void timeoutQueue(Context context) {
-        ContentValues rowData;
-
-        Cursor esm = context.getContentResolver().query(ESM_Provider.ESM_Data.CONTENT_URI, null, ESM_Provider.ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
-        if (esm != null && esm.moveToFirst()) {
+        Cursor timedOutESM = context.getContentResolver().query(ESM_Provider.ESM_Data.CONTENT_URI, null, ESM_Provider.ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
+        if (timedOutESM != null && timedOutESM.moveToFirst()) {
+            if (Aware.DEBUG) Log.d(Aware.TAG, "Rest of ESM Queue is expired!");
             do {
-                rowData = new ContentValues();
+                ContentValues rowData = new ContentValues();
                 rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
-                rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_TIMEOUT);
-                context.getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, null, null);
-            } while (esm.moveToNext());
+                rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_EXPIRED);
+                context.getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + timedOutESM.getInt(timedOutESM.getColumnIndex(ESM_Provider.ESM_Data._ID)), null);
+            } while (timedOutESM.moveToNext());
         }
-        if (esm != null && !esm.isClosed()) esm.close();
+        if (timedOutESM != null && !timedOutESM.isClosed()) timedOutESM.close();
     }
 
     @Override
@@ -467,6 +463,9 @@ public class ESM_Question extends DialogFragment {
             rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, 0);
             rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_NEW);
             getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
+
+            //Make sure the state of notification timeout is false before notifying the user again
+            Aware.setSetting(getActivity().getApplicationContext(), ESM.NOTIFICATION_TIMEOUT, false, "com.aware.phone");
 
             //Update notification
             ESM.notifyESM(getActivity().getApplicationContext());

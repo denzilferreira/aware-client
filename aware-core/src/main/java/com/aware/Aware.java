@@ -279,8 +279,7 @@ public class Aware extends Service {
                     device_ping.put("package_version_code", String.valueOf(package_info.versionCode));
                     device_ping.put("package_version_name", String.valueOf(package_info.versionName));
                 }
-            } catch (PackageManager.NameNotFoundException e) {
-            }
+            } catch (PackageManager.NameNotFoundException e) {}
 
             try {
                 new Https(awareContext, SSLManager.getHTTPS(getApplicationContext(), "https://api.awareframework.com/index.php")).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
@@ -313,8 +312,9 @@ public class Aware extends Service {
                     JSONArray status = new JSONArray(study_status);
                     JSONObject study = status.getJSONObject(0);
 
-                    if (!status.getBoolean(0))
+                    if (!study.getBoolean("status")) {
                         return false; //study no longer active, make clients quit the study and reset.
+                    }
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -330,6 +330,7 @@ public class Aware extends Service {
             super.onPostExecute(studyStatus);
 
             if (!studyStatus) {
+                Log.d("Niels", "quit study");
                 sendBroadcast(new Intent(Aware.ACTION_QUIT_STUDY));
             }
         }
@@ -1814,21 +1815,21 @@ public class Aware extends Service {
             }
 
             NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-            if (wifi.isAvailable()) {
+            if (wifi != null && wifi.isAvailable()) {
                 complianceStatus.put("wifi", true);
             } else {
                 complianceStatus.put("wifi", false);
             }
 
             NetworkInfo bt = connManager.getNetworkInfo(ConnectivityManager.TYPE_BLUETOOTH);
-            if (bt.isAvailable()) {
+            if (bt!= null && bt.isAvailable()) {
                 complianceStatus.put("bt", true);
             } else {
                 complianceStatus.put("bt", false);
             }
 
             NetworkInfo network = connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-            if (network.isAvailable()) {
+            if (network != null && network.isAvailable()) {
                 complianceStatus.put("network", true);
             } else {
                 complianceStatus.put("network", false);

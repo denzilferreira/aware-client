@@ -6,10 +6,14 @@ import android.net.Uri;
 import android.os.BatteryManager;
 
 import com.aware.Aware;
+import com.aware.ESM;
 import com.aware.Screen;
 import com.aware.providers.Battery_Provider;
 import com.aware.providers.Scheduler_Provider;
 import com.aware.providers.Screen_Provider;
+import com.aware.ui.ESM_Queue;
+import com.aware.ui.esms.ESMFactory;
+import com.aware.ui.esms.ESM_PAM;
 import com.aware.utils.Aware_TTS;
 import com.aware.utils.Scheduler;
 
@@ -83,6 +87,31 @@ public class TestScheduler implements AwareTest {
             contextual.setActionClass(c.getPackageName() + "/" + Aware_TTS.class.getName());
             contextual.addActionExtra(Aware_TTS.EXTRA_TTS_TEXT, "Screen is on!");
             contextual.addActionExtra(Aware_TTS.EXTRA_TTS_REQUESTER, c.getPackageName());
+
+            Scheduler.saveSchedule(c, contextual);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void testESMTrigger(Context c) {
+        try {
+
+            ESM_PAM esmPAM = new ESM_PAM();
+            esmPAM.setTitle("PAM")
+                    .setInstructions("Pick the closest to how you feel right now.")
+                    .setSubmitButton("OK")
+                    .setNotificationTimeout(10)
+                    .setTrigger("AWARE Test");
+
+            ESMFactory factory = new ESMFactory();
+            factory.addESM(esmPAM);
+
+            Scheduler.Schedule contextual = new Scheduler.Schedule("test_contextual");
+            contextual.addContext(Screen.ACTION_AWARE_SCREEN_ON);
+            contextual.setActionType(Scheduler.ACTION_TYPE_SERVICE);
+            contextual.setActionClass(c.getPackageName() + "/" + ESM.QueueESM.class.getName());
+            contextual.addActionExtra(ESM.EXTRA_ESM, factory.build());
 
             Scheduler.saveSchedule(c, contextual);
         } catch (JSONException e) {

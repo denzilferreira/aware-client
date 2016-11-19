@@ -50,8 +50,7 @@ public class ESM_Provider extends ContentProvider {
         private ESM_Data() {
         }
 
-        public static final Uri CONTENT_URI = Uri.parse("content://"
-                + ESM_Provider.AUTHORITY + "/esms");
+        public static final Uri CONTENT_URI = Uri.parse("content://" + ESM_Provider.AUTHORITY + "/esms");
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.aware.esms";
         public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.aware.esms";
 
