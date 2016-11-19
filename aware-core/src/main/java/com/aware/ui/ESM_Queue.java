@@ -125,27 +125,6 @@ public class ESM_Queue extends FragmentActivity {
     }
 
     /**
-     * Returns the requested queue (where status is NEW), ordered chronologically
-     * @param c
-     * @return
-     */
-    public static JSONArray getQueue(Context c) {
-        JSONArray esms = new JSONArray();
-        Cursor queue = c.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + "=" + ESM.STATUS_NEW, null, ESM_Data.TIMESTAMP + " ASC");
-        if (queue != null && queue.moveToFirst()) {
-            do {
-                try {
-                    esms.put(new JSONObject(queue.getString(queue.getColumnIndex(ESM_Data.JSON))));
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            } while (queue.moveToNext());
-        }
-        if (queue != null && ! queue.isClosed()) queue.close();
-        return esms;
-    }
-
-    /**
      * Get notification timeout value
      * @param c
      * @return

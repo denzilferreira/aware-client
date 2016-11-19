@@ -427,10 +427,10 @@ public class ESM extends Aware_Sensor {
             }
 
             if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_ANSWERED)) {
+                //Check if there is a flow to follow
+                processFlow(context, intent.getStringExtra(EXTRA_ANSWER));
+
                 if (ESM_Queue.getQueueSize(context) > 0) {
-
-                    processFlow(context, intent.getStringExtra(EXTRA_ANSWER));
-
                     Intent intent_ESM = new Intent(context, ESM_Queue.class);
                     intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     context.startActivity(intent_ESM);
@@ -460,6 +460,10 @@ public class ESM extends Aware_Sensor {
             }
 
             if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_EXPIRED)) {
+
+                //Check if there is a flow to follow
+                processFlow(context, intent.getStringExtra(EXTRA_ANSWER));
+
                 if (ESM_Queue.getQueueSize(context) > 0) {
                     Intent intent_ESM = new Intent(context, ESM_Queue.class);
                     intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -474,13 +478,11 @@ public class ESM extends Aware_Sensor {
     }
 
     private static void processFlow(Context context, String current_answer) {
-
         if (ESM.DEBUG) {
             Log.d(ESM.TAG, "Current answer: " + current_answer);
         }
 
         try {
-
             //Check flow
             Cursor last_esm = context.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_ANSWERED + "," + ESM.STATUS_EXPIRED + ")", null, ESM_Data.TIMESTAMP + " DESC LIMIT 1");
             if (last_esm != null && last_esm.moveToFirst()) {
@@ -493,18 +495,37 @@ public class ESM extends Aware_Sensor {
                 for (int i = 0; i < flows.length(); i++) {
                     JSONObject flow = flows.getJSONObject(i);
                     String flowAnswer = flow.getString(ESM_Question.flow_user_answer);
-                    JSONObject nextESM = flow.getJSONObject(ESM_Question.flow_next_esm);
+                    JSONObject nextESM = flow.getJSONObject(ESM_Question.flow_next_esm).getJSONObject(EXTRA_ESM);
 
                     if (flowAnswer.equals(current_answer)) {
                         if (ESM.DEBUG) Log.d(ESM.TAG, "Following next question: " + nextESM);
-                        ContentValues esmFollowing = new ContentValues();
-                        esmFollowing.put(ESM_Data.STATUS, ESM.STATUS_VISIBLE);
-                        context.getContentResolver().update(ESM_Data.CONTENT_URI, esmFollowing, ESM_Data.JSON + " LIKE '" + nextESM.getJSONObject("esm") + "' AND " + ESM_Data.STATUS + "=" + ESM.STATUS_NEW, null);
+
+                        //Queued ESM
+                        ContentValues rowData = new ContentValues();
+                        rowData.put(ESM_Data.TIMESTAMP, System.currentTimeMillis()); //fixed issue with synching and support ordering of esms by timestamp
+                        rowData.put(ESM_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
+                        rowData.put(ESM_Data.JSON, nextESM.toString());
+                        rowData.put(ESM_Data.EXPIRATION_THRESHOLD, nextESM.optInt(ESM_Data.EXPIRATION_THRESHOLD)); //optional, defaults to 0
+                        rowData.put(ESM_Data.NOTIFICATION_TIMEOUT, nextESM.optInt(ESM_Data.NOTIFICATION_TIMEOUT)); //optional, defaults to 0
+                        rowData.put(ESM_Data.STATUS, ESM.STATUS_NEW);
+                        rowData.put(ESM_Data.TRIGGER, nextESM.optString(ESM_Data.TRIGGER)); //optional, defaults to ""
+
+                        context.getContentResolver().insert(ESM_Data.CONTENT_URI, rowData);
                     } else {
-                        if (ESM.DEBUG) Log.d(ESM.TAG, "Branched split: " + flowAnswer + " Skipping: " + nextESM);
-                        ContentValues esmBranched = new ContentValues();
-                        esmBranched.put(ESM_Data.STATUS, ESM.STATUS_BRANCHED);
-                        context.getContentResolver().update(ESM_Data.CONTENT_URI, esmBranched, ESM_Data.JSON + " LIKE '" + nextESM.getJSONObject("esm") + "' AND " + ESM_Data.STATUS + "=" + ESM.STATUS_NEW, null);
+                        if (ESM.DEBUG)
+                            Log.d(ESM.TAG, "Branched split: " + flowAnswer + " Skipping: " + nextESM);
+
+                        //Branched ESM
+                        ContentValues rowData = new ContentValues();
+                        rowData.put(ESM_Data.TIMESTAMP, System.currentTimeMillis()); //fixed issue with synching and support ordering of esms by timestamp
+                        rowData.put(ESM_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
+                        rowData.put(ESM_Data.JSON, nextESM.toString());
+                        rowData.put(ESM_Data.EXPIRATION_THRESHOLD, nextESM.optInt(ESM_Data.EXPIRATION_THRESHOLD)); //optional, defaults to 0
+                        rowData.put(ESM_Data.NOTIFICATION_TIMEOUT, nextESM.optInt(ESM_Data.NOTIFICATION_TIMEOUT)); //optional, defaults to 0
+                        rowData.put(ESM_Data.STATUS, ESM.STATUS_BRANCHED);
+                        rowData.put(ESM_Data.TRIGGER, nextESM.optString(ESM_Data.TRIGGER)); //optional, defaults to ""
+
+                        context.getContentResolver().insert(ESM_Data.CONTENT_URI, rowData);
                     }
                 }
             }
@@ -520,6 +541,7 @@ public class ESM extends Aware_Sensor {
     /**
      * ESM background service
      * - Queue ESM received to the local database
+     *
      * @author df
      */
     public static class QueueESM extends IntentService {
