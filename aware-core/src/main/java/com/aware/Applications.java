@@ -335,7 +335,9 @@ public class Applications extends AccessibilityService {
     @Override
     public void onInterrupt() {
         if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
-            unregisterReceiver(awareMonitor);
+            if(awareMonitor != null) {
+                unregisterReceiver(awareMonitor);
+            }
         }
         Log.w(TAG, "Accessibility Service has been interrupted...");
     }
@@ -343,7 +345,9 @@ public class Applications extends AccessibilityService {
     @Override
     public boolean onUnbind(Intent intent) {
         if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
-            unregisterReceiver(awareMonitor);
+            if(awareMonitor != null) {
+                unregisterReceiver(awareMonitor);
+            }
         }
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, false);
         Log.e(TAG, "Accessibility Service has been unbound...");
@@ -378,7 +382,9 @@ public class Applications extends AccessibilityService {
         super.onDestroy();
         alarmManager.cancel(repeatingIntent);
         try {
-            unregisterReceiver(awareMonitor);
+            if(awareMonitor != null) {
+                unregisterReceiver(awareMonitor);
+            }
         } catch (IllegalArgumentException e) {}
 
         Aware.debug(this, "destroyed: " + getClass().getName());
