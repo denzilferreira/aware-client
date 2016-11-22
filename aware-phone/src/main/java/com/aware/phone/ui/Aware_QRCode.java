@@ -21,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.security.KeyChain;
 import android.support.design.widget.Snackbar;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
@@ -125,7 +126,10 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
             mScannerView = new ZBarScannerView(this);
             LinearLayout main = new LinearLayout(this);
             ListView list = new ListView(this);
+            Toolbar toolbar = new Toolbar(this);
+            toolbar.setId(R.id.aware_toolbar);
             list.setId(android.R.id.list);
+            main.addView(toolbar);
             main.addView(mScannerView);
             main.addView(list);
             setContentView(main);

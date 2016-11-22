@@ -109,12 +109,12 @@ public class Aware_Sensor extends Service {
             startService(study_SSL);
         }
 
-        Aware.debug(this, "created: " + getClass().getName() + ". package: " + getPackageName());
+        Aware.debug(this, "created: " + getClass().getName() + " package: " + getPackageName());
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Aware.debug(this, "active: " + getClass().getName() + ". package: " + getPackageName());
+        Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -127,7 +127,7 @@ public class Aware_Sensor extends Service {
             unregisterReceiver(contextBroadcaster);
         }
 
-        Aware.debug(this, "destroyed: " + getClass().getName() + ". package: " + getPackageName());
+        Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
     }
 
     /**

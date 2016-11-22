@@ -43,6 +43,8 @@ public class ESM_Queue extends FragmentActivity {
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         manager.cancel(ESM.ESM_NOTIFICATION_ID);
 
+        Aware.setSetting(getApplicationContext(), ESM.NOTIFICATION_TIMEOUT, false, "com.aware.phone");
+
         TAG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_TAG) : TAG;
 
         Intent queue_started = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_STARTED);
@@ -58,6 +60,8 @@ public class ESM_Queue extends FragmentActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        if (getQueueSize(getApplicationContext()) == 0) finish();
 
         try {
             FragmentManager fragmentManager = getSupportFragmentManager();
@@ -96,6 +100,7 @@ public class ESM_Queue extends FragmentActivity {
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE)) {
                 Aware.setSetting(context, ESM.NOTIFICATION_TIMEOUT, "false", "com.aware.phone");
+
                 //Clean-up trials from database
                 getContentResolver().delete(ESM_Data.CONTENT_URI, ESM_Data.TRIGGER + " LIKE 'TRIAL'", null);
             }

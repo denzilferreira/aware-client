@@ -284,6 +284,11 @@ public class Applications extends AccessibilityService {
         updateApps.setAction(ACTION_AWARE_APPLICATIONS_HISTORY);
         repeatingIntent = PendingIntent.getService(getApplicationContext(), 0, updateApps, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
+        filter.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
+        registerReceiver(awareMonitor, filter);
+
         Aware.debug(this, "created: " + getClass().getName());
     }
 

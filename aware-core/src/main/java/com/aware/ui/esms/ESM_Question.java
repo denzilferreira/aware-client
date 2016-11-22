@@ -8,11 +8,9 @@ import android.app.AlarmManager;
 import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -317,6 +315,9 @@ public class ESM_Question extends DialogFragment {
     public class DismissNotificationTimeout extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
+
+            Aware.setSetting(getContext(), ESM.NOTIFICATION_TIMEOUT, false, "com.aware.phone");
+
             // Remove notification timeout upon ESM being displayed
             Intent removeESMNotification = new Intent(getContext(), ESM.RemoveESM.class);
             PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), 710, removeESMNotification, 0);
@@ -379,16 +380,16 @@ public class ESM_Question extends DialogFragment {
             Intent expired = new Intent(ESM.ACTION_AWARE_ESM_EXPIRED);
             getActivity().sendBroadcast(expired);
 
-            esm_dialog.dismiss();
+            if (esm_dialog != null) esm_dialog.dismiss();
 
             return null;
         }
     }
 
     /**
-     * When dismissing one ESM by pressing cancel, the rest of the queue gets dismissed
+     * Leaving ESM by pressing cancel, the rest of the queue gets dismissed status (canceled by the user)
      */
-    private void dismissESM() {
+    private void cancelESM() {
         ContentValues rowData = new ContentValues();
         rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
         rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_DISMISSED);
@@ -412,29 +413,13 @@ public class ESM_Question extends DialogFragment {
         if (esm_dialog != null) esm_dialog.dismiss();
     }
 
-    /**
-     * When one of the ESM's has timed out, the entire queue gets expired.
-     */
-    public void timeoutQueue(Context context) {
-        Cursor timedOutESM = context.getContentResolver().query(ESM_Provider.ESM_Data.CONTENT_URI, null, ESM_Provider.ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
-        if (timedOutESM != null && timedOutESM.moveToFirst()) {
-            if (Aware.DEBUG) Log.d(Aware.TAG, "Rest of ESM Queue is expired!");
-            do {
-                ContentValues rowData = new ContentValues();
-                rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
-                rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_EXPIRED);
-                context.getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + timedOutESM.getInt(timedOutESM.getColumnIndex(ESM_Provider.ESM_Data._ID)), null);
-            } while (timedOutESM.moveToNext());
-        }
-        if (timedOutESM != null && !timedOutESM.isClosed()) timedOutESM.close();
-    }
-
     @Override
     public void onCancel(DialogInterface dialog) {
         super.onCancel(dialog);
         try {
             if (getExpirationThreshold() > 0 && expire_monitor != null) expire_monitor.cancel(true);
-            dismissESM();
+            cancelESM();
+            getActivity().finish();
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -470,7 +455,7 @@ public class ESM_Question extends DialogFragment {
             //Update notification
             ESM.notifyESM(getActivity().getApplicationContext());
 
-            esm_dialog.dismiss();
+            if (esm_dialog != null) esm_dialog.dismiss();
             getActivity().finish();
         }
     }
