@@ -26,7 +26,7 @@ public class TestESM implements AwareTest {
 
     @Override
     public void test(Context context) {
-//        testESMS(context);
+        testESMS(context);
 //        trialESMS(context);
 //        testFlow(context);
 //        testTimeoutQueue(context);
@@ -34,7 +34,7 @@ public class TestESM implements AwareTest {
 //        testDateTime(context);
 //        testPAM(context);
 
-        testOptionsOverflow(context);
+//        testOptionsOverflow(context);
     }
 
     private void testOptionsOverflow(Context context) {
@@ -216,11 +216,11 @@ public class TestESM implements AwareTest {
                     .setInstructions("Checkbox ESM");
 
             ESM_Likert esmLikert = new ESM_Likert();
-            esmLikert.setLikertMax(5)
+            esmLikert.setLikertMax(7)
                     .setLikertMaxLabel("Great")
                     .setLikertMinLabel("Poor")
                     .setLikertStep(1)
-                    .setTitle("Likert")
+                    .setTitle("Likert 3")
                     .setInstructions("Likert ESM")
                     .setTrigger("test")
                     .setSubmitButton("OK");
@@ -255,8 +255,8 @@ public class TestESM implements AwareTest {
                     .setSubmitButton("OK")
                     .setTrigger("AWARE Test");
 
-            factory.addESM(esmFreetext);
-            factory.addESM(esmCheckbox);
+//            factory.addESM(esmFreetext);
+//            factory.addESM(esmCheckbox);
             factory.addESM(esmLikert);
             factory.addESM(esmQuickAnswer);
             factory.addESM(esmRadio);

@@ -105,6 +105,11 @@ public class ESM_Likert extends ESM_Question {
             esm_instructions.setText(getInstructions());
 
             final RatingBar ratingBar = (RatingBar) ui.findViewById(R.id.esm_likert);
+
+            ratingBar.setNumStars(getLikertMax());
+            ratingBar.setMax(getLikertMax());
+            ratingBar.setStepSize((float) getLikertStep());
+
             ratingBar.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -116,9 +121,6 @@ public class ESM_Likert extends ESM_Question {
                     }
                 }
             });
-            ratingBar.setMax(getLikertMax());
-            ratingBar.setStepSize((float) getLikertStep());
-            ratingBar.setNumStars(getLikertMax());
 
             TextView min_label = (TextView) ui.findViewById(R.id.esm_min);
             min_label.setText(getLikertMinLabel());
