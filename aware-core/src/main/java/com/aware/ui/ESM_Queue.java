@@ -134,6 +134,22 @@ public class ESM_Queue extends FragmentActivity {
      * @param c
      * @return
      */
+    public static int getExpirationThreshold(Context c) {
+        int expiration = 0;
+        String[] projection = { ESM_Data.EXPIRATION_THRESHOLD };
+        Cursor onqueue = c.getContentResolver().query(ESM_Data.CONTENT_URI, projection, ESM_Data.STATUS + " IN (" + ESM.STATUS_VISIBLE + "," + ESM.STATUS_NEW + ")", null, null);
+        if (onqueue != null && onqueue.moveToFirst()) {
+            expiration = onqueue.getInt(onqueue.getColumnIndex(ESM_Data.EXPIRATION_THRESHOLD));
+        }
+        if (onqueue != null && !onqueue.isClosed()) onqueue.close();
+        return expiration;
+    }
+
+    /**
+     * Get notification timeout value
+     * @param c
+     * @return
+     */
     public static int getNotificationTimeout(Context c) {
         int timeout = 0;
         String[] projection = { ESM_Data.NOTIFICATION_TIMEOUT };

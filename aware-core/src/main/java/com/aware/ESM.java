@@ -333,10 +333,16 @@ public class ESM extends Aware_Sensor {
 
             mNotificationManager.notify(ESM_NOTIFICATION_ID, mBuilder.build());
 
+            int expirationThreshold = ESM_Queue.getExpirationThreshold(c);
             int notificationTimeout = ESM_Queue.getNotificationTimeout(c);
 
+            if (notificationTimeout > 0 && expirationThreshold == 0) {
+                Aware.setSetting(c, ESM.NOTIFICATION_TIMEOUT, true, "com.aware.phone");
+            }
+
             //Notification timeout set, trigger expire ESM's after notification timeout
-            if (notificationTimeout != 0) {
+            if (notificationTimeout != 0 && !Aware.getSetting(c, ESM.NOTIFICATION_TIMEOUT).equals("true")) {
+
                 Aware.setSetting(c, ESM.NOTIFICATION_TIMEOUT, true, "com.aware.phone");
 
                 Calendar cal = Calendar.getInstance();
