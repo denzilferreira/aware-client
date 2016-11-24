@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/LinearLayout1"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:minWidth="300dip"
-    android:orientation="vertical" >
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/esm_title"
@@ -13,8 +14,8 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:padding="16dp"
-        android:textStyle="normal|bold"
-        android:textSize="18sp" />
+        android:textSize="18sp"
+        android:textStyle="normal|bold" />
 
     <TextView
         android:id="@+id/esm_instructions"
@@ -24,19 +25,26 @@
         android:layout_alignParentTop="true"
         android:padding="10dp" />
 
-    <RatingBar
-        android:id="@+id/esm_likert"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/esm_instructions"
-        android:layout_centerHorizontal="true"
-        android:layout_gravity="center_horizontal" />
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <RatingBar
+            android:id="@+id/esm_likert"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
 
     <LinearLayout
         android:id="@+id/LinearLayout1"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/esm_likert" >
+        android:layout_below="@+id/esm_likert">
 
         <TextView
             android:id="@+id/esm_min"
@@ -44,8 +52,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="left"
-            android:paddingLeft="12dp"
             android:paddingBottom="2dp"
+            android:paddingLeft="12dp"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
         <TextView
@@ -54,8 +62,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="right"
-            android:paddingRight="12dp"
             android:paddingBottom="2dp"
+            android:paddingRight="12dp"
             android:textAppearance="?android:attr/textAppearanceSmall" />
     </LinearLayout>
 
@@ -64,9 +72,9 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/LinearLayout1"
+        android:paddingBottom="10dp"
         android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingBottom="10dp" >
+        android:paddingRight="10dp">
 
         <Button
             android:id="@+id/esm_cancel"

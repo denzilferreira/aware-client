@@ -109,8 +109,8 @@ public class TestScheduler implements AwareTest {
 
             Scheduler.Schedule contextual = new Scheduler.Schedule("test_contextual");
             contextual.addContext(Screen.ACTION_AWARE_SCREEN_ON);
-            contextual.setActionType(Scheduler.ACTION_TYPE_SERVICE);
-            contextual.setActionClass(c.getPackageName() + "/" + ESM.QueueESM.class.getName());
+            contextual.setActionType(Scheduler.ACTION_TYPE_BROADCAST);
+            contextual.setActionClass(ESM.ACTION_AWARE_QUEUE_ESM);
             contextual.addActionExtra(ESM.EXTRA_ESM, factory.build());
 
             Scheduler.saveSchedule(c, contextual);

@@ -94,8 +94,9 @@ public class WebserviceHelper extends IntentService {
     protected void onHandleIntent(Intent intent) {
 
         String WEBSERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
-        //Fixed: not using webservices
-        if (WEBSERVER.length() == 0) return;
+
+        //Fixed: not part of a study, do nothing
+        if (WEBSERVER.length() == 0 || WEBSERVER.equalsIgnoreCase("https://api.awareframework.com/index.php")) return;
 
         String protocol = WEBSERVER.substring(0, WEBSERVER.indexOf(":"));
         boolean WEBSERVICE_SIMPLE = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SIMPLE).equals("true");

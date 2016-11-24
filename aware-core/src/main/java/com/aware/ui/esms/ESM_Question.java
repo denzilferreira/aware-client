@@ -4,15 +4,11 @@ package com.aware.ui.esms;
  * Created by denzilferreira on 21/02/16.
  */
 
-import android.app.AlarmManager;
 import android.app.Dialog;
-import android.app.PendingIntent;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -26,8 +22,6 @@ import com.aware.providers.ESM_Provider;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import static android.content.Context.ALARM_SERVICE;
 
 /**
  * Builder class for ESM questions. Any new ESM type needs to extend this class.
@@ -44,6 +38,7 @@ public class ESM_Question extends DialogFragment {
     public static final String esm_submit = "esm_submit";
     public static final String esm_expiration_threshold = "esm_expiration_threshold";
     public static final String esm_notification_timeout = "esm_notification_timeout";
+    public static final String esm_notification_retry = "esm_notification_retry";
     public static final String esm_trigger = "esm_trigger";
     public static final String esm_flows = "esm_flows";
     public static final String flow_user_answer = "user_answer";
@@ -136,6 +131,24 @@ public class ESM_Question extends DialogFragment {
             this.esm.put(esm_notification_timeout, 0);
         }
         return this.esm.getInt(esm_notification_timeout);
+    }
+
+    public int getNotificationRetry() throws JSONException {
+        if (!this.esm.has(esm_notification_retry)) {
+            this.esm.put(esm_notification_retry, 0);
+        }
+        return this.esm.getInt(esm_notification_retry);
+    }
+
+    /**
+     * How many times we retry the notification once it expires
+     * @param notification_retry
+     * @return
+     * @throws JSONException
+     */
+    public ESM_Question setNotificationRetry(int notification_retry) throws JSONException {
+        this.esm.put(esm_notification_retry, notification_retry);
+        return this;
     }
 
     /**
@@ -283,8 +296,6 @@ public class ESM_Question extends DialogFragment {
      */
     public Dialog esm_dialog = null;
     public ESMExpireMonitor expire_monitor = null;
-    public DismissNotificationTimeout dismiss_notification_timeout = null;
-
 
     /**
      * Extended on sub-classes
@@ -295,10 +306,9 @@ public class ESM_Question extends DialogFragment {
     @NonNull
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         try {
-            if (getNotificationTimeout() > 0) {
-                dismiss_notification_timeout = new DismissNotificationTimeout();
-                dismiss_notification_timeout.execute();
-            }
+            if (getNotificationTimeout() > 0 && ESM.esm_notif_expire != null)
+                ESM.esm_notif_expire.cancel(true);
+
             if (getExpirationThreshold() > 0) {
                 expire_monitor = new ESMExpireMonitor(System.currentTimeMillis(), getExpirationThreshold(), getID());
                 expire_monitor.execute();
@@ -308,29 +318,6 @@ public class ESM_Question extends DialogFragment {
         }
         return esm_dialog;
     }
-
-    /**
-     * Disables notification timeout from dismissing the ESM as soon as the user has opened the notification
-     *
-     * @author Niels
-     */
-    public class DismissNotificationTimeout extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
-            // Remove notification timeout upon ESM being displayed
-            Intent removeESMNotification = new Intent(getContext(), ESM.RemoveESM.class);
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), 710, removeESMNotification, 0);
-            AlarmManager alarmManager = (AlarmManager) getContext().getSystemService(ALARM_SERVICE);
-            try{
-                pendingIntent.cancel();
-                alarmManager.cancel(pendingIntent);
-            } catch (NullPointerException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-    }
-
 
     /**
      * Checks on the background if the current visible dialog has expired or not. If it did, removes dialog and updates the status to expired.
@@ -379,16 +366,16 @@ public class ESM_Question extends DialogFragment {
             Intent expired = new Intent(ESM.ACTION_AWARE_ESM_EXPIRED);
             getActivity().sendBroadcast(expired);
 
-            esm_dialog.dismiss();
+            if (esm_dialog != null) esm_dialog.dismiss();
 
             return null;
         }
     }
 
     /**
-     * When dismissing one ESM by pressing cancel, the rest of the queue gets dismissed
+     * Leaving ESM by pressing cancel, the rest of the queue gets dismissed status (canceled by the user)
      */
-    private void dismissESM() {
+    private void cancelESM() {
         ContentValues rowData = new ContentValues();
         rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
         rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_DISMISSED);
@@ -412,29 +399,12 @@ public class ESM_Question extends DialogFragment {
         if (esm_dialog != null) esm_dialog.dismiss();
     }
 
-    /**
-     * When one of the ESM's has timed out, the entire queue gets expired.
-     */
-    public void timeoutQueue(Context context) {
-        Cursor timedOutESM = context.getContentResolver().query(ESM_Provider.ESM_Data.CONTENT_URI, null, ESM_Provider.ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
-        if (timedOutESM != null && timedOutESM.moveToFirst()) {
-            if (Aware.DEBUG) Log.d(Aware.TAG, "Rest of ESM Queue is expired!");
-            do {
-                ContentValues rowData = new ContentValues();
-                rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
-                rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_EXPIRED);
-                context.getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + timedOutESM.getInt(timedOutESM.getColumnIndex(ESM_Provider.ESM_Data._ID)), null);
-            } while (timedOutESM.moveToNext());
-        }
-        if (timedOutESM != null && !timedOutESM.isClosed()) timedOutESM.close();
-    }
-
     @Override
     public void onCancel(DialogInterface dialog) {
         super.onCancel(dialog);
         try {
             if (getExpirationThreshold() > 0 && expire_monitor != null) expire_monitor.cancel(true);
-            dismissESM();
+            cancelESM();
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -464,13 +434,11 @@ public class ESM_Question extends DialogFragment {
             rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_NEW);
             getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
 
-            //Make sure the state of notification timeout is false before notifying the user again
-            Aware.setSetting(getActivity().getApplicationContext(), ESM.NOTIFICATION_TIMEOUT, false, "com.aware.phone");
-
             //Update notification
             ESM.notifyESM(getActivity().getApplicationContext());
 
-            esm_dialog.dismiss();
+            if (esm_dialog != null) esm_dialog.dismiss();
+
             getActivity().finish();
         }
     }

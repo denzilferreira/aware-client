@@ -33,8 +33,32 @@ public class TestESM implements AwareTest {
 //        testNumeric(context);
 //        testDateTime(context);
 //        testPAM(context);
+//        testOptionsOverflow(context);
+        testNotificationRetries(context);
+    }
 
-        testOptionsOverflow(context);
+    /**
+     * This tests the notification re-trigger x times after y seconds have elapsed.
+     * @param context
+     */
+    private void testNotificationRetries(Context context) {
+        ESMFactory factory = new ESMFactory();
+        try {
+
+            ESM_Number number = new ESM_Number();
+            number.setNotificationTimeout(10) //60 seconds to reply
+                    .setNotificationRetry(3) //notify the user 3 times
+                    .setSubmitButton("OK")
+                    .setTitle("Lucky number?")
+                    .setInstructions("Pick one.");
+
+            factory.addESM(number);
+
+            ESM.queueESM(context, factory.build());
+
+        } catch (JSONException e){
+            e.printStackTrace();
+        }
     }
 
     private void testOptionsOverflow(Context context) {
@@ -200,10 +224,10 @@ public class TestESM implements AwareTest {
         ESMFactory factory = new ESMFactory();
         try {
             ESM_Freetext esmFreetext = new ESM_Freetext();
-            esmFreetext.setTitle("Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext Freetext ")
+            esmFreetext.setTitle("Freetext")
                     .setTrigger("test")
                     .setSubmitButton("OK")
-                    .setNotificationTimeout(5)
+                    .setNotificationTimeout(10)
                     .setInstructions("Freetext ESM");
 
             ESM_Checkbox esmCheckbox = new ESM_Checkbox();
@@ -212,15 +236,16 @@ public class TestESM implements AwareTest {
                     .addCheck("Other")
                     .setTitle("Checkbox")
                     .setTrigger("test")
+                    .setExpirationThreshold(60)
                     .setSubmitButton("OK")
                     .setInstructions("Checkbox ESM");
 
             ESM_Likert esmLikert = new ESM_Likert();
-            esmLikert.setLikertMax(5)
+            esmLikert.setLikertMax(7)
                     .setLikertMaxLabel("Great")
                     .setLikertMinLabel("Poor")
                     .setLikertStep(1)
-                    .setTitle("Likert")
+                    .setTitle("Likert 3")
                     .setInstructions("Likert ESM")
                     .setTrigger("test")
                     .setSubmitButton("OK");

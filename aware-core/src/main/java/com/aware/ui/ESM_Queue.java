@@ -59,6 +59,8 @@ public class ESM_Queue extends FragmentActivity {
     protected void onResume() {
         super.onResume();
 
+        if (getQueueSize(getApplicationContext()) == 0) finish();
+
         try {
             FragmentManager fragmentManager = getSupportFragmentManager();
 
@@ -95,7 +97,6 @@ public class ESM_Queue extends FragmentActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE)) {
-                Aware.setSetting(context, ESM.NOTIFICATION_TIMEOUT, "false", "com.aware.phone");
                 //Clean-up trials from database
                 getContentResolver().delete(ESM_Data.CONTENT_URI, ESM_Data.TRIGGER + " LIKE 'TRIAL'", null);
             }
@@ -125,14 +126,30 @@ public class ESM_Queue extends FragmentActivity {
     }
 
     /**
-     * Get notification timeout value
+     * Get dialog timeout value. How long is the ESM visible on the screen
+     * @param c
+     * @return
+     */
+    public static int getExpirationThreshold(Context c) {
+        int expiration = 0;
+        String[] projection = { ESM_Data.EXPIRATION_THRESHOLD };
+        Cursor onqueue = c.getContentResolver().query(ESM_Data.CONTENT_URI, projection, ESM_Data.STATUS + "=" + ESM.STATUS_VISIBLE, null, null);
+        if (onqueue != null && onqueue.moveToFirst()) {
+            expiration = onqueue.getInt(onqueue.getColumnIndex(ESM_Data.EXPIRATION_THRESHOLD));
+        }
+        if (onqueue != null && !onqueue.isClosed()) onqueue.close();
+        return expiration;
+    }
+
+    /**
+     * Get notification timeout value. How long is the ESM notification visible on the tray
      * @param c
      * @return
      */
     public static int getNotificationTimeout(Context c) {
         int timeout = 0;
         String[] projection = { ESM_Data.NOTIFICATION_TIMEOUT };
-        Cursor onqueue = c.getContentResolver().query(ESM_Data.CONTENT_URI, projection, ESM_Data.STATUS + " IN (" + ESM.STATUS_VISIBLE + "," + ESM.STATUS_NEW + ")", null, null);
+        Cursor onqueue = c.getContentResolver().query(ESM_Data.CONTENT_URI, projection, ESM_Data.STATUS + "=" + ESM.STATUS_NEW, null, null);
         if (onqueue != null && onqueue.moveToFirst()) {
             timeout = onqueue.getInt(onqueue.getColumnIndex(ESM_Data.NOTIFICATION_TIMEOUT));
         }
