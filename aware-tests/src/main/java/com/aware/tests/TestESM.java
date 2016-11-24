@@ -37,6 +37,10 @@ public class TestESM implements AwareTest {
         testNotificationRetries(context);
     }
 
+    /**
+     * This tests the notification re-trigger x times after y seconds have elapsed.
+     * @param context
+     */
     private void testNotificationRetries(Context context) {
         ESMFactory factory = new ESMFactory();
         try {
