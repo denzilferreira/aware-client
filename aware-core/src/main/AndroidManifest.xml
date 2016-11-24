@@ -85,7 +85,7 @@
             android:name="com.aware.Processor"
             android:exported="true" />
         <service
-            android:name=".Timezone"
+            android:name="com.aware.Timezone"
             android:exported="true" />
         <service
             android:name="com.aware.Mqtt"
@@ -139,7 +139,8 @@
             android:name="com.aware.ESM"
             android:exported="true" />
         <service
-            android:name="com.aware.ESM$QueueESM" />
+            android:name="com.aware.ESM$QueueESM"
+            android:exported="true" />
         <service
             android:name="com.aware.Installations"
             android:exported="true" />
@@ -180,9 +181,6 @@
                 <data android:scheme="file" />
             </intent-filter>
         </receiver>
-        <receiver
-            android:name="com.aware.ESM$RemoveESM"
-            android:exported="true" />
 
         <!-- Core providers -->
         <provider

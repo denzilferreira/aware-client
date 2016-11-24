@@ -48,7 +48,7 @@ public class ESM_Checkbox extends ESM_Question {
     }
 
     public ESM_Checkbox setCheckboxes(JSONArray checkboxes) throws JSONException {
-        this.esm.put(this.esm_checkboxes, checkboxes);
+        this.esm.put(esm_checkboxes, checkboxes);
         return this;
     }
 
