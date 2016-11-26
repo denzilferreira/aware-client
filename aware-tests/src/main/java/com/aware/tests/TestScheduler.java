@@ -32,9 +32,8 @@ public class TestScheduler implements AwareTest {
     public void test(Context context) {
 //        testTimer(context);
 //        testContextual(context);
-//        testConditional(context);
-
-        testTime(context);
+        testConditional(context);
+//        testTime(context);
         Aware.startScheduler(context);
     }
 
@@ -56,17 +55,17 @@ public class TestScheduler implements AwareTest {
 
     /**
      * This test makes a scheduler that:
-     * - if the phone is charging over AC and the screen is ON, it will notify the user to turn it off to charge faster.
+     * - Asks the user how the device can help when the screen is turned on
      * @param c
      */
     private void testConditional(Context c) {
         try {
-            Scheduler.Schedule conditional = new Scheduler.Schedule("condition_charging");
+            Scheduler.Schedule conditional = new Scheduler.Schedule("screen_on");
             conditional
-                    .addCondition(Battery_Provider.Battery_Data.CONTENT_URI, Battery_Provider.Battery_Data.STATUS + "=" + BatteryManager.BATTERY_STATUS_CHARGING)
+                    .addCondition(Uri.parse("content://com.aware.phone.provider.screen/screen"), Screen_Provider.Screen_Data.SCREEN_STATUS + "=" + Screen.STATUS_SCREEN_ON)
                     .setActionType(Scheduler.ACTION_TYPE_SERVICE)
                     .setActionClass(c.getPackageName() + "/" + Aware_TTS.class.getName())
-                    .addActionExtra(Aware_TTS.EXTRA_TTS_TEXT, "Charging...")
+                    .addActionExtra(Aware_TTS.EXTRA_TTS_TEXT, "How can I help?")
                     .addActionExtra(Aware_TTS.EXTRA_TTS_REQUESTER, c.getPackageName());
             Scheduler.saveSchedule(c, conditional);
         } catch (JSONException e) {
