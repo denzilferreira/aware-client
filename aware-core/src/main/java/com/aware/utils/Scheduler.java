@@ -76,8 +76,11 @@ public class Scheduler extends Aware_Sensor {
     public static final String ACTION_EXTRA_KEY = "extra_key";
     public static final String ACTION_EXTRA_VALUE = "extra_value";
 
-    //String is the scheduler ID, and hashtable contains list of intentfilters and broadcastreceivers
-    private static Hashtable<String, Hashtable<IntentFilter, BroadcastReceiver>> schedulerListeners = new Hashtable<>();
+    //String is the scheduler ID, and hashtable contains list of IntentFilters and BroadcastReceivers
+    private static final Hashtable<String, Hashtable<IntentFilter, BroadcastReceiver>> schedulerListeners = new Hashtable<>();
+
+    //String is the scheduler ID, and hashtable contains list of Uri and ContentObservers
+    private static final Hashtable<String, Hashtable<Uri, ContentObserver>> schedulerDataObservers = new Hashtable<>();
 
     /**
      * Save the defined scheduled task
@@ -572,6 +575,56 @@ public class Scheduler extends Aware_Sensor {
         if (DEBUG) Log.d(TAG, "Scheduler is created");
     }
 
+    public class DBObserver extends ContentObserver {
+        private Uri data;
+        private String condition;
+        private Schedule schedule;
+
+        public DBObserver(Handler h) {
+            super(h);
+        }
+
+        public DBObserver setSchedule(Schedule s) {
+            this.schedule = s;
+            return this;
+        }
+
+        public DBObserver setData(Uri content_uri) {
+            this.data = content_uri;
+            return this;
+        }
+
+        public DBObserver setCondition(String where) {
+            this.condition = where;
+            return this;
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            super.onChange(selfChange);
+
+            Log.d(Aware.TAG, "Checking condition : " + data.toString() + " where: " + condition);
+
+            if (this.data != null && this.condition.length() > 0) {
+
+                boolean condition_met = false;
+
+                Cursor rows = getContentResolver().query(this.data, null, this.condition, null, "timestamp DESC LIMIT 1"); //latest value
+                if (rows != null && rows.moveToFirst() && rows.getCount() > 0) {
+                    condition_met = true;
+                }
+                if (rows != null && !rows.isClosed()) rows.close();
+
+                if (condition_met) {
+                    if (is_trigger(schedule)) {
+                        performAction(schedule);
+                        Log.d(Aware.TAG, "Condition triggered: " + data.toString() + " where: " + condition);
+                    }
+                }
+            }
+        }
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
@@ -639,32 +692,39 @@ public class Scheduler extends Aware_Sensor {
                     //Check databases latest value for condition matching
                     if (schedule.getConditions().length() > 0) {
 
-                        final JSONArray conditions = schedule.getConditions();
-                        Boolean[] booleans = new Boolean[conditions.length()];
+                        //Check if we already registered the ContentObservers for this schedule
+                        if (!schedulerDataObservers.containsKey(schedule.getScheduleID())) {
 
-                        for (int i = 0; i < conditions.length(); i++) {
-                            JSONObject condition = conditions.getJSONObject(i);
-                            Uri content_uri = Uri.parse(condition.getString(CONDITION_URI));
-                            String content_where = condition.getString(CONDITION_WHERE);
+                            Hashtable<Uri, ContentObserver> dataObs = new Hashtable<>();
 
-                            //Checked every 1-minute. Looking back in time for 1 minute.
-                            Cursor rows = getContentResolver().query(content_uri, null, content_where + " AND timestamp BETWEEN " + (System.currentTimeMillis()-60000) + " AND " + System.currentTimeMillis(), null, "timestamp DESC LIMIT 1");
-                            Log.d(TAG, "Database: " + content_uri.toString() + " where: "+ content_where + " Results: \n" + DatabaseUtils.dumpCursorToString(rows));
-                            if (rows != null && rows.moveToFirst()) {
-                                booleans[i] = true;
-                            } else {
-                                booleans[i] = false;
+                            final JSONArray conditions = schedule.getConditions();
+                            for (int i = 0; i < conditions.length(); i++) {
+
+                                JSONObject condition = conditions.getJSONObject(i);
+
+                                Uri content_uri = Uri.parse(condition.getString(CONDITION_URI));
+                                String content_where = condition.getString(CONDITION_WHERE);
+
+                                DBObserver dbObs = new DBObserver(new Handler())
+                                        .setCondition(content_where)
+                                        .setData(content_uri)
+                                        .setSchedule(schedule);
+
+                                dataObs.put(content_uri, dbObs);
+
+                                getContentResolver().registerContentObserver(content_uri, true, dbObs);
                             }
-                            if (rows != null && ! rows.isClosed()) rows.close();
+
+                            schedulerDataObservers.put(schedule.getScheduleID(), dataObs);
+
+                            if (DEBUG)
+                                Log.d(TAG, "Registered conditional triggers: " + conditions.toString());
+
+                        } else {
+                            if (DEBUG)
+                                Log.d(TAG, "Conditional triggers are active: " + schedule.getConditions().toString());
                         }
 
-                        if (!Arrays.asList(booleans).contains(Boolean.FALSE)) {
-                            if (DEBUG)
-                                Log.d(TAG, "Triggered conditional triggers: " + schedule.getConditions().toString());
-                            performAction(schedule);
-                        } else {
-                            Log.d(TAG, "Conditions are not all TRUE: " + booleans.toString());
-                        }
                         continue;
                     }
 
@@ -699,6 +759,18 @@ public class Scheduler extends Aware_Sensor {
             for (IntentFilter filter : scheduled.keySet()) {
                 try {
                     unregisterReceiver(scheduled.get(filter));
+                } catch (NullPointerException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        //Remove contentobservers
+        for (String schedule_id : schedulerDataObservers.keySet()) {
+            Hashtable<Uri, ContentObserver> scheduled = schedulerDataObservers.get(schedule_id);
+            for (Uri data : scheduled.keySet()) {
+                try {
+                    getContentResolver().unregisterContentObserver(scheduled.get(data));
                 } catch (NullPointerException e) {
                     e.printStackTrace();
                 }

@@ -139,9 +139,6 @@
             android:name="com.aware.ESM"
             android:exported="true" />
         <service
-            android:name="com.aware.ESM$QueueESM"
-            android:exported="true" />
-        <service
             android:name="com.aware.Installations"
             android:exported="true" />
         <service
