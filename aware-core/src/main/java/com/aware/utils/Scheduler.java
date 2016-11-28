@@ -16,6 +16,7 @@ import android.util.Log;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
+import com.aware.R;
 import com.aware.providers.Scheduler_Provider;
 
 import org.json.JSONArray;
@@ -193,7 +194,6 @@ public class Scheduler extends Aware_Sensor {
         boolean is_global = global_settings.contains(schedule_id);
 
         Schedule output = null;
-
         Cursor scheduleData = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + ((is_global) ? "com.aware.phone" : context.getPackageName()) + "'", null, null);
         if (scheduleData != null && scheduleData.moveToFirst()) {
             try {
@@ -575,6 +575,9 @@ public class Scheduler extends Aware_Sensor {
         if (DEBUG) Log.d(TAG, "Scheduler is created");
     }
 
+    /**
+     * Scheduler's ContentObservers
+     */
     public class DBObserver extends ContentObserver {
         private Uri data;
         private String condition;
@@ -609,7 +612,7 @@ public class Scheduler extends Aware_Sensor {
 
                 boolean condition_met = false;
 
-                Cursor rows = getContentResolver().query(this.data, null, this.condition, null, "timestamp DESC LIMIT 1"); //latest value
+                Cursor rows = getContentResolver().query(this.data, null, this.condition, null, null);
                 if (rows != null && rows.moveToFirst() && rows.getCount() > 0) {
                     condition_met = true;
                 }
@@ -632,7 +635,12 @@ public class Scheduler extends Aware_Sensor {
 
         if (DEBUG) Log.d(TAG, "Checking for scheduled tasks: " + getPackageName());
 
-        Cursor scheduled_tasks = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null, Scheduler_Provider.Scheduler_Data.TIMESTAMP + " ASC");
+        String standalone = "";
+        if (getResources().getBoolean(R.bool.standalone)) {
+            standalone = " OR " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE 'com.aware.phone'";
+        }
+
+        Cursor scheduled_tasks = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'" + standalone, null, Scheduler_Provider.Scheduler_Data.TIMESTAMP + " ASC");
         if (scheduled_tasks != null && scheduled_tasks.moveToFirst()) {
 
             if (DEBUG)
@@ -640,7 +648,6 @@ public class Scheduler extends Aware_Sensor {
 
             do {
                 try {
-
                     final Schedule schedule = getSchedule(this, scheduled_tasks.getString(scheduled_tasks.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID)));
 
                     //unable to load schedule. This should never happen.
