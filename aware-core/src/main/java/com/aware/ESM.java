@@ -193,6 +193,9 @@ public class ESM extends Aware_Sensor {
 
     public static ESMNotificationTimeout esm_notif_expire = null;
 
+    //Static instance to the notification manager
+    private static NotificationManager mNotificationManager;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -208,6 +211,8 @@ public class ESM extends Aware_Sensor {
         filter.addAction(ESM.ACTION_AWARE_ESM_DISMISSED);
         filter.addAction(ESM.ACTION_AWARE_ESM_EXPIRED);
         registerReceiver(esmMonitor, filter);
+
+        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (Aware.DEBUG) Log.d(TAG, "ESM service created!");
     }
@@ -239,7 +244,7 @@ public class ESM extends Aware_Sensor {
 
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_ESM).equals("true")) {
                 if (isESMWaiting(getApplicationContext()) && !isESMVisible(getApplicationContext())) {
-                    notifyESM(getApplicationContext());
+                    notifyESM(getApplicationContext(), true);
                 }
             }
 
@@ -353,7 +358,7 @@ public class ESM extends Aware_Sensor {
                 if (pendingESM != null && !pendingESM.isClosed()) pendingESM.close();
 
                 //Show notification
-                notifyESM(context);
+                notifyESM(context, true);
 
             } else { //show ESM immediately
                 Intent intent_ESM = new Intent(context, ESM_Queue.class);
@@ -370,16 +375,16 @@ public class ESM extends Aware_Sensor {
      *
      * @param context
      */
-    public static void notifyESM(Context context) {
-        NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+    public static void notifyESM(Context context, boolean notifyOnce) {
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
         mBuilder.setSmallIcon(R.drawable.ic_stat_aware_esm);
         mBuilder.setContentTitle(context.getResources().getText(R.string.aware_esm_questions_title));
         mBuilder.setContentText(context.getResources().getText(R.string.aware_esm_questions));
         mBuilder.setNumber(ESM_Queue.getQueueSize(context)); //update the number of ESMs queued
-        mBuilder.setOngoing(true); //So it does not get cleared if the user presses Clear All.
-        mBuilder.setWhen(System.currentTimeMillis()); //set the time when this notification was triggered
+        mBuilder.setOngoing(true); //So it does not get cleared if the user presses clear all notifications.
+        mBuilder.setUsesChronometer(true);
+        mBuilder.setOnlyAlertOnce(notifyOnce);
         mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
 
         Intent intent_ESM = new Intent(context, ESM_Queue.class);
@@ -387,6 +392,9 @@ public class ESM extends Aware_Sensor {
 
         PendingIntent pending_ESM = PendingIntent.getActivity(context, 0, intent_ESM, PendingIntent.FLAG_UPDATE_CURRENT);
         mBuilder.setContentIntent(pending_ESM);
+
+        if (mNotificationManager == null)
+            mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         mNotificationManager.notify(ESM_NOTIFICATION_ID, mBuilder.build());
     }
@@ -423,7 +431,7 @@ public class ESM extends Aware_Sensor {
                     mRetries--;
                     display_timestamp = System.currentTimeMillis(); //move forward time and try again
                     if (Aware.DEBUG) Log.d(Aware.TAG, "Retrying ESM: " + mRetries);
-                    notifyESM(mContext);
+                    notifyESM(mContext, false);
                 }
             }
 
@@ -431,8 +439,10 @@ public class ESM extends Aware_Sensor {
                 Log.d(Aware.TAG, "ESM queue has expired!");
 
             //Remove notification
-            NotificationManager nMgr = (NotificationManager) mContext.getSystemService(NOTIFICATION_SERVICE);
-            nMgr.cancel(ESM.ESM_NOTIFICATION_ID);
+            if (mNotificationManager == null)
+                mNotificationManager = (NotificationManager) mContext.getSystemService(NOTIFICATION_SERVICE);
+
+            mNotificationManager.cancel(ESM.ESM_NOTIFICATION_ID);
 
             //Expire the queue
             Intent expired = new Intent(ESM.ACTION_AWARE_ESM_EXPIRED);

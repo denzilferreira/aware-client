@@ -435,7 +435,7 @@ public class ESM_Question extends DialogFragment {
             getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);
 
             //Update notification
-            ESM.notifyESM(getActivity().getApplicationContext());
+            ESM.notifyESM(getActivity().getApplicationContext(), true);
 
             if (esm_dialog != null) esm_dialog.dismiss();
 
