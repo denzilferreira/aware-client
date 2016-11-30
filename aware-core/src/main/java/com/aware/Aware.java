@@ -943,7 +943,7 @@ public class Aware extends Service {
         is_global = global_settings.contains(key);
 
         if (context.getResources().getBoolean(R.bool.standalone))
-            is_global = false; //use the package name from the context
+            is_global = true;
 
         String value = "";
         Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'") + ((is_global) ? " OR " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE ''" : ""), null, null);
@@ -1014,7 +1014,7 @@ public class Aware extends Service {
         is_global = global_settings.contains(key);
 
         if (context.getResources().getBoolean(R.bool.standalone))
-            is_global = false; //use the package name from the context
+            is_global = true;
 
         //We already have a Device ID, do nothing!
         if (key.equals(Aware_Preferences.DEVICE_ID) && Aware.getSetting(context, Aware_Preferences.DEVICE_ID).length() > 0)
