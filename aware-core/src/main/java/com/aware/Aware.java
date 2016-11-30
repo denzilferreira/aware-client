@@ -275,7 +275,7 @@ public class Aware extends Service {
             try {
                 PackageInfo package_info = awareContext.getPackageManager().getPackageInfo(awareContext.getPackageName(), 0);
                 device_ping.put("package_name", package_info.packageName);
-                if (package_info.packageName.equals("com.aware.phone")) {
+                if (package_info.packageName.equals("com.aware.phone") || getResources().getBoolean(R.bool.standalone)) {
                     device_ping.put("package_version_code", String.valueOf(package_info.versionCode));
                     device_ping.put("package_version_name", String.valueOf(package_info.versionName));
                 }
@@ -944,7 +944,7 @@ public class Aware extends Service {
         is_global = global_settings.contains(key);
 
         String value = "";
-        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'") + ((is_global) ? " OR " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE ''" : ""), null, null);
+        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global || context.getResources().getBoolean(R.bool.standalone)) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'") + ((is_global || context.getResources().getBoolean(R.bool.standalone)) ? " OR " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE ''" : ""), null, null);
         if (qry != null && qry.moveToFirst()) {
             value = qry.getString(qry.getColumnIndex(Aware_Settings.SETTING_VALUE));
         }
@@ -1021,13 +1021,13 @@ public class Aware extends Service {
         ContentValues setting = new ContentValues();
         setting.put(Aware_Settings.SETTING_KEY, key);
         setting.put(Aware_Settings.SETTING_VALUE, value.toString());
-        if (is_global) {
+        if (is_global || context.getResources().getBoolean(R.bool.standalone)) {
             setting.put(Aware_Settings.SETTING_PACKAGE_NAME, "com.aware.phone");
         } else {
             setting.put(Aware_Settings.SETTING_PACKAGE_NAME, context.getPackageName());
         }
 
-        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'"), null, null);
+        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global || context.getResources().getBoolean(R.bool.standalone)) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'"), null, null);
         //update
         if (qry != null && qry.moveToFirst()) {
             try {
