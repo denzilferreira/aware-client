@@ -929,7 +929,6 @@ public class Aware extends Service {
         global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
         global_settings.add(Applications.STATUS_AWARE_ACCESSIBILITY);
 
-        //allow standalone apps to react to MQTT
         if (context.getResources().getBoolean(R.bool.standalone)) {
             global_settings.add(Aware_Preferences.STATUS_MQTT);
             global_settings.add(Aware_Preferences.MQTT_USERNAME);
@@ -943,8 +942,11 @@ public class Aware extends Service {
 
         is_global = global_settings.contains(key);
 
+        if (context.getResources().getBoolean(R.bool.standalone))
+            is_global = false; //use the package name from the context
+
         String value = "";
-        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global || context.getResources().getBoolean(R.bool.standalone)) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'") + ((is_global || context.getResources().getBoolean(R.bool.standalone)) ? " OR " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE ''" : ""), null, null);
+        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'") + ((is_global) ? " OR " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE ''" : ""), null, null);
         if (qry != null && qry.moveToFirst()) {
             value = qry.getString(qry.getColumnIndex(Aware_Settings.SETTING_VALUE));
         }
@@ -961,6 +963,9 @@ public class Aware extends Service {
      * @return value
      */
     public static String getSetting(Context context, String key, String package_name) {
+        if (context.getResources().getBoolean(R.bool.standalone) && package_name.equalsIgnoreCase("com.aware.phone"))
+            package_name = context.getPackageName(); //use the package name from the context
+
         String value = "";
         Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
         if (qry != null && qry.moveToFirst()) {
@@ -1008,6 +1013,9 @@ public class Aware extends Service {
 
         is_global = global_settings.contains(key);
 
+        if (context.getResources().getBoolean(R.bool.standalone))
+            is_global = false; //use the package name from the context
+
         //We already have a Device ID, do nothing!
         if (key.equals(Aware_Preferences.DEVICE_ID) && Aware.getSetting(context, Aware_Preferences.DEVICE_ID).length() > 0)
             return;
@@ -1021,13 +1029,13 @@ public class Aware extends Service {
         ContentValues setting = new ContentValues();
         setting.put(Aware_Settings.SETTING_KEY, key);
         setting.put(Aware_Settings.SETTING_VALUE, value.toString());
-        if (is_global || context.getResources().getBoolean(R.bool.standalone)) {
+        if (is_global) {
             setting.put(Aware_Settings.SETTING_PACKAGE_NAME, "com.aware.phone");
         } else {
             setting.put(Aware_Settings.SETTING_PACKAGE_NAME, context.getPackageName());
         }
 
-        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global || context.getResources().getBoolean(R.bool.standalone)) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'"), null, null);
+        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'"), null, null);
         //update
         if (qry != null && qry.moveToFirst()) {
             try {
@@ -1062,6 +1070,9 @@ public class Aware extends Service {
      * @param package_name
      */
     public static void setSetting(Context context, String key, Object value, String package_name) {
+        if (context.getResources().getBoolean(R.bool.standalone) && package_name.equalsIgnoreCase("com.aware.phone"))
+            package_name = context.getPackageName(); //use the package name from the context
+
         //We already have a device ID, bail-out!
         if (key.equals(Aware_Preferences.DEVICE_ID) && Aware.getSetting(context, Aware_Preferences.DEVICE_ID).length() > 0) {
             Log.d(Aware.TAG, "AWARE UUID: " + Aware.getSetting(context, Aware_Preferences.DEVICE_ID) + " in " + package_name);
