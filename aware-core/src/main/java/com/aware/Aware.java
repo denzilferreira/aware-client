@@ -963,8 +963,9 @@ public class Aware extends Service {
      * @return value
      */
     public static String getSetting(Context context, String key, String package_name) {
-//        if (context.getResources().getBoolean(R.bool.standalone))
-//            package_name = context.getPackageName(); //use the package name from the context
+        if (context.getResources().getBoolean(R.bool.standalone))
+            package_name = context.getPackageName(); //use the package name from the context
+
         String value = "";
         Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
         if (qry != null && qry.moveToFirst()) {
