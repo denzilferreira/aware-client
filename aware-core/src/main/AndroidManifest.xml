@@ -27,6 +27,7 @@
             android:name="com.aware.ui.PermissionsHandler"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
+            android:launchMode="singleTask"
             android:theme="@style/Theme.AppCompat.Translucent" />
 
         <!-- Services -->

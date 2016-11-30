@@ -1014,7 +1014,7 @@ public class Aware extends Service {
 
         if (key.equals(Aware_Preferences.DEVICE_LABEL) && ((String) value).length() > 0) {
             ContentValues newLabel = new ContentValues();
-            newLabel.put(Aware_Provider.Aware_Device.LABEL, Aware.getSetting(awareContext, Aware_Preferences.DEVICE_LABEL));
+            newLabel.put(Aware_Provider.Aware_Device.LABEL, (String) value);
             context.getContentResolver().update(Aware_Provider.Aware_Device.CONTENT_URI, newLabel, Aware_Provider.Aware_Device.DEVICE_ID + " LIKE '" + Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID) + "'", null);
         }
 
@@ -1070,7 +1070,7 @@ public class Aware extends Service {
 
         if (key.equals(Aware_Preferences.DEVICE_LABEL) && ((String) value).length() > 0) {
             ContentValues newLabel = new ContentValues();
-            newLabel.put(Aware_Provider.Aware_Device.LABEL, Aware.getSetting(awareContext, Aware_Preferences.DEVICE_LABEL));
+            newLabel.put(Aware_Provider.Aware_Device.LABEL, (String) value);
             context.getContentResolver().update(Aware_Provider.Aware_Device.CONTENT_URI, newLabel, Aware_Provider.Aware_Device.DEVICE_ID + " LIKE '" + Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID) + "'", null);
         }
 
