@@ -657,11 +657,12 @@ public class Scheduler extends Aware_Sensor {
                         continue;
                     }
 
-                    //Check schedulers triggered by broadcasts
+                    //Schedulers triggered by broadcasts
                     if (schedule.getContexts().length() > 0) {
-                        //Check if we already registered the broadcastreceivers for this schedule
+
+                        //Check if we already registered the broadcastreceiver for this schedule
                         if (!schedulerListeners.containsKey(schedule.getScheduleID())) {
-                            //Register broadcast listeners again
+
                             final JSONArray contexts = schedule.getContexts();
                             IntentFilter filter = new IntentFilter();
                             for (int i = 0; i < contexts.length(); i++) {
@@ -696,7 +697,7 @@ public class Scheduler extends Aware_Sensor {
                         continue;
                     }
 
-                    //Check databases latest value for condition matching
+                    //Schedulers triggered by database changes
                     if (schedule.getConditions().length() > 0) {
 
                         //Check if we already registered the ContentObservers for this schedule
@@ -801,36 +802,45 @@ public class Scheduler extends Aware_Sensor {
 
         try {
 
-            //Context and condition schedulers do not have time constrains and it is handled by the broadcast receiver or the content observer
-            if (schedule.getContexts().length() > 0 || schedule.getConditions().length() > 0) {
+            if (schedule.getTimer() == -1
+                    && schedule.getHours().length() == 0
+                    && schedule.getMinutes().length() == 0
+                    && schedule.getInterval() == 0
+                    && schedule.getWeekdays().length() == 0
+                    && schedule.getMonths().length() == 0)
+
                 return true;
-            }
 
             //Has this scheduler been triggered before?
             long last_triggered = 0;
-            Cursor last_time_triggered = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, new String[]{Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED}, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'", null, null);
+            Cursor last_time_triggered = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI,
+                    new String[]{Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED}, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'",
+                    null, null);
+
             if (last_time_triggered != null && last_time_triggered.moveToFirst()) {
                 last_triggered = last_time_triggered.getLong(last_time_triggered.getColumnIndex(Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED));
                 last_time_triggered.close();
             }
 
-            // This is a scheduled task with a specific timestamp. Once triggered, it's deleted from the database automatically.
-            // We trigger it within a 5 minute interval (before & after). The framework checks this at inexact 5 minutes
+            // This is a scheduled task on a specific timestamp.
+            // NOTE: Once triggered, it's deleted from the database automatically.
             if (schedule.getTimer() != -1 && last_triggered == 0) { //not been triggered yet
-
                 Calendar schedulerTimer = Calendar.getInstance();
                 schedulerTimer.setTimeInMillis(schedule.getTimer());
 
                 if (DEBUG)
                     Log.d(Scheduler.TAG, "Checking trigger set for a specific timestamp: " + schedulerTimer.getTime().toString());
 
-                //trigger within a 2-minute window
-                if (schedule.getTimer() - 2 * 60 * 1000 <= now.getTimeInMillis() && now.getTimeInMillis() <= schedule.getTimer() + 2 * 60 * 1000) {
+                if (now.getTimeInMillis() == schedule.getTimer()) {
+                    return true;
+                } else if (now.getTimeInMillis() > schedule.getTimer()) {
+                    Log.d(Scheduler.TAG, "Trigger was late (power saving, Doze, etc...): " + schedulerTimer.getTime().toString());
                     return true;
                 } else {
                     if (DEBUG) Log.d(Scheduler.TAG,
                             "Not the right time to trigger...: \nNow: " + now.getTime().toString() + " vs trigger: " + new Date(schedule.getTimer()).toString()
                                     + "\n Time to trigger: " + Converters.readable_elapsed(schedule.getTimer() - now.getTimeInMillis()));
+                    return false;
                 }
             }
 
@@ -838,53 +848,65 @@ public class Scheduler extends Aware_Sensor {
             if (last_triggered != 0) {
                 previous = Calendar.getInstance();
                 previous.setTimeInMillis(last_triggered);
-
                 if (DEBUG) Log.i(TAG, "Scheduler last triggered: " + previous.getTime().toString());
             }
 
-            boolean execute = false;
+            Boolean execute_interval = null;
+            if (schedule.getInterval() > 0 && previous == null) {
+                execute_interval = true;
+            } else if (previous != null && schedule.getInterval() > 0) {
+                execute_interval = is_interval_elapsed(now, previous, schedule.getInterval());
+                if (DEBUG) Log.d(Scheduler.TAG, "Trigger interval: " + execute_interval);
+            }
 
+            Boolean execute_month = null;
             if (schedule.getMonths().length() > 0) {
                 if (previous != null && is_same_month(now, previous)) {
-                    execute = false;
+                    execute_month = false;
                 } else
-                    execute = is_trigger_month(schedule);
-            }
-            if (DEBUG) Log.d(Scheduler.TAG, "Trigger month: " + execute);
+                    execute_month = is_trigger_month(schedule);
 
+                if (DEBUG) Log.d(Scheduler.TAG, "Trigger month: " + execute_month);
+            }
+
+            Boolean execute_weekdays = null;
             if (schedule.getWeekdays().length() > 0) {
                 if (previous != null && is_same_weekday(now, previous)) {
-                    execute = false;
+                    execute_weekdays = false;
                 } else
-                    execute = is_trigger_weekday(schedule);
-            }
-            if (DEBUG) Log.d(Scheduler.TAG, "Trigger weekday: " + execute);
+                    execute_weekdays = is_trigger_weekday(schedule);
 
+                if (DEBUG) Log.d(Scheduler.TAG, "Trigger weekday: " + execute_weekdays);
+            }
+
+            Boolean execute_hours = null;
             if (schedule.getHours().length() > 0) {
                 if (previous != null && is_same_hour_day(now, previous)) {
-                    execute = false;
+                    execute_hours = false;
                 } else
-                    execute = is_trigger_hour(schedule);
-            }
-            if (DEBUG) Log.d(Scheduler.TAG, "Trigger hour: " + execute);
+                    execute_hours = is_trigger_hour(schedule);
 
+                if (DEBUG) Log.d(Scheduler.TAG, "Trigger hour: " + execute_hours);
+            }
+
+            Boolean execute_minutes = null;
             if (schedule.getMinutes().length() > 0) {
                 if (previous != null && is_same_minute_hour(now, previous)) {
-                    execute = false;
-                } else {
-                    execute = is_trigger_minute(schedule);
-                }
-            }
-            if (DEBUG) Log.d(Scheduler.TAG, "Trigger minute: " + execute);
+                    execute_minutes = false;
+                } else
+                    execute_minutes = is_trigger_minute(schedule);
 
-            if (schedule.getInterval() > 0 && previous == null) {
-                execute = true;
-            } else if (previous != null && schedule.getInterval() > 0) {
-                execute = is_interval_elapsed(now, previous, schedule.getInterval());
+                if (DEBUG) Log.d(Scheduler.TAG, "Trigger minute: " + execute_minutes);
             }
-            if (DEBUG) Log.d(Scheduler.TAG, "Trigger interval: " + execute);
 
-            return execute;
+            ArrayList<Boolean> executers = new ArrayList<>();
+            if (execute_interval != null) executers.add(execute_interval);
+            if (execute_month != null) executers.add(execute_month);
+            if (execute_weekdays != null) executers.add(execute_weekdays);
+            if (execute_hours != null) executers.add(execute_hours);
+            if (execute_minutes != null) executers.add(execute_minutes);
+
+            return !executers.contains(false);
 
         } catch (JSONException e) {
             e.printStackTrace();

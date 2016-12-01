@@ -30,9 +30,10 @@ public class TestScheduler implements AwareTest {
 
     @Override
     public void test(Context context) {
+//        testInterval(context);
 //        testTimer(context);
 //        testContextual(context);
-        testConditional(context);
+//        testConditional(context);
 //        testTime(context);
         Aware.startScheduler(context);
     }
@@ -113,6 +114,21 @@ public class TestScheduler implements AwareTest {
             contextual.addActionExtra(ESM.EXTRA_ESM, factory.build());
 
             Scheduler.saveSchedule(c, contextual);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void testInterval(Context c) {
+        try {
+            Scheduler.Schedule timer = new Scheduler.Schedule("interval");
+            timer.setInterval(3)
+            .setActionType(Scheduler.ACTION_TYPE_SERVICE)
+            .setActionClass(c.getPackageName() + "/" + Aware_TTS.class.getName())
+            .addActionExtra(Aware_TTS.EXTRA_TTS_TEXT, "3 minutes are up!")
+            .addActionExtra(Aware_TTS.EXTRA_TTS_REQUESTER, c.getPackageName());
+
+            Scheduler.saveSchedule(c, timer);
         } catch (JSONException e) {
             e.printStackTrace();
         }

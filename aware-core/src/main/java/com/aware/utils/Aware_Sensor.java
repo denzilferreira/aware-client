@@ -158,8 +158,6 @@ public class Aware_Sensor extends Service {
                         webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, CONTEXT_URIS[i].toString());
                         context.startService(webserviceHelper);
                     }
-                } else {
-                    if (Aware.DEBUG) Log.d(TAG, "No database to backup!");
                 }
             }
             if (intent.getAction().equals(Aware.ACTION_AWARE_CLEAR_DATA)) {

@@ -126,7 +126,7 @@ public class WebserviceHelper extends IntentService {
 
                 if (!isCharging) {
                     if (Aware.DEBUG)
-                        Log.d(Aware.TAG, "Only synching data if charging...");
+                        Log.d(Aware.TAG, "Only sync data if charging...");
                     return;
                 }
             }
@@ -137,10 +137,10 @@ public class WebserviceHelper extends IntentService {
                 NetworkInfo activeNetwork = connManager.getActiveNetworkInfo();
                 if (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected()) {
                     if (Aware.DEBUG)
-                        Log.d(Aware.TAG, "Synching data only over Wi-Fi and internet is available, let's sync!");
+                        Log.d(Aware.TAG, "Sync data only over Wi-Fi and internet is available, let's sync!");
                 } else {
                     if (Aware.DEBUG)
-                        Log.d(Aware.TAG, "Synching data only over Wi-Fi. Will try again later...");
+                        Log.d(Aware.TAG, "Sync data only over Wi-Fi. Will try again later...");
                     return;
                 }
             }
@@ -202,7 +202,7 @@ public class WebserviceHelper extends IntentService {
                     if (Aware.isStudy(getApplicationContext())) {
                         Cursor study = Aware.getStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
                         if (study != null && study.moveToFirst()) {
-                            study_condition = " AND timestamp >= " + study.getLong(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED));
+                            study_condition += " AND timestamp >= " + study.getLong(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP));
                         }
                         if (study != null && !study.isClosed()) study.close();
                     }
@@ -211,15 +211,6 @@ public class WebserviceHelper extends IntentService {
                     if (DATABASE_TABLE.equalsIgnoreCase("aware_device")
                             || DATABASE_TABLE.matches("sensor_.*"))
                         study_condition = "";
-
-                    //FIXED: only load the log of the current enrolled study, nothing more.
-                    if (DATABASE_TABLE.equalsIgnoreCase("aware_studies")) {
-                        Cursor study_log = getContentResolver().query(Aware_Provider.Aware_Studies.CONTENT_URI, null, Aware_Provider.Aware_Studies.STUDY_URL + " LIKE '" + Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER) + "'", null, Aware_Provider.Aware_Studies.STUDY_TIMESTAMP + " ASC LIMIT 1");
-                        if (study_log != null && study_log.moveToFirst()) {
-                            study_condition = " AND timestamp >= " + study_log.getLong(study_log.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP));
-                        }
-                        if (study_log != null && ! study_log.isClosed()) study_log.close();
-                    }
 
                     JSONArray remoteData = new JSONArray(latest);
 
@@ -271,6 +262,9 @@ public class WebserviceHelper extends IntentService {
                     }
 
                     if (TOTAL_RECORDS == 0) {
+                        if (DEBUG)
+                            Log.d(Aware.TAG, "Nothing to sync: " + TOTAL_RECORDS + " records from " + DATABASE_TABLE);
+
                         return; //nothing to upload, no need to do anything now.
                     }
 
@@ -356,7 +350,7 @@ public class WebserviceHelper extends IntentService {
                             //Something went wrong, e.g., server is down, lost internet, etc.
                             if (success == null) {
                                 if (DEBUG)
-                                    Log.d(Aware.TAG, DATABASE_TABLE + " FAILED to upload. Server down?");
+                                    Log.d(Aware.TAG, DATABASE_TABLE + " FAILED to sync. Server down?");
                                 break;
                             } else { //Are we performing database space maintenance?
                                 ArrayList<String> highFrequencySensors = new ArrayList<>();
@@ -381,10 +375,10 @@ public class WebserviceHelper extends IntentService {
                                     getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null);
 
                                     if (DEBUG)
-                                        Log.d(Aware.TAG, "Deleted local old records for " + DATABASE_TABLE);
+                                        Log.d(Aware.TAG, "Sync finished. Deleted local old records for " + DATABASE_TABLE);
 
                                     if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
-                                        notifyUser("Cleaned old records from " + DATABASE_TABLE, false, true);
+                                        notifyUser("Sync finished. Cleaned old records from " + DATABASE_TABLE, false, true);
                                     }
                                 }
                             }
@@ -427,10 +421,10 @@ public class WebserviceHelper extends IntentService {
         super.onDestroy();
 
         if (Aware.DEBUG)
-            Log.d(Aware.TAG, "Finished synching all the databases in " + DateUtils.formatElapsedTime((System.currentTimeMillis() - sync_start) / 1000));
+            Log.d(Aware.TAG, "Finished sync of all the databases in " + DateUtils.formatElapsedTime((System.currentTimeMillis() - sync_start) / 1000));
 
         if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
-            notifyUser("Finished syncing", true, false);
+            notifyUser("Finished syncing data. Thanks!", true, false);
         }
     }
 }
