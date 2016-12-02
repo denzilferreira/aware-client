@@ -961,6 +961,17 @@ public class Aware extends Service {
             is_global = false;
 
         String value = "";
+        if (key.equals(Aware_Preferences.DEVICE_ID)) { //we will query the database from the library
+            Cursor device_info = context.getContentResolver().query(Uri.parse("content://" + context.getPackageName() + ".provider.aware/aware_device"), null, null, null, Aware_Device.TIMESTAMP + " DESC LIMIT 1");
+            if (device_info != null && device_info.moveToFirst()) {
+                value = device_info.getString(device_info.getColumnIndex(Aware_Device.DEVICE_ID));
+            }
+            if (device_info != null && ! device_info.isClosed()) device_info.close();
+
+            if (value.length() > 0)
+                return value;
+        }
+
         Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null,
                 Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'"), null, null);
         if (qry != null && qry.moveToFirst()) {
