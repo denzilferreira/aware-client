@@ -797,20 +797,17 @@ public class Scheduler extends Aware_Sensor {
         Calendar now = Calendar.getInstance();
         now.setTimeInMillis(System.currentTimeMillis());
 
-        if (DEBUG)
+        if (DEBUG) {
             Log.i(TAG, "Time now is: " + now.getTime().toString());
 
+            try {
+                Log.i(TAG, "Scheduler info: " + schedule.build().toString(5));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
         try {
-
-            if (schedule.getTimer() == -1
-                    && schedule.getHours().length() == 0
-                    && schedule.getMinutes().length() == 0
-                    && schedule.getInterval() == 0
-                    && schedule.getWeekdays().length() == 0
-                    && schedule.getMonths().length() == 0)
-
-                return true;
-
             //Has this scheduler been triggered before?
             long last_triggered = 0;
             Cursor last_time_triggered = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI,
@@ -854,6 +851,7 @@ public class Scheduler extends Aware_Sensor {
             Boolean execute_interval = null;
             if (schedule.getInterval() > 0 && previous == null) {
                 execute_interval = true;
+                if (DEBUG) Log.d(Scheduler.TAG, "Trigger interval: " + execute_interval);
             } else if (previous != null && schedule.getInterval() > 0) {
                 execute_interval = is_interval_elapsed(now, previous, schedule.getInterval());
                 if (DEBUG) Log.d(Scheduler.TAG, "Trigger interval: " + execute_interval);
