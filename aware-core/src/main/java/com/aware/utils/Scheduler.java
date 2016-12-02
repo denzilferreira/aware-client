@@ -808,10 +808,21 @@ public class Scheduler extends Aware_Sensor {
         }
 
         try {
+            //No time constaints, trigger it!
+            if (schedule.getTimer() == -1
+                    && schedule.getHours().length() == 0
+                    && schedule.getMinutes().length() == 0
+                    && schedule.getInterval() == 0
+                    && schedule.getWeekdays().length() == 0
+                    && schedule.getMonths().length() == 0)
+                return true;
+
             //Has this scheduler been triggered before?
             long last_triggered = 0;
-            Cursor last_time_triggered = getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI,
-                    new String[]{Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED}, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'",
+            Cursor last_time_triggered = getContentResolver().query(
+                    Scheduler_Provider.Scheduler_Data.CONTENT_URI,
+                    new String[]{Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED},
+                    Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'",
                     null, null);
 
             if (last_time_triggered != null && last_time_triggered.moveToFirst()) {
@@ -1202,11 +1213,19 @@ public class Scheduler extends Aware_Sensor {
             }
 
             if (schedule.getTimer() != -1) {
-                getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null);
+                if (getResources().getBoolean(R.bool.standalone)) {
+                    getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "' OR " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE 'com.aware.phone'", null);
+                } else {
+                    getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null);
+                }
             } else {
                 ContentValues data = new ContentValues();
                 data.put(Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED, System.currentTimeMillis());
-                getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null);
+                if (getResources().getBoolean(R.bool.standalone)) {
+                    getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "' OR " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE 'com.aware.phone'", null);
+                } else {
+                    getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null);
+                }
             }
         } catch (JSONException e) {
             e.printStackTrace();
