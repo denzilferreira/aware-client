@@ -21,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.security.KeyChain;
 import android.support.design.widget.Snackbar;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -36,6 +37,7 @@ import android.widget.Toast;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
+import com.aware.phone.Aware_Client;
 import com.aware.phone.R;
 import com.aware.phone.ui.qrcode.BarcodeGraphic;
 import com.aware.phone.ui.qrcode.BarcodeTrackerFactory;
@@ -124,11 +126,24 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
             snack.show();
         } else {
             mScannerView = new ZBarScannerView(this);
+
             LinearLayout main = new LinearLayout(this);
+            main.setOrientation(LinearLayout.VERTICAL);
+
             ListView list = new ListView(this);
+            list.setId(android.R.id.list);
+
             Toolbar toolbar = new Toolbar(this);
             toolbar.setId(R.id.aware_toolbar);
-            list.setId(android.R.id.list);
+            toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    finish();
+                }
+            });
+            toolbar.setBackgroundColor(Color.parseColor("#33B5E5"));
+            toolbar.setTitleTextColor(Color.parseColor("#FFFFFF"));
+
             main.addView(toolbar);
             main.addView(mScannerView);
             main.addView(list);

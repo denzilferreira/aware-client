@@ -6,13 +6,13 @@ version = version_readable
 group = "com.awareframework"
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion "24.0.3"
+    compileSdkVersion 25
+    buildToolsVersion "25.0.1"
 
     defaultConfig {
         versionCode version_code
         versionName version_readable
-        targetSdkVersion 24
+        targetSdkVersion 25
         minSdkVersion 10 //Android 2.3.3
     }
 
