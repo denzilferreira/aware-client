@@ -212,7 +212,8 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
                             }
                             break;
                     }
-                    navigationDrawer.closeDrawer(navigationList);
+                    if (navigationDrawer != null && navigationList != null)
+                        navigationDrawer.closeDrawer(navigationList);
                 }
             });
             ImageView nav_icon = (ImageView) row.findViewById(R.id.nav_placeholder);

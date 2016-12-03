@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <item name="accessibility_access" type="bool" format="boolean">false</item>
+    <item name="standalone" type="bool" format="boolean">false</item>
 </resources>

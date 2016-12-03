@@ -34,11 +34,33 @@ public class PermissionsHandler extends Activity {
 
     private Intent redirect;
 
+    private ArrayList<String> permissionsNeeded;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        permissionsNeeded = new ArrayList<>();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (permissionsNeeded == null)
+            permissionsNeeded = new ArrayList<>();
+
         if (getIntent() != null && getIntent().getExtras() != null && getIntent().getSerializableExtra(EXTRA_REQUIRED_PERMISSIONS) != null) {
-            ArrayList<String> permissionsNeeded = (ArrayList<String>) getIntent().getSerializableExtra(EXTRA_REQUIRED_PERMISSIONS);
+            if (permissionsNeeded.size() == 0) {
+                permissionsNeeded = (ArrayList<String>) getIntent().getSerializableExtra(EXTRA_REQUIRED_PERMISSIONS);
+            } else {
+                //Append new permissions to the old permissions if they are not present
+                ArrayList<String> newPermissions = (ArrayList<String>) getIntent().getSerializableExtra(EXTRA_REQUIRED_PERMISSIONS);
+                for(String p : newPermissions) {
+                    if (!permissionsNeeded.contains(p))
+                        permissionsNeeded.add(p);
+                }
+            }
+
             ActivityCompat.requestPermissions(PermissionsHandler.this, permissionsNeeded.toArray(new String[permissionsNeeded.size()]), RC_PERMISSIONS);
             if (getIntent().hasExtra(EXTRA_REDIRECT_ACTIVITY)) {
                 redirect = new Intent();

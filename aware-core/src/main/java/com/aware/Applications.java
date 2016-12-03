@@ -289,7 +289,7 @@ public class Applications extends AccessibilityService {
         filter.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
         registerReceiver(awareMonitor, filter);
 
-        Aware.debug(this, "created: " + getClass().getName());
+        Aware.debug(this, "created: " + getClass().getName() + " package: " + getPackageName());
     }
 
     @Override
@@ -382,7 +382,7 @@ public class Applications extends AccessibilityService {
             if (Aware.DEBUG) Log.d(TAG, "Applications Background: " + FREQUENCY + "s check");
         }
 
-        Aware.debug(this, "active: " + getClass().getName());
+        Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -397,7 +397,7 @@ public class Applications extends AccessibilityService {
             }
         } catch (IllegalArgumentException e) {}
 
-        Aware.debug(this, "destroyed: " + getClass().getName());
+        Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
     }
 
     private synchronized static boolean isAccessibilityEnabled(Context c) {

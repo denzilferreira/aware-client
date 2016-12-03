@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,6 +19,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
@@ -41,6 +43,7 @@ import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.phone.ui.Aware_Activity;
 import com.aware.phone.ui.Aware_Join_Study;
+import com.aware.providers.Aware_Provider;
 import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Https;
 import com.aware.utils.SSLManager;
@@ -267,10 +270,13 @@ public class Aware_Client extends Aware_Activity {
      */
     private void esm() {
         final PreferenceScreen mobile_esm = (PreferenceScreen) findPreference("esm");
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true")) {
-            mobile_esm.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_esm_active));
-        } else {
-            mobile_esm.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_esm));
+
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true")) {
+                mobile_esm.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_esm_active));
+            } else {
+                mobile_esm.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_esm));
+            }
         }
 
         final CheckBoxPreference esm = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_ESM);
@@ -295,10 +301,13 @@ public class Aware_Client extends Aware_Activity {
      */
     private void temperature() {
         final PreferenceScreen temp_pref = (PreferenceScreen) findPreference("temperature");
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_TEMPERATURE).equals("true")) {
-            temp_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_temperature_active));
-        } else {
-            temp_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_temperature));
+
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_TEMPERATURE).equals("true")) {
+                temp_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_temperature_active));
+            } else {
+                temp_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_temperature));
+            }
         }
 
         Sensor temp = mSensorMgr.getDefaultSensor(Sensor.TYPE_TEMPERATURE);
@@ -373,10 +382,12 @@ public class Aware_Client extends Aware_Activity {
      */
     private void accelerometer() {
         final PreferenceScreen accel_pref = (PreferenceScreen) findPreference("accelerometer");
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ACCELEROMETER).equals("true")) {
-            accel_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_accelerometer_active));
-        } else {
-            accel_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_accelerometer));
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ACCELEROMETER).equals("true")) {
+                accel_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_accelerometer_active));
+            } else {
+                accel_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_accelerometer));
+            }
         }
 
         Sensor accel = mSensorMgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -450,12 +461,13 @@ public class Aware_Client extends Aware_Activity {
      * Linear Accelerometer module settings UI
      */
     private void linear_accelerometer() {
-
         final PreferenceScreen linear_pref = (PreferenceScreen) findPreference("linear_accelerometer");
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_LINEAR_ACCELEROMETER).equals("true")) {
-            linear_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_linear_acceleration_active));
-        } else {
-            linear_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_linear_acceleration));
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_LINEAR_ACCELEROMETER).equals("true")) {
+                linear_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_linear_acceleration_active));
+            } else {
+                linear_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_linear_acceleration));
+            }
         }
 
         Sensor temp = mSensorMgr.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
@@ -531,13 +543,15 @@ public class Aware_Client extends Aware_Activity {
     private void applications() {
         final PreferenceScreen apps_pref = (PreferenceScreen) findPreference("applications");
 
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_APPLICATIONS).equals("true")
-                || Aware.getSetting(awareContext, Aware_Preferences.STATUS_KEYBOARD).equals("true")
-                || Aware.getSetting(awareContext, Aware_Preferences.STATUS_CRASHES).equals("true")
-                || Aware.getSetting(awareContext, Aware_Preferences.STATUS_INSTALLATIONS).equals("true")) {
-            apps_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_applications_active));
-        } else {
-            apps_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_applications));
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_APPLICATIONS).equals("true")
+                    || Aware.getSetting(awareContext, Aware_Preferences.STATUS_KEYBOARD).equals("true")
+                    || Aware.getSetting(awareContext, Aware_Preferences.STATUS_CRASHES).equals("true")
+                    || Aware.getSetting(awareContext, Aware_Preferences.STATUS_INSTALLATIONS).equals("true")) {
+                apps_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_applications_active));
+            } else {
+                apps_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_applications));
+            }
         }
 
         final CheckBoxPreference notifications = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_NOTIFICATIONS);
@@ -662,10 +676,12 @@ public class Aware_Client extends Aware_Activity {
      */
     private void battery() {
         final PreferenceScreen batt_pref = (PreferenceScreen) findPreference("battery");
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_BATTERY).equals("true")) {
-            batt_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_battery_active));
-        } else {
-            batt_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_battery));
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_BATTERY).equals("true")) {
+                batt_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_battery_active));
+            } else {
+                batt_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_battery));
+            }
         }
 
         final CheckBoxPreference battery = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_BATTERY);
@@ -690,10 +706,12 @@ public class Aware_Client extends Aware_Activity {
      */
     private void bluetooth() {
         final PreferenceScreen bt_pref = (PreferenceScreen) findPreference("bluetooth");
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_BLUETOOTH).equals("true")) {
-            bt_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_bluetooth_active));
-        } else {
-            bt_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_bluetooth));
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_BLUETOOTH).equals("true")) {
+                bt_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_bluetooth_active));
+            } else {
+                bt_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_bluetooth));
+            }
         }
 
         final CheckBoxPreference bluetooth = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_BLUETOOTH);
@@ -747,12 +765,14 @@ public class Aware_Client extends Aware_Activity {
             return;
         }
 
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_CALLS).equals("true")
-                || Aware.getSetting(awareContext, Aware_Preferences.STATUS_MESSAGES).equals("true")
-                || Aware.getSetting(awareContext, Aware_Preferences.STATUS_COMMUNICATION_EVENTS).equals("true")) {
-            communications.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_communication_active));
-        } else {
-            communications.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_communication));
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_CALLS).equals("true")
+                    || Aware.getSetting(awareContext, Aware_Preferences.STATUS_MESSAGES).equals("true")
+                    || Aware.getSetting(awareContext, Aware_Preferences.STATUS_COMMUNICATION_EVENTS).equals("true")) {
+                communications.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_communication_active));
+            } else {
+                communications.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_communication));
+            }
         }
 
         final CheckBoxPreference calls = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_CALLS);
@@ -809,10 +829,12 @@ public class Aware_Client extends Aware_Activity {
      */
     private void gravity() {
         final PreferenceScreen grav_pref = (PreferenceScreen) findPreference("gravity");
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_GRAVITY).equals("true")) {
-            grav_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_gravity_active));
-        } else {
-            grav_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_gravity));
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_GRAVITY).equals("true")) {
+                grav_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_gravity_active));
+            } else {
+                grav_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_gravity));
+            }
         }
 
         Sensor temp = mSensorMgr.getDefaultSensor(Sensor.TYPE_GRAVITY);
@@ -887,10 +909,12 @@ public class Aware_Client extends Aware_Activity {
      */
     private void gyroscope() {
         final PreferenceScreen gyro_pref = (PreferenceScreen) findPreference("gyroscope");
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_GYROSCOPE).equals("true")) {
-            gyro_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_gyroscope_active));
-        } else {
-            gyro_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_gyroscope));
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_GYROSCOPE).equals("true")) {
+                gyro_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_gyroscope_active));
+            } else {
+                gyro_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_gyroscope));
+            }
         }
 
         Sensor temp = mSensorMgr.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
@@ -965,15 +989,17 @@ public class Aware_Client extends Aware_Activity {
      */
     private void locations() {
         final PreferenceScreen locations = (PreferenceScreen) findPreference("locations");
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_GPS).equals("true")
-                || Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true")) {
-            locations.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_locations_active));
-        } else {
-            locations.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_locations));
-        }
         if (Aware.is_watch(awareContext)) {
             locations.setEnabled(false);
             return;
+        }
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_GPS).equals("true")
+                    || Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true")) {
+                locations.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_locations_active));
+            } else {
+                locations.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_locations));
+            }
         }
 
         final CheckBoxPreference location_gps = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_LOCATION_GPS);
@@ -1116,15 +1142,18 @@ public class Aware_Client extends Aware_Activity {
      */
     private void network() {
         final PreferenceScreen networks = (PreferenceScreen) findPreference("network");
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_NETWORK_TRAFFIC).equals("true")
-                || Aware.getSetting(awareContext, Aware_Preferences.STATUS_NETWORK_EVENTS).equals("true")) {
-            networks.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_network_active));
-        } else {
-            networks.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_network));
-        }
         if (Aware.is_watch(awareContext)) {
             networks.setEnabled(false);
             return;
+        }
+
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_NETWORK_TRAFFIC).equals("true")
+                    || Aware.getSetting(awareContext, Aware_Preferences.STATUS_NETWORK_EVENTS).equals("true")) {
+                networks.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_network_active));
+            } else {
+                networks.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_network));
+            }
         }
 
         final CheckBoxPreference network_traffic = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_NETWORK_TRAFFIC);
@@ -1183,10 +1212,12 @@ public class Aware_Client extends Aware_Activity {
      */
     private void screen() {
         final PreferenceScreen screen_pref = (PreferenceScreen) findPreference("screen");
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_SCREEN).equals("true")) {
-            screen_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_screen_active));
-        } else {
-            screen_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_screen));
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_SCREEN).equals("true")) {
+                screen_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_screen_active));
+            } else {
+                screen_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_screen));
+            }
         }
 
         final CheckBoxPreference screen = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_SCREEN);
@@ -1211,14 +1242,17 @@ public class Aware_Client extends Aware_Activity {
      */
     private void wifi() {
         final PreferenceScreen wifis = (PreferenceScreen) findPreference("wifi");
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_WIFI).equals("true")) {
-            wifis.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_wifi_active));
-        } else {
-            wifis.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_wifi));
-        }
         if (Aware.is_watch(awareContext)) {
             wifis.setEnabled(false);
             return;
+        }
+
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_WIFI).equals("true")) {
+                wifis.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_wifi_active));
+            } else {
+                wifis.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_wifi));
+            }
         }
 
         final CheckBoxPreference wifi = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_WIFI);
@@ -1259,11 +1293,14 @@ public class Aware_Client extends Aware_Activity {
      */
     private void processor() {
         final PreferenceScreen cpu_pref = (PreferenceScreen) findPreference("processor");
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_PROCESSOR).equals("true")) {
-            cpu_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_processor_active));
-        } else {
-            cpu_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_processor));
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_PROCESSOR).equals("true")) {
+                cpu_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_processor_active));
+            } else {
+                cpu_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_processor));
+            }
         }
+
         final CheckBoxPreference processor = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_PROCESSOR);
         processor.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_PROCESSOR).equals("true"));
         processor.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -1306,10 +1343,12 @@ public class Aware_Client extends Aware_Activity {
             timezones.setEnabled(false);
             return;
         }
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_TIMEZONE).equals("true")) {
-            timezones.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_timezone_active));
-        } else {
-            timezones.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_timezone));
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_TIMEZONE).equals("true")) {
+                timezones.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_timezone_active));
+            } else {
+                timezones.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_timezone));
+            }
         }
 
         final CheckBoxPreference timeZone = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_TIMEZONE);
@@ -1349,8 +1388,15 @@ public class Aware_Client extends Aware_Activity {
      * Light module settings UI
      */
     private void light() {
-
         final PreferenceScreen light_pref = (PreferenceScreen) findPreference("light");
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_LIGHT).equals("true")) {
+                light_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_light_active));
+            } else {
+                light_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_light));
+            }
+        }
+
         Sensor temp = mSensorMgr.getDefaultSensor(Sensor.TYPE_LIGHT);
         if (temp != null) {
             light_pref.setSummary(light_pref.getSummary().toString().replace("*", " - Power: " + temp.getPower() + " mA"));
@@ -1358,12 +1404,6 @@ public class Aware_Client extends Aware_Activity {
             light_pref.setSummary(light_pref.getSummary().toString().replace("*", ""));
             light_pref.setEnabled(false);
             return;
-        }
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_LIGHT).equals("true")) {
-            light_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_light_active));
-        } else {
-            light_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_light));
         }
 
         final CheckBoxPreference light = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_LIGHT);
@@ -1429,6 +1469,14 @@ public class Aware_Client extends Aware_Activity {
      */
     private void magnetometer() {
         final PreferenceScreen magno_pref = (PreferenceScreen) findPreference("magnetometer");
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_MAGNETOMETER).equals("true")) {
+                magno_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_magnetometer_active));
+            } else {
+                magno_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_magnetometer));
+            }
+        }
+
         Sensor temp = mSensorMgr.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         if (temp != null) {
             magno_pref.setSummary(magno_pref.getSummary().toString().replace("*", " - Power: " + temp.getPower() + " mA"));
@@ -1436,12 +1484,6 @@ public class Aware_Client extends Aware_Activity {
             magno_pref.setSummary(magno_pref.getSummary().toString().replace("*", ""));
             magno_pref.setEnabled(false);
             return;
-        }
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_MAGNETOMETER).equals("true")) {
-            magno_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_magnetometer_active));
-        } else {
-            magno_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_magnetometer));
         }
 
         final CheckBoxPreference magnetometer = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_MAGNETOMETER);
@@ -1508,6 +1550,14 @@ public class Aware_Client extends Aware_Activity {
      */
     private void barometer() {
         final PreferenceScreen baro_pref = (PreferenceScreen) findPreference("barometer");
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_BAROMETER).equals("true")) {
+                baro_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_barometer_active));
+            } else {
+                baro_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_barometer));
+            }
+        }
+
         Sensor temp = mSensorMgr.getDefaultSensor(Sensor.TYPE_PRESSURE);
         if (temp != null) {
             baro_pref.setSummary(baro_pref.getSummary().toString().replace("*", " - Power: " + temp.getPower() + " mA"));
@@ -1517,11 +1567,6 @@ public class Aware_Client extends Aware_Activity {
             return;
         }
 
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_BAROMETER).equals("true")) {
-            baro_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_barometer_active));
-        } else {
-            baro_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_barometer));
-        }
 
         final CheckBoxPreference pressure = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_BAROMETER);
         pressure.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_BAROMETER).equals("true"));
@@ -1586,8 +1631,15 @@ public class Aware_Client extends Aware_Activity {
      * Proximity module settings UI
      */
     private void proximity() {
-
         final PreferenceScreen proxi_pref = (PreferenceScreen) findPreference("proximity");
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_PROXIMITY).equals("true")) {
+                proxi_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_proximity_active));
+            } else {
+                proxi_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_proximity));
+            }
+        }
+
         Sensor temp = mSensorMgr.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         if (temp != null) {
             proxi_pref.setSummary(proxi_pref.getSummary().toString().replace("*", " - Power: " + temp.getPower() + " mA"));
@@ -1595,12 +1647,6 @@ public class Aware_Client extends Aware_Activity {
             proxi_pref.setSummary(proxi_pref.getSummary().toString().replace("*", ""));
             proxi_pref.setEnabled(false);
             return;
-        }
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_PROXIMITY).equals("true")) {
-            proxi_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_proximity_active));
-        } else {
-            proxi_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_proximity));
         }
 
         final CheckBoxPreference proximity = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_PROXIMITY);
@@ -1666,8 +1712,15 @@ public class Aware_Client extends Aware_Activity {
      * Rotation module settings UI
      */
     private void rotation() {
-
         final PreferenceScreen rotation_pref = (PreferenceScreen) findPreference("rotation");
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ROTATION).equals("true")) {
+                rotation_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_rotation_active));
+            } else {
+                rotation_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_rotation));
+            }
+        }
+
         Sensor temp = mSensorMgr.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         if (temp != null) {
             rotation_pref.setSummary(rotation_pref.getSummary().toString().replace("*", " - Power: " + temp.getPower() + " mA"));
@@ -1675,12 +1728,6 @@ public class Aware_Client extends Aware_Activity {
             rotation_pref.setSummary(rotation_pref.getSummary().toString().replace("*", ""));
             rotation_pref.setEnabled(false);
             return;
-        }
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ROTATION).equals("true")) {
-            rotation_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_rotation_active));
-        } else {
-            rotation_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_rotation));
         }
 
         final CheckBoxPreference rotation = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_ROTATION);
@@ -1750,11 +1797,14 @@ public class Aware_Client extends Aware_Activity {
             telephonies.setEnabled(false);
             return;
         }
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_TELEPHONY).equals("true")) {
-            telephonies.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_telephony_active));
-        } else {
-            telephonies.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_telephony));
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_TELEPHONY).equals("true")) {
+                telephonies.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_telephony_active));
+            } else {
+                telephonies.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_telephony));
+            }
         }
+
         final CheckBoxPreference telephony = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_TELEPHONY);
         telephony.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_TELEPHONY).equals("true"));
         telephony.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -1785,10 +1835,12 @@ public class Aware_Client extends Aware_Activity {
      */
     private void webservices() {
         final PreferenceScreen webservices = (PreferenceScreen) findPreference("webservice");
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
-            webservices.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_study_active));
-        } else {
-            webservices.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_study));
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
+                webservices.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_study_active));
+            } else {
+                webservices.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_study));
+            }
         }
 
         final CheckBoxPreference webservice = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_WEBSERVICE);
@@ -1912,10 +1964,12 @@ public class Aware_Client extends Aware_Activity {
      */
     private void mqtt() {
         final PreferenceScreen mqtts = (PreferenceScreen) findPreference("mqtt");
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_MQTT).equals("true")) {
-            mqtts.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_mqtt_active));
-        } else {
-            mqtts.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_mqtt));
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_MQTT).equals("true")) {
+                mqtts.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_mqtt_active));
+            } else {
+                mqtts.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_mqtt));
+            }
         }
 
         final CheckBoxPreference mqtt = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_MQTT);

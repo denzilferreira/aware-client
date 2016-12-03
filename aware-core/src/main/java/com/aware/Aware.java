@@ -32,6 +32,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
@@ -257,6 +258,20 @@ public class Aware extends Service {
             return;
         }
 
+        //If Android M+ and client or standalone, ask to be added to the whilelist of Doze
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (getPackageName().equals("com.aware.phone") || getResources().getBoolean(R.bool.standalone))) {
+            Intent intent = new Intent();
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (pm.isIgnoringBatteryOptimizations(getPackageName()))
+                intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+            else {
+                intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+            }
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        }
+
         if (Aware.DEBUG) Log.d(TAG, "AWARE framework is created!");
     }
 
@@ -275,11 +290,12 @@ public class Aware extends Service {
             try {
                 PackageInfo package_info = awareContext.getPackageManager().getPackageInfo(awareContext.getPackageName(), 0);
                 device_ping.put("package_name", package_info.packageName);
-                if (package_info.packageName.equals("com.aware.phone")) {
+                if (package_info.packageName.equals("com.aware.phone") || getResources().getBoolean(R.bool.standalone)) {
                     device_ping.put("package_version_code", String.valueOf(package_info.versionCode));
                     device_ping.put("package_version_name", String.valueOf(package_info.versionName));
                 }
-            } catch (PackageManager.NameNotFoundException e) {}
+            } catch (PackageManager.NameNotFoundException e) {
+            }
 
             try {
                 new Https(awareContext, SSLManager.getHTTPS(getApplicationContext(), "https://api.awareframework.com/index.php")).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
@@ -306,7 +322,8 @@ public class Aware extends Service {
                 if (study_status == null)
                     return true; //unable to connect to server, timeout, etc. We do nothing.
 
-                Log.d(Aware.TAG, "Study_status: \n" + study_status);
+                if (DEBUG)
+                    Log.d(Aware.TAG, "Study_status: \n" + study_status);
 
                 try {
                     JSONArray status = new JSONArray(study_status);
@@ -330,7 +347,6 @@ public class Aware extends Service {
             super.onPostExecute(studyStatus);
 
             if (!studyStatus) {
-                Log.d("Niels", "quit study");
                 sendBroadcast(new Intent(Aware.ACTION_QUIT_STUDY));
             }
         }
@@ -396,13 +412,16 @@ public class Aware extends Service {
      */
     public static boolean isStudy(Context c) {
         boolean participant = false;
+
         Cursor study = c.getContentResolver().query(Aware_Provider.Aware_Studies.CONTENT_URI, null,
                 Aware_Provider.Aware_Studies.STUDY_URL + " LIKE '" + Aware.getSetting(c, Aware_Preferences.WEBSERVICE_SERVER) +
                         "' AND " + Aware_Provider.Aware_Studies.STUDY_JOINED + ">0" +
                         " AND " + Aware_Provider.Aware_Studies.STUDY_EXIT + "=0",
                 null, null);
+
         if (study != null && study.moveToFirst())
             participant = true;
+
         if (study != null && !study.isClosed()) study.close();
         return participant;
     }
@@ -925,20 +944,36 @@ public class Aware extends Service {
         global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
         global_settings.add(Applications.STATUS_AWARE_ACCESSIBILITY);
 
-        //allow plugin's to react to MQTT
-//        global_settings.add(Aware_Preferences.STATUS_MQTT);
-//        global_settings.add(Aware_Preferences.MQTT_USERNAME);
-//        global_settings.add(Aware_Preferences.MQTT_PASSWORD);
-//        global_settings.add(Aware_Preferences.MQTT_SERVER);
-//        global_settings.add(Aware_Preferences.MQTT_PORT);
-//        global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
-//        global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
-//        global_settings.add(Aware_Preferences.MQTT_QOS);
+        if (context.getResources().getBoolean(R.bool.standalone)) {
+            global_settings.add(Aware_Preferences.STATUS_MQTT);
+            global_settings.add(Aware_Preferences.MQTT_USERNAME);
+            global_settings.add(Aware_Preferences.MQTT_PASSWORD);
+            global_settings.add(Aware_Preferences.MQTT_SERVER);
+            global_settings.add(Aware_Preferences.MQTT_PORT);
+            global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
+            global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
+            global_settings.add(Aware_Preferences.MQTT_QOS);
+        }
 
         is_global = global_settings.contains(key);
 
+        if (context.getResources().getBoolean(R.bool.standalone))
+            is_global = false;
+
         String value = "";
-        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'") + ((is_global) ? " OR " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE ''" : ""), null, null);
+        if (key.equals(Aware_Preferences.DEVICE_ID)) { //we will query the database from the library
+            Cursor device_info = context.getContentResolver().query(Uri.parse("content://" + context.getPackageName() + ".provider.aware/aware_device"), null, null, null, Aware_Device.TIMESTAMP + " DESC LIMIT 1");
+            if (device_info != null && device_info.moveToFirst()) {
+                value = device_info.getString(device_info.getColumnIndex(Aware_Device.DEVICE_ID));
+            }
+            if (device_info != null && ! device_info.isClosed()) device_info.close();
+
+            if (value.length() > 0)
+                return value;
+        }
+
+        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null,
+                Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'"), null, null);
         if (qry != null && qry.moveToFirst()) {
             value = qry.getString(qry.getColumnIndex(Aware_Settings.SETTING_VALUE));
         }
@@ -955,6 +990,9 @@ public class Aware extends Service {
      * @return value
      */
     public static String getSetting(Context context, String key, String package_name) {
+        if (context.getResources().getBoolean(R.bool.standalone))
+            package_name = context.getPackageName(); //use the package name from the context
+
         String value = "";
         Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
         if (qry != null && qry.moveToFirst()) {
@@ -982,28 +1020,38 @@ public class Aware extends Service {
         global_settings.add(Aware_Preferences.FREQUENCY_WEBSERVICE);
         global_settings.add(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
         global_settings.add(Aware_Preferences.WEBSERVICE_SERVER);
+        global_settings.add(Aware_Preferences.WEBSERVICE_SIMPLE);
+        global_settings.add(Aware_Preferences.WEBSERVICE_REMOVE_DATA);
+        global_settings.add(Aware_Preferences.WEBSERVICE_SILENT);
+        global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
         global_settings.add(Applications.STATUS_AWARE_ACCESSIBILITY);
 
-        //allow plugins to get accessibility events
-        global_settings.add(Aware_Preferences.STATUS_APPLICATIONS);
-
-        //allow plugin's to react to MQTT
-//        global_settings.add(Aware_Preferences.STATUS_MQTT);
-//        global_settings.add(Aware_Preferences.MQTT_USERNAME);
-//        global_settings.add(Aware_Preferences.MQTT_PASSWORD);
-//        global_settings.add(Aware_Preferences.MQTT_SERVER);
-//        global_settings.add(Aware_Preferences.MQTT_PORT);
-//        global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
-//        global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
-//        global_settings.add(Aware_Preferences.MQTT_QOS);
+        //allow standalone apps to react to MQTT
+        if (context.getResources().getBoolean(R.bool.standalone)) {
+            global_settings.add(Aware_Preferences.STATUS_MQTT);
+            global_settings.add(Aware_Preferences.MQTT_USERNAME);
+            global_settings.add(Aware_Preferences.MQTT_PASSWORD);
+            global_settings.add(Aware_Preferences.MQTT_SERVER);
+            global_settings.add(Aware_Preferences.MQTT_PORT);
+            global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
+            global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
+            global_settings.add(Aware_Preferences.MQTT_QOS);
+        }
 
         is_global = global_settings.contains(key);
 
-        //We already have a Device ID or Group ID, bail-out!
+        if (context.getResources().getBoolean(R.bool.standalone))
+            is_global = false;
+
+        //We already have a Device ID, do nothing!
         if (key.equals(Aware_Preferences.DEVICE_ID) && Aware.getSetting(context, Aware_Preferences.DEVICE_ID).length() > 0)
             return;
-        if (key.equals(Aware_Preferences.DEVICE_LABEL) && Aware.getSetting(context, Aware_Preferences.DEVICE_LABEL).length() > 0)
-            return;
+
+        if (key.equals(Aware_Preferences.DEVICE_LABEL) && ((String) value).length() > 0) {
+            ContentValues newLabel = new ContentValues();
+            newLabel.put(Aware_Provider.Aware_Device.LABEL, (String) value);
+            context.getContentResolver().update(Aware_Provider.Aware_Device.CONTENT_URI, newLabel, Aware_Provider.Aware_Device.DEVICE_ID + " LIKE '" + Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID) + "'", null);
+        }
 
         ContentValues setting = new ContentValues();
         setting.put(Aware_Settings.SETTING_KEY, key);
@@ -1049,10 +1097,19 @@ public class Aware extends Service {
      * @param package_name
      */
     public static void setSetting(Context context, String key, Object value, String package_name) {
+        if (context.getResources().getBoolean(R.bool.standalone)) //use the package name from the context
+            package_name = context.getPackageName();
+
         //We already have a device ID, bail-out!
         if (key.equals(Aware_Preferences.DEVICE_ID) && Aware.getSetting(context, Aware_Preferences.DEVICE_ID).length() > 0) {
             Log.d(Aware.TAG, "AWARE UUID: " + Aware.getSetting(context, Aware_Preferences.DEVICE_ID) + " in " + package_name);
             return;
+        }
+
+        if (key.equals(Aware_Preferences.DEVICE_LABEL) && ((String) value).length() > 0) {
+            ContentValues newLabel = new ContentValues();
+            newLabel.put(Aware_Provider.Aware_Device.LABEL, (String) value);
+            context.getContentResolver().update(Aware_Provider.Aware_Device.CONTENT_URI, newLabel, Aware_Provider.Aware_Device.DEVICE_ID + " LIKE '" + Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID) + "'", null);
         }
 
         ContentValues setting = new ContentValues();
@@ -1218,6 +1275,9 @@ public class Aware extends Service {
                 try {
                     JSONObject studyInfo = new JSONObject(request);
 
+                    if (DEBUG)
+                        Log.d(TAG, "Study info: " + studyInfo.toString(5));
+
                     //Request study settings
                     Hashtable<String, String> data = new Hashtable<>();
                     data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
@@ -1252,6 +1312,9 @@ public class Aware extends Service {
                     }
 
                     JSONArray study_config = new JSONArray(answer);
+
+                    if (DEBUG)
+                        Log.d(TAG, "Study config: " + study_config.toString(5));
 
                     if (study_config.getJSONObject(0).has("message")) {
                         Toast.makeText(getApplicationContext(), study_config.getJSONObject(0).getString("message"), Toast.LENGTH_LONG).show();
@@ -1423,6 +1486,8 @@ public class Aware extends Service {
 
         //Remove all settings
         c.getContentResolver().delete(Aware_Settings.CONTENT_URI, null, null);
+
+        //Remove all schedulers
         c.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, null);
 
         //Read default client settings
@@ -1822,7 +1887,7 @@ public class Aware extends Service {
             }
 
             NetworkInfo bt = connManager.getNetworkInfo(ConnectivityManager.TYPE_BLUETOOTH);
-            if (bt!= null && bt.isAvailable()) {
+            if (bt != null && bt.isAvailable()) {
                 complianceStatus.put("bt", true);
             } else {
                 complianceStatus.put("bt", false);
@@ -1859,8 +1924,8 @@ public class Aware extends Service {
      */
     public static void startAWARE() {
 
-        //Fixed: only the client needs to check the compliance and only if in a study
-        if (awareContext.getPackageName().equals("com.aware.phone") && isStudy(awareContext))
+        //Fixed: client or standalone apps can check the compliance if part of a study
+        if ((awareContext.getPackageName().equals("com.aware.phone") || awareContext.getResources().getBoolean(R.bool.standalone)) && isStudy(awareContext))
             complianceStatus();
 
         startScheduler(awareContext);
