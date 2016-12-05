@@ -1,6 +1,7 @@
 package com.aware.phone.ui;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,6 +14,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +28,7 @@ import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.phone.R;
 import com.aware.providers.Aware_Provider;
+import com.aware.utils.Aware_Plugin;
 import com.aware.utils.PluginsManager;
 import com.aware.utils.StudyUtils;
 import com.aware.utils.WebserviceHelper;
@@ -278,11 +281,14 @@ public class Aware_Join_Study extends Aware_Activity {
             try {
                 JSONObject plugin_config = plugins.getJSONObject(i);
                 String package_name = plugin_config.getString("plugin");
+
+                boolean bundled = recoverBundled(getApplicationContext(), package_name);
                 PackageInfo installed = PluginsManager.isInstalled(this, package_name);
-                if (installed != null) {
-                    active_plugins.add(new PluginInfo(PluginsManager.getPluginName(getApplicationContext(), package_name), package_name, true));
-                } else {
+
+                if (! bundled && installed == null) {
                     active_plugins.add(new PluginInfo(package_name, package_name, false));
+                } else {
+                    active_plugins.add(new PluginInfo(PluginsManager.getPluginName(getApplicationContext(), package_name), package_name, true));
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -291,6 +297,39 @@ public class Aware_Join_Study extends Aware_Activity {
 
         mAdapter = new PluginsAdapter(active_plugins);
         pluginsRecyclerView.setAdapter(mAdapter);
+    }
+
+    private boolean recoverBundled(Context context, String package_name) {
+        Intent bundled = new Intent();
+        bundled.setComponent(new ComponentName(context.getPackageName(), package_name + ".Plugin"));
+        ComponentName bundledResult = context.startService(bundled);
+        if (bundledResult != null) {
+
+            context.stopService(bundled);
+
+            if (Aware.DEBUG) Log.d(Aware.TAG, "Bundled " + package_name + ".Plugin found...");
+
+            //Check if plugin is cached
+            Cursor cached = context.getContentResolver().query(Aware_Provider.Aware_Plugins.CONTENT_URI, null, Aware_Provider.Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+            if (cached == null || !cached.moveToFirst()) {
+                //Fixed: add a bundled plugin to the list of installed plugins on the self-contained apps
+                ContentValues rowData = new ContentValues();
+                rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_AUTHOR, "Self-packaged");
+                rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_DESCRIPTION, "Bundled with " + context.getPackageName());
+                rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_NAME, package_name);
+                rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_PACKAGE_NAME, package_name);
+                rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
+                rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_VERSION, 1);
+                context.getContentResolver().insert(Aware_Provider.Aware_Plugins.CONTENT_URI, rowData);
+                if (Aware.DEBUG)
+                    Log.d(Aware.TAG, "Added self-package " + package_name + " to " + context.getPackageName());
+            }
+            if (cached != null && !cached.isClosed()) cached.close();
+
+            return true;
+        }
+
+        return false;
     }
 
     @Override
