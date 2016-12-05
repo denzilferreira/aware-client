@@ -15,8 +15,6 @@
         android:label="Write to AWARE&apos;s Context data"
         android:protectionLevel="normal" />
 
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
