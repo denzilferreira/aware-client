@@ -42,7 +42,7 @@ public class Https {
 	private static final String TAG = "AWARE::HTTPS";
 
     private static SSLContext sslContext;
-    private static Context sContext;
+//    private static Context sContext;
 
     /**
      * The InputStream certificate should be:
@@ -52,7 +52,7 @@ public class Https {
      * @param certificate
      */
 	public Https(Context c, InputStream certificate ) {
-		sContext = c;
+//		sContext = c;
 
         try {
 
@@ -164,7 +164,7 @@ public class Https {
 		}catch (UnsupportedEncodingException e) {
 			Log.e(TAG, e.getMessage());
 			return null;
-		} catch (IOException e) {
+		} catch (IOException | NullPointerException e) {
 			Log.e(TAG, e.getMessage());
 			return null;
 		} catch (IllegalStateException e ) {
@@ -228,7 +228,7 @@ public class Https {
 
             return page_content;
 
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             if(Aware.DEBUG) Log.e(TAG,e.getMessage());
             return null;
         }

@@ -395,7 +395,9 @@ public class Applications extends AccessibilityService {
             if(awareMonitor != null) {
                 unregisterReceiver(awareMonitor);
             }
-        } catch (IllegalArgumentException e) {}
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        }
 
         Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
     }
