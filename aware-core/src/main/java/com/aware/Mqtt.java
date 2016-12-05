@@ -442,7 +442,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
             new MQTTAsync().execute(MQTT_OPTIONS);
             if (Aware.DEBUG) Log.d(TAG, "MQTT service connecting: " + MQTT_URL);
 
-        } catch (MqttException e) {
+        } catch (MqttException | IllegalArgumentException e) {
             if (Aware.DEBUG) Log.e(TAG, "Failed: " + e.getMessage());
         }
     }

@@ -340,9 +340,11 @@ public class Applications extends AccessibilityService {
     @Override
     public void onInterrupt() {
         if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
-            if(awareMonitor != null) {
-                unregisterReceiver(awareMonitor);
-            }
+            try {
+                if(awareMonitor != null) {
+                    unregisterReceiver(awareMonitor);
+                }
+            } catch (IllegalArgumentException e) {}
         }
         Log.w(TAG, "Accessibility Service has been interrupted...");
     }
@@ -350,10 +352,13 @@ public class Applications extends AccessibilityService {
     @Override
     public boolean onUnbind(Intent intent) {
         if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
-            if(awareMonitor != null) {
-                unregisterReceiver(awareMonitor);
-            }
+            try {
+                if(awareMonitor != null) {
+                    unregisterReceiver(awareMonitor);
+                }
+            } catch (IllegalArgumentException e) {}
         }
+
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, false);
         Log.e(TAG, "Accessibility Service has been unbound...");
         return super.onUnbind(intent);
