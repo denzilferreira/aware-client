@@ -153,6 +153,11 @@ public class Aware extends Service {
     public static final String ACTION_QUIT_STUDY = "ACTION_QUIT_STUDY";
 
     /**
+     * Used by the AWARE watchdog
+     */
+    private static final String ACTION_AWARE_KEEP_ALIVE = "ACTION_AWARE_KEEP_ALIVE";
+
+    /**
      * Used on the scheduler class to define global schedules for AWARE, SYNC and SPACE MAINTENANCE actions
      */
     public static final String SCHEDULE_SPACE_MAINTENANCE = "schedule_aware_space_maintenance";
@@ -160,6 +165,7 @@ public class Aware extends Service {
 
     private static AlarmManager alarmManager = null;
     private static PendingIntent repeatingIntent = null;
+
     private static Context awareContext = null;
 
     private static Intent awareStatusMonitor = null;
@@ -259,18 +265,18 @@ public class Aware extends Service {
         }
 
         //If Android M+ and client or standalone, ask to be added to the whilelist of Doze
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (getPackageName().equals("com.aware.phone") || getResources().getBoolean(R.bool.standalone))) {
-            Intent intent = new Intent();
-            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            if (pm.isIgnoringBatteryOptimizations(getPackageName())) {
-                intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-            } else {
-                intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                intent.setData(Uri.parse("package:" + getPackageName()));
-            }
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (getPackageName().equals("com.aware.phone") || getResources().getBoolean(R.bool.standalone))) {
+//            Intent intent = new Intent();
+//            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+//            if (pm.isIgnoringBatteryOptimizations(getPackageName())) {
+//                intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+//            } else {
+//                intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+//                intent.setData(Uri.parse("package:" + getPackageName()));
+//            }
+//            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//            startActivity(intent);
+//        }
 
 
         if (Aware.DEBUG) Log.d(TAG, "AWARE framework is created!");
@@ -514,10 +520,31 @@ public class Aware extends Service {
                 new AsyncPing().execute();
             }
 
-            if (awareStatusMonitor == null) {
-                awareStatusMonitor = new Intent(this, Aware.class);
-                repeatingIntent = PendingIntent.getService(getApplicationContext(), 0, awareStatusMonitor, PendingIntent.FLAG_UPDATE_CURRENT);
-                alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000, aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000, repeatingIntent);
+            //only the client and self-contained apps need to run the keep alive. Plugins are handled by them.
+            if (getApplicationContext().getPackageName().equals("com.aware.phone") || getResources().getBoolean(R.bool.standalone)) {
+                if (awareStatusMonitor == null) { //not set yet
+                    awareStatusMonitor = new Intent(this, Aware.class);
+                    awareStatusMonitor.setAction(ACTION_AWARE_KEEP_ALIVE);
+                    repeatingIntent = PendingIntent.getService(getApplicationContext(), 0, awareStatusMonitor, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
+                                System.currentTimeMillis() + aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000,
+                                repeatingIntent);
+                    } else {
+                        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
+                                System.currentTimeMillis() + aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000,
+                                aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000,
+                                repeatingIntent);
+                    }
+                } else { //already set, schedule the next one if API23+. If < API23, it's a repeating alarm, so no need to set it again.
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (intent != null && intent.getAction() != null && intent.getAction().equals(ACTION_AWARE_KEEP_ALIVE))) {
+                        //set the alarm again to the future for API 23, works even if under Doze
+                        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
+                                System.currentTimeMillis() + aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000,
+                                repeatingIntent);
+                    }
+                }
             }
 
             //Boot AWARE services
@@ -1539,7 +1566,7 @@ public class Aware extends Service {
             String packageName = packageUri.getSchemeSpecificPart();
             if (packageName == null) return;
 
-            if (!packageName.matches("com.aware.plugin.*")) return;
+            if (!packageName.matches("com.aware.plugin.*") || context.getResources().getBoolean(R.bool.standalone)) return;
 
             if (intent.getAction().equals(Intent.ACTION_PACKAGE_ADDED)) {
 

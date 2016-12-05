@@ -12,6 +12,8 @@ import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.aware.R;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -50,11 +52,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      * @return Folder for Aware databases
      */
     public File getAwareDatabaseDirectory(Context context) {
-        // sdcard/AWARE/     (shareable, does not delete when uninstalling)
-//      File aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString());
-
-        // sdcard/Android/<app_package_name>/AWARE/    (not shareable, deletes when uninstalling package)
-        File aware_folder = new File(ContextCompat.getExternalFilesDirs(context, null)[0] + "/AWARE"); //compatible with API 10+
+        File aware_folder;
+        if (!context.getResources().getBoolean(R.bool.standalone)) {
+            // sdcard/AWARE/     (shareable, does not delete when uninstalling)
+            aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString());
+        } else {
+            // sdcard/Android/<app_package_name>/AWARE/    (not shareable, deletes when uninstalling package)
+            aware_folder = new File(ContextCompat.getExternalFilesDirs(context, null)[0] + "/AWARE"); //compatible with API 10+
+        }
         return aware_folder;
     }
 
