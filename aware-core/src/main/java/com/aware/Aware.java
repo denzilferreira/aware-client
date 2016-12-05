@@ -272,6 +272,7 @@ public class Aware extends Service {
             startActivity(intent);
         }
 
+
         if (Aware.DEBUG) Log.d(TAG, "AWARE framework is created!");
     }
 
