@@ -112,9 +112,9 @@ public class Aware_Join_Study extends Aware_Activity {
                 if (study != null && study.moveToFirst()) {
                     ContentValues studyData = new ContentValues();
                     studyData.put(Aware_Provider.Aware_Studies.STUDY_JOINED, System.currentTimeMillis());
-                    getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, studyData, Aware_Provider.Aware_Studies.STUDY_ID + "=" +study.getInt(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_ID)), null);
+                    getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, studyData, Aware_Provider.Aware_Studies.STUDY_ID + "=" + study.getInt(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_ID)), null);
                 }
-                if (study != null && ! study.isClosed()) study.close();
+                if (study != null && !study.isClosed()) study.close();
 
                 StudyUtils.applySettings(getApplicationContext(), study_configs);
                 finish();
@@ -143,7 +143,7 @@ public class Aware_Join_Study extends Aware_Activity {
 
                     getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
                 }
-                if (dbStudy != null && ! dbStudy.isClosed()) dbStudy.close();
+                if (dbStudy != null && !dbStudy.isClosed()) dbStudy.close();
 
                 //Sync immediately just this record, skipping all others
                 Intent webserviceHelper = new Intent(getApplicationContext(), WebserviceHelper.class);
@@ -154,79 +154,79 @@ public class Aware_Join_Study extends Aware_Activity {
                 startService(webserviceHelper);
 
                 new AlertDialog.Builder(Aware_Join_Study.this)
-                    .setMessage("Are you sure you want to quit the study?")
-                    .setCancelable(false)
-                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            btnQuit.setEnabled(false);
-                            btnQuit.setAlpha(0.5f);
+                        .setMessage("Are you sure you want to quit the study?")
+                        .setCancelable(false)
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                btnQuit.setEnabled(false);
+                                btnQuit.setAlpha(0.5f);
 
-                            Cursor dbStudy = Aware.getStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
-                            if (dbStudy != null && dbStudy.moveToFirst()) {
-                                ContentValues complianceEntry = new ContentValues();
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_KEY, dbStudy.getInt(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_API, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_API)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_URL, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_URL)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, dbStudy.getLong(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_EXIT, System.currentTimeMillis());
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "quit study");
+                                Cursor dbStudy = Aware.getStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
+                                if (dbStudy != null && dbStudy.moveToFirst()) {
+                                    ContentValues complianceEntry = new ContentValues();
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_KEY, dbStudy.getInt(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_API, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_API)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_URL, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_URL)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, dbStudy.getLong(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_EXIT, System.currentTimeMillis());
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "quit study");
 
-                                getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
+                                    getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
+                                }
+                                if (dbStudy != null && !dbStudy.isClosed()) dbStudy.close();
+
+                                //Sync immediately just this record, skipping all others
+                                Intent webserviceHelper = new Intent(getApplicationContext(), WebserviceHelper.class);
+                                webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
+                                webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, Aware_Provider.DATABASE_TABLES[3]);
+                                webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, Aware_Provider.TABLES_FIELDS[3]);
+                                webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, Aware_Provider.Aware_Studies.CONTENT_URI.toString());
+                                startService(webserviceHelper);
+
+                                Aware.reset(getApplicationContext());
+                                dialogInterface.dismiss();
+
+                                Intent preferences = new Intent(getApplicationContext(), com.aware.phone.Aware_Client.class);
+                                preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                startActivity(preferences);
+
+                                finish();
                             }
-                            if (dbStudy != null && ! dbStudy.isClosed()) dbStudy.close();
+                        })
+                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
 
-                            //Sync immediately just this record, skipping all others
-                            Intent webserviceHelper = new Intent(getApplicationContext(), WebserviceHelper.class);
-                            webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
-                            webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, Aware_Provider.DATABASE_TABLES[3]);
-                            webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, Aware_Provider.TABLES_FIELDS[3]);
-                            webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, Aware_Provider.Aware_Studies.CONTENT_URI.toString());
-                            startService(webserviceHelper);
+                                Cursor dbStudy = Aware.getStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
+                                if (dbStudy != null && dbStudy.moveToFirst()) {
+                                    ContentValues complianceEntry = new ContentValues();
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_KEY, dbStudy.getInt(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_API, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_API)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_URL, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_URL)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, dbStudy.getLong(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_EXIT, 0); //still on study
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "canceled quit");
 
-                            Aware.reset(getApplicationContext());
-                            dialogInterface.dismiss();
-
-                            Intent preferences = new Intent(getApplicationContext(), com.aware.phone.Aware_Client.class);
-                            preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                            startActivity(preferences);
-
-                            finish();
-                        }
-                    })
-                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            dialogInterface.dismiss();
-
-                            Cursor dbStudy = Aware.getStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
-                            if (dbStudy != null && dbStudy.moveToFirst()) {
-                                ContentValues complianceEntry = new ContentValues();
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_KEY, dbStudy.getInt(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_API, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_API)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_URL, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_URL)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, dbStudy.getLong(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_EXIT, 0); //still on study
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "canceled quit");
-
-                                getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
+                                    getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
+                                }
+                                if (dbStudy != null && !dbStudy.isClosed()) dbStudy.close();
                             }
-                            if (dbStudy != null && ! dbStudy.isClosed()) dbStudy.close();
-                        }
-                    })
-                    .show();
+                        })
+                        .show();
             }
         });
 
@@ -237,6 +237,7 @@ public class Aware_Join_Study extends Aware_Activity {
     }
 
     private static PluginCompliance pluginCompliance = new PluginCompliance();
+
     public static class PluginCompliance extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -282,10 +283,8 @@ public class Aware_Join_Study extends Aware_Activity {
                 JSONObject plugin_config = plugins.getJSONObject(i);
                 String package_name = plugin_config.getString("plugin");
 
-                boolean bundled = recoverBundled(getApplicationContext(), package_name);
                 PackageInfo installed = PluginsManager.isInstalled(this, package_name);
-
-                if (! bundled && installed == null) {
+                if (installed == null) {
                     active_plugins.add(new PluginInfo(package_name, package_name, false));
                 } else {
                     active_plugins.add(new PluginInfo(PluginsManager.getPluginName(getApplicationContext(), package_name), package_name, true));
@@ -297,39 +296,6 @@ public class Aware_Join_Study extends Aware_Activity {
 
         mAdapter = new PluginsAdapter(active_plugins);
         pluginsRecyclerView.setAdapter(mAdapter);
-    }
-
-    private boolean recoverBundled(Context context, String package_name) {
-        Intent bundled = new Intent();
-        bundled.setComponent(new ComponentName(context.getPackageName(), package_name + ".Plugin"));
-        ComponentName bundledResult = context.startService(bundled);
-        if (bundledResult != null) {
-
-            context.stopService(bundled);
-
-            if (Aware.DEBUG) Log.d(Aware.TAG, "Bundled " + package_name + ".Plugin found...");
-
-            //Check if plugin is cached
-            Cursor cached = context.getContentResolver().query(Aware_Provider.Aware_Plugins.CONTENT_URI, null, Aware_Provider.Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
-            if (cached == null || !cached.moveToFirst()) {
-                //Fixed: add a bundled plugin to the list of installed plugins on the self-contained apps
-                ContentValues rowData = new ContentValues();
-                rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_AUTHOR, "Self-packaged");
-                rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_DESCRIPTION, "Bundled with " + context.getPackageName());
-                rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_NAME, package_name);
-                rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_PACKAGE_NAME, package_name);
-                rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
-                rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_VERSION, 1);
-                context.getContentResolver().insert(Aware_Provider.Aware_Plugins.CONTENT_URI, rowData);
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Added self-package " + package_name + " to " + context.getPackageName());
-            }
-            if (cached != null && !cached.isClosed()) cached.close();
-
-            return true;
-        }
-
-        return false;
     }
 
     @Override
