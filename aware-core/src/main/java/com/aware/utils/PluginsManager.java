@@ -102,7 +102,7 @@ public class PluginsManager {
                 rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_DESCRIPTION, "Bundled with " + context.getPackageName());
                 rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_NAME, package_name);
                 rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_PACKAGE_NAME, package_name);
-                rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
+                rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
                 rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_VERSION, 1);
                 context.getContentResolver().insert(Aware_Provider.Aware_Plugins.CONTENT_URI, rowData);
                 if (Aware.DEBUG)
@@ -112,6 +112,7 @@ public class PluginsManager {
 
             PackageInfo pkgInfo = new PackageInfo();
             pkgInfo.packageName = serviceInfo.packageName;
+            pkgInfo.versionName = "bundled";
 
             return pkgInfo;
 

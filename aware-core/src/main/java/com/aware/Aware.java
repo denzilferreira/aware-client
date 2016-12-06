@@ -707,44 +707,70 @@ public class Aware extends Service {
     public synchronized static void stopPlugin(final Context context, final String package_name) {
         if (awareContext == null) awareContext = context;
 
-        if (Aware.DEBUG) Log.d(TAG, "Stopping " + package_name);
+        PackageInfo packageInfo = PluginsManager.isInstalled(context, package_name);
+        if (packageInfo != null) {
+            if (packageInfo.versionName.equals("bundled")) {
+                Intent bundled = new Intent();
+                bundled.setComponent(new ComponentName(context.getPackageName(), package_name + ".Plugin"));
+                context.stopService(bundled);
 
-        //Check if plugin is bundled within an application/plugin
-        Intent bundled = new Intent();
-        bundled.setComponent(new ComponentName(awareContext.getPackageName(), package_name + ".Plugin"));
-        boolean result = awareContext.stopService(bundled);
+                if (Aware.DEBUG) Log.d(TAG, "Bundled " + package_name + ".Plugin stopped...");
 
-        if (result) {
-            if (Aware.DEBUG)
-                Log.d(TAG, "Bundled " + package_name + " stopped.");
+            } else {
+                Intent external = new Intent();
+                external.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
+                context.stopService(external);
+
+                if (Aware.DEBUG) Log.d(TAG, package_name + " stopped...");
+            }
+
+            ContentValues rowData = new ContentValues();
+            rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
+            awareContext.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+
+            if (context.getPackageName().equals("com.aware.phone") || context.getResources().getBoolean(R.bool.standalone)) {
+                context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
+            }
         }
 
-        boolean is_installed = false;
-        Cursor cached = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
-        if (cached != null && cached.moveToFirst()) {
-            is_installed = true;
-        }
-        if (cached != null && !cached.isClosed()) cached.close();
-
-        if (is_installed) {
-            Intent plugin = new Intent();
-            plugin.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
-            awareContext.stopService(plugin);
-
-            if (Aware.DEBUG)
-                Log.d(TAG, package_name + " stopped.");
-        }
-
-        ContentValues rowData = new ContentValues();
-        rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
-        int updated = awareContext.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
-
-        if (Aware.DEBUG)
-            Log.d(TAG, "Plugin " + package_name + " stopped: " + updated);
-
-        if (context.getPackageName().equals("com.aware.phone")) {
-            context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
-        }
+//        if (Aware.DEBUG) Log.d(TAG, "Stopping " + package_name);
+//
+//        //Check if plugin is bundled within an application/plugin
+//        Intent bundled = new Intent();
+//        bundled.setComponent(new ComponentName(awareContext.getPackageName(), package_name + ".Plugin"));
+//        boolean result = awareContext.stopService(bundled);
+//
+//        if (result) {
+//            if (Aware.DEBUG)
+//                Log.d(TAG, "Bundled " + package_name + " stopped.");
+//        }
+//
+//        boolean is_installed = false;
+//        Cursor cached = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+//        if (cached != null && cached.moveToFirst()) {
+//            is_installed = true;
+//        }
+//        if (cached != null && !cached.isClosed()) cached.close();
+//
+//        if (is_installed) {
+//            Intent plugin = new Intent();
+//            plugin.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
+//            awareContext.stopService(plugin);
+//
+//            if (Aware.DEBUG)
+//                Log.d(TAG, package_name + " stopped.");
+//        }
+//
+//        ContentValues rowData = new ContentValues();
+//        rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
+//        int updated = awareContext.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+//
+//        if (Aware.DEBUG)
+//            Log.d(TAG, "Plugin " + package_name + " stopped: " + updated);
+//
+//        if (context.getPackageName().equals("com.aware.phone") || context.getResources().getBoolean(R.bool.standalone)) {
+//            context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
+//        }
     }
 
     /**
@@ -757,59 +783,74 @@ public class Aware extends Service {
     public synchronized static void startPlugin(final Context context, final String package_name) {
         if (awareContext == null) awareContext = context;
 
-        if (Aware.DEBUG) Log.d(TAG, "Starting " + package_name);
+        PackageInfo packageInfo = PluginsManager.isInstalled(context, package_name);
+        if (packageInfo != null) {
+            if (packageInfo.versionName.equals("bundled")) {
+                Intent bundled = new Intent();
+                bundled.setComponent(new ComponentName(context.getPackageName(), package_name + ".Plugin"));
+                context.startService(bundled);
 
-        //Check if plugin is bundled within an application/plugin
-        Intent bundled = new Intent();
-        bundled.setComponent(new ComponentName(awareContext.getPackageName(), package_name + ".Plugin"));
-        ComponentName bundledResult = awareContext.startService(bundled);
-        if (bundledResult != null) {
-            if (Aware.DEBUG) Log.d(TAG, "Bundled " + package_name + ".Plugin started...");
+                if (Aware.DEBUG) Log.d(TAG, "Bundled " + package_name + ".Plugin started...");
 
-            //Check if plugin is cached
-            Cursor cached = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
-            if (cached == null || !cached.moveToFirst()) {
-                //Fixed: add a bundled plugin to the list of installed plugins on the self-contained apps
-                ContentValues rowData = new ContentValues();
-                rowData.put(Aware_Plugins.PLUGIN_AUTHOR, "Self-packaged");
-                rowData.put(Aware_Plugins.PLUGIN_DESCRIPTION, "Bundled with " + context.getPackageName());
-                rowData.put(Aware_Plugins.PLUGIN_NAME, "Self-packaged");
-                rowData.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, package_name);
-                rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
-                rowData.put(Aware_Plugins.PLUGIN_VERSION, 1);
-                awareContext.getContentResolver().insert(Aware_Plugins.CONTENT_URI, rowData);
-                if (Aware.DEBUG)
-                    Log.d(TAG, "Added self-package " + package_name + " to " + awareContext.getPackageName());
+            } else {
+                Intent external = new Intent();
+                external.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
+                context.startService(external);
+
+                if (Aware.DEBUG) Log.d(TAG, package_name + " started...");
             }
-            if (cached != null && !cached.isClosed()) cached.close();
-        }
 
-        //set the plugin as active
-        Cursor cached = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
-        if (cached != null && cached.moveToFirst()) {
-            //Installed on the phone
-            if (isClassAvailable(context, package_name, "Plugin")) {
-                Intent plugin = new Intent();
-                plugin.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
-                ComponentName cachedResult = awareContext.startService(plugin);
-                if (cachedResult != null) {
-                    if (Aware.DEBUG)
-                        Log.d(TAG, package_name + " started...");
-                }
+            ContentValues rowData = new ContentValues();
+            rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
+            awareContext.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+
+            if (context.getPackageName().equals("com.aware.phone") || context.getResources().getBoolean(R.bool.standalone)) {
+                context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
             }
         }
-        if (cached != null && !cached.isClosed()) cached.close();
 
-        ContentValues rowData = new ContentValues();
-        rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
-        int updated = awareContext.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
-
-        if (Aware.DEBUG)
-            Log.d(TAG, "Plugin " + package_name + " started: " + updated);
-
-        if (context.getPackageName().equals("com.aware.phone")) {
-            context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
-        }
+//        if (Aware.DEBUG) Log.d(TAG, "Starting " + package_name);
+//
+//        //Check if plugin is bundled within an application/plugin
+//        Intent bundled = new Intent();
+//        bundled.setComponent(new ComponentName(awareContext.getPackageName(), package_name + ".Plugin"));
+//        ComponentName bundledResult = awareContext.startService(bundled);
+//        if (bundledResult != null) {
+//            if (Aware.DEBUG) Log.d(TAG, "Bundled " + package_name + ".Plugin started...");
+//
+//            //Check if plugin is cached
+//            Cursor cached = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+//            if (cached == null || !cached.moveToFirst()) {
+//                //Fixed: add a bundled plugin to the list of installed plugins on the self-contained apps
+//                ContentValues rowData = new ContentValues();
+//                rowData.put(Aware_Plugins.PLUGIN_AUTHOR, "Self-packaged");
+//                rowData.put(Aware_Plugins.PLUGIN_DESCRIPTION, "Bundled with " + context.getPackageName());
+//                rowData.put(Aware_Plugins.PLUGIN_NAME, "Self-packaged");
+//                rowData.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, package_name);
+//                rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
+//                rowData.put(Aware_Plugins.PLUGIN_VERSION, 1);
+//                awareContext.getContentResolver().insert(Aware_Plugins.CONTENT_URI, rowData);
+//                if (Aware.DEBUG)
+//                    Log.d(TAG, "Added self-package " + package_name + " to " + awareContext.getPackageName());
+//            }
+//            if (cached != null && !cached.isClosed()) cached.close();
+//        }
+//
+//        //set the plugin as active
+//        Cursor cached = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+//        if (cached != null && cached.moveToFirst()) {
+//            //Installed on the phone
+//            if (isClassAvailable(context, package_name, "Plugin")) {
+//                Intent plugin = new Intent();
+//                plugin.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
+//                ComponentName cachedResult = awareContext.startService(plugin);
+//                if (cachedResult != null) {
+//                    if (Aware.DEBUG)
+//                        Log.d(TAG, package_name + " started...");
+//                }
+//            }
+//        }
+//        if (cached != null && !cached.isClosed()) cached.close();
     }
 
     /**
