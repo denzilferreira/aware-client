@@ -47,6 +47,10 @@ public class SSLManager extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         String server_url = intent.getStringExtra(EXTRA_SERVER);
+
+        //Fixed: not a valid server URL
+        if (server_url == null || server_url.length() == 0) return;
+
         handleUrl(getApplicationContext(), server_url, true);
     }
 
@@ -101,6 +105,9 @@ public class SSLManager extends IntentService {
      * @param block If true, block until certificate retrieved, otherwise do not.
      */
     public static void downloadCertificate(Context context, String hostname, boolean block) {
+        //Fixed: make sure we have a valid hostname
+        if (hostname == null || hostname.length() == 0 ) return;
+
         File host_credentials = new File(context.getExternalFilesDir(null) + "/Documents/", "credentials/"+ hostname );
         host_credentials.mkdirs();
 
@@ -207,6 +214,8 @@ public class SSLManager extends IntentService {
      * @return true if a certificate exists, false otherwise
      */
     public static boolean hasCertificate(Context context, String hostname) {
+        if (hostname == null || hostname.length() == 0) return false;
+
         File host_credentials = new File(context.getExternalFilesDir(null) + "/Documents/", "credentials/"+ hostname);
         return host_credentials.exists();
     }
@@ -219,6 +228,9 @@ public class SSLManager extends IntentService {
      * @param cert_data certificate data, as String.
      */
     public static void setCertificate(Context context, String hostname, String cert_data) {
+
+        if (hostname == null || hostname.length() == 0) return;
+
         //Create folder if not existent
         File host_credentials = new File(context.getExternalFilesDir(null) + "/Documents/", "credentials/"+ hostname );
         host_credentials.mkdirs();
@@ -249,6 +261,8 @@ public class SSLManager extends IntentService {
         Uri study_uri = Uri.parse(server);
         String hostname = study_uri.getHost();
 
+        if (hostname == null || hostname.length() == 0) return null;
+
         //Makes sure we always have the latest certificate
         downloadCertificate(c, hostname, true);
 
@@ -271,6 +285,8 @@ public class SSLManager extends IntentService {
      * @throws FileNotFoundException
      */
     public static InputStream getCertificate(Context c, String server) throws FileNotFoundException {
+        //Fixed: make sure we have a valid server name
+        if (server == null || server.length() == 0) return null;
 
         //Makes sure we always have the latest certificate
         downloadCertificate(c, server, true);

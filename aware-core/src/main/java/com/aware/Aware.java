@@ -876,9 +876,14 @@ public class Aware extends Service {
      */
     public static View getContextCard(final Context context, final String package_name) {
 
-        if (!isClassAvailable(context, package_name, "ContextCard")) {
-            Log.d(Aware.TAG, "No ContextCard: " + package_name);
-            return null;
+        PackageInfo pkg = PluginsManager.isInstalled(context, package_name);
+        if (pkg != null && pkg.versionName.equals("bundled")) {
+            //Bundled plugin, load the class as usual
+        } else {
+            if (!isClassAvailable(context, package_name, "ContextCard")) {
+                Log.d(Aware.TAG, "No ContextCard: " + package_name);
+                return null;
+            }
         }
 
         String ui_class = package_name + ".ContextCard";
@@ -1031,7 +1036,8 @@ public class Aware extends Service {
 
         String value = "";
         Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null,
-                Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'"), null, null);
+                Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'"),
+                null, null);
         if (qry != null && qry.moveToFirst()) {
             value = qry.getString(qry.getColumnIndex(Aware_Settings.SETTING_VALUE));
         }
@@ -1052,7 +1058,9 @@ public class Aware extends Service {
             package_name = context.getPackageName(); //use the package name from the context
 
         String value = "";
-        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null,
+                Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE '" + package_name + "'",
+                null, null);
         if (qry != null && qry.moveToFirst()) {
             value = qry.getString(qry.getColumnIndex(Aware_Settings.SETTING_VALUE));
         }
@@ -1102,8 +1110,10 @@ public class Aware extends Service {
             is_global = false;
 
         //We already have a Device ID, do nothing!
-        if (key.equals(Aware_Preferences.DEVICE_ID) && Aware.getSetting(context, Aware_Preferences.DEVICE_ID).length() > 0)
+        if (key.equals(Aware_Preferences.DEVICE_ID) && Aware.getSetting(context, Aware_Preferences.DEVICE_ID).length() > 0) {
+            Log.d(Aware.TAG, "AWARE UUID: " + Aware.getSetting(context, Aware_Preferences.DEVICE_ID) + " in " + context.getPackageName());
             return;
+        }
 
         if (key.equals(Aware_Preferences.DEVICE_LABEL) && ((String) value).length() > 0) {
             ContentValues newLabel = new ContentValues();
