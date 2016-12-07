@@ -21,6 +21,7 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -148,8 +149,13 @@ public class Plugins_Manager extends Aware_Activity {
 
             try {
                 if (status != PluginsManager.PLUGIN_NOT_INSTALLED) {
-                    ApplicationInfo appInfo = context.getPackageManager().getApplicationInfo(package_name, PackageManager.GET_META_DATA);
-                    pkg_icon.setImageDrawable(appInfo.loadIcon(getPackageManager()));
+                    PackageInfo pkg = PluginsManager.isInstalled(getApplicationContext(), package_name);
+                    if (pkg != null && pkg.versionName.equals("bundled")) {
+                        pkg_icon.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_launcher_aware));
+                    } else {
+                        ApplicationInfo appInfo = context.getPackageManager().getApplicationInfo(package_name, PackageManager.GET_META_DATA);
+                        pkg_icon.setImageDrawable(appInfo.loadIcon(getPackageManager()));
+                    }
                 } else {
                     if (icon != null && icon.length > 0)
                         pkg_icon.setImageBitmap(BitmapFactory.decodeByteArray(icon, 0, icon.length));

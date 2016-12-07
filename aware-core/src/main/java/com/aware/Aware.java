@@ -876,9 +876,11 @@ public class Aware extends Service {
      */
     public static View getContextCard(final Context context, final String package_name) {
 
+        String bundled_package = "";
         PackageInfo pkg = PluginsManager.isInstalled(context, package_name);
         if (pkg != null && pkg.versionName.equals("bundled")) {
             //Bundled plugin, load the class as usual
+            bundled_package = context.getPackageName();
         } else {
             if (!isClassAvailable(context, package_name, "ContextCard")) {
                 Log.d(Aware.TAG, "No ContextCard: " + package_name);
@@ -886,9 +888,9 @@ public class Aware extends Service {
             }
         }
 
-        String ui_class = package_name + ".ContextCard";
+        String ui_class = ((bundled_package.length() > 0) ? bundled_package : package_name) + ".ContextCard";
         try {
-            Context packageContext = context.createPackageContext(package_name, Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
+            Context packageContext = context.createPackageContext(((bundled_package.length() > 0) ? bundled_package : package_name), Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
             Class<?> fragment_loader = packageContext.getClassLoader().loadClass(ui_class);
             Object fragment = fragment_loader.newInstance();
             Method[] allMethods = fragment_loader.getDeclaredMethods();
@@ -981,7 +983,13 @@ public class Aware extends Service {
      */
     public static boolean isClassAvailable(Context context, String package_name, String class_name) {
         try {
-            Context package_context = context.createPackageContext(package_name, Context.CONTEXT_IGNORE_SECURITY + Context.CONTEXT_INCLUDE_CODE);
+            String bundled_package = "";
+            PackageInfo pkg = PluginsManager.isInstalled(context, package_name);
+            if (pkg != null && pkg.versionName.equals("bundled")) {
+                bundled_package = context.getPackageName();
+            }
+
+            Context package_context = context.createPackageContext(((bundled_package.length() > 0) ? bundled_package : package_name), Context.CONTEXT_IGNORE_SECURITY + Context.CONTEXT_INCLUDE_CODE);
             DexFile df = new DexFile(package_context.getPackageCodePath());
             for (Enumeration<String> iter = df.entries(); iter.hasMoreElements(); ) {
                 String className = iter.nextElement();
