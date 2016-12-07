@@ -404,11 +404,12 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         String server = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_SERVER);
         if (server == null || server.length() == 0) return;
 
-        Uri serverUri = Uri.parse(server);
+        if (server.contains("http") || server.contains("https")) {
+            Uri serverUri = Uri.parse(server);
+            server = serverUri.getHost();
+        }
 
-        Log.d("MQTT", "MQTT HOST: " + serverUri.toString());
-
-        MQTT_SERVER = serverUri.getHost();
+        MQTT_SERVER = server;
         MQTT_PORT = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_PORT);
         MQTT_USERNAME = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_USERNAME);
         MQTT_PASSWORD = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_PASSWORD);
