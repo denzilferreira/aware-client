@@ -732,45 +732,6 @@ public class Aware extends Service {
                 context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
             }
         }
-
-//        if (Aware.DEBUG) Log.d(TAG, "Stopping " + package_name);
-//
-//        //Check if plugin is bundled within an application/plugin
-//        Intent bundled = new Intent();
-//        bundled.setComponent(new ComponentName(awareContext.getPackageName(), package_name + ".Plugin"));
-//        boolean result = awareContext.stopService(bundled);
-//
-//        if (result) {
-//            if (Aware.DEBUG)
-//                Log.d(TAG, "Bundled " + package_name + " stopped.");
-//        }
-//
-//        boolean is_installed = false;
-//        Cursor cached = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
-//        if (cached != null && cached.moveToFirst()) {
-//            is_installed = true;
-//        }
-//        if (cached != null && !cached.isClosed()) cached.close();
-//
-//        if (is_installed) {
-//            Intent plugin = new Intent();
-//            plugin.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
-//            awareContext.stopService(plugin);
-//
-//            if (Aware.DEBUG)
-//                Log.d(TAG, package_name + " stopped.");
-//        }
-//
-//        ContentValues rowData = new ContentValues();
-//        rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
-//        int updated = awareContext.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
-//
-//        if (Aware.DEBUG)
-//            Log.d(TAG, "Plugin " + package_name + " stopped: " + updated);
-//
-//        if (context.getPackageName().equals("com.aware.phone") || context.getResources().getBoolean(R.bool.standalone)) {
-//            context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
-//        }
     }
 
     /**
@@ -808,49 +769,6 @@ public class Aware extends Service {
                 context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
             }
         }
-
-//        if (Aware.DEBUG) Log.d(TAG, "Starting " + package_name);
-//
-//        //Check if plugin is bundled within an application/plugin
-//        Intent bundled = new Intent();
-//        bundled.setComponent(new ComponentName(awareContext.getPackageName(), package_name + ".Plugin"));
-//        ComponentName bundledResult = awareContext.startService(bundled);
-//        if (bundledResult != null) {
-//            if (Aware.DEBUG) Log.d(TAG, "Bundled " + package_name + ".Plugin started...");
-//
-//            //Check if plugin is cached
-//            Cursor cached = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
-//            if (cached == null || !cached.moveToFirst()) {
-//                //Fixed: add a bundled plugin to the list of installed plugins on the self-contained apps
-//                ContentValues rowData = new ContentValues();
-//                rowData.put(Aware_Plugins.PLUGIN_AUTHOR, "Self-packaged");
-//                rowData.put(Aware_Plugins.PLUGIN_DESCRIPTION, "Bundled with " + context.getPackageName());
-//                rowData.put(Aware_Plugins.PLUGIN_NAME, "Self-packaged");
-//                rowData.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, package_name);
-//                rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
-//                rowData.put(Aware_Plugins.PLUGIN_VERSION, 1);
-//                awareContext.getContentResolver().insert(Aware_Plugins.CONTENT_URI, rowData);
-//                if (Aware.DEBUG)
-//                    Log.d(TAG, "Added self-package " + package_name + " to " + awareContext.getPackageName());
-//            }
-//            if (cached != null && !cached.isClosed()) cached.close();
-//        }
-//
-//        //set the plugin as active
-//        Cursor cached = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
-//        if (cached != null && cached.moveToFirst()) {
-//            //Installed on the phone
-//            if (isClassAvailable(context, package_name, "Plugin")) {
-//                Intent plugin = new Intent();
-//                plugin.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
-//                ComponentName cachedResult = awareContext.startService(plugin);
-//                if (cachedResult != null) {
-//                    if (Aware.DEBUG)
-//                        Log.d(TAG, package_name + " started...");
-//                }
-//            }
-//        }
-//        if (cached != null && !cached.isClosed()) cached.close();
     }
 
     /**
@@ -876,21 +794,22 @@ public class Aware extends Service {
      */
     public static View getContextCard(final Context context, final String package_name) {
 
-        String bundled_package = "";
-        PackageInfo pkg = PluginsManager.isInstalled(context, package_name);
-        if (pkg != null && pkg.versionName.equals("bundled")) {
-            //Bundled plugin, load the class as usual
-            bundled_package = context.getPackageName();
-        } else {
+//        String bundled_package = "";
+//        PackageInfo pkg = PluginsManager.isInstalled(context, package_name);
+//        if (pkg != null && pkg.versionName.equals("bundled")) {
+//            //Bundled plugin, load the class as usual
+//            bundled_package = context.getPackageName();
+//        } else {
             if (!isClassAvailable(context, package_name, "ContextCard")) {
                 Log.d(Aware.TAG, "No ContextCard: " + package_name);
                 return null;
             }
-        }
+//        }
 
         String ui_class = package_name + ".ContextCard";
         try {
-            Context packageContext = context.createPackageContext(((bundled_package.length() > 0) ? bundled_package : package_name), Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
+            Context packageContext = context.createPackageContext(package_name, Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
+//            Context packageContext = context.createPackageContext(((bundled_package.length() > 0) ? bundled_package : package_name), Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
             Class<?> fragment_loader = packageContext.getClassLoader().loadClass(ui_class);
             Object fragment = fragment_loader.newInstance();
             Method[] allMethods = fragment_loader.getDeclaredMethods();
@@ -989,32 +908,26 @@ public class Aware extends Service {
      * @return true if exists, false otherwise
      */
     public static boolean isClassAvailable(Context context, String package_name, String class_name) {
-        try {
-            Class.forName(package_name + "." + class_name);
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
+        if (context.getResources().getBoolean(R.bool.standalone)) {
+            try {
+                Class.forName(package_name + "." + class_name);
+                return true;
+            } catch (ClassNotFoundException e) {
+                return false;
+            }
+        } else {
+            try {
+                Context package_context = context.createPackageContext(package_name, Context.CONTEXT_IGNORE_SECURITY + Context.CONTEXT_INCLUDE_CODE);
+                DexFile df = new DexFile(package_context.getPackageCodePath());
+                for (Enumeration<String> iter = df.entries(); iter.hasMoreElements(); ) {
+                    String className = iter.nextElement();
+                    if (className.contains(class_name)) return true;
+                }
+                return false;
+            } catch (IOException | NameNotFoundException e) {
+                return false;
+            }
         }
-//        try {
-//            String bundled_package = "";
-//            PackageInfo pkg = PluginsManager.isInstalled(context, package_name);
-//            if (pkg != null && pkg.versionName.equals("bundled")) {
-//                bundled_package = context.getPackageName();
-//            }
-//
-//            Context package_context = context.createPackageContext(((bundled_package.length() > 0) ? bundled_package : package_name), Context.CONTEXT_IGNORE_SECURITY + Context.CONTEXT_INCLUDE_CODE);
-//            DexFile df = new DexFile(package_context.getPackageCodePath());
-//            for (Enumeration<String> iter = df.entries(); iter.hasMoreElements(); ) {
-//                String className = iter.nextElement();
-//
-//                Log.d("BUNDLED", ((bundled_package.length() > 0) ? bundled_package : package_name) + ": " + class_name);
-//
-//                if (className.contains(class_name)) return true;
-//            }
-//            return false;
-//        } catch (IOException | NameNotFoundException e) {
-//            return false;
-//        }
     }
 
     /**
@@ -1641,7 +1554,7 @@ public class Aware extends Service {
             String packageName = packageUri.getSchemeSpecificPart();
             if (packageName == null) return;
 
-            if (!packageName.matches("com.aware.plugin.*") || context.getResources().getBoolean(R.bool.standalone)) return;
+            if (!packageName.matches("com.aware.plugin.*")) return;
 
             if (intent.getAction().equals(Intent.ACTION_PACKAGE_ADDED)) {
 
