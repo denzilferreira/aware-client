@@ -72,6 +72,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 
 import dalvik.system.DexFile;
@@ -794,22 +795,20 @@ public class Aware extends Service {
      */
     public static View getContextCard(final Context context, final String package_name) {
 
-//        String bundled_package = "";
-//        PackageInfo pkg = PluginsManager.isInstalled(context, package_name);
-//        if (pkg != null && pkg.versionName.equals("bundled")) {
-//            //Bundled plugin, load the class as usual
-//            bundled_package = context.getPackageName();
-//        } else {
-            if (!isClassAvailable(context, package_name, "ContextCard")) {
-                Log.d(Aware.TAG, "No ContextCard: " + package_name);
-                return null;
-            }
-//        }
+        String bundled_package = "";
+        PackageInfo pkg = PluginsManager.isInstalled(context, package_name);
+        if (pkg != null && pkg.versionName.equals("bundled")) {
+            bundled_package = context.getPackageName();
+        }
+
+        if (!isClassAvailable(context, package_name, "ContextCard")) {
+            Log.d(Aware.TAG, "No ContextCard: " + package_name);
+            return null;
+        }
 
         String ui_class = package_name + ".ContextCard";
         try {
-            Context packageContext = context.createPackageContext(package_name, Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
-//            Context packageContext = context.createPackageContext(((bundled_package.length() > 0) ? bundled_package : package_name), Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
+            Context packageContext = context.createPackageContext(((bundled_package.length() > 0) ? bundled_package : package_name), Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
             Class<?> fragment_loader = packageContext.getClassLoader().loadClass(ui_class);
             Object fragment = fragment_loader.newInstance();
             Method[] allMethods = fragment_loader.getDeclaredMethods();
@@ -825,21 +824,28 @@ public class Aware extends Service {
 
             View ui = (View) m.invoke(fragment, packageContext);
             if (ui != null) {
+                ui.setId(new Random(System.currentTimeMillis()).nextInt());
                 ui.setBackgroundColor(Color.WHITE);
                 ui.setPadding(0, 0, 0, 10);
 
                 LinearLayout card = new LinearLayout(context);
+                card.setId(new Random(System.currentTimeMillis()).nextInt());
+
                 LinearLayout.LayoutParams card_params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                 card.setLayoutParams(card_params);
                 card.setOrientation(LinearLayout.VERTICAL);
 
                 LinearLayout info = new LinearLayout(context);
+                info.setId(new Random(System.currentTimeMillis()).nextInt());
+
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
                 info.setLayoutParams(params);
                 info.setOrientation(LinearLayout.HORIZONTAL);
                 info.setBackgroundColor(Color.parseColor("#33B5E5"));
 
                 TextView plugin_header = new TextView(context);
+                plugin_header.setId(new Random(System.currentTimeMillis()).nextInt());
+
                 plugin_header.setText(PluginsManager.getPluginName(context, package_name));
                 plugin_header.setTextColor(Color.WHITE);
                 plugin_header.setPadding(10, 0, 0, 0);
@@ -850,6 +856,8 @@ public class Aware extends Service {
                 //Check if plugin has settings. Add button if it does.
                 if (isClassAvailable(context, package_name, "Settings")) {
                     ImageView infoSettings = new ImageView(context);
+                    infoSettings.setId(new Random(System.currentTimeMillis()).nextInt());
+
                     infoSettings.setBackgroundResource(R.drawable.ic_action_plugin_settings);
                     infoSettings.setAdjustViewBounds(true);
                     infoSettings.setMaxWidth(10);
