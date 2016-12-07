@@ -1,6 +1,7 @@
 package com.aware.utils;
 
 import android.content.Context;
+import android.net.Uri;
 import android.util.Log;
 
 import com.aware.Aware;
@@ -27,6 +28,10 @@ public class SSLUtils {
     }
 
     public SSLSocketFactory getSocketFactory( String host ) {
+        Uri server = Uri.parse(host);
+        host = server.getHost();
+        if (host == null || host.length() == 0) return null;
+
         try {
             //load SSL certificate
             InputStream crt = SSLManager.getCertificate(mContext, host);
