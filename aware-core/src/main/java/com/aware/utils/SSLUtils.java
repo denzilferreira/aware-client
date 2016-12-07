@@ -33,7 +33,7 @@ public class SSLUtils {
             InputStream crt = SSLManager.getCertificate(mContext, host);
 
             //Load SSL public certificate so we can talk with the server
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            CertificateFactory cf = CertificateFactory.getInstance("X.509", "BC");
             Certificate ca = cf.generateCertificate(crt);
 
             KeyStore caKS = KeyStore.getInstance("BKS");
