@@ -888,7 +888,7 @@ public class Aware extends Service {
             }
         }
 
-        String ui_class = ((bundled_package.length() > 0) ? bundled_package : "") + package_name + ".ContextCard";
+        String ui_class = package_name + ".ContextCard";
         try {
             Context packageContext = context.createPackageContext(((bundled_package.length() > 0) ? bundled_package : package_name), Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
             Class<?> fragment_loader = packageContext.getClassLoader().loadClass(ui_class);
