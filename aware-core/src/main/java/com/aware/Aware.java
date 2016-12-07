@@ -888,7 +888,7 @@ public class Aware extends Service {
             }
         }
 
-        String ui_class = ((bundled_package.length() > 0) ? bundled_package : package_name) + ".ContextCard";
+        String ui_class = ((bundled_package.length() > 0) ? bundled_package + "/" : "") + package_name + ".ContextCard";
         try {
             Context packageContext = context.createPackageContext(((bundled_package.length() > 0) ? bundled_package : package_name), Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
             Class<?> fragment_loader = packageContext.getClassLoader().loadClass(ui_class);
@@ -937,8 +937,15 @@ public class Aware extends Service {
                     infoSettings.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
+
+                            String bundled_package = "";
+                            PackageInfo pkg = PluginsManager.isInstalled(context, package_name);
+                            if (pkg != null && pkg.versionName.equals("bundled")) {
+                                bundled_package = context.getPackageName();
+                            }
+
                             Intent open_settings = new Intent();
-                            open_settings.setComponent(new ComponentName(package_name, package_name + ".Settings"));
+                            open_settings.setComponent(new ComponentName(((bundled_package.length() > 0) ? bundled_package : package_name), package_name + ".Settings"));
                             open_settings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                             context.startActivity(open_settings);
                         }
