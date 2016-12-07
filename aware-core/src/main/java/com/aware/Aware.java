@@ -1000,6 +1000,9 @@ public class Aware extends Service {
             DexFile df = new DexFile(package_context.getPackageCodePath());
             for (Enumeration<String> iter = df.entries(); iter.hasMoreElements(); ) {
                 String className = iter.nextElement();
+
+                Log.d("BUNDLED", ((bundled_package.length() > 0) ? bundled_package : package_name) + ": " + class_name);
+
                 if (className.contains(class_name)) return true;
             }
             return false;

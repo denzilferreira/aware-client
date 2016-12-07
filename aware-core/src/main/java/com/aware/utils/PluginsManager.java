@@ -187,7 +187,7 @@ public class PluginsManager {
             PackageManager pm = context.getPackageManager();
             return pm.getApplicationLabel(pm.getApplicationInfo(package_name, PackageManager.GET_META_DATA)).toString();
         } catch (NameNotFoundException e) {
-            e.printStackTrace();
+            //may be bundled
         }
         return package_name;
     }
@@ -204,7 +204,7 @@ public class PluginsManager {
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
             return stream.toByteArray();
         } catch (NameNotFoundException e) {
-            e.printStackTrace();
+            //may be bundled
         }
         return null;
     }
