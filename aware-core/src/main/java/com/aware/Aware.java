@@ -888,7 +888,7 @@ public class Aware extends Service {
             }
         }
 
-        String ui_class = ((bundled_package.length() > 0) ? bundled_package + "/" : "") + package_name + ".ContextCard";
+        String ui_class = ((bundled_package.length() > 0) ? bundled_package : "") + package_name + ".ContextCard";
         try {
             Context packageContext = context.createPackageContext(((bundled_package.length() > 0) ? bundled_package : package_name), Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
             Class<?> fragment_loader = packageContext.getClassLoader().loadClass(ui_class);
@@ -990,25 +990,31 @@ public class Aware extends Service {
      */
     public static boolean isClassAvailable(Context context, String package_name, String class_name) {
         try {
-            String bundled_package = "";
-            PackageInfo pkg = PluginsManager.isInstalled(context, package_name);
-            if (pkg != null && pkg.versionName.equals("bundled")) {
-                bundled_package = context.getPackageName();
-            }
-
-            Context package_context = context.createPackageContext(((bundled_package.length() > 0) ? bundled_package : package_name), Context.CONTEXT_IGNORE_SECURITY + Context.CONTEXT_INCLUDE_CODE);
-            DexFile df = new DexFile(package_context.getPackageCodePath());
-            for (Enumeration<String> iter = df.entries(); iter.hasMoreElements(); ) {
-                String className = iter.nextElement();
-
-                Log.d("BUNDLED", ((bundled_package.length() > 0) ? bundled_package : package_name) + ": " + class_name);
-
-                if (className.contains(class_name)) return true;
-            }
-            return false;
-        } catch (IOException | NameNotFoundException e) {
+            Class.forName(package_name + "." + class_name);
+            return true;
+        } catch (ClassNotFoundException e) {
             return false;
         }
+//        try {
+//            String bundled_package = "";
+//            PackageInfo pkg = PluginsManager.isInstalled(context, package_name);
+//            if (pkg != null && pkg.versionName.equals("bundled")) {
+//                bundled_package = context.getPackageName();
+//            }
+//
+//            Context package_context = context.createPackageContext(((bundled_package.length() > 0) ? bundled_package : package_name), Context.CONTEXT_IGNORE_SECURITY + Context.CONTEXT_INCLUDE_CODE);
+//            DexFile df = new DexFile(package_context.getPackageCodePath());
+//            for (Enumeration<String> iter = df.entries(); iter.hasMoreElements(); ) {
+//                String className = iter.nextElement();
+//
+//                Log.d("BUNDLED", ((bundled_package.length() > 0) ? bundled_package : package_name) + ": " + class_name);
+//
+//                if (className.contains(class_name)) return true;
+//            }
+//            return false;
+//        } catch (IOException | NameNotFoundException e) {
+//            return false;
+//        }
     }
 
     /**

@@ -175,8 +175,15 @@ public class Plugins_Manager extends Aware_Activity {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
                                             dialog.dismiss();
+
+                                            String bundled_package = "";
+                                            PackageInfo pkg = PluginsManager.isInstalled(getApplicationContext(), package_name);
+                                            if (pkg != null && pkg.versionName.equals("bundled")) {
+                                                bundled_package = getApplicationContext().getPackageName();
+                                            }
+
                                             Intent open_settings = new Intent();
-                                            open_settings.setComponent(new ComponentName(package_name, package_name + ".Settings"));
+                                            open_settings.setComponent(new ComponentName(((bundled_package.length() > 0) ? bundled_package : package_name), package_name + ".Settings"));
                                             startActivity(open_settings);
                                         }
                                     });
@@ -204,8 +211,15 @@ public class Plugins_Manager extends Aware_Activity {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
                                             dialog.dismiss();
+
+                                            String bundled_package = "";
+                                            PackageInfo pkg = PluginsManager.isInstalled(getApplicationContext(), package_name);
+                                            if (pkg != null && pkg.versionName.equals("bundled")) {
+                                                bundled_package = getApplicationContext().getPackageName();
+                                            }
+
                                             Intent open_settings = new Intent();
-                                            open_settings.setComponent(new ComponentName(package_name, package_name + ".Settings"));
+                                            open_settings.setComponent(new ComponentName(((bundled_package.length() > 0) ? bundled_package : package_name), package_name + ".Settings"));
                                             startActivity(open_settings);
                                         }
                                     });
@@ -233,8 +247,15 @@ public class Plugins_Manager extends Aware_Activity {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
                                             dialog.dismiss();
+
+                                            String bundled_package = "";
+                                            PackageInfo pkg = PluginsManager.isInstalled(getApplicationContext(), package_name);
+                                            if (pkg != null && pkg.versionName.equals("bundled")) {
+                                                bundled_package = getApplicationContext().getPackageName();
+                                            }
+
                                             Intent open_settings = new Intent();
-                                            open_settings.setComponent(new ComponentName(package_name, package_name + ".Settings"));
+                                            open_settings.setComponent(new ComponentName(((bundled_package.length() > 0) ? bundled_package : package_name), package_name + ".Settings"));
                                             startActivity(open_settings);
                                         }
                                     });
