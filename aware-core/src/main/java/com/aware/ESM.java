@@ -14,6 +14,7 @@ import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
@@ -74,6 +75,11 @@ public class ESM extends Aware_Sensor {
     public static final String ACTION_AWARE_ESM_EXPIRED = "ACTION_AWARE_ESM_EXPIRED";
 
     /**
+     * Broadcasted event: the ESM got replaced by another ESM
+     */
+    public static final String ACTION_AWARE_ESM_REPLACED = "ACTION_AWARE_ESM_REPLACED";
+
+    /**
      * Broadcasted event: the user has finished answering the ESM queue
      */
     public static final String ACTION_AWARE_ESM_QUEUE_COMPLETE = "ACTION_AWARE_ESM_QUEUE_COMPLETE";
@@ -112,6 +118,11 @@ public class ESM extends Aware_Sensor {
      * ESM status: esm was not visible because of flow condition, branching to another esm
      */
     public static final int STATUS_BRANCHED = 5;
+
+    /**
+     * ESM status: esm was replaced by another incoming esm
+     */
+    public static final int STATUS_REPLACED = 6;
 
     /**
      * ESM Dialog with free text
@@ -210,6 +221,7 @@ public class ESM extends Aware_Sensor {
         filter.addAction(ESM.ACTION_AWARE_ESM_ANSWERED);
         filter.addAction(ESM.ACTION_AWARE_ESM_DISMISSED);
         filter.addAction(ESM.ACTION_AWARE_ESM_EXPIRED);
+        filter.addAction(ESM.ACTION_AWARE_ESM_REPLACED);
         registerReceiver(esmMonitor, filter);
 
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -295,11 +307,24 @@ public class ESM extends Aware_Sensor {
 
     /**
      * Queue an ESM
+     *
      * @param context
      * @param queue
      */
     public static void queueESM(Context context, String queue) {
-        queueESM(context, queue, false);
+        // Clear the current queue before queueing a new ESM
+        if (Aware.DEBUG)
+            Log.d(Aware.TAG, "Clearing ESM queue and adding new ESM to queue");
+
+        // Remove notification
+        if (mNotificationManager == null)
+            mNotificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+        mNotificationManager.cancel(ESM.ESM_NOTIFICATION_ID);
+
+        // Send replace intent with extra (actual ESM queue to be fired)
+        Intent replaced = new Intent(ESM.ACTION_AWARE_ESM_REPLACED);
+        replaced.putExtra(ESM.EXTRA_ESM, queue);
+        context.sendBroadcast(replaced);
     }
 
     /**
@@ -484,6 +509,7 @@ public class ESM extends Aware_Sensor {
      * - ACTION_AWARE_ESM_ANSWERED
      * - ACTION_AWARE_ESM_DISMISSED
      * - ACTION_AWARE_ESM_EXPIRED
+     * - ACTION_AWARE_ESM_REPLACED
      *
      * @author df
      */
@@ -548,6 +574,29 @@ public class ESM extends Aware_Sensor {
                 if (Aware.DEBUG) Log.d(TAG, "Rest of ESM Queue is expired!");
                 Intent esm_done = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
                 context.sendBroadcast(esm_done);
+            }
+
+            if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_REPLACED)) {
+                Cursor esm = context.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
+                if (esm != null && esm.moveToFirst()) {
+                    do {
+                        ContentValues rowData = new ContentValues();
+                        rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
+                        rowData.put(ESM_Data.STATUS, ESM.STATUS_REPLACED);
+                        context.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm.getInt(esm.getColumnIndex(ESM_Data._ID)), null);
+                    } while (esm.moveToNext());
+                }
+                if (esm != null && !esm.isClosed()) esm.close();
+
+                if (Aware.DEBUG) Log.d(TAG, "Previous ESM Queue is replaced!");
+
+                Intent esm_done = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
+                context.sendBroadcast(esm_done);
+
+                if (intent.hasExtra(EXTRA_ESM)) {
+                    // We first cleared the queue, now time fire the new ESM
+                    queueESM(context, intent.getStringExtra(ESM.EXTRA_ESM), false);
+                }
             }
         }
     }

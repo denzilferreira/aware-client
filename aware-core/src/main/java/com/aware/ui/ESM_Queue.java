@@ -52,6 +52,7 @@ public class ESM_Queue extends FragmentActivity {
         filter.addAction(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
         filter.addAction(ESM.ACTION_AWARE_ESM_DISMISSED);
         filter.addAction(ESM.ACTION_AWARE_ESM_EXPIRED);
+        filter.addAction(ESM.ACTION_AWARE_ESM_REPLACED);
         registerReceiver(esmStateListener, filter);
     }
 
