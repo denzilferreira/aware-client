@@ -326,10 +326,32 @@ public class ESM extends Aware_Sensor {
 
             long esm_timestamp = System.currentTimeMillis();
             boolean is_persistent = false;
-            boolean replace_queue = false;
 
             for (int i = 0; i < esms.length(); i++) {
                 JSONObject esm = esms.getJSONObject(i).getJSONObject(EXTRA_ESM);
+
+                if (i == 0) { // we check the first ESM item in the queue to see whether any current queue items need to be removed
+                    if (esm.optBoolean("esm_replace_queue")) { // clear current queue
+                        if (Aware.DEBUG) Log.d(TAG, "Clearing ESM queue before adding new ESM to queue");
+
+                        // Remove notification
+                        if (mNotificationManager == null)
+                            mNotificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+                        mNotificationManager.cancel(ESM.ESM_NOTIFICATION_ID);
+
+                        // Clear queue
+                        Cursor esm_cursor = context.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
+                        if (esm_cursor != null && esm_cursor.moveToFirst()) {
+                            do {
+                                ContentValues rowData = new ContentValues();
+                                rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
+                                rowData.put(ESM_Data.STATUS, ESM.STATUS_REPLACED);
+                                context.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm_cursor.getInt(esm_cursor.getColumnIndex(ESM_Data._ID)), null);
+                            } while (esm_cursor.moveToNext());
+                        }
+                        if (esm_cursor != null && !esm_cursor.isClosed()) esm_cursor.close();
+                    }
+                }
 
                 ContentValues rowData = new ContentValues();
                 rowData.put(ESM_Data.TIMESTAMP, esm_timestamp + i); //fix issue with synching and support ordering
@@ -344,10 +366,6 @@ public class ESM extends Aware_Sensor {
                     is_persistent = true;
                 }
 
-                if (i == 0) {
-                    replace_queue = esm.getBoolean("esm_replace_queue");
-                }
-
                 try {
                     context.getContentResolver().insert(ESM_Data.CONTENT_URI, rowData);
                     if (Aware.DEBUG) Log.d(TAG, "ESM: " + rowData.toString());
@@ -357,24 +375,6 @@ public class ESM extends Aware_Sensor {
             }
 
             if (is_persistent) { //show notification
-
-                // TODO: integrate this function.
-                if (replace_queue) { // clear current queue
-                    // Clear the current queue before queueing a new ESM
-                    if (Aware.DEBUG)
-                        Log.d(Aware.TAG, "Clearing ESM queue and adding new ESM to queue");
-
-                    // Remove notification
-                    if (mNotificationManager == null)
-                        mNotificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
-                    mNotificationManager.cancel(ESM.ESM_NOTIFICATION_ID);
-
-                    // Send replace intent
-                    Intent replaced = new Intent(ESM.ACTION_AWARE_ESM_REPLACED);
-                    context.sendBroadcast(replaced);
-                }
-
-
                 Cursor pendingESM = context.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + "=" + ESM.STATUS_NEW, null, ESM_Data.TIMESTAMP + " ASC LIMIT 1");
                 if (pendingESM != null && pendingESM.moveToFirst()) {
                     //Set the timer if there is a notification timeout
@@ -585,23 +585,23 @@ public class ESM extends Aware_Sensor {
                 context.sendBroadcast(esm_done);
             }
 
-            if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_REPLACED)) {
-                Cursor esm = context.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
-                if (esm != null && esm.moveToFirst()) {
-                    do {
-                        ContentValues rowData = new ContentValues();
-                        rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
-                        rowData.put(ESM_Data.STATUS, ESM.STATUS_REPLACED);
-                        context.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm.getInt(esm.getColumnIndex(ESM_Data._ID)), null);
-                    } while (esm.moveToNext());
-                }
-                if (esm != null && !esm.isClosed()) esm.close();
-
-                if (Aware.DEBUG) Log.d(TAG, "Previous ESM Queue is replaced!");
-
-                Intent esm_done = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
-                context.sendBroadcast(esm_done);
-            }
+//            if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_REPLACED)) {
+//                Cursor esm = context.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
+//                if (esm != null && esm.moveToFirst()) {
+//                    do {
+//                        ContentValues rowData = new ContentValues();
+//                        rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
+//                        rowData.put(ESM_Data.STATUS, ESM.STATUS_REPLACED);
+//                        context.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm.getInt(esm.getColumnIndex(ESM_Data._ID)), null);
+//                    } while (esm.moveToNext());
+//                }
+//                if (esm != null && !esm.isClosed()) esm.close();
+//
+//                if (Aware.DEBUG) Log.d(TAG, "Previous ESM Queue is replaced!");
+//
+//                Intent esm_done = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
+//                context.sendBroadcast(esm_done);
+//            }
         }
     }
 

@@ -48,7 +48,6 @@ public class TestESM implements AwareTest {
             ESM_Number number = new ESM_Number();
             number.setNotificationTimeout(10) //10 seconds
                     .setNotificationRetry(3) //notify the user 3 times, so notification alive for 3 * 10 seconds = 30 seconds
-                    .setSubmitButton("OK")
                     .setTitle("Lucky number?")
                     .setInstructions("Pick one.");
 
