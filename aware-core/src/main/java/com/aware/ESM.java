@@ -14,7 +14,6 @@ import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
@@ -312,19 +311,7 @@ public class ESM extends Aware_Sensor {
      * @param queue
      */
     public static void queueESM(Context context, String queue) {
-        // Clear the current queue before queueing a new ESM
-        if (Aware.DEBUG)
-            Log.d(Aware.TAG, "Clearing ESM queue and adding new ESM to queue");
-
-        // Remove notification
-        if (mNotificationManager == null)
-            mNotificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
-        mNotificationManager.cancel(ESM.ESM_NOTIFICATION_ID);
-
-        // Send replace intent with extra (actual ESM queue to be fired)
-        Intent replaced = new Intent(ESM.ACTION_AWARE_ESM_REPLACED);
-        replaced.putExtra(ESM.EXTRA_ESM, queue);
-        context.sendBroadcast(replaced);
+        queueESM(context, queue, false);
     }
 
     /**
@@ -339,6 +326,7 @@ public class ESM extends Aware_Sensor {
 
             long esm_timestamp = System.currentTimeMillis();
             boolean is_persistent = false;
+            boolean replace_queue = false;
 
             for (int i = 0; i < esms.length(); i++) {
                 JSONObject esm = esms.getJSONObject(i).getJSONObject(EXTRA_ESM);
@@ -356,6 +344,10 @@ public class ESM extends Aware_Sensor {
                     is_persistent = true;
                 }
 
+                if (i == 0) {
+                    replace_queue = esm.getBoolean("esm_replace_queue");
+                }
+
                 try {
                     context.getContentResolver().insert(ESM_Data.CONTENT_URI, rowData);
                     if (Aware.DEBUG) Log.d(TAG, "ESM: " + rowData.toString());
@@ -365,6 +357,23 @@ public class ESM extends Aware_Sensor {
             }
 
             if (is_persistent) { //show notification
+
+                // TODO: integrate this function.
+                if (replace_queue) { // clear current queue
+                    // Clear the current queue before queueing a new ESM
+                    if (Aware.DEBUG)
+                        Log.d(Aware.TAG, "Clearing ESM queue and adding new ESM to queue");
+
+                    // Remove notification
+                    if (mNotificationManager == null)
+                        mNotificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+                    mNotificationManager.cancel(ESM.ESM_NOTIFICATION_ID);
+
+                    // Send replace intent
+                    Intent replaced = new Intent(ESM.ACTION_AWARE_ESM_REPLACED);
+                    context.sendBroadcast(replaced);
+                }
+
 
                 Cursor pendingESM = context.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + "=" + ESM.STATUS_NEW, null, ESM_Data.TIMESTAMP + " ASC LIMIT 1");
                 if (pendingESM != null && pendingESM.moveToFirst()) {
@@ -592,11 +601,6 @@ public class ESM extends Aware_Sensor {
 
                 Intent esm_done = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
                 context.sendBroadcast(esm_done);
-
-                if (intent.hasExtra(EXTRA_ESM)) {
-                    // We first cleared the queue, now time fire the new ESM
-                    queueESM(context, intent.getStringExtra(ESM.EXTRA_ESM), false);
-                }
             }
         }
     }

@@ -226,6 +226,7 @@ public class TestESM implements AwareTest {
             ESM_Freetext esmFreetext = new ESM_Freetext();
             esmFreetext.setTitle("Freetext")
                     .setTrigger("test")
+                    .setReplaceQueue(true)
                     .setSubmitButton("OK")
 //                    .setNotificationTimeout(10)
                     .setInstructions("Freetext ESM");
