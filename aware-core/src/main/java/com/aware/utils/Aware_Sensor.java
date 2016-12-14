@@ -1,25 +1,22 @@
 
 package com.aware.utils;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-
 import android.Manifest;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.IBinder;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.view.GestureDetectorCompat;
 import android.util.Log;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
-import com.aware.ui.PermissionsHandler;
+import com.aware.R;
+
+import java.util.ArrayList;
+import java.util.Calendar;
 
 /**
  * Aware_Sensor: Extend to integrate with the framework (extension of Android Service class).
@@ -100,8 +97,10 @@ public class Aware_Sensor extends Service {
 
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
-        aware = new Intent(getApplicationContext(), Aware.class);
-        startService(aware);
+        if (!getResources().getBoolean(R.bool.standalone)) {
+            aware = new Intent(getApplicationContext(), Aware.class);
+            startService(aware);
+        }
 
         if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
             Intent study_SSL = new Intent(this, SSLManager.class);
