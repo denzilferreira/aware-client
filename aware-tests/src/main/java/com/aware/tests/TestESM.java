@@ -26,7 +26,7 @@ public class TestESM implements AwareTest {
 
     @Override
     public void test(Context context) {
-//        testESMS(context);
+        testESMS(context);
 //        trialESMS(context);
 //        testFlow(context);
 //        testTimeoutQueue(context);
@@ -34,7 +34,7 @@ public class TestESM implements AwareTest {
 //        testDateTime(context);
 //        testPAM(context);
 //        testOptionsOverflow(context);
-        testNotificationRetries(context);
+//        testNotificationRetries(context);
     }
 
     /**
@@ -48,7 +48,6 @@ public class TestESM implements AwareTest {
             ESM_Number number = new ESM_Number();
             number.setNotificationTimeout(10) //10 seconds
                     .setNotificationRetry(3) //notify the user 3 times, so notification alive for 3 * 10 seconds = 30 seconds
-                    .setSubmitButton("OK")
                     .setTitle("Lucky number?")
                     .setInstructions("Pick one.");
 
@@ -226,8 +225,9 @@ public class TestESM implements AwareTest {
             ESM_Freetext esmFreetext = new ESM_Freetext();
             esmFreetext.setTitle("Freetext")
                     .setTrigger("test")
+                    .setReplaceQueue(true)
                     .setSubmitButton("OK")
-                    .setNotificationTimeout(10)
+//                    .setNotificationTimeout(10)
                     .setInstructions("Freetext ESM");
 
             ESM_Checkbox esmCheckbox = new ESM_Checkbox();
@@ -236,7 +236,7 @@ public class TestESM implements AwareTest {
                     .addCheck("Other")
                     .setTitle("Checkbox")
                     .setTrigger("test")
-                    .setExpirationThreshold(60)
+//                    .setExpirationThreshold(60)
                     .setSubmitButton("OK")
                     .setInstructions("Checkbox ESM");
 
@@ -281,12 +281,12 @@ public class TestESM implements AwareTest {
                     .setTrigger("AWARE Test");
 
             factory.addESM(esmFreetext);
-            factory.addESM(esmCheckbox);
-            factory.addESM(esmLikert);
-            factory.addESM(esmQuickAnswer);
-            factory.addESM(esmRadio);
-            factory.addESM(esmScale);
-            factory.addESM(esmPAM);
+//            factory.addESM(esmCheckbox);
+//            factory.addESM(esmLikert);
+//            factory.addESM(esmQuickAnswer);
+//            factory.addESM(esmRadio);
+//            factory.addESM(esmScale);
+//            factory.addESM(esmPAM);
 
             ESM.queueESM(context, factory.build());
 //            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
