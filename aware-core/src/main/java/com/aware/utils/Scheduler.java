@@ -198,6 +198,7 @@ public class Scheduler extends Aware_Sensor {
             }
 
         } catch (JSONException e) {
+            e.printStackTrace();
             Log.e(Scheduler.TAG, "Error saving schedule");
         }
     }
@@ -293,6 +294,7 @@ public class Scheduler extends Aware_Sensor {
             }
 
         } catch (JSONException e) {
+            e.printStackTrace();
             Log.e(Scheduler.TAG, "Error saving schedule");
         }
     }
@@ -466,6 +468,7 @@ public class Scheduler extends Aware_Sensor {
                 Schedule s = new Schedule(schedule);
                 saveSchedule(c, s, schedule.getString("package"));
             } catch (JSONException e) {
+                e.printStackTrace();
                 if (DEBUG) Log.d(Scheduler.TAG, "Error in JSON: " + e.getMessage());
             }
         }
