@@ -42,6 +42,7 @@ public class Scheduler extends Aware_Sensor {
     public static final String SCHEDULE_ID = "schedule_id";
 
     public static final String TRIGGER_INTERVAL = "interval";
+    public static final String TRIGGER_INTERVAL_DELAYED = "interval_delayed";
     public static final String TRIGGER_MINUTE = "minute";
     public static final String TRIGGER_HOUR = "hour";
     public static final String TRIGGER_TIMER = "timer";
@@ -726,6 +727,21 @@ public class Scheduler extends Aware_Sensor {
         }
 
         /**
+         * Get scheduled interval delay
+         * For some schedules, we don't want it to run immediately after we set it (mainly
+         * a schedule which updates the config itself).  If this setting is true, then do not
+         *
+         * @return true or false
+         * @throws JSONException
+         */
+        public long getIntervalDelayed() throws JSONException {
+            if (this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_INTERVAL_DELAYED)) {
+                return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getLong(TRIGGER_INTERVAL_DELAYED);
+            }
+            return 0;
+        }
+
+        /**
          * Get scheduled minutes
          *
          * @return
@@ -1139,22 +1155,26 @@ public class Scheduler extends Aware_Sensor {
                     && schedule.getHours().length() == 0
                     && schedule.getMinutes().length() == 0
                     && schedule.getInterval() == 0
+                    && schedule.getIntervalDelayed() == 0
                     && schedule.getWeekdays().length() == 0
                     && schedule.getMonths().length() == 0)
                 return true;
 
             //Has this scheduler been triggered before?
             long last_triggered = 0;
-            Cursor last_time_triggered = getContentResolver().query(
+            long sched_timestamp = 0;
+            Cursor schedule_data_cursor = getContentResolver().query(
                     Scheduler_Provider.Scheduler_Data.CONTENT_URI,
-                    new String[]{Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED},
+                    new String[]{Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED, Scheduler_Provider.Scheduler_Data.TIMESTAMP},
                     Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "'",
                     null, null);
 
-            if (last_time_triggered != null && last_time_triggered.moveToFirst()) {
-                last_triggered = last_time_triggered.getLong(last_time_triggered.getColumnIndex(Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED));
+            if (schedule_data_cursor != null && schedule_data_cursor.moveToFirst()) {
+                last_triggered = schedule_data_cursor.getLong(schedule_data_cursor.getColumnIndex(Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED));
+                sched_timestamp = schedule_data_cursor.getLong(schedule_data_cursor.getColumnIndex(Scheduler_Provider.Scheduler_Data.TIMESTAMP));
+                schedule_data_cursor.close();
             }
-            if (last_time_triggered != null && !last_time_triggered.isClosed()) last_time_triggered.close();
+            if (schedule_data_cursor != null && !schedule_data_cursor.isClosed()) schedule_data_cursor.close();
 
             // This is a scheduled task on a specific timestamp.
             // NOTE: Once triggered, it's deleted from the database automatically.
@@ -1188,6 +1208,23 @@ public class Scheduler extends Aware_Sensor {
             } else if (previous != null && schedule.getInterval() > 0) {
                 execute_interval = is_interval_elapsed(now, previous, schedule.getInterval());
                 if (DEBUG) Log.d(Scheduler.TAG, "Trigger interval: " + execute_interval);
+            }
+            // For some schedules, we don't want to execute until an initial delay has passed.
+            // For these, we have the separate interval_delayed key.  interval_delayed should
+            // never be set at the same time as interval.
+            if (schedule.getIntervalDelayed() != 0) {
+                Calendar creation_time = Calendar.getInstance();
+                creation_time.setTimeInMillis(sched_timestamp);
+                if (previous != null && is_interval_elapsed(now, previous, schedule.getIntervalDelayed())) {
+                    // Run schedule if interval is elapsed since last run time
+                    execute_interval = true;
+                } else if (is_interval_elapsed(now, creation_time, schedule.getIntervalDelayed())) {
+                    // Otherwise, only execute if interval elapsed since
+                    execute_interval = true;
+                } else {
+                    execute_interval = false;
+                }
+                if (DEBUG) Log.d(Scheduler.TAG, "Trigger interval (delayed): " + execute_interval);
             }
 
             Boolean execute_month = null;
