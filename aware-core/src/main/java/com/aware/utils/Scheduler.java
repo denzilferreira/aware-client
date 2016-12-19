@@ -73,6 +73,7 @@ public class Scheduler extends Aware_Sensor {
     public static final String ACTION_TYPE_ACTIVITY = "activity";
 
     public static final String ACTION_CLASS = "class";
+    public static final String ACTION_INTENT_ACTION = "intent_action";
     public static final String ACTION_EXTRAS = "extras";
     public static final String ACTION_EXTRA_KEY = "extra_key";
     public static final String ACTION_EXTRA_VALUE = "extra_value";
@@ -325,16 +326,30 @@ public class Scheduler extends Aware_Sensor {
 
         /**
          * Get action class
-         *
          * @return
          * @throws JSONException
          */
         public String getActionClass() throws JSONException {
+            if (!this.schedule.getJSONObject(SCHEDULE_ACTION).has(ACTION_CLASS)) {
+                this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_CLASS, "");
+            }
             return this.schedule.getJSONObject(SCHEDULE_ACTION).getString(ACTION_CLASS);
         }
 
         public Schedule setActionClass(String classname) throws JSONException {
             this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_CLASS, classname);
+            return this;
+        }
+
+        public String getActionIntentAction() throws JSONException {
+            if (!this.schedule.getJSONObject(SCHEDULE_ACTION).has(ACTION_INTENT_ACTION)) {
+                this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_INTENT_ACTION, "");
+            }
+            return this.schedule.getJSONObject(SCHEDULE_ACTION).getString(ACTION_INTENT_ACTION);
+        }
+
+        public Schedule setActionIntentAction(String action) throws JSONException {
+            this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_INTENT_ACTION, action);
             return this;
         }
 
@@ -1163,6 +1178,10 @@ public class Scheduler extends Aware_Sensor {
                 activity.setComponent(new ComponentName(activity_info[0], activity_info[1]));
                 activity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
+                if (schedule.getActionIntentAction().length()>0) {
+                    activity.setAction(schedule.getActionIntentAction());
+                }
+
                 JSONArray extras = schedule.getActionExtras();
                 for (int i = 0; i < extras.length(); i++) {
                     JSONObject extra = extras.getJSONObject(i);
@@ -1188,6 +1207,10 @@ public class Scheduler extends Aware_Sensor {
 
                     Intent service = new Intent();
                     service.setComponent(new ComponentName(service_info[0], service_info[1]));
+
+                    if (schedule.getActionIntentAction().length()>0) {
+                        service.setAction(schedule.getActionIntentAction());
+                    }
 
                     JSONArray extras = schedule.getActionExtras();
                     for (int i = 0; i < extras.length(); i++) {

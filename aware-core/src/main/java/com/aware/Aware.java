@@ -434,18 +434,6 @@ public class Aware extends Service {
         return participant;
     }
 
-    /**
-     * Identifies if the user can modify the sensors while on a study
-     * TODO
-     *
-     * @param c
-     * @return
-     */
-    public static boolean isLocked(Context c) {
-
-        return false;
-    }
-
     public static void debug(Context c, String message) {
         //Only collect this log if in a study
         if (!Aware.isStudy(c)) return;

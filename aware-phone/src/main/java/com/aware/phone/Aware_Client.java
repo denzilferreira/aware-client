@@ -186,7 +186,7 @@ public class Aware_Client extends Aware_Activity {
 
             //Notify the user of no changes are allowed, if enrolled on a study.
             if (Aware.isStudy(getApplicationContext())) {
-                Snackbar noChanges = Snackbar.make(aware_container, "Ongoing study, no changes allowed.", Snackbar.LENGTH_LONG);
+                Snackbar noChanges = Snackbar.make(aware_container, "You are participating on a study! Thanks!", Snackbar.LENGTH_LONG);
                 TextView output = (TextView) noChanges.getView().findViewById(android.support.design.R.id.snackbar_text);
                 output.setTextColor(Color.WHITE);
                 noChanges.show();
@@ -293,7 +293,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) esm.setSelectable(false);
     }
 
     /**
@@ -340,7 +339,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) temperature.setSelectable(false);
 
         final ListPreference frequency_temperature = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_TEMPERATURE);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_TEMPERATURE).length() > 0) {
@@ -357,7 +355,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) frequency_temperature.setSelectable(false);
 
         final EditTextPreference threshold_temperature = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_TEMPERATURE);
         if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_TEMPERATURE).length() > 0) {
@@ -374,7 +371,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) threshold_temperature.setSelectable(false);
     }
 
     /**
@@ -420,7 +416,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) accelerometer.setSelectable(false);
 
         final ListPreference frequency_accelerometer = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_ACCELEROMETER);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_ACCELEROMETER).length() > 0) {
@@ -437,7 +432,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) frequency_accelerometer.setSelectable(false);
 
         final EditTextPreference threshold_accelerometer = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_ACCELEROMETER);
         if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_ACCELEROMETER).length() > 0) {
@@ -454,7 +448,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) threshold_accelerometer.setSelectable(false);
     }
 
     /**
@@ -500,7 +493,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) linear_accelerometer.setSelectable(false);
 
         final ListPreference frequency_linear_accelerometer = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER).length() > 0) {
@@ -517,7 +509,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) frequency_linear_accelerometer.setSelectable(false);
 
         final EditTextPreference threshold_linear_accelerometer = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_LINEAR_ACCELEROMETER);
         if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_LINEAR_ACCELEROMETER).length() > 0) {
@@ -534,7 +525,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) threshold_linear_accelerometer.setSelectable(false);
     }
 
     /**
@@ -571,7 +561,6 @@ public class Aware_Client extends Aware_Activity {
                 return false;
             }
         });
-        if (Aware.isStudy(awareContext)) notifications.setSelectable(false);
 
         final CheckBoxPreference keyboard = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_KEYBOARD);
         keyboard.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_KEYBOARD).equals("true"));
@@ -592,7 +581,6 @@ public class Aware_Client extends Aware_Activity {
                 return false;
             }
         });
-        if (Aware.isStudy(awareContext)) keyboard.setSelectable(false);
 
         final CheckBoxPreference crashes = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_CRASHES);
         crashes.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_CRASHES).equals("true"));
@@ -611,7 +599,6 @@ public class Aware_Client extends Aware_Activity {
                 return false;
             }
         });
-        if (Aware.isStudy(awareContext)) crashes.setSelectable(false);
 
         final CheckBoxPreference applications = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_APPLICATIONS);
         applications.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_APPLICATIONS).equals("true"));
@@ -636,7 +623,6 @@ public class Aware_Client extends Aware_Activity {
                 }
             }
         });
-        if (Aware.isStudy(awareContext)) applications.setSelectable(false);
 
         final EditTextPreference frequency_applications = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_APPLICATIONS);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_APPLICATIONS).length() > 0) {
@@ -652,7 +638,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) frequency_applications.setSelectable(false);
 
         final CheckBoxPreference installations = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_INSTALLATIONS);
         installations.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_INSTALLATIONS).equals("true"));
@@ -668,7 +653,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) installations.setSelectable(false);
     }
 
     /**
@@ -698,7 +682,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) battery.setSelectable(false);
     }
 
     /**
@@ -736,7 +719,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) bluetooth.setSelectable(false);
 
         final EditTextPreference bluetoothInterval = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_BLUETOOTH);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_BLUETOOTH).length() > 0) {
@@ -752,7 +734,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) bluetoothInterval.setSelectable(false);
     }
 
     /**
@@ -789,7 +770,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) calls.setSelectable(false);
 
         final CheckBoxPreference messages = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_MESSAGES);
         messages.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_MESSAGES).equals("true"));
@@ -805,7 +785,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) messages.setSelectable(false);
 
         final CheckBoxPreference communication = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_COMMUNICATION_EVENTS);
         communication.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_COMMUNICATION_EVENTS).equals("true"));
@@ -821,7 +800,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) communication.setSelectable(false);
     }
 
     /**
@@ -867,7 +845,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) gravity.setSelectable(false);
 
         final ListPreference frequency_gravity = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_GRAVITY);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_GRAVITY).length() > 0) {
@@ -884,7 +861,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) frequency_gravity.setSelectable(false);
 
         final EditTextPreference threshold_gravity = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_GRAVITY);
         if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_GRAVITY).length() > 0) {
@@ -901,7 +877,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) threshold_gravity.setSelectable(false);
     }
 
     /**
@@ -947,7 +922,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) gyroscope.setSelectable(false);
 
         final ListPreference frequency_gyroscope = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_GYROSCOPE);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_GYROSCOPE).length() > 0) {
@@ -964,7 +938,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) frequency_gyroscope.setSelectable(false);
 
         final EditTextPreference threshold_gyroscope = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_GYROSCOPE);
         if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_GYROSCOPE).length() > 0) {
@@ -981,7 +954,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) threshold_gyroscope.setSelectable(false);
     }
 
     /**
@@ -1027,7 +999,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) location_gps.setSelectable(false);
 
         final CheckBoxPreference location_network = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_LOCATION_NETWORK);
         location_network.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true"));
@@ -1054,7 +1025,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) location_network.setSelectable(false);
 
         final EditTextPreference gpsInterval = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_LOCATION_GPS);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_LOCATION_GPS).length() > 0) {
@@ -1070,7 +1040,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) gpsInterval.setSelectable(false);
 
         final EditTextPreference networkInterval = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_LOCATION_NETWORK);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_LOCATION_NETWORK).length() > 0) {
@@ -1086,7 +1055,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) networkInterval.setSelectable(false);
 
         final EditTextPreference gpsAccuracy = (EditTextPreference) findPreference(Aware_Preferences.MIN_LOCATION_GPS_ACCURACY);
         if (Aware.getSetting(awareContext, Aware_Preferences.MIN_LOCATION_GPS_ACCURACY).length() > 0) {
@@ -1102,7 +1070,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) gpsAccuracy.setSelectable(false);
 
         final EditTextPreference networkAccuracy = (EditTextPreference) findPreference(Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY);
         if (Aware.getSetting(awareContext, Aware_Preferences.MIN_LOCATION_NETWORK_ACCURACY).length() > 0) {
@@ -1118,7 +1085,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) networkAccuracy.setSelectable(false);
 
         final EditTextPreference expirateTime = (EditTextPreference) findPreference(Aware_Preferences.LOCATION_EXPIRATION_TIME);
         if (Aware.getSetting(awareContext, Aware_Preferences.LOCATION_EXPIRATION_TIME).length() > 0) {
@@ -1134,7 +1100,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) expirateTime.setSelectable(false);
     }
 
     /**
@@ -1170,7 +1135,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) network_traffic.setSelectable(false);
 
         final EditTextPreference frequencyTraffic = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC).length() > 0) {
@@ -1188,7 +1152,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) frequencyTraffic.setSelectable(false);
 
         final CheckBoxPreference network = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_NETWORK_EVENTS);
         network.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_NETWORK_EVENTS).equals("true"));
@@ -1204,7 +1167,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) network.setSelectable(false);
     }
 
     /**
@@ -1234,7 +1196,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) screen.setSelectable(false);
     }
 
     /**
@@ -1269,7 +1230,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) wifi.setSelectable(false);
 
         final EditTextPreference wifiInterval = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_WIFI);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_WIFI).length() > 0) {
@@ -1285,7 +1245,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) wifiInterval.setSelectable(false);
     }
 
     /**
@@ -1315,7 +1274,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) processor.setSelectable(false);
 
         final EditTextPreference frequencyProcessor = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_PROCESSOR);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_PROCESSOR).length() > 0) {
@@ -1331,7 +1289,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) frequencyProcessor.setSelectable(false);
     }
 
     /**
@@ -1365,7 +1322,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) timeZone.setSelectable(false);
 
         final EditTextPreference frequencyTimeZone = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_TIMEZONE);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_TIMEZONE).length() > 0) {
@@ -1381,7 +1337,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) frequencyTimeZone.setSelectable(false);
     }
 
     /**
@@ -1427,7 +1382,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) light.setSelectable(false);
 
         final ListPreference frequency_light = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_LIGHT);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_LIGHT).length() > 0) {
@@ -1444,7 +1398,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) frequency_light.setSelectable(false);
 
         final EditTextPreference threshold_light = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_LIGHT);
         if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_LIGHT).length() > 0) {
@@ -1461,7 +1414,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) threshold_light.setSelectable(false);
     }
 
     /**
@@ -1508,7 +1460,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) magnetometer.setSelectable(false);
 
         final ListPreference frequency_magnetometer = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_MAGNETOMETER);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_MAGNETOMETER).length() > 0) {
@@ -1525,7 +1476,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) frequency_magnetometer.setSelectable(false);
 
         final EditTextPreference threshold_magnetometer = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_MAGNETOMETER);
         if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_MAGNETOMETER).length() > 0) {
@@ -1542,7 +1492,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) threshold_magnetometer.setSelectable(false);
     }
 
     /**
@@ -1590,7 +1539,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) pressure.setSelectable(false);
 
         final ListPreference frequency_pressure = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_BAROMETER);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_BAROMETER).length() > 0) {
@@ -1607,7 +1555,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) frequency_pressure.setSelectable(false);
 
         final EditTextPreference threshold_barometer = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_BAROMETER);
         if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_BAROMETER).length() > 0) {
@@ -1624,7 +1571,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) threshold_barometer.setSelectable(false);
     }
 
     /**
@@ -1671,7 +1617,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) proximity.setSelectable(false);
 
         final ListPreference frequency_proximity = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_PROXIMITY);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_PROXIMITY).length() > 0) {
@@ -1688,7 +1633,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) frequency_proximity.setSelectable(false);
 
         final EditTextPreference threshold_proximity = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_PROXIMITY);
         if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_PROXIMITY).length() > 0) {
@@ -1705,7 +1649,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) threshold_proximity.setSelectable(false);
     }
 
     /**
@@ -1751,7 +1694,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) rotation.setSelectable(false);
 
         final ListPreference frequency_rotation = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_ROTATION);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_ROTATION).length() > 0) {
@@ -1768,7 +1710,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) frequency_rotation.setSelectable(false);
 
         final EditTextPreference threshold_rotation = (EditTextPreference) findPreference(Aware_Preferences.THRESHOLD_ROTATION);
         if (Aware.getSetting(awareContext, Aware_Preferences.THRESHOLD_ROTATION).length() > 0) {
@@ -1785,7 +1726,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) threshold_rotation.setSelectable(false);
     }
 
     /**
@@ -1819,7 +1759,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) telephony.setSelectable(false);
     }
 
     /**
@@ -1868,7 +1807,6 @@ public class Aware_Client extends Aware_Activity {
                 }
             }
         });
-        if (Aware.isStudy(awareContext)) webservice.setSelectable(false);
 
         final EditTextPreference webservice_server = (EditTextPreference) findPreference(Aware_Preferences.WEBSERVICE_SERVER);
         webservice_server.setText(Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SERVER));
@@ -1883,7 +1821,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) webservice_server.setSelectable(false);
 
         final CheckBoxPreference webservice_wifi_only = (CheckBoxPreference) findPreference(Aware_Preferences.WEBSERVICE_WIFI_ONLY);
         webservice_wifi_only.setChecked(Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true"));
@@ -1894,7 +1831,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) webservice_wifi_only.setSelectable(false);
 
         final CheckBoxPreference webservice_charging = (CheckBoxPreference) findPreference(Aware_Preferences.WEBSERVICE_CHARGING);
         webservice_charging.setChecked(Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_CHARGING).equals("true"));
@@ -1905,7 +1841,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) webservice_charging.setSelectable(false);
 
         final EditTextPreference frequency_webservice = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_WEBSERVICE);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_WEBSERVICE).length() > 0) {
@@ -1920,7 +1855,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) frequency_webservice.setSelectable(false);
 
         final ListPreference clean_old_data = (ListPreference) findPreference(Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0) {
@@ -1956,7 +1890,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) clean_old_data.setSelectable(false);
     }
 
     /**
@@ -1993,7 +1926,6 @@ public class Aware_Client extends Aware_Activity {
                 }
             }
         });
-        if (Aware.isStudy(awareContext)) mqtt.setSelectable(false);
 
         final EditTextPreference mqttServer = (EditTextPreference) findPreference(Aware_Preferences.MQTT_SERVER);
         mqttServer.setText(Aware.getSetting(awareContext, Aware_Preferences.MQTT_SERVER));
@@ -2008,7 +1940,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) mqttServer.setSelectable(false);
 
         final EditTextPreference mqttPort = (EditTextPreference) findPreference(Aware_Preferences.MQTT_PORT);
         if (Aware.getSetting(awareContext, Aware_Preferences.MQTT_PORT).length() > 0) {
@@ -2022,7 +1953,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) mqttPort.setSelectable(false);
 
         final EditTextPreference mqttUsername = (EditTextPreference) findPreference(Aware_Preferences.MQTT_USERNAME);
         if (Aware.getSetting(awareContext, Aware_Preferences.MQTT_USERNAME).length() > 0) {
@@ -2036,7 +1966,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) mqttUsername.setSelectable(false);
 
         final EditTextPreference mqttPassword = (EditTextPreference) findPreference(Aware_Preferences.MQTT_PASSWORD);
         mqttPassword.setText(Aware.getSetting(awareContext, Aware_Preferences.MQTT_PASSWORD));
@@ -2047,7 +1976,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) mqttPassword.setSelectable(false);
 
         final EditTextPreference mqttKeepAlive = (EditTextPreference) findPreference(Aware_Preferences.MQTT_KEEP_ALIVE);
         if (Aware.getSetting(awareContext, Aware_Preferences.MQTT_KEEP_ALIVE).length() > 0) {
@@ -2062,7 +1990,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) mqttKeepAlive.setSelectable(false);
 
         final EditTextPreference mqttQoS = (EditTextPreference) findPreference(Aware_Preferences.MQTT_QOS);
         mqttQoS.setText(Aware.getSetting(awareContext, Aware_Preferences.MQTT_QOS));
@@ -2073,7 +2000,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) mqttQoS.setSelectable(false);
 
         final EditTextPreference mqttProtocol = (EditTextPreference) findPreference(Aware_Preferences.MQTT_PROTOCOL);
         mqttProtocol.setText(Aware.getSetting(awareContext, Aware_Preferences.MQTT_PROTOCOL));
@@ -2084,7 +2010,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) mqttProtocol.setSelectable(false);
     }
 
     /**
@@ -2135,7 +2060,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) debug_db_slow.setSelectable(false);
 
         final EditTextPreference device_id = (EditTextPreference) findPreference(Aware_Preferences.DEVICE_ID);
         device_id.setSummary("UUID: " + Aware.getSetting(awareContext, Aware_Preferences.DEVICE_ID));
@@ -2160,8 +2084,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) device_label.setSelectable(false);
-
 
         final CheckBoxPreference webservice_simple = (CheckBoxPreference) findPreference(Aware_Preferences.WEBSERVICE_SIMPLE);
         webservice_simple.setChecked(Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SIMPLE).equals("true"));
@@ -2172,7 +2094,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) webservice_simple.setSelectable(false);
 
         final CheckBoxPreference webservice_remove_data = (CheckBoxPreference) findPreference(Aware_Preferences.WEBSERVICE_REMOVE_DATA);
         webservice_remove_data.setChecked(Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_REMOVE_DATA).equals("true"));
@@ -2183,7 +2104,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        if (Aware.isStudy(awareContext)) webservice_remove_data.setSelectable(false);
 
         final CheckBoxPreference webservice_silent = (CheckBoxPreference) findPreference(Aware_Preferences.WEBSERVICE_SILENT);
         webservice_silent.setChecked(Aware.getSetting(awareContext, Aware_Preferences.WEBSERVICE_SILENT).equals("true"));
@@ -2194,8 +2114,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        // Users can always adjust this!  But it might be overwritten on next config update.
-        //if (Aware.isStudy(awareContext)) webservice_silent.setSelectable(false);
 
         final CheckBoxPreference aware_donate_usage = (CheckBoxPreference) findPreference(Aware_Preferences.AWARE_DONATE_USAGE);
         aware_donate_usage.setChecked(Aware.getSetting(awareContext, Aware_Preferences.AWARE_DONATE_USAGE).equals("true"));
@@ -2210,8 +2128,6 @@ public class Aware_Client extends Aware_Activity {
                 return true;
             }
         });
-        // Users can always choose to donate data, even if in a study.
-        //if (Aware.isStudy(awareContext)) aware_donate_data.setSelectable(false);
     }
 
     private class AsyncPing extends AsyncTask<Void, Void, Boolean> {
