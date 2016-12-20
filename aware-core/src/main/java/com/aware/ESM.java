@@ -518,8 +518,6 @@ public class ESM extends Aware_Sensor {
      * - ACTION_AWARE_ESM_ANSWERED
      * - ACTION_AWARE_ESM_DISMISSED
      * - ACTION_AWARE_ESM_EXPIRED
-     * - ACTION_AWARE_ESM_REPLACED
-     *
      * @author df
      */
     public static class ESMMonitor extends BroadcastReceiver {
@@ -584,24 +582,6 @@ public class ESM extends Aware_Sensor {
                 Intent esm_done = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
                 context.sendBroadcast(esm_done);
             }
-
-//            if (intent.getAction().equals(ESM.ACTION_AWARE_ESM_REPLACED)) {
-//                Cursor esm = context.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + " IN (" + ESM.STATUS_NEW + "," + ESM.STATUS_VISIBLE + ")", null, null);
-//                if (esm != null && esm.moveToFirst()) {
-//                    do {
-//                        ContentValues rowData = new ContentValues();
-//                        rowData.put(ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
-//                        rowData.put(ESM_Data.STATUS, ESM.STATUS_REPLACED);
-//                        context.getContentResolver().update(ESM_Data.CONTENT_URI, rowData, ESM_Data._ID + "=" + esm.getInt(esm.getColumnIndex(ESM_Data._ID)), null);
-//                    } while (esm.moveToNext());
-//                }
-//                if (esm != null && !esm.isClosed()) esm.close();
-//
-//                if (Aware.DEBUG) Log.d(TAG, "Previous ESM Queue is replaced!");
-//
-//                Intent esm_done = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
-//                context.sendBroadcast(esm_done);
-//            }
         }
     }
 
