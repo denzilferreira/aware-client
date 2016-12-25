@@ -95,10 +95,10 @@ public class Scheduler extends Aware_Sensor {
     public static final String ACTION_EXTRA_VALUE = "extra_value";
 
     //String is the scheduler ID, and hashtable contains list of IntentFilters and BroadcastReceivers
-    private static final Hashtable<String, Hashtable<IntentFilter, BroadcastReceiver>> schedulerListeners = new Hashtable<>();
+    private static Hashtable<String, Hashtable<IntentFilter, BroadcastReceiver>> schedulerListeners = new Hashtable<>();
 
     //String is the scheduler ID, and hashtable contains list of Uri and ContentObservers
-    private static final Hashtable<String, Hashtable<Uri, ContentObserver>> schedulerDataObservers = new Hashtable<>();
+    private static Hashtable<String, Hashtable<Uri, ContentObserver>> schedulerDataObservers = new Hashtable<>();
 
     /**
      * Save the defined scheduled task
@@ -294,6 +294,10 @@ public class Scheduler extends Aware_Sensor {
             is_global = false;
 
         context.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + ((is_global) ? "com.aware.phone" : context.getPackageName()) + "'", null);
+
+        //unregister any potential broadcast receivers or contentobservers
+        clearReceivers(context, schedule_id);
+        clearContentObservers(context, schedule_id);
     }
 
     /**
@@ -305,6 +309,9 @@ public class Scheduler extends Aware_Sensor {
      */
     public static void removeSchedule(Context context, String schedule_id, String package_name) {
         context.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+
+        clearReceivers(context, schedule_id);
+        clearContentObservers(context, schedule_id);
     }
 
     /**
@@ -380,6 +387,47 @@ public class Scheduler extends Aware_Sensor {
 
         //Apply new schedules immediately
         Aware.startScheduler(c);
+    }
+
+    /**
+     * Clear and unregister all schedulers
+     * @param c
+     */
+    public static void clearSchedules(Context c) {
+        String standalone = "";
+        if (c.getResources().getBoolean(R.bool.standalone)) {
+            standalone = " OR " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE 'com.aware.phone'";
+        }
+
+        Cursor scheduled_tasks = c.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + c.getPackageName() + "'" + standalone, null, Scheduler_Provider.Scheduler_Data.TIMESTAMP + " ASC");
+        if (scheduled_tasks != null && scheduled_tasks.moveToFirst()) {
+            do {
+                removeSchedule(c, scheduled_tasks.getString(scheduled_tasks.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID)));
+            } while (scheduled_tasks.moveToNext());
+        }
+        if (scheduled_tasks != null && !scheduled_tasks.isClosed()) scheduled_tasks.close();
+    }
+
+    private static void clearReceivers(Context c, String schedule_id) {
+        if (schedulerListeners.size() == 0) return;
+
+        Hashtable<IntentFilter, BroadcastReceiver> scheduled = schedulerListeners.get(schedule_id);
+        for (IntentFilter filter : scheduled.keySet()) {
+            try {
+                c.unregisterReceiver(scheduled.get(filter));
+            } catch (IllegalArgumentException | NullPointerException e) {}
+        }
+    }
+
+    private static void clearContentObservers(Context c, String schedule_id) {
+        if (schedulerDataObservers.size() == 0) return;
+
+        Hashtable<Uri, ContentObserver> scheduled = schedulerDataObservers.get(schedule_id);
+        for (Uri data : scheduled.keySet()) {
+            try {
+                c.getContentResolver().unregisterContentObserver(scheduled.get(data));
+            } catch (IllegalArgumentException | NullPointerException e) {}
+        }
     }
 
     /**
@@ -938,26 +986,12 @@ public class Scheduler extends Aware_Sensor {
 
         //Remove broadcast receivers
         for (String schedule_id : schedulerListeners.keySet()) {
-            Hashtable<IntentFilter, BroadcastReceiver> scheduled = schedulerListeners.get(schedule_id);
-            for (IntentFilter filter : scheduled.keySet()) {
-                try {
-                    unregisterReceiver(scheduled.get(filter));
-                } catch (NullPointerException e) {
-                    e.printStackTrace();
-                }
-            }
+            clearReceivers(getApplicationContext(), schedule_id);
         }
 
         //Remove contentobservers
         for (String schedule_id : schedulerDataObservers.keySet()) {
-            Hashtable<Uri, ContentObserver> scheduled = schedulerDataObservers.get(schedule_id);
-            for (Uri data : scheduled.keySet()) {
-                try {
-                    getContentResolver().unregisterContentObserver(scheduled.get(data));
-                } catch (NullPointerException e) {
-                    e.printStackTrace();
-                }
-            }
+            clearContentObservers(getApplicationContext(), schedule_id);
         }
     }
 
@@ -1014,10 +1048,7 @@ public class Scheduler extends Aware_Sensor {
                 if (DEBUG)
                     Log.d(Scheduler.TAG, "Checking trigger set for a specific timestamp: " + schedulerTimer.getTime().toString());
 
-                if (now.getTimeInMillis() == schedule.getTimer()) {
-                    return true;
-                } else if (now.getTimeInMillis() > schedule.getTimer()) {
-                    Log.d(Scheduler.TAG, "Trigger was late (power saving, Doze, etc...): " + schedulerTimer.getTime().toString());
+                if (now.getTimeInMillis() >= schedule.getTimer()) {
                     return true;
                 } else {
                     if (DEBUG) Log.d(Scheduler.TAG,

@@ -179,7 +179,6 @@ public class ESM extends Aware_Sensor {
      */
     public static final int TYPE_ESM_NUMBER = 9;
 
-
     /**
      * Required String extra for displaying an ESM. It should contain the JSON string that defines the ESM dialog.
      * Examples:<p>

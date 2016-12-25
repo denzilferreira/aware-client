@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.util.Log;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
@@ -54,6 +55,8 @@ public class ESM_Queue extends FragmentActivity {
         filter.addAction(ESM.ACTION_AWARE_ESM_EXPIRED);
         filter.addAction(ESM.ACTION_AWARE_ESM_REPLACED);
         registerReceiver(esmStateListener, filter);
+
+        if (getQueueSize(getApplicationContext()) == 0) finish();
     }
 
     @Override
@@ -123,6 +126,8 @@ public class ESM_Queue extends FragmentActivity {
             size = onqueue.getCount();
         }
         if (onqueue != null && !onqueue.isClosed()) onqueue.close();
+
+        Log.d(TAG, "Queue size: " + size);
         return size;
     }
 

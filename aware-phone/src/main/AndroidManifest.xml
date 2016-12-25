@@ -91,10 +91,6 @@
             android:launchMode="singleTop"
             android:noHistory="true"
             android:theme="@style/Theme.Aware">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
         <activity
             android:name="com.aware.phone.ui.Aware_QRCode"

@@ -554,7 +554,7 @@ public class Aware extends Service {
                         try {
                             Scheduler.Schedule schedule = new Scheduler.Schedule(SCHEDULE_SYNC_DATA)
                                     .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                    .setActionClass(Aware.ACTION_AWARE_SYNC_DATA)
+                                    .setActionIntentAction(Aware.ACTION_AWARE_SYNC_DATA)
                                     .setInterval(frequency_webservice);
 
                             Scheduler.saveSchedule(getApplicationContext(), schedule);
@@ -572,7 +572,7 @@ public class Aware extends Service {
                             if (interval != frequency_webservice) {
                                 Scheduler.Schedule schedule = new Scheduler.Schedule(SCHEDULE_SYNC_DATA)
                                         .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                        .setActionClass(Aware.ACTION_AWARE_SYNC_DATA)
+                                        .setActionIntentAction(Aware.ACTION_AWARE_SYNC_DATA)
                                         .setInterval(frequency_webservice);
 
                                 Scheduler.saveSchedule(getApplicationContext(), schedule);
@@ -604,7 +604,8 @@ public class Aware extends Service {
                             case 1: //weekly, by default every Sunday
                                 cleanup.addWeekday("Sunday")
                                         .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                        .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
+                                        .setActionIntentAction(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
+
                                 break;
                             case 2: //monthly
                                 cleanup.addMonth("January")
@@ -620,7 +621,7 @@ public class Aware extends Service {
                                         .addMonth("November")
                                         .addMonth("December")
                                         .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                        .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
+                                        .setActionIntentAction(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
                                 break;
                             case 3: //daily
                                 cleanup.addWeekday("Monday")
@@ -631,7 +632,7 @@ public class Aware extends Service {
                                         .addWeekday("Saturday")
                                         .addWeekday("Sunday")
                                         .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                        .setActionClass(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
+                                        .setActionIntentAction(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
                                 break;
                         }
                         Scheduler.saveSchedule(getApplicationContext(), cleanup);

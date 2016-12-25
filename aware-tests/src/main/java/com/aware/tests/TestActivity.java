@@ -24,9 +24,6 @@ import com.aware.utils.Scheduler;
 
 import org.json.JSONException;
 
-/**
- * Created by denzilferreira on 02/03/16.
- */
 public class TestActivity extends Activity {
 
     int REQUEST_STORAGE = 1;
@@ -61,7 +58,7 @@ public class TestActivity extends Activity {
         button_delete_schedules = (Button) findViewById(R.id.btn_clear_schedulers);
         button_delete_schedules.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null);
+                Scheduler.clearSchedules(getApplicationContext());
                 Toast.makeText(getApplicationContext(), "Cleared!", Toast.LENGTH_SHORT).show();
             }
         });
