@@ -35,7 +35,28 @@ public class TestScheduler implements AwareTest {
 //        testContextual(context);
 //        testConditional(context);
 //        testTime(context);
+
+        testRandom(context);
+
         Aware.startScheduler(context);
+    }
+
+    private void testRandom(Context c) {
+        try {
+
+            Scheduler.Schedule random = new Scheduler.Schedule("testRandom");
+            random.addHour(14)
+                    .random(4, 5) //4 randoms, at least 5 minutes apart
+                    .setActionType(Scheduler.ACTION_TYPE_SERVICE)
+                    .setActionClass(c.getPackageName() + "/" + Aware_TTS.class.getName())
+                    .addActionExtra(Aware_TTS.EXTRA_TTS_TEXT, "Random triggered!")
+                    .addActionExtra(Aware_TTS.EXTRA_TTS_REQUESTER, c.getPackageName());
+
+            Scheduler.saveSchedule(c, random);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     private void testTime(Context c) {

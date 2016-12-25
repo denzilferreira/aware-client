@@ -8,11 +8,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.ContentObserver;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.aware.Aware;
@@ -25,19 +23,17 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Locale;
-import java.util.Random;
 
-//TODO: add action support for services and activities
 public class Scheduler extends Aware_Sensor {
 
     private static String TAG = "AWARE::Scheduler";
 
     public static final String ACTION_AWARE_SCHEDULER_CHECK = "ACTION_AWARE_SCHEDULER_CHECK";
+
     public static final String ACTION_AWARE_SCHEDULER_TRIGGERED = "ACTION_AWARE_SCHEDULER_TRIGGERED";
     public static final String EXTRA_SCHEDULER_ID = "extra_scheduler_id";
 
@@ -58,18 +54,42 @@ public class Scheduler extends Aware_Sensor {
     public static final String CONDITION_URI = "condition_uri";
     public static final String CONDITION_WHERE = "condition_where";
 
-    public static final String RANDOM_START = "random_start";
-    public static final String RANDOM_END = "random_end";
+    /**
+     * How many times per day
+     */
     public static final String RANDOM_TIMES = "random_times";
+
+    /**
+     * Minimum amount of elapsed time until we may trigger again
+     */
     public static final String RANDOM_INTERVAL = "random_interval";
 
+    /**
+     * Defines the type of action (e.g., broadcast, service or activity)
+     */
     public static final String ACTION_TYPE = "type";
     public static final String ACTION_TYPE_BROADCAST = "broadcast";
     public static final String ACTION_TYPE_SERVICE = "service";
     public static final String ACTION_TYPE_ACTIVITY = "activity";
 
+    /**
+     * Used only if action type is service or activity
+     * Defined as package/package.service_class or package/package.activity_class
+     * e.g.,
+     * com.aware.phone/com.aware.phone.ui.Aware_Client
+     * <p>
+     * Would open the main client UI with the Aware_Client activity class
+     */
     public static final String ACTION_CLASS = "class";
+
+    /**
+     * Used to specify the intent action for broadcasts, activities and services
+     */
     public static final String ACTION_INTENT_ACTION = "intent_action";
+
+    /**
+     * Used to define intent extras, if needed
+     */
     public static final String ACTION_EXTRAS = "extras";
     public static final String ACTION_EXTRA_KEY = "extra_key";
     public static final String ACTION_EXTRA_VALUE = "extra_value";
@@ -88,35 +108,63 @@ public class Scheduler extends Aware_Sensor {
      */
     public static void saveSchedule(Context context, Schedule schedule) {
         try {
-            ArrayList<String> global_settings = new ArrayList<String>();
+            ArrayList<String> global_settings = new ArrayList<>();
             global_settings.add(Aware.SCHEDULE_SPACE_MAINTENANCE);
             global_settings.add(Aware.SCHEDULE_SYNC_DATA);
 
             boolean is_global = global_settings.contains(schedule.getScheduleID());
+            if (context.getResources().getBoolean(R.bool.standalone))
+                is_global = false;
 
             if (schedule.getRandom().length() != 0) {
 
                 JSONObject random = schedule.getRandom();
 
                 Calendar start = Calendar.getInstance();
-                start.setTimeInMillis(random.getLong(RANDOM_START));
+                start.setTimeInMillis(System.currentTimeMillis());
+                start.set(Calendar.HOUR_OF_DAY, 0);
+                start.set(Calendar.MINUTE, 0);
+                start.set(Calendar.SECOND, 0);
 
                 Calendar end = Calendar.getInstance();
-                end.setTimeInMillis(random.getLong(RANDOM_START));
+                end.setTimeInMillis(System.currentTimeMillis());
+                end.set(Calendar.HOUR_OF_DAY, 23);
+                end.set(Calendar.MINUTE, 59);
+                end.set(Calendar.SECOND, 59);
 
-                for (Long r : random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL))) {
+                if (schedule.getHours().length() > 0) {
+                    //get the earliest and the latest this random can be scheduled. Can be the same if there is only one hour
+                    start.set(Calendar.HOUR_OF_DAY, schedule.getDailyEarliest());
+                    end.set(Calendar.HOUR_OF_DAY, schedule.getDailyLatest());
+                }
+
+                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
+                String original_id = schedule.getScheduleID();
+
+                int total_randoms = random.getInt(RANDOM_TIMES);
+
+                for (Long r : randoms) {
+
+                    total_randoms--;
+
                     Calendar timer = Calendar.getInstance();
                     timer.setTimeInMillis(r);
                     schedule.setTimer(timer);
 
+                    if (total_randoms == 0) {
+                        schedule.setScheduleID(original_id + "_random_" + r + "_last");
+                    } else {
+                        schedule.setScheduleID(original_id + "_random_" + r);
+                    }
+
                     ContentValues data = new ContentValues();
                     data.put(Scheduler_Provider.Scheduler_Data.TIMESTAMP, System.currentTimeMillis());
                     data.put(Scheduler_Provider.Scheduler_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                    data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID, schedule.getScheduleID() + "_" + r);
+                    data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID, schedule.getScheduleID());
                     data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE, schedule.build().toString());
                     data.put(Scheduler_Provider.Scheduler_Data.PACKAGE_NAME, (is_global) ? "com.aware.phone" : context.getPackageName());
 
-                    Log.d(Scheduler.TAG, "New random schedule: " + data.toString());
+                    Log.d(Scheduler.TAG, "Random schedule: " + data.toString());
                     context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
                 }
             } else {
@@ -159,24 +207,50 @@ public class Scheduler extends Aware_Sensor {
                 JSONObject random = schedule.getRandom();
 
                 Calendar start = Calendar.getInstance();
-                start.setTimeInMillis(random.getLong(RANDOM_START));
+                start.setTimeInMillis(System.currentTimeMillis());
+                start.set(Calendar.HOUR_OF_DAY, 0);
+                start.set(Calendar.MINUTE, 0);
+                start.set(Calendar.SECOND, 0);
 
                 Calendar end = Calendar.getInstance();
-                end.setTimeInMillis(random.getLong(RANDOM_START));
+                end.setTimeInMillis(System.currentTimeMillis());
+                end.set(Calendar.HOUR_OF_DAY, 23);
+                end.set(Calendar.MINUTE, 59);
+                start.set(Calendar.SECOND, 59);
 
-                for (Long r : random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL))) {
+                if (schedule.getHours().length() > 0) {
+                    //get earliest and latest this random can be scheduled
+                    start.set(Calendar.HOUR_OF_DAY, schedule.getDailyEarliest());
+                    end.set(Calendar.HOUR_OF_DAY, schedule.getDailyLatest());
+                }
+
+                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
+                String original_id = schedule.getScheduleID();
+
+                int total_randoms = random.getInt(RANDOM_TIMES);
+
+                for (Long r : randoms) {
+
+                    total_randoms--;
+
                     Calendar timer = Calendar.getInstance();
                     timer.setTimeInMillis(r);
                     schedule.setTimer(timer);
 
+                    if (total_randoms == 0) {
+                        schedule.setScheduleID(original_id + "_random_" + r + "_last");
+                    } else {
+                        schedule.setScheduleID(original_id + "_random_" + r);
+                    }
+
                     ContentValues data = new ContentValues();
                     data.put(Scheduler_Provider.Scheduler_Data.TIMESTAMP, System.currentTimeMillis());
                     data.put(Scheduler_Provider.Scheduler_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                    data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID, schedule.getScheduleID() + "_" + r);
+                    data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID, schedule.getScheduleID());
                     data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE, schedule.build().toString());
                     data.put(Scheduler_Provider.Scheduler_Data.PACKAGE_NAME, package_name);
 
-                    Log.d(Scheduler.TAG, "New random schedule: " + data.toString());
+                    Log.d(Scheduler.TAG, "Random schedule: " + data.toString());
                     context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
                 }
             } else {
@@ -216,6 +290,8 @@ public class Scheduler extends Aware_Sensor {
         global_settings.add(Aware.SCHEDULE_SYNC_DATA);
 
         boolean is_global = global_settings.contains(schedule_id);
+        if (context.getResources().getBoolean(R.bool.standalone))
+            is_global = false;
 
         context.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + ((is_global) ? "com.aware.phone" : context.getPackageName()) + "'", null);
     }
@@ -245,9 +321,11 @@ public class Scheduler extends Aware_Sensor {
         global_settings.add(Aware.SCHEDULE_SYNC_DATA);
 
         boolean is_global = global_settings.contains(schedule_id);
+        if (context.getResources().getBoolean(R.bool.standalone))
+            is_global = false;
 
         Schedule output = null;
-        Cursor scheduleData = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "%' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + ((is_global) ? "com.aware.phone" : context.getPackageName()) + "'", null, null);
+        Cursor scheduleData = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + ((is_global) ? "com.aware.phone" : context.getPackageName()) + "'", null, null);
         if (scheduleData != null && scheduleData.moveToFirst()) {
             try {
                 JSONObject jsonSchedule = new JSONObject(scheduleData.getString(scheduleData.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE)));
@@ -270,7 +348,7 @@ public class Scheduler extends Aware_Sensor {
      */
     public static Schedule getSchedule(Context context, String schedule_id, String package_name) {
         Schedule output = null;
-        Cursor scheduleData = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "%' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
+        Cursor scheduleData = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
         if (scheduleData != null && scheduleData.moveToFirst()) {
             try {
                 JSONObject jsonSchedule = new JSONObject(scheduleData.getString(scheduleData.getColumnIndex(Scheduler_Provider.Scheduler_Data.SCHEDULE)));
@@ -345,6 +423,11 @@ public class Scheduler extends Aware_Sensor {
             return this;
         }
 
+        public Schedule setScheduleID(String new_id) throws JSONException {
+            this.schedule.put(SCHEDULE_ID, new_id);
+            return this;
+        }
+
         public String getScheduleID() throws JSONException {
             return this.schedule.getString(SCHEDULE_ID);
         }
@@ -415,6 +498,42 @@ public class Scheduler extends Aware_Sensor {
             JSONArray hours = getHours();
             hours.put(hour);
             return this;
+        }
+
+        /**
+         * Return the latest hour of the day in which a random scheduler can be scheduled
+         *
+         * @return latest hour
+         * @throws JSONException
+         */
+        public int getDailyLatest() throws JSONException {
+            JSONArray hours = getHours();
+            int max = 0;
+            for (int i = 0; i < hours.length(); i++) {
+                if (hours.getInt(i) >= max) max = hours.getInt(i);
+            }
+
+            Log.d(TAG, "Latest random hour: " + max);
+
+            return max;
+        }
+
+        /**
+         * Return the earliest hour of the day in which a random scheduler can be scheduled
+         *
+         * @return earliest hour
+         * @throws JSONException
+         */
+        public int getDailyEarliest() throws JSONException {
+            JSONArray hours = getHours();
+            int min = 23;
+            for (int i = 0; i < hours.length(); i++) {
+                if (hours.getInt(i) <= min) min = hours.getInt(i);
+            }
+
+            Log.d(TAG, "Earliest random hour: " + min);
+
+            return min;
         }
 
         public Schedule addMinute(int minute) throws JSONException {
@@ -594,16 +713,14 @@ public class Scheduler extends Aware_Sensor {
         }
 
         /**
-         * Set random schedules: between start and end, this amount of times, with at least interval minutes apart
+         * Set random schedules between two dates. Define the total amount of times per day, with at least X interval minutes apart
          *
          * @throws JSONException
          */
-        public Schedule randomize(Calendar start, Calendar end, int amount, int interval) throws JSONException {
+        public Schedule random(int daily_amount, int minimum_interval) throws JSONException {
             JSONObject json_random = getRandom();
-            json_random.put(RANDOM_START, start.getTimeInMillis());
-            json_random.put(RANDOM_END, end.getTimeInMillis());
-            json_random.put(RANDOM_TIMES, amount);
-            json_random.put(RANDOM_INTERVAL, interval);
+            json_random.put(RANDOM_TIMES, daily_amount);
+            json_random.put(RANDOM_INTERVAL, minimum_interval);
             return this;
         }
     }
@@ -641,21 +758,21 @@ public class Scheduler extends Aware_Sensor {
         private String condition;
         private Schedule schedule;
 
-        public DBObserver(Handler h) {
+        DBObserver(Handler h) {
             super(h);
         }
 
-        public DBObserver setSchedule(Schedule s) {
+        DBObserver setSchedule(Schedule s) {
             this.schedule = s;
             return this;
         }
 
-        public DBObserver setData(Uri content_uri) {
+        DBObserver setData(Uri content_uri) {
             this.data = content_uri;
             return this;
         }
 
-        public DBObserver setCondition(String where) {
+        DBObserver setCondition(String where) {
             this.condition = where;
             return this;
         }
@@ -1233,14 +1350,18 @@ public class Scheduler extends Aware_Sensor {
             }
 
             if (schedule.getTimer() != -1) {
-                if (getResources().getBoolean(R.bool.standalone)) {
-                    getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "' OR " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE 'com.aware.phone'", null);
-                } else {
-                    getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null);
+
+                removeSchedule(getApplicationContext(), schedule.getScheduleID());
+
+                //Check if this scheduler is a random and it is the last time it was triggered, re-schedule new randoms
+                if (schedule.getRandom().length() > 0 && schedule.getScheduleID().contains("_last") && schedule.getScheduleID().contains("_random_")) {
+                    Scheduler.saveSchedule(getApplicationContext(), schedule);
                 }
+
             } else {
                 ContentValues data = new ContentValues();
                 data.put(Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED, System.currentTimeMillis());
+
                 if (getResources().getBoolean(R.bool.standalone)) {
                     getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "' OR " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE 'com.aware.phone'", null);
                 } else {
@@ -1255,20 +1376,20 @@ public class Scheduler extends Aware_Sensor {
     /**
      * Given a timeframe, a number of randoms and a minimum time interval, return a list of timestamps
      *
-     * @param leftLimit
-     * @param rightLimit
-     * @param size          number of times
-     * @param minDifference how much time is set between timestamps, in minutes
+     * @param start
+     * @param end
+     * @param amount           number of times
+     * @param interval_minutes how much time is set between timestamps, in minutes
      * @return ArrayList<Long> of timestamps between interval
      */
-    public static ArrayList<Long> random_times(Calendar leftLimit, Calendar rightLimit, int size, int minDifference) {
+    public static ArrayList<Long> random_times(Calendar start, Calendar end, int amount, int interval_minutes) {
         ArrayList<Long> randomList = new ArrayList<>();
-        int minDifferenceMillis = minDifference * 60 * 1000;
+        int minDifferenceMillis = interval_minutes * 60 * 1000;
 
-        while (randomList.size() < size) {
+        while (randomList.size() < amount) {
             boolean valid_random = true;
 
-            long random = leftLimit.getTimeInMillis() + (long) (Math.random() * (rightLimit.getTimeInMillis() - leftLimit.getTimeInMillis()));
+            long random = start.getTimeInMillis() + (long) (Math.random() * (end.getTimeInMillis() - start.getTimeInMillis()));
 
             if (randomList.size() == 0) {
                 randomList.add(random);
