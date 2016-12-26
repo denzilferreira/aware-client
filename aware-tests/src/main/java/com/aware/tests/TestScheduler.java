@@ -45,9 +45,8 @@ public class TestScheduler implements AwareTest {
         try {
 
             Scheduler.Schedule random = new Scheduler.Schedule("testRandom");
-            random.addHour(14)
-                    .addHour(15)
-                    .random(6, 5) //6 randoms, at least 5 minutes apart
+            random.addHour(21)
+                    .random(5, 1) //6 randoms, at least 5 minutes apart
                     .setActionType(Scheduler.ACTION_TYPE_SERVICE)
                     .setActionClass(c.getPackageName() + "/" + Aware_TTS.class.getName())
                     .addActionExtra(Aware_TTS.EXTRA_TTS_TEXT, "Random triggered!")

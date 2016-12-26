@@ -1409,6 +1409,12 @@ public class Scheduler extends Aware_Sensor {
 
                 //Check if this scheduler is a random and it is the last time it was triggered, re-schedule new randoms
                 if (schedule.getRandom().length() > 0 && schedule.getScheduleID().contains("_last") && schedule.getScheduleID().contains("_random_")) {
+
+                    //clean-up random strings
+                    String originalScheduleID = schedule.getScheduleID().substring(0, schedule.getScheduleID().indexOf("_random_"));
+                    schedule.setScheduleID(originalScheduleID);
+
+                    //reset random schedule
                     Scheduler.saveSchedule(getApplicationContext(), schedule);
                 }
 
