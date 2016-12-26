@@ -122,9 +122,6 @@ public class Scheduler extends Aware_Sensor {
 
                 Calendar start = Calendar.getInstance();
                 start.setTimeInMillis(System.currentTimeMillis());
-                start.set(Calendar.HOUR_OF_DAY, 0);
-                start.set(Calendar.MINUTE, 0);
-                start.set(Calendar.SECOND, 0);
 
                 Calendar end = Calendar.getInstance();
                 end.setTimeInMillis(System.currentTimeMillis());
@@ -134,6 +131,16 @@ public class Scheduler extends Aware_Sensor {
 
                 if (schedule.getHours().length() > 0) {
                     //get the earliest and the latest this random can be scheduled. Can be the same if there is only one hour
+
+                    Calendar now = Calendar.getInstance();
+                    now.setTimeInMillis(System.currentTimeMillis());
+
+                    if (schedule.getDailyEarliest() < now.get(Calendar.HOUR_OF_DAY)) {
+                        //moving the start and end to tomorrow
+                        start.add(Calendar.DAY_OF_YEAR, 1);
+                        end.add(Calendar.DAY_OF_YEAR, 1);
+                    }
+
                     start.set(Calendar.HOUR_OF_DAY, schedule.getDailyEarliest());
                     end.set(Calendar.HOUR_OF_DAY, schedule.getDailyLatest());
                 }
@@ -141,17 +148,17 @@ public class Scheduler extends Aware_Sensor {
                 ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
                 String original_id = schedule.getScheduleID();
 
-                int total_randoms = random.getInt(RANDOM_TIMES);
+                long max = getLastRandom(randoms);
 
                 for (Long r : randoms) {
-
-                    total_randoms--;
-
                     Calendar timer = Calendar.getInstance();
                     timer.setTimeInMillis(r);
+
+                    Log.d(TAG, "RANDOM TIME:" + timer.getTime().toString());
+
                     schedule.setTimer(timer);
 
-                    if (total_randoms == 0) {
+                    if (r == max) {
                         schedule.setScheduleID(original_id + "_random_" + r + "_last");
                     } else {
                         schedule.setScheduleID(original_id + "_random_" + r);
@@ -208,17 +215,24 @@ public class Scheduler extends Aware_Sensor {
 
                 Calendar start = Calendar.getInstance();
                 start.setTimeInMillis(System.currentTimeMillis());
-                start.set(Calendar.HOUR_OF_DAY, 0);
-                start.set(Calendar.MINUTE, 0);
-                start.set(Calendar.SECOND, 0);
 
                 Calendar end = Calendar.getInstance();
                 end.setTimeInMillis(System.currentTimeMillis());
                 end.set(Calendar.HOUR_OF_DAY, 23);
                 end.set(Calendar.MINUTE, 59);
-                start.set(Calendar.SECOND, 59);
+                end.set(Calendar.SECOND, 59);
 
                 if (schedule.getHours().length() > 0) {
+
+                    Calendar now = Calendar.getInstance();
+                    now.setTimeInMillis(System.currentTimeMillis());
+
+                    if (schedule.getDailyEarliest() < now.get(Calendar.HOUR_OF_DAY)) {
+                        //moving the start and end to tomorrow
+                        start.add(Calendar.DAY_OF_YEAR, 1);
+                        end.add(Calendar.DAY_OF_YEAR, 1);
+                    }
+
                     //get earliest and latest this random can be scheduled
                     start.set(Calendar.HOUR_OF_DAY, schedule.getDailyEarliest());
                     end.set(Calendar.HOUR_OF_DAY, schedule.getDailyLatest());
@@ -227,17 +241,17 @@ public class Scheduler extends Aware_Sensor {
                 ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
                 String original_id = schedule.getScheduleID();
 
-                int total_randoms = random.getInt(RANDOM_TIMES);
+                long max = getLastRandom(randoms);
 
                 for (Long r : randoms) {
-
-                    total_randoms--;
-
                     Calendar timer = Calendar.getInstance();
                     timer.setTimeInMillis(r);
+
+                    Log.d(TAG, "RANDOM TIME:" + timer.getTime().toString());
+
                     schedule.setTimer(timer);
 
-                    if (total_randoms == 0) {
+                    if (r == max) {
                         schedule.setScheduleID(original_id + "_random_" + r + "_last");
                     } else {
                         schedule.setScheduleID(original_id + "_random_" + r);
@@ -275,6 +289,14 @@ public class Scheduler extends Aware_Sensor {
         } catch (JSONException e) {
             Log.e(Scheduler.TAG, "Error saving schedule");
         }
+    }
+
+    private static long getLastRandom(ArrayList<Long> randoms) {
+        long max = 0;
+        for (Long r : randoms) {
+            if (r >= max) max = r;
+        }
+        return max;
     }
 
     /**
@@ -391,6 +413,7 @@ public class Scheduler extends Aware_Sensor {
 
     /**
      * Clear and unregister all schedulers
+     *
      * @param c
      */
     public static void clearSchedules(Context c) {
@@ -410,23 +433,23 @@ public class Scheduler extends Aware_Sensor {
 
     private static void clearReceivers(Context c, String schedule_id) {
         if (schedulerListeners.size() == 0) return;
-
         Hashtable<IntentFilter, BroadcastReceiver> scheduled = schedulerListeners.get(schedule_id);
         for (IntentFilter filter : scheduled.keySet()) {
             try {
-                c.unregisterReceiver(scheduled.get(filter));
-            } catch (IllegalArgumentException | NullPointerException e) {}
+                c.unregisterReceiver((BroadcastReceiver) scheduled.get(filter));
+            } catch (IllegalArgumentException | NullPointerException e) {
+            }
         }
     }
 
     private static void clearContentObservers(Context c, String schedule_id) {
         if (schedulerDataObservers.size() == 0) return;
-
         Hashtable<Uri, ContentObserver> scheduled = schedulerDataObservers.get(schedule_id);
         for (Uri data : scheduled.keySet()) {
             try {
-                c.getContentResolver().unregisterContentObserver(scheduled.get(data));
-            } catch (IllegalArgumentException | NullPointerException e) {}
+                c.getContentResolver().unregisterContentObserver((DBObserver) scheduled.get(data));
+            } catch (IllegalArgumentException | NullPointerException e) {
+            }
         }
     }
 
