@@ -164,12 +164,12 @@ public class Aware extends Service {
     public static final String SCHEDULE_SPACE_MAINTENANCE = "schedule_aware_space_maintenance";
     public static final String SCHEDULE_SYNC_DATA = "schedule_aware_sync_data";
 
-    private static AlarmManager alarmManager = null;
-    private static PendingIntent repeatingIntent = null;
+//    private static AlarmManager alarmManager = null;
+//    private static PendingIntent repeatingIntent = null;
 
     private static Context awareContext = null;
 
-    private static Intent awareStatusMonitor = null;
+    //    private static Intent awareStatusMonitor = null;
     private static Intent applicationsSrv = null;
     private static Intent accelerometerSrv = null;
     private static Intent locationsSrv = null;
@@ -198,11 +198,11 @@ public class Aware extends Service {
     private static Intent keyboard = null;
     private static Intent scheduler = null;
 
-    private final static String PREF_FREQUENCY_WATCHDOG = "frequency_watchdog";
-    private final static String PREF_LAST_UPDATE = "last_update";
-    private final static int CONST_FREQUENCY_WATCHDOG = 5 * 60; //5 minutes check
+//    private final static String PREF_FREQUENCY_WATCHDOG = "frequency_watchdog";
+//    private final static String PREF_LAST_UPDATE = "last_update";
+//    private final static int CONST_FREQUENCY_WATCHDOG = 5 * 60; //5 minutes check
 
-    private static SharedPreferences aware_preferences;
+//    private static SharedPreferences aware_preferences;
 
     /**
      * Singleton instance of the framework
@@ -241,7 +241,7 @@ public class Aware extends Service {
         super.onCreate();
 
         awareContext = getApplicationContext();
-        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+//        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
         IntentFilter storage = new IntentFilter();
         storage.addAction(Intent.ACTION_MEDIA_MOUNTED);
@@ -466,13 +466,13 @@ public class Aware extends Service {
 
             if (Aware.DEBUG) Log.d(TAG, "AWARE framework is active...");
 
-            aware_preferences = getSharedPreferences("aware_core_prefs", MODE_PRIVATE);
-            if (aware_preferences.getAll().isEmpty()) {
-                SharedPreferences.Editor editor = aware_preferences.edit();
-                editor.putInt(PREF_FREQUENCY_WATCHDOG, CONST_FREQUENCY_WATCHDOG);
-                editor.putLong(PREF_LAST_UPDATE, 0);
-                editor.commit();
-            }
+//            aware_preferences = getSharedPreferences("aware_core_prefs", MODE_PRIVATE);
+//            if (aware_preferences.getAll().isEmpty()) {
+//                SharedPreferences.Editor editor = aware_preferences.edit();
+//                editor.putInt(PREF_FREQUENCY_WATCHDOG, CONST_FREQUENCY_WATCHDOG);
+//                editor.putLong(PREF_LAST_UPDATE, 0);
+//                editor.commit();
+//            }
 
             //this sets the default settings to all plugins too
             SharedPreferences prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
@@ -511,29 +511,41 @@ public class Aware extends Service {
 
             //only the client and self-contained apps need to run the keep alive. Plugins are handled by them.
             if (getApplicationContext().getPackageName().equals("com.aware.phone") || getResources().getBoolean(R.bool.standalone)) {
-                if (awareStatusMonitor == null) { //not set yet
-                    awareStatusMonitor = new Intent(this, Aware.class);
-                    awareStatusMonitor.setAction(ACTION_AWARE_KEEP_ALIVE);
-                    repeatingIntent = PendingIntent.getService(getApplicationContext(), 0, awareStatusMonitor, PendingIntent.FLAG_UPDATE_CURRENT);
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
-                                System.currentTimeMillis() + aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000,
-                                repeatingIntent);
-                    } else {
-                        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
-                                System.currentTimeMillis() + aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000,
-                                aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000,
-                                repeatingIntent);
+                try {
+                    Scheduler.Schedule watchdog = Scheduler.getSchedule(this, Aware.ACTION_AWARE_KEEP_ALIVE);
+                    if (watchdog == null) {
+                        watchdog = new Scheduler.Schedule(Aware.ACTION_AWARE_KEEP_ALIVE);
+                        watchdog.setInterval(5)
+                                .setActionType(Scheduler.ACTION_TYPE_SERVICE)
+                                .setActionClass(getPackageName() + "/" + getClass().getName());
                     }
-                } else { //already set, schedule the next one if API23+. If < API23, it's a repeating alarm, so no need to set it again.
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (intent != null && intent.getAction() != null && intent.getAction().equals(ACTION_AWARE_KEEP_ALIVE))) {
-                        //set the alarm again to the future for API 23, works even if under Doze
-                        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
-                                System.currentTimeMillis() + aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000,
-                                repeatingIntent);
-                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
+//                if (awareStatusMonitor == null) { //not set yet
+//                    awareStatusMonitor = new Intent(this, Aware.class);
+//                    awareStatusMonitor.setAction(ACTION_AWARE_KEEP_ALIVE);
+//                    repeatingIntent = PendingIntent.getService(getApplicationContext(), 0, awareStatusMonitor, PendingIntent.FLAG_UPDATE_CURRENT);
+//
+//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
+//                                System.currentTimeMillis() + aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000,
+//                                repeatingIntent);
+//                    } else {
+//                        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
+//                                System.currentTimeMillis() + aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000,
+//                                aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000,
+//                                repeatingIntent);
+//                    }
+//                } else { //already set, schedule the next one if API23+. If < API23, it's a repeating alarm, so no need to set it again.
+//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (intent != null && intent.getAction() != null && intent.getAction().equals(ACTION_AWARE_KEEP_ALIVE))) {
+//                        //set the alarm again to the future for API 23, works even if under Doze
+//                        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
+//                                System.currentTimeMillis() + aware_preferences.getInt(PREF_FREQUENCY_WATCHDOG, 300) * 1000,
+//                                repeatingIntent);
+//                    }
+//                }
             }
 
             //Boot AWARE services
@@ -1460,7 +1472,7 @@ public class Aware extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (repeatingIntent != null) alarmManager.cancel(repeatingIntent);
+//        if (repeatingIntent != null) alarmManager.cancel(repeatingIntent);
 
         try {
             awareContext.unregisterReceiver(aware_BR);

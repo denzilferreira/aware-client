@@ -77,7 +77,7 @@ public class Scheduler extends Aware_Sensor {
      * Defined as package/package.service_class or package/package.activity_class
      * e.g.,
      * com.aware.phone/com.aware.phone.ui.Aware_Client
-     * <p>
+     * <br/>
      * Would open the main client UI with the Aware_Client activity class
      */
     public static final String ACTION_CLASS = "class";
