@@ -1,8 +1,6 @@
 
 package com.aware;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.app.UiModeManager;
 import android.content.BroadcastReceiver;
@@ -32,7 +30,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
-import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
@@ -519,6 +516,8 @@ public class Aware extends Service {
                         watchdog.setInterval(5)
                                 .setActionType(Scheduler.ACTION_TYPE_SERVICE)
                                 .setActionClass(getPackageName() + "/" + getClass().getName());
+
+                        Scheduler.saveSchedule(this, watchdog);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
