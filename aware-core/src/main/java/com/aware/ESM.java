@@ -329,13 +329,16 @@ public class ESM extends Aware_Sensor {
             for (int i = 0; i < esms.length(); i++) {
                 JSONObject esm = esms.getJSONObject(i).getJSONObject(EXTRA_ESM);
 
-                if (i == 0) { // we check the first ESM item in the queue to see whether any current queue items need to be removed
+                // we check the first ESM item in the queue to see whether any current queue items need to be removed
+                if (i == 0) {
                     if (esm.optBoolean("esm_replace_queue")) { // clear current queue
-                        if (Aware.DEBUG) Log.d(TAG, "Clearing ESM queue before adding new ESM to queue");
+                        if (Aware.DEBUG)
+                            Log.d(TAG, "Clearing ESM queue before adding new ESM to queue");
 
                         // Remove notification
                         if (mNotificationManager == null)
                             mNotificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+
                         mNotificationManager.cancel(ESM.ESM_NOTIFICATION_ID);
 
                         // Clear queue
@@ -517,6 +520,7 @@ public class ESM extends Aware_Sensor {
      * - ACTION_AWARE_ESM_ANSWERED
      * - ACTION_AWARE_ESM_DISMISSED
      * - ACTION_AWARE_ESM_EXPIRED
+     *
      * @author df
      */
     public static class ESMMonitor extends BroadcastReceiver {

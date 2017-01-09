@@ -113,6 +113,7 @@ public class Scheduler extends Aware_Sensor {
             global_settings.add(Aware.SCHEDULE_SYNC_DATA);
 
             boolean is_global = global_settings.contains(schedule.getScheduleID());
+
             if (context.getResources().getBoolean(R.bool.standalone))
                 is_global = false;
 
@@ -121,40 +122,43 @@ public class Scheduler extends Aware_Sensor {
                 JSONObject random = schedule.getRandom();
 
                 Calendar start = Calendar.getInstance();
-                start.setTimeInMillis(System.currentTimeMillis());
-
                 Calendar end = Calendar.getInstance();
-                end.setTimeInMillis(System.currentTimeMillis());
-                end.set(Calendar.HOUR_OF_DAY, 23);
+                Calendar now = Calendar.getInstance();
+
+                int earliest = schedule.getDailyEarliest();
+                int latest = schedule.getDailyLatest();
+
+                start.set(Calendar.HOUR_OF_DAY, earliest);
+                start.set(Calendar.MINUTE, start.get(Calendar.MINUTE));
+                start.set(Calendar.SECOND, start.get(Calendar.SECOND));
+                start.set(Calendar.MILLISECOND, start.get(Calendar.MILLISECOND));
+
+                end.set(Calendar.HOUR_OF_DAY, latest);
                 end.set(Calendar.MINUTE, 59);
                 end.set(Calendar.SECOND, 59);
+                end.set(Calendar.MILLISECOND, 999);
 
-                if (schedule.getHours().length() > 0) {
-                    //get the earliest and the latest this random can be scheduled. Can be the same if there is only one hour
+                //too late to schedule them today, schedule for the next day
+                if (now.get(Calendar.HOUR_OF_DAY) > latest) {
+                    start.add(Calendar.DAY_OF_YEAR, 1);
+                    start.set(Calendar.MINUTE, 0);
+                    start.set(Calendar.SECOND, 0);
+                    start.set(Calendar.MILLISECOND, 0);
 
-                    Calendar now = Calendar.getInstance();
-                    now.setTimeInMillis(System.currentTimeMillis());
+                    end.add(Calendar.DAY_OF_YEAR, 1);
 
-                    if (schedule.getDailyEarliest() < now.get(Calendar.HOUR_OF_DAY)) {
-                        //moving the start and end to tomorrow
-                        start.add(Calendar.DAY_OF_YEAR, 1);
-                        end.add(Calendar.DAY_OF_YEAR, 1);
-                    }
-
-                    start.set(Calendar.HOUR_OF_DAY, schedule.getDailyEarliest());
-                    end.set(Calendar.HOUR_OF_DAY, schedule.getDailyLatest());
+                    Log.d(TAG, "RANDOM TIME is TOMORROW\n");
                 }
 
                 ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
                 String original_id = schedule.getScheduleID();
 
                 long max = getLastRandom(randoms);
-
                 for (Long r : randoms) {
                     Calendar timer = Calendar.getInstance();
                     timer.setTimeInMillis(r);
 
-                    Log.d(TAG, "RANDOM TIME:" + timer.getTime().toString());
+                    Log.d(TAG, "RANDOM TIME:" + timer.getTime().toString() + "\n");
 
                     schedule.setTimer(timer);
 
@@ -171,7 +175,7 @@ public class Scheduler extends Aware_Sensor {
                     data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE, schedule.build().toString());
                     data.put(Scheduler_Provider.Scheduler_Data.PACKAGE_NAME, (is_global) ? "com.aware.phone" : context.getPackageName());
 
-                    Log.d(Scheduler.TAG, "Random schedule: " + data.toString());
+                    Log.d(Scheduler.TAG, "Random schedule: " + data.toString() + "\n");
                     context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
                 }
             } else {
@@ -208,34 +212,37 @@ public class Scheduler extends Aware_Sensor {
      */
     public static void saveSchedule(Context context, Schedule schedule, String package_name) {
         try {
-
             if (schedule.getRandom().length() != 0) {
 
                 JSONObject random = schedule.getRandom();
 
                 Calendar start = Calendar.getInstance();
-                start.setTimeInMillis(System.currentTimeMillis());
-
                 Calendar end = Calendar.getInstance();
-                end.setTimeInMillis(System.currentTimeMillis());
-                end.set(Calendar.HOUR_OF_DAY, 23);
+                Calendar now = Calendar.getInstance();
+
+                int earliest = schedule.getDailyEarliest();
+                int latest = schedule.getDailyLatest();
+
+                start.set(Calendar.HOUR_OF_DAY, earliest);
+                start.set(Calendar.MINUTE, start.get(Calendar.MINUTE));
+                start.set(Calendar.SECOND, start.get(Calendar.SECOND));
+                start.set(Calendar.MILLISECOND, start.get(Calendar.MILLISECOND));
+
+                end.set(Calendar.HOUR_OF_DAY, latest);
                 end.set(Calendar.MINUTE, 59);
                 end.set(Calendar.SECOND, 59);
+                end.set(Calendar.MILLISECOND, 999);
 
-                if (schedule.getHours().length() > 0) {
+                //too late to schedule them today, schedule for the next day
+                if (now.get(Calendar.HOUR_OF_DAY) > latest) {
+                    start.add(Calendar.DAY_OF_YEAR, 1);
+                    start.set(Calendar.MINUTE, 0);
+                    start.set(Calendar.SECOND, 0);
+                    start.set(Calendar.MILLISECOND, 0);
 
-                    Calendar now = Calendar.getInstance();
-                    now.setTimeInMillis(System.currentTimeMillis());
+                    end.add(Calendar.DAY_OF_YEAR, 1);
 
-                    if (schedule.getDailyEarliest() < now.get(Calendar.HOUR_OF_DAY)) {
-                        //moving the start and end to tomorrow
-                        start.add(Calendar.DAY_OF_YEAR, 1);
-                        end.add(Calendar.DAY_OF_YEAR, 1);
-                    }
-
-                    //get earliest and latest this random can be scheduled
-                    start.set(Calendar.HOUR_OF_DAY, schedule.getDailyEarliest());
-                    end.set(Calendar.HOUR_OF_DAY, schedule.getDailyLatest());
+                    Log.d(TAG, "RANDOM TIME is TOMORROW\n");
                 }
 
                 ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
@@ -247,7 +254,7 @@ public class Scheduler extends Aware_Sensor {
                     Calendar timer = Calendar.getInstance();
                     timer.setTimeInMillis(r);
 
-                    Log.d(TAG, "RANDOM TIME:" + timer.getTime().toString());
+                    Log.d(TAG, "RANDOM TIME:" + timer.getTime().toString() + "\n");
 
                     schedule.setTimer(timer);
 
@@ -264,7 +271,7 @@ public class Scheduler extends Aware_Sensor {
                     data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE, schedule.build().toString());
                     data.put(Scheduler_Provider.Scheduler_Data.PACKAGE_NAME, package_name);
 
-                    Log.d(Scheduler.TAG, "Random schedule: " + data.toString());
+                    Log.d(Scheduler.TAG, "Random schedule: " + data.toString() + "\n");
                     context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
                 }
             } else {
@@ -297,6 +304,67 @@ public class Scheduler extends Aware_Sensor {
             if (r >= max) max = r;
         }
         return max;
+    }
+
+    private static void rescheduleRandom(Context context, Schedule schedule) {
+        try {
+            JSONObject random = schedule.getRandom();
+
+            Calendar start = Calendar.getInstance();
+            Calendar end = Calendar.getInstance();
+
+            int earliest = schedule.getDailyEarliest();
+            int latest = schedule.getDailyLatest();
+
+            start.set(Calendar.HOUR_OF_DAY, earliest);
+            start.set(Calendar.MINUTE, 0);
+            start.set(Calendar.SECOND, 0);
+            start.set(Calendar.MILLISECOND, 0);
+
+            end.set(Calendar.HOUR_OF_DAY, latest);
+            end.set(Calendar.MINUTE, 59);
+            end.set(Calendar.SECOND, 59);
+            end.set(Calendar.MILLISECOND, 999);
+
+            //moving dates to tomorrow
+            start.add(Calendar.DAY_OF_YEAR, 1);
+            end.add(Calendar.DAY_OF_YEAR, 1);
+
+            Log.d(TAG, "RANDOM TIME is TOMORROW\n");
+
+            ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
+            String original_id = schedule.getScheduleID();
+
+            long max = getLastRandom(randoms);
+
+            for (Long r : randoms) {
+                Calendar timer = Calendar.getInstance();
+                timer.setTimeInMillis(r);
+
+                Log.d(TAG, "RANDOM TIME:" + timer.getTime().toString() + "\n");
+
+                schedule.setTimer(timer);
+
+                if (r == max) {
+                    schedule.setScheduleID(original_id + "_random_" + r + "_last");
+                } else {
+                    schedule.setScheduleID(original_id + "_random_" + r);
+                }
+
+                ContentValues data = new ContentValues();
+                data.put(Scheduler_Provider.Scheduler_Data.TIMESTAMP, System.currentTimeMillis());
+                data.put(Scheduler_Provider.Scheduler_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
+                data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID, schedule.getScheduleID());
+                data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE, schedule.build().toString());
+                data.put(Scheduler_Provider.Scheduler_Data.PACKAGE_NAME, context.getPackageName());
+
+                Log.d(Scheduler.TAG, "Random schedule: " + data.toString() + "\n");
+                context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -1414,8 +1482,8 @@ public class Scheduler extends Aware_Sensor {
                     String originalScheduleID = schedule.getScheduleID().substring(0, schedule.getScheduleID().indexOf("_random_"));
                     schedule.setScheduleID(originalScheduleID);
 
-                    //reset random schedule
-                    Scheduler.saveSchedule(getApplicationContext(), schedule);
+                    //recreate random scheduler for tomorrow
+                    Scheduler.rescheduleRandom(getApplicationContext(), schedule);
                 }
 
             } else {
@@ -1444,9 +1512,14 @@ public class Scheduler extends Aware_Sensor {
      */
     public static ArrayList<Long> random_times(Calendar start, Calendar end, int amount, int interval_minutes) {
         ArrayList<Long> randomList = new ArrayList<>();
+
         int minDifferenceMillis = interval_minutes * 60 * 1000;
 
+        long startedLoop = System.currentTimeMillis();
         while (randomList.size() < amount) {
+
+            if ((System.currentTimeMillis() - startedLoop) >= 3000) break;
+
             boolean valid_random = true;
 
             long random = start.getTimeInMillis() + (long) (Math.random() * (end.getTimeInMillis() - start.getTimeInMillis()));

@@ -26,7 +26,7 @@ public class TestESM implements AwareTest {
 
     @Override
     public void test(Context context) {
-        testESMS(context);
+//        testESMS(context);
 //        trialESMS(context);
 //        testFlow(context);
 //        testTimeoutQueue(context);
@@ -34,7 +34,9 @@ public class TestESM implements AwareTest {
 //        testDateTime(context);
 //        testPAM(context);
 //        testOptionsOverflow(context);
-//        testNotificationRetries(context);
+        testNotificationRetries(context);
+
+        Aware.startESM(context);
     }
 
     /**
@@ -46,8 +48,8 @@ public class TestESM implements AwareTest {
         try {
 
             ESM_Number number = new ESM_Number();
-            number.setNotificationTimeout(10) //10 seconds
-                    .setNotificationRetry(3) //notify the user 3 times, so notification alive for 3 * 10 seconds = 30 seconds
+            number.setNotificationTimeout(5*60) //5 minutes
+                    .setNotificationRetry(3) //notify the user 3 times, so notification alive for 3 * 5 minutes = 15 minutes
                     .setTitle("Lucky number?")
                     .setInstructions("Pick one.");
 
