@@ -313,8 +313,8 @@ public class ESM_Question extends DialogFragment {
     /**
      * COMMON CODE TO HANDLE ESM INTERACTIONS
      */
-    public Dialog esm_dialog = null;
-    public ESMExpireMonitor expire_monitor = null;
+    public Dialog esm_dialog;
+    public ESMExpireMonitor expire_monitor;
 
     /**
      * Extended on sub-classes

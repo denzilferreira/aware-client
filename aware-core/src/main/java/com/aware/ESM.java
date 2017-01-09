@@ -200,7 +200,7 @@ public class ESM extends Aware_Sensor {
 
     public static final int ESM_NOTIFICATION_ID = 777;
 
-    public static ESMNotificationTimeout esm_notif_expire = null;
+    public static ESMNotificationTimeout esm_notif_expire;
 
     //Static instance to the notification manager
     private static NotificationManager mNotificationManager;
@@ -329,16 +329,13 @@ public class ESM extends Aware_Sensor {
             for (int i = 0; i < esms.length(); i++) {
                 JSONObject esm = esms.getJSONObject(i).getJSONObject(EXTRA_ESM);
 
-                // we check the first ESM item in the queue to see whether any current queue items need to be removed
-                if (i == 0) {
+                if (i == 0) { // we check the first ESM item in the queue to see whether any current queue items need to be removed
                     if (esm.optBoolean("esm_replace_queue")) { // clear current queue
-                        if (Aware.DEBUG)
-                            Log.d(TAG, "Clearing ESM queue before adding new ESM to queue");
+                        if (Aware.DEBUG) Log.d(TAG, "Clearing ESM queue before adding new ESM to queue");
 
                         // Remove notification
                         if (mNotificationManager == null)
                             mNotificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
-
                         mNotificationManager.cancel(ESM.ESM_NOTIFICATION_ID);
 
                         // Clear queue
@@ -442,7 +439,7 @@ public class ESM extends Aware_Sensor {
         private Context mContext;
         private int mRetries = 0;
 
-        public ESMNotificationTimeout(Context context, long display_timestamp, int expires_in_seconds, int retries, int esm_id) {
+        ESMNotificationTimeout(Context context, long display_timestamp, int expires_in_seconds, int retries, int esm_id) {
             this.display_timestamp = display_timestamp;
             this.expires_in_seconds = expires_in_seconds;
             this.mContext = context;
@@ -520,7 +517,6 @@ public class ESM extends Aware_Sensor {
      * - ACTION_AWARE_ESM_ANSWERED
      * - ACTION_AWARE_ESM_DISMISSED
      * - ACTION_AWARE_ESM_EXPIRED
-     *
      * @author df
      */
     public static class ESMMonitor extends BroadcastReceiver {
