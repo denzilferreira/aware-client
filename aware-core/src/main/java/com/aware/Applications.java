@@ -363,6 +363,10 @@ public class Applications extends AccessibilityService {
             } catch (IllegalArgumentException e) {
             }
         }
+
+        Scheduler.removeSchedule(this, SCHEDULER_APPLICATIONS_BACKGROUND);
+        Aware.startScheduler(this);
+
         Log.d(TAG, "Accessibility Service has been interrupted...");
     }
 
@@ -378,6 +382,9 @@ public class Applications extends AccessibilityService {
         }
 
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, false);
+
+        Scheduler.removeSchedule(this, SCHEDULER_APPLICATIONS_BACKGROUND);
+        Aware.startScheduler(this);
 
         Log.d(TAG, "Accessibility Service has been unbound...");
         return super.onUnbind(intent);
@@ -414,6 +421,9 @@ public class Applications extends AccessibilityService {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+        } else {
+            Scheduler.removeSchedule(getApplicationContext(), SCHEDULER_APPLICATIONS_BACKGROUND);
+            Aware.startScheduler(this);
         }
 
         Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
@@ -434,6 +444,7 @@ public class Applications extends AccessibilityService {
         }
 
         Scheduler.removeSchedule(this, SCHEDULER_APPLICATIONS_BACKGROUND);
+        Aware.startScheduler(this);
 
         Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
     }
@@ -579,6 +590,12 @@ public class Applications extends AccessibilityService {
 
         @Override
         protected void onHandleIntent(Intent intent) {
+
+            if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true")) {
+                Scheduler.removeSchedule(getApplicationContext(), SCHEDULER_APPLICATIONS_BACKGROUND);
+                if (DEBUG)
+                    Log.d(TAG, "Removed scheduler: " + SCHEDULER_APPLICATIONS_BACKGROUND);
+            }
 
             //Updating list of running applications/services
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && intent.getAction().equals(ACTION_AWARE_APPLICATIONS_HISTORY)) {
