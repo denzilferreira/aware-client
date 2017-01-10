@@ -88,13 +88,13 @@
                 android:title="Application usage" />
 
             <EditTextPreference
-                android:defaultValue="30"
+                android:defaultValue="1"
                 android:dependency="status_applications"
                 android:inputType="number"
                 android:key="frequency_applications"
                 android:persistent="true"
-                android:summary="30 seconds"
-                android:title="Update frequency of background applications" />
+                android:summary="Check every 1 minute(s)"
+                android:title="Background applications" />
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -648,6 +648,26 @@
                 android:summaryOff="Screen is inactive"
                 android:title="Active" />
         </PreferenceScreen>
+
+        <PreferenceScreen
+            android:icon="@drawable/ic_action_significant"
+            android:key="significant"
+            android:summary="Device significant motion *"
+            android:title="Significant motion">
+
+            <com.aware.phone.ui.Aware_Toolbar
+                android:key="significant"
+                android:title="Significant motion" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_significant_motion"
+                android:persistent="true"
+                android:summary="Capture device significant motion start and end"
+                android:summaryOff="Significant motion is off"
+                android:title="Active" />
+        </PreferenceScreen>
+
         <PreferenceScreen
             android:icon="@drawable/ic_action_temperature"
             android:key="temperature"

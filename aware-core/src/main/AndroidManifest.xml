@@ -162,6 +162,9 @@
         <service
             android:name="com.aware.utils.Aware_TTS"
             android:exported="true" />
+        <service
+            android:name="com.aware.SignificantMotion"
+            android:exported="true" />
 
         <!-- BroadcastReceivers -->
 
@@ -349,6 +352,12 @@
         <provider
             android:name="com.aware.providers.Keyboard_Provider"
             android:authorities="${applicationId}.provider.keyboard"
+            android:exported="true"
+            android:readPermission="com.aware.READ_CONTEXT_DATA"
+            android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
+        <provider
+            android:name="com.aware.providers.Significant_Provider"
+            android:authorities="${applicationId}.provider.significant"
             android:exported="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />

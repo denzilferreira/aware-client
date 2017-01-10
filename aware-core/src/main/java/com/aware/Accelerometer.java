@@ -109,7 +109,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         // Proceed with saving as usual.
         ContentValues rowData = new ContentValues();
         rowData.put(Accelerometer_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-        rowData.put(Accelerometer_Data.TIMESTAMP, System.currentTimeMillis()); //convert from nano to milliseconds
+        rowData.put(Accelerometer_Data.TIMESTAMP, System.currentTimeMillis());
         rowData.put(Accelerometer_Data.VALUES_0, event.values[0]);
         rowData.put(Accelerometer_Data.VALUES_1, event.values[1]);
         rowData.put(Accelerometer_Data.VALUES_2, event.values[2]);

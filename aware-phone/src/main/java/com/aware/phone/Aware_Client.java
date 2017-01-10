@@ -263,6 +263,7 @@ public class Aware_Client extends Aware_Activity {
         telephony();
         gravity();
         temperature();
+        significant();
     }
 
     /**
@@ -368,6 +369,41 @@ public class Aware_Client extends Aware_Activity {
                 Aware.setSetting(awareContext, Aware_Preferences.THRESHOLD_TEMPERATURE, (String) newValue);
                 threshold_temperature.setSummary((String) newValue);
                 Aware.startTemperature(awareContext);
+                return true;
+            }
+        });
+    }
+
+    private void significant() {
+        final PreferenceScreen significant_pref = (PreferenceScreen) findPreference("significant");
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_SIGNIFICANT_MOTION).equals("true")) {
+                significant_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_significant_active));
+            } else {
+                significant_pref.setIcon(ContextCompat.getDrawable(awareContext, R.drawable.ic_action_significant));
+            }
+        }
+
+        Sensor sensor = mSensorMgr.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION);
+        if (sensor != null) {
+            significant_pref.setSummary(significant_pref.getSummary().toString().replace("*", " - Power: " + sensor.getPower() + " mA"));
+        } else {
+            significant_pref.setSummary(significant_pref.getSummary().toString().replace("*", ""));
+            significant_pref.setEnabled(false);
+            return;
+        }
+
+        final CheckBoxPreference signicant = (CheckBoxPreference) findPreference(Aware_Preferences.STATUS_SIGNIFICANT_MOTION);
+        signicant.setChecked(Aware.getSetting(awareContext, Aware_Preferences.STATUS_SIGNIFICANT_MOTION).equals("true"));
+        signicant.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_SCREEN, signicant.isChecked());
+                if (signicant.isChecked()) {
+                    Aware.startSignificant(awareContext);
+                } else {
+                    Aware.stopSignificant(awareContext);
+                }
                 return true;
             }
         });
@@ -626,14 +662,14 @@ public class Aware_Client extends Aware_Activity {
 
         final EditTextPreference frequency_applications = (EditTextPreference) findPreference(Aware_Preferences.FREQUENCY_APPLICATIONS);
         if (Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_APPLICATIONS).length() > 0) {
-            frequency_applications.setSummary(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_APPLICATIONS) + " seconds");
+            frequency_applications.setSummary("Check every " + Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_APPLICATIONS) + " minute(s)");
         }
         frequency_applications.setText(Aware.getSetting(awareContext, Aware_Preferences.FREQUENCY_APPLICATIONS));
         frequency_applications.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 Aware.setSetting(awareContext, Aware_Preferences.FREQUENCY_APPLICATIONS, (String) newValue);
-                frequency_applications.setSummary((String) newValue + " seconds");
+                frequency_applications.setSummary("Check every " + (String) newValue + " minute(s)");
                 Aware.startApplications(awareContext);
                 return true;
             }

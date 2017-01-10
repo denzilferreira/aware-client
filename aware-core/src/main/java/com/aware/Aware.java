@@ -193,6 +193,7 @@ public class Aware extends Service {
     private static Intent installationsSrv = null;
     private static Intent keyboard = null;
     private static Intent scheduler = null;
+    private static Intent significantSrv = null;
 
     /**
      * Singleton instance of the framework
@@ -905,7 +906,7 @@ public class Aware extends Service {
 
         boolean is_global;
 
-        ArrayList<String> global_settings = new ArrayList<String>();
+        ArrayList<String> global_settings = new ArrayList<>();
         global_settings.add(Aware_Preferences.DEBUG_FLAG);
         global_settings.add(Aware_Preferences.DEBUG_TAG);
         global_settings.add(Aware_Preferences.DEVICE_ID);
@@ -1900,6 +1901,10 @@ public class Aware extends Service {
 
         startScheduler(awareContext);
 
+        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_SIGNIFICANT_MOTION).equals("true")) {
+            startSignificant(awareContext);
+        } else stopSignificant(awareContext);
+
         if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true")) {
             startESM(awareContext);
         } else stopESM(awareContext);
@@ -2016,6 +2021,10 @@ public class Aware extends Service {
 
         startScheduler(context);
 
+        if (Aware.getSetting(context, Aware_Preferences.STATUS_SIGNIFICANT_MOTION).equals("true")) {
+            startSignificant(context);
+        } else stopSignificant(context);
+
         if (Aware.getSetting(context, Aware_Preferences.STATUS_ESM).equals("true")) {
             startESM(context);
         } else stopESM(context);
@@ -2127,6 +2136,7 @@ public class Aware extends Service {
      */
     @Deprecated
     public static void stopAWARE() {
+        stopSignificant(awareContext);
         stopApplications(awareContext);
         stopAccelerometer(awareContext);
         stopBattery(awareContext);
@@ -2158,10 +2168,12 @@ public class Aware extends Service {
 
     /**
      * Stop all services
+     *
      * @param context
      */
     public static void stopAWARE(Context context) {
         if (context == null) return;
+        stopSignificant(context);
         stopApplications(context);
         stopAccelerometer(context);
         stopBattery(context);
@@ -2189,6 +2201,27 @@ public class Aware extends Service {
         stopInstallations(context);
         stopKeyboard(context);
         stopScheduler(context);
+    }
+
+    /**
+     * Start the significant motion service
+     *
+     * @param context
+     */
+    public static void startSignificant(Context context) {
+        if (context == null) return;
+        if (significantSrv == null) significantSrv = new Intent(context, SignificantMotion.class);
+        context.startService(significantSrv);
+    }
+
+    /**
+     * Stop the significant motion service
+     *
+     * @param context
+     */
+    public static void stopSignificant(Context context) {
+        if (context == null) return;
+        if (significantSrv != null) context.stopService(significantSrv);
     }
 
     /**
