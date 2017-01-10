@@ -398,7 +398,7 @@ public class Aware_Client extends Aware_Activity {
         signicant.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                Aware.setSetting(awareContext, Aware_Preferences.STATUS_SCREEN, signicant.isChecked());
+                Aware.setSetting(awareContext, Aware_Preferences.STATUS_SIGNIFICANT_MOTION, signicant.isChecked());
                 if (signicant.isChecked()) {
                     Aware.startSignificant(awareContext);
                 } else {
