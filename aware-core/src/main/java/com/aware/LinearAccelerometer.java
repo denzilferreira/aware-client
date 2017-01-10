@@ -102,6 +102,10 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        //If we are using the significant motion, don't record accelerometer data
+        if (Aware.getSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION).equals("true") && !SignificantMotion.CURRENT_SIGMOTION_STATE)
+            return;
+
         // Apply threshold.  This applies to each axis independently.  We could
         // alternatively use Euclidian distance.  If change of values is not
         // enough, do nothing.

@@ -384,7 +384,7 @@ public class Aware_Client extends Aware_Activity {
             }
         }
 
-        Sensor sensor = mSensorMgr.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION);
+        Sensor sensor = mSensorMgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER); //we are using the accelerometer + post-processing
         if (sensor != null) {
             significant_pref.setSummary(significant_pref.getSummary().toString().replace("*", " - Power: " + sensor.getPower() + " mA"));
         } else {

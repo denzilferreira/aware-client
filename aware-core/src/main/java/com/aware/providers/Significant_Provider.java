@@ -30,7 +30,7 @@ import java.util.HashMap;
  */
 public class Significant_Provider extends ContentProvider {
 
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 2;
 
     /**
      * Authority of content provider
@@ -38,36 +38,8 @@ public class Significant_Provider extends ContentProvider {
     public static String AUTHORITY = "com.aware.provider.significant";
 
     // ContentProvider query paths
-    private static final int SENSOR_DEV = 1;
-    private static final int SENSOR_DEV_ID = 2;
-    private static final int SENSOR_DATA = 3;
-    private static final int SENSOR_DATA_ID = 4;
-
-    /**
-     * Sensor device info
-     *
-     * @author denzil
-     */
-    public static final class Significant_Sensor implements BaseColumns {
-        private Significant_Sensor() {
-        }
-
-        public static final Uri CONTENT_URI = Uri.parse("content://" + Significant_Provider.AUTHORITY + "/sensor_significant");
-        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.aware.significant.sensor";
-        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.aware.significant.sensor";
-
-        public static final String _ID = "_id";
-        public static final String TIMESTAMP = "timestamp";
-        public static final String DEVICE_ID = "device_id";
-        public static final String MAXIMUM_RANGE = "double_sensor_maximum_range";
-        public static final String MINIMUM_DELAY = "double_sensor_minimum_delay";
-        public static final String NAME = "sensor_name";
-        public static final String POWER_MA = "double_sensor_power_ma";
-        public static final String RESOLUTION = "double_sensor_resolution";
-        public static final String TYPE = "sensor_type";
-        public static final String VENDOR = "sensor_vendor";
-        public static final String VERSION = "sensor_version";
-    }
+    private static final int SENSOR_DATA = 1;
+    private static final int SENSOR_DATA_ID = 2;
 
     /**
      * Logged sensor data
@@ -90,23 +62,9 @@ public class Significant_Provider extends ContentProvider {
 
     public static String DATABASE_NAME = "significant.db";
 
-    public static final String[] DATABASE_TABLES = {"sensor_significant",
-            "significant"};
+    public static final String[] DATABASE_TABLES = {"significant"};
 
     public static final String[] TABLES_FIELDS = {
-            // sensor device information
-            Significant_Sensor._ID + " integer primary key autoincrement,"
-                    + Significant_Sensor.TIMESTAMP + " real default 0,"
-                    + Significant_Sensor.DEVICE_ID + " text default '',"
-                    + Significant_Sensor.MAXIMUM_RANGE + " real default 0,"
-                    + Significant_Sensor.MINIMUM_DELAY + " real default 0,"
-                    + Significant_Sensor.NAME + " text default '',"
-                    + Significant_Sensor.POWER_MA + " real default 0,"
-                    + Significant_Sensor.RESOLUTION + " real default 0,"
-                    + Significant_Sensor.TYPE + " text default '',"
-                    + Significant_Sensor.VENDOR + " text default '',"
-                    + Significant_Sensor.VERSION + " text default '',"
-                    + "UNIQUE(" + Significant_Sensor.DEVICE_ID + ")",
             // sensor data
             Significant_Data._ID + " integer primary key autoincrement,"
                     + Significant_Data.TIMESTAMP + " real default 0,"
@@ -140,24 +98,16 @@ public class Significant_Provider extends ContentProvider {
             return 0;
         }
 
-        int count = 0;
+        int count;
         switch (sUriMatcher.match(uri)) {
-            case SENSOR_DEV:
+            case SENSOR_DATA:
                 database.beginTransaction();
                 count = database.delete(DATABASE_TABLES[0], selection,
                         selectionArgs);
                 database.setTransactionSuccessful();
                 database.endTransaction();
                 break;
-            case SENSOR_DATA:
-                database.beginTransaction();
-                count = database.delete(DATABASE_TABLES[1], selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
-                break;
             default:
-
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
 
@@ -168,10 +118,6 @@ public class Significant_Provider extends ContentProvider {
     @Override
     public String getType(Uri uri) {
         switch (sUriMatcher.match(uri)) {
-            case SENSOR_DEV:
-                return Significant_Sensor.CONTENT_TYPE;
-            case SENSOR_DEV_ID:
-                return Significant_Sensor.CONTENT_ITEM_TYPE;
             case SENSOR_DATA:
                 return Significant_Data.CONTENT_TYPE;
             case SENSOR_DATA_ID:
@@ -195,30 +141,14 @@ public class Significant_Provider extends ContentProvider {
                 initialValues) : new ContentValues();
 
         switch (sUriMatcher.match(uri)) {
-            case SENSOR_DEV:
-                database.beginTransaction();
-                long accel_id = database.insertWithOnConflict(DATABASE_TABLES[0],
-                        Significant_Sensor.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-                database.setTransactionSuccessful();
-                database.endTransaction();
-                if (accel_id > 0) {
-                    Uri accelUri = ContentUris.withAppendedId(
-                            Significant_Sensor.CONTENT_URI, accel_id);
-                    getContext().getContentResolver().notifyChange(accelUri, null);
-                    return accelUri;
-                }
-                throw new SQLException("Failed to insert row into " + uri);
             case SENSOR_DATA:
                 database.beginTransaction();
-                long accelData_id = database.insertWithOnConflict(DATABASE_TABLES[1],
-                        Significant_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
+                long accelData_id = database.insertWithOnConflict(DATABASE_TABLES[0], Significant_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
                 database.setTransactionSuccessful();
                 database.endTransaction();
                 if (accelData_id > 0) {
-                    Uri accelDataUri = ContentUris.withAppendedId(
-                            Significant_Data.CONTENT_URI, accelData_id);
-                    getContext().getContentResolver().notifyChange(accelDataUri,
-                            null);
+                    Uri accelDataUri = ContentUris.withAppendedId(Significant_Data.CONTENT_URI, accelData_id);
+                    getContext().getContentResolver().notifyChange(accelDataUri, null);
                     return accelDataUri;
                 }
                 throw new SQLException("Failed to insert row into " + uri);
@@ -244,33 +174,14 @@ public class Significant_Provider extends ContentProvider {
 
         int count = 0;
         switch (sUriMatcher.match(uri)) {
-            case SENSOR_DEV:
-                database.beginTransaction();
-                for (ContentValues v : values) {
-                    long id;
-                    try {
-                        id = database.insertOrThrow(DATABASE_TABLES[0], Significant_Sensor.DEVICE_ID, v);
-                    } catch (SQLException e) {
-                        id = database.replace(DATABASE_TABLES[0], Significant_Sensor.DEVICE_ID, v);
-                    }
-                    if (id <= 0) {
-                        Log.w(Accelerometer.TAG, "Failed to insert/replace row into " + uri);
-                    } else {
-                        count++;
-                    }
-                }
-                database.setTransactionSuccessful();
-                database.endTransaction();
-                getContext().getContentResolver().notifyChange(uri, null);
-                return count;
             case SENSOR_DATA:
                 database.beginTransaction();
                 for (ContentValues v : values) {
                     long id;
                     try {
-                        id = database.insertOrThrow(DATABASE_TABLES[1], Significant_Data.DEVICE_ID, v);
+                        id = database.insertOrThrow(DATABASE_TABLES[0], Significant_Data.DEVICE_ID, v);
                     } catch (SQLException e) {
-                        id = database.replace(DATABASE_TABLES[1], Significant_Data.DEVICE_ID, v);
+                        id = database.replace(DATABASE_TABLES[0], Significant_Data.DEVICE_ID, v);
                     }
                     if (id <= 0) {
                         Log.w(Accelerometer.TAG, "Failed to insert/replace row into " + uri);
@@ -292,32 +203,8 @@ public class Significant_Provider extends ContentProvider {
         AUTHORITY = getContext().getPackageName() + ".provider.significant";
 
         sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-        sUriMatcher.addURI(Significant_Provider.AUTHORITY, DATABASE_TABLES[0],
-                SENSOR_DEV);
-        sUriMatcher.addURI(Significant_Provider.AUTHORITY, DATABASE_TABLES[0]
-                + "/#", SENSOR_DEV_ID);
-        sUriMatcher.addURI(Significant_Provider.AUTHORITY, DATABASE_TABLES[1],
-                SENSOR_DATA);
-        sUriMatcher.addURI(Significant_Provider.AUTHORITY, DATABASE_TABLES[1]
-                + "/#", SENSOR_DATA_ID);
-
-        sensorMap = new HashMap<>();
-        sensorMap.put(Significant_Sensor._ID, Significant_Sensor._ID);
-        sensorMap.put(Significant_Sensor.TIMESTAMP,
-                Significant_Sensor.TIMESTAMP);
-        sensorMap.put(Significant_Sensor.DEVICE_ID,
-                Significant_Sensor.DEVICE_ID);
-        sensorMap.put(Significant_Sensor.MAXIMUM_RANGE,
-                Significant_Sensor.MAXIMUM_RANGE);
-        sensorMap.put(Significant_Sensor.MINIMUM_DELAY,
-                Significant_Sensor.MINIMUM_DELAY);
-        sensorMap.put(Significant_Sensor.NAME, Significant_Sensor.NAME);
-        sensorMap.put(Significant_Sensor.POWER_MA, Significant_Sensor.POWER_MA);
-        sensorMap.put(Significant_Sensor.RESOLUTION,
-                Significant_Sensor.RESOLUTION);
-        sensorMap.put(Significant_Sensor.TYPE, Significant_Sensor.TYPE);
-        sensorMap.put(Significant_Sensor.VENDOR, Significant_Sensor.VENDOR);
-        sensorMap.put(Significant_Sensor.VERSION, Significant_Sensor.VERSION);
+        sUriMatcher.addURI(Significant_Provider.AUTHORITY, DATABASE_TABLES[0], SENSOR_DATA);
+        sUriMatcher.addURI(Significant_Provider.AUTHORITY, DATABASE_TABLES[0] + "/#", SENSOR_DATA_ID);
 
         sensorDataMap = new HashMap<>();
         sensorDataMap.put(Significant_Data._ID, Significant_Data._ID);
@@ -344,12 +231,8 @@ public class Significant_Provider extends ContentProvider {
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         switch (sUriMatcher.match(uri)) {
-            case SENSOR_DEV:
-                qb.setTables(DATABASE_TABLES[0]);
-                qb.setProjectionMap(sensorMap);
-                break;
             case SENSOR_DATA:
-                qb.setTables(DATABASE_TABLES[1]);
+                qb.setTables(DATABASE_TABLES[0]);
                 qb.setProjectionMap(sensorDataMap);
                 break;
             default:
@@ -381,22 +264,14 @@ public class Significant_Provider extends ContentProvider {
         }
         int count = 0;
         switch (sUriMatcher.match(uri)) {
-            case SENSOR_DEV:
+            case SENSOR_DATA:
                 database.beginTransaction();
                 count = database.update(DATABASE_TABLES[0], values, selection,
                         selectionArgs);
                 database.setTransactionSuccessful();
                 database.endTransaction();
                 break;
-            case SENSOR_DATA:
-                database.beginTransaction();
-                count = database.update(DATABASE_TABLES[1], values, selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
-                break;
             default:
-
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
 

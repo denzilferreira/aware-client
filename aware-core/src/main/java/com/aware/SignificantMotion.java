@@ -1,70 +1,55 @@
 package com.aware;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.database.SQLException;
 import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.hardware.TriggerEvent;
-import android.hardware.TriggerEventListener;
 import android.net.Uri;
+import android.os.Binder;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.IBinder;
+import android.os.PowerManager;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.aware.providers.Significant_Provider;
-import com.aware.providers.Temperature_Provider;
 import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 
+import java.util.ArrayList;
+
 /**
  * Created by denzil on 10/01/2017.
- *
+ * <p>
  * This sensor is used to track device significant motion.
  * Also used internally by AWARE if available to save battery when the device is still with high-frequency sensors
+ * Based of:
+ * https://github.com/sensorplatforms/open-sensor-platform/blob/master/embedded/common/alg/significantmotiondetector.c
  */
 
-public class SignificantMotion extends Aware_Sensor {
+public class SignificantMotion extends Aware_Sensor implements SensorEventListener {
 
-    public static String TAG = "AWARE::Resource Manager";
+    public static String TAG = "AWARE::Significant";
 
     private static SensorManager mSensorManager;
-    private static Sensor mSignificantMotion;
-    private SignificantMotionTrigger mSignificantTrigger;
+    private static Sensor mAccelerometer;
+    private static HandlerThread sensorThread = null;
+    private static Handler sensorHandler = null;
+    private static PowerManager.WakeLock wakeLock = null;
+
+    private static boolean LAST_SIGMOTION_STATE = false;
+    public static boolean CURRENT_SIGMOTION_STATE = false;
+    private static final double SIGMOTION_THRESHOLD = 2.5f;
 
     /**
      * Broadcasted when there is significant motion
      */
-    public static final String ACTION_AWARE_SIGNIFICANT_MOTION = "ACTION_AWARE_SIGNIFICANT_MOTION";
-    public static final String EXTRA_DATA = "data";
-    public static final String EXTRA_SENSOR = "sensor";
-
-    private void saveSensorDevice(Sensor sensor) {
-        Cursor sensorInfo = getContentResolver().query(Significant_Provider.Significant_Sensor.CONTENT_URI, null, null, null, null);
-        if (sensorInfo == null || !sensorInfo.moveToFirst()) {
-            ContentValues rowData = new ContentValues();
-            rowData.put(Temperature_Provider.Temperature_Sensor.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-            rowData.put(Temperature_Provider.Temperature_Sensor.TIMESTAMP, System.currentTimeMillis());
-            rowData.put(Temperature_Provider.Temperature_Sensor.MAXIMUM_RANGE, sensor.getMaximumRange());
-            rowData.put(Temperature_Provider.Temperature_Sensor.MINIMUM_DELAY, sensor.getMinDelay());
-            rowData.put(Temperature_Provider.Temperature_Sensor.NAME, sensor.getName());
-            rowData.put(Temperature_Provider.Temperature_Sensor.POWER_MA, sensor.getPower());
-            rowData.put(Temperature_Provider.Temperature_Sensor.RESOLUTION, sensor.getResolution());
-            rowData.put(Temperature_Provider.Temperature_Sensor.TYPE, sensor.getType());
-            rowData.put(Temperature_Provider.Temperature_Sensor.VENDOR, sensor.getVendor());
-            rowData.put(Temperature_Provider.Temperature_Sensor.VERSION, sensor.getVersion());
-
-            getContentResolver().insert(Significant_Provider.Significant_Sensor.CONTENT_URI, rowData);
-            if (Aware.DEBUG) Log.d(TAG, "Significant motion sensor info: " + rowData.toString());
-
-            Intent significant = new Intent(ACTION_AWARE_SIGNIFICANT_MOTION);
-            significant.putExtra(EXTRA_SENSOR, rowData);
-            sendBroadcast(significant);
-        }
-        if (sensorInfo != null && !sensorInfo.isClosed()) sensorInfo.close();
-    }
+    public static final String ACTION_AWARE_SIGNIFICANT_MOTION_START = "ACTION_AWARE_SIGNIFICANT_MOTION_START";
+    public static final String ACTION_AWARE_SIGNIFICANT_MOTION_END = "ACTION_AWARE_SIGNIFICANT_MOTION_END";
 
     @Override
     public void onCreate() {
@@ -73,18 +58,41 @@ public class SignificantMotion extends Aware_Sensor {
         DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        mSignificantMotion = mSensorManager.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION);
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
+        sensorThread = new HandlerThread(TAG);
+        sensorThread.start();
+
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
+        wakeLock.acquire();
+
+        sensorHandler = new Handler(sensorThread.getLooper());
 
         DATABASE_TABLES = Significant_Provider.DATABASE_TABLES;
         TABLES_FIELDS = Significant_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Significant_Provider.Significant_Sensor.CONTENT_URI, Significant_Provider.Significant_Data.CONTENT_URI};
+        CONTEXT_URIS = new Uri[]{Significant_Provider.Significant_Data.CONTENT_URI};
 
         CONTEXT_PRODUCER = new ContextProducer() {
             @Override
             public void onContext() {
-                Intent moving = new Intent();
-                moving.setAction(ACTION_AWARE_SIGNIFICANT_MOTION);
-                sendBroadcast(moving);
+                ContentValues rowData = new ContentValues();
+                rowData.put(Significant_Provider.Significant_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                rowData.put(Significant_Provider.Significant_Data.TIMESTAMP, System.currentTimeMillis());
+                rowData.put(Significant_Provider.Significant_Data.IS_MOVING, CURRENT_SIGMOTION_STATE);
+                getContentResolver().insert(Significant_Provider.Significant_Data.CONTENT_URI, rowData);
+
+                if (DEBUG)
+                    Log.d(SignificantMotion.TAG, "Significant motion: " + rowData.toString());
+
+                Intent sigmotion = new Intent();
+                if (CURRENT_SIGMOTION_STATE) {
+                    sigmotion.setAction(ACTION_AWARE_SIGNIFICANT_MOTION_START);
+                } else {
+                    sigmotion.setAction(ACTION_AWARE_SIGNIFICANT_MOTION_END);
+                }
+
+                sendBroadcast(sigmotion);
             }
         };
 
@@ -102,8 +110,9 @@ public class SignificantMotion extends Aware_Sensor {
         }
 
         if (permissions_ok) {
-            if (mSignificantMotion == null) {
-                if (DEBUG) Log.d(TAG, "This device does not have a significant motion sensor.");
+            if (mAccelerometer == null) {
+                if (DEBUG)
+                    Log.d(TAG, "This device does not have an accelerometer sensor. Can't detect significant motion");
                 Aware.setSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION, false);
                 stopSelf();
 
@@ -112,20 +121,15 @@ public class SignificantMotion extends Aware_Sensor {
                 DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
                 Aware.setSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION, true);
 
-                saveSensorDevice(mSignificantMotion);
-
-                if (mSignificantTrigger == null) {
-                    mSignificantTrigger = new SignificantMotionTrigger(getApplicationContext());
-                    mSensorManager.requestTriggerSensor(mSignificantTrigger, mSignificantMotion);
-                }
+                mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI, sensorHandler);
 
                 if (Aware.DEBUG) Log.d(TAG, "Significant motion service active...");
             }
         } else {
-                Intent permissions = new Intent(this, PermissionsHandler.class);
-                permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-                permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(permissions);
+            Intent permissions = new Intent(this, PermissionsHandler.class);
+            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
+            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(permissions);
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -135,38 +139,74 @@ public class SignificantMotion extends Aware_Sensor {
     public void onDestroy() {
         super.onDestroy();
 
-        if (mSignificantMotion != null && mSignificantTrigger != null)
-            mSensorManager.cancelTriggerSensor(mSignificantTrigger, mSignificantMotion);
+        sensorHandler.removeCallbacksAndMessages(null);
+        mSensorManager.unregisterListener(this, mAccelerometer);
+        sensorThread.quit();
+        wakeLock.release();
 
         if (Aware.DEBUG) Log.d(TAG, "Significant motion service destroyed...");
     }
 
-    public class SignificantMotionTrigger extends TriggerEventListener {
-        private Context mContext;
+    private ArrayList<Double> buffer = new ArrayList<>();
 
-        SignificantMotionTrigger(Context context) {
-            mContext = context;
-        }
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        double x = event.values[0];
+        double y = event.values[1];
+        double z = event.values[2];
 
-        @Override
-        public void onTrigger(TriggerEvent event) {
+        double mSignificantEnergy = Math.sqrt(x * x + y * y + z * z) - SensorManager.GRAVITY_EARTH;
+        buffer.add(Math.abs(mSignificantEnergy));
 
-            ContentValues rowData = new ContentValues();
-            rowData.put(Significant_Provider.Significant_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-            rowData.put(Significant_Provider.Significant_Data.TIMESTAMP, System.currentTimeMillis());
-            rowData.put(Significant_Provider.Significant_Data.IS_MOVING, event.values[0] == 1);
+        if (buffer.size() == 5) {
+            //remove oldest value
+            buffer.remove(0);
 
-            try {
-                if (SignificantMotion.DEBUG)
-                    Log.d(SignificantMotion.TAG, "Significant motion: " + rowData.toString());
-
-                mContext.getContentResolver().insert(Significant_Provider.Significant_Data.CONTENT_URI, rowData);
-            } catch (SQLException e) {
-                if (SignificantMotion.DEBUG)
-                    e.printStackTrace();
+            double max_energy = -1;
+            for (double e : buffer) {
+                if (e >= max_energy) max_energy = e;
             }
 
-            CONTEXT_PRODUCER.onContext();
+            if (max_energy >= SIGMOTION_THRESHOLD) {
+                CURRENT_SIGMOTION_STATE = true;
+            } else if (max_energy < SIGMOTION_THRESHOLD) {
+                CURRENT_SIGMOTION_STATE = false;
+            }
+
+            if (CURRENT_SIGMOTION_STATE != LAST_SIGMOTION_STATE)
+                CONTEXT_PRODUCER.onContext();
+
+            LAST_SIGMOTION_STATE = CURRENT_SIGMOTION_STATE;
         }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    }
+
+    //Singleton instance of this service
+    private static SignificantMotion significantMotionSrv = SignificantMotion.getService();
+
+    /**
+     * Get singleton instance to service
+     *
+     * @return obj
+     */
+    public static SignificantMotion getService() {
+        if (significantMotionSrv == null) significantMotionSrv = new SignificantMotion();
+        return significantMotionSrv;
+    }
+
+    private final IBinder serviceBinder = new ServiceBinder();
+
+    public class ServiceBinder extends Binder {
+        SignificantMotion getService() {
+            return SignificantMotion.getService();
+        }
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return serviceBinder;
     }
 }
