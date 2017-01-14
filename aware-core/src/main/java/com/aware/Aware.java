@@ -780,7 +780,14 @@ public class Aware extends Service {
                 }
             }
 
-            View ui = (View) m.invoke(fragment, packageContext);
+            View ui = null;
+            try {
+                ui = (View) m.invoke(fragment, packageContext);
+            } catch (InvocationTargetException e) {
+                Log.d(TAG, e.getCause().getMessage());
+                return ui;
+            }
+
             if (ui != null) {
                 ui.setId(new Random(System.currentTimeMillis()).nextInt());
                 ui.setBackgroundColor(Color.WHITE);
@@ -849,20 +856,19 @@ public class Aware extends Service {
                 return null;
             }
         } catch (NameNotFoundException e) {
-            e.printStackTrace();
+            Log.d(TAG, e.getCause().getMessage());
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            Log.d(TAG, e.getCause().getMessage());
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            Log.d(TAG, e.getCause().getMessage());
         } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            Log.d(TAG, e.getCause().getMessage());
         } catch (NullPointerException e) {
-            e.printStackTrace();
+            Log.d(TAG, e.getCause().getMessage());
         } catch (InstantiationException e) {
-            e.printStackTrace();
+            Log.d(TAG, e.getCause().getMessage());
         }
+
         return null;
     }
 
