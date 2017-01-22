@@ -1,62 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <include android:id="@+id/aware_toolbar" layout="@layout/aware_toolbar"/>
-
-    <android.support.v4.widget.DrawerLayout
-        android:id="@+id/aware_ui_main"
+    <ScrollView
+        android:id="@+id/plugins_store_scroller"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" >
+        android:layout_height="match_parent"
+        android:layout_weight="1">
 
-        <android.support.v4.widget.SwipeRefreshLayout
-            android:id="@+id/refresh_plugins"
-            android:layout_height="wrap_content"
+        <GridView
+            android:id="@+id/plugins_store_grid"
             android:layout_width="match_parent"
-            >
-            <ScrollView
-                android:id="@+id/plugins_store_scroller"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:fillViewport="true" >
-
-                <LinearLayout
-                    android:id="@+id/store_container"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical" >
-
-                    <GridView
-                        android:id="@+id/plugins_store_grid"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@android:color/white"
-                        android:columnWidth="80dp"
-                        android:padding="5dp"
-                        android:numColumns="auto_fit"
-                        android:verticalSpacing="5dp"
-                        android:horizontalSpacing="5dp"
-                        android:stretchMode="columnWidth"
-                        android:gravity="center"
-                        android:animateLayoutChanges="true"
-                        />
-                </LinearLayout>
-            </ScrollView>
-        </android.support.v4.widget.SwipeRefreshLayout>
-        <ListView
-            android:id="@+id/aware_navigation"
-            android:layout_width="240dp"
             android:layout_height="match_parent"
-            android:layout_gravity="start"
-            android:background="#0099CC"
-            android:choiceMode="singleChoice"
-            android:divider="@android:color/transparent"
-            android:dividerHeight="0dp" />
-    </android.support.v4.widget.DrawerLayout>
-    <ListView
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent" android:id="@android:id/list"
-        />
+            android:animateLayoutChanges="true"
+            android:background="@android:color/white"
+            android:columnWidth="80dp"
+            android:gravity="center"
+            android:horizontalSpacing="5dp"
+            android:numColumns="auto_fit"
+            android:padding="5dp"
+            android:stretchMode="columnWidth"
+            android:verticalSpacing="5dp" />
+
+    </ScrollView>
+
+    <include
+        android:id="@+id/aware_bottombar"
+        layout="@layout/aware_controller" />
+
+    <ListView android:id="@android:id/list"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"/>
+
 </LinearLayout>
+

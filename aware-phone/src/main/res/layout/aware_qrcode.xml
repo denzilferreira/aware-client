@@ -2,50 +2,28 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#000"
     android:orientation="vertical">
 
-    <include
-        android:id="@+id/aware_toolbar"
-        layout="@layout/aware_toolbar" />
-
-    <android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/aware_ui_main"
+    <com.aware.phone.ui.qrcode.CameraSourcePreview
+        android:id="@+id/preview"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_weight="1">
 
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:background="#000"
-            android:orientation="vertical">
+        <com.aware.phone.ui.qrcode.GraphicOverlay
+            android:id="@+id/overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </com.aware.phone.ui.qrcode.CameraSourcePreview>
 
-            <com.aware.phone.ui.qrcode.CameraSourcePreview
-                android:id="@+id/preview"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
+    <include
+        android:id="@+id/aware_bottombar"
+        layout="@layout/aware_controller" />
 
-                <com.aware.phone.ui.qrcode.GraphicOverlay
-                    android:id="@+id/overlay"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-            </com.aware.phone.ui.qrcode.CameraSourcePreview>
+    <ListView android:id="@android:id/list"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"/>
 
-        </LinearLayout>
-
-        <ListView
-            android:id="@+id/aware_navigation"
-            android:layout_width="240dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="left"
-            android:background="#0099CC"
-            android:choiceMode="singleChoice"
-            android:divider="@android:color/transparent"
-            android:dividerHeight="0dp" />
-
-    </android.support.v4.widget.DrawerLayout>
-
-    <ListView
-        android:id="@android:id/list"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent" />
 </LinearLayout>

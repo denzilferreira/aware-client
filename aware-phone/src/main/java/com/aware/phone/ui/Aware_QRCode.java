@@ -132,19 +132,20 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
 
             ListView list = new ListView(this);
             list.setId(android.R.id.list);
+            list.setVisibility(View.GONE);
 
-            Toolbar toolbar = new Toolbar(this);
-            toolbar.setId(R.id.aware_toolbar);
-            toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    finish();
-                }
-            });
-            toolbar.setBackgroundColor(Color.parseColor("#33B5E5"));
-            toolbar.setTitleTextColor(Color.parseColor("#FFFFFF"));
+//            Toolbar toolbar = new Toolbar(this);
+//            toolbar.setId(R.id.aware_toolbar);
+//            toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View view) {
+//                    finish();
+//                }
+//            });
+//            toolbar.setBackgroundColor(Color.parseColor("#33B5E5"));
+//            toolbar.setTitleTextColor(Color.parseColor("#FFFFFF"));
 
-            main.addView(toolbar);
+//            main.addView(toolbar);
             main.addView(mScannerView);
             main.addView(list);
             setContentView(main);

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:enabled="true"
+        android:id="@+id/aware_sensors"
+        android:icon="@drawable/ic_action_aware_sensors"
+        android:title="Sensors"
+        app:showAsAction="always" />
+    <item
+        android:enabled="true"
+        android:id="@+id/aware_plugins"
+        android:icon="@drawable/ic_action_aware_plugins"
+        android:title="Plugins"
+        app:showAsAction="always" />
+    <item
+        android:enabled="true"
+        android:id="@+id/aware_stream"
+        android:icon="@drawable/ic_action_aware_stream"
+        android:title="Stream"
+        app:showAsAction="always" />
+</menu>

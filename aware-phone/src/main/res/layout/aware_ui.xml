@@ -5,30 +5,15 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <include
-        android:id="@+id/aware_toolbar"
-        layout="@layout/aware_toolbar" />
-
-    <android.support.v4.widget.DrawerLayout
-        android:id="@+id/aware_ui_main"
+    <ListView
+        android:id="@android:id/list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="56dp">
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="56dp"
+        android:layout_weight="1" />
 
-        <ListView
-            android:id="@android:id/list"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent" />
+    <include
+        android:id="@+id/aware_bottombar"
+        layout="@layout/aware_controller" />
 
-        <ListView
-            android:id="@+id/aware_navigation"
-            android:layout_width="240dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="start"
-            android:background="#0099CC"
-            android:choiceMode="singleChoice"
-            android:divider="@android:color/transparent"
-            android:dividerHeight="0dp" />
-
-    </android.support.v4.widget.DrawerLayout>
 </android.support.design.widget.CoordinatorLayout>

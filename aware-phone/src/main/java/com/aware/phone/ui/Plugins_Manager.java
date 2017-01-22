@@ -42,6 +42,7 @@ import com.aware.Aware_Preferences;
 import com.aware.phone.R;
 import com.aware.providers.Aware_Provider;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
+import com.aware.utils.Aware_Plugin;
 import com.aware.utils.DatabaseHelper;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
@@ -82,7 +83,6 @@ public class Plugins_Manager extends Aware_Activity {
 
     private static LayoutInflater inflater;
     private GridView store_grid;
-    private SwipeRefreshLayout swipeToRefresh;
     private PluginsAdapter pluginsAdapter;
 
     @Override
@@ -95,14 +95,6 @@ public class Plugins_Manager extends Aware_Activity {
         store_grid = (GridView) findViewById(R.id.plugins_store_grid);
         pluginsAdapter = new PluginsAdapter(this);
         store_grid.setAdapter(pluginsAdapter);
-
-        swipeToRefresh = (SwipeRefreshLayout) findViewById(R.id.refresh_plugins);
-        swipeToRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                new Async_PluginUpdater().execute();
-            }
-        });
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO);
@@ -195,7 +187,10 @@ public class Plugins_Manager extends Aware_Activity {
                 final String version = plugin.getString(Aware_Plugins.PLUGIN_VERSION);
 
                 int status = plugin.getInt(Aware_Plugins.PLUGIN_STATUS);
-                byte[] icon = Base64.decode(plugin.getString(Aware_Plugins.PLUGIN_ICON), Base64.DEFAULT);
+                byte[] icon = null;
+
+                if (plugin.optString(Aware_Plugins.PLUGIN_ICON, "").length() > 0)
+                    icon = Base64.decode(plugin.getString(Aware_Plugins.PLUGIN_ICON), Base64.DEFAULT);
 
                 final ImageView pkg_icon = (ImageView) convertView.findViewById(R.id.pkg_icon);
                 final TextView pkg_title = (TextView) convertView.findViewById(R.id.pkg_title);
@@ -210,7 +205,7 @@ public class Plugins_Manager extends Aware_Activity {
                         pkg_icon.setImageDrawable(appInfo.loadIcon(getPackageManager()));
                     }
                 } else {
-                    if (icon.length > 0)
+                    if (icon != null)
                         pkg_icon.setImageBitmap(BitmapFactory.decodeByteArray(icon, 0, icon.length));
                 }
 
@@ -362,8 +357,6 @@ public class Plugins_Manager extends Aware_Activity {
                         });
                         break;
                 }
-//                convertView.refreshDrawableState();
-
             } catch (NameNotFoundException e) {
                 e.printStackTrace();
             } catch (JSONException e) {
@@ -407,154 +400,154 @@ public class Plugins_Manager extends Aware_Activity {
      *
      * @author denzil
      */
-    public class Async_PluginUpdater extends AsyncTask<Void, View, Boolean> {
-
-        boolean needsRefresh = false;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-            //First, clean plugins on the database if they are not installed on the device anymore
-            ArrayList<String> to_clean = new ArrayList<>();
-            Cursor on_database = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, null);
-            if (on_database != null && on_database.moveToFirst()) {
-                do {
-                    String package_name = on_database.getString(on_database.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-                    PackageInfo installed = PluginsManager.isInstalled(getApplicationContext(), package_name);
-
-                    //Clean
-                    if (installed == null) {
-                        to_clean.add(package_name);
-                    }
-                } while (on_database.moveToNext());
-            }
-            if (on_database != null && !on_database.isClosed()) on_database.close();
-
-            if (to_clean.size() > 0) {
-                String to_clean_txt = "";
-                for (int i = 0; i < to_clean.size(); i++) {
-                    to_clean_txt += "'" + to_clean.get(i) + "',";
-                }
-                to_clean_txt = to_clean_txt.substring(0, to_clean_txt.length() - 1);
-                getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " in (" + to_clean_txt + ")", null);
-
-                needsRefresh = true;
-            }
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            JSONArray plugins = null;
-
-            String study_url = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
-            String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
-            String protocol = study_url.substring(0, study_url.indexOf(":"));
-
-            int study_key = 0;
-            Cursor studyInfo = Aware.getStudy(getApplicationContext(), study_url);
-            if (studyInfo != null && studyInfo.moveToFirst()) {
-                study_key = studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY));
-            }
-            if (studyInfo != null && !studyInfo.isClosed()) studyInfo.close();
-
-            //Check for updates on the server side
-            String response;
-            if (protocol.equals("https")) {
-                try {
-                    response = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_host + "/index.php/plugins/get_plugins" + ((study_key > 0) ? "/" + study_key : ""), true);
-                } catch (FileNotFoundException e) {
-                    response = null;
-                }
-            } else {
-                response = new Http(getApplicationContext()).dataGET(study_host + "/index.php/plugins/get_plugins" + ((study_key > 0) ? "/" + study_key : ""), true);
-            }
-
-            if (response != null) {
-                try {
-                    plugins = new JSONArray(response);
-
-                    for (int i = 0; i < plugins.length(); i++) {
-                        JSONObject plugin = plugins.getJSONObject(i);
-                        PackageInfo installed = PluginsManager.isInstalled(getApplicationContext(), plugin.getString("package"));
-                        if (installed != null) {
-                            //Installed, lets check if it is updated
-                            if (plugin.getString("version").compareTo(installed.versionName) != 0) {
-                                ContentValues data = new ContentValues();
-                                data.put(Aware_Plugins.PLUGIN_DESCRIPTION, plugin.getString("desc"));
-                                data.put(Aware_Plugins.PLUGIN_VERSION, plugin.getString("version"));
-                                data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
-                                data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
-                                data.put(Aware_Plugins.PLUGIN_STATUS, PluginsManager.PLUGIN_UPDATED);
-                                getContentResolver().update(Aware_Plugins.CONTENT_URI, data, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + installed.packageName + "'", null);
-                                needsRefresh = true;
-                            }
-                        } else {
-                            //this is a new plugin available on the server
-                            ContentValues data = new ContentValues();
-                            data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
-                            data.put(Aware_Plugins.PLUGIN_DESCRIPTION, plugin.getString("desc"));
-                            data.put(Aware_Plugins.PLUGIN_VERSION, plugin.getString("version"));
-                            data.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, plugin.getString("package"));
-                            data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
-                            data.put(Aware_Plugins.PLUGIN_STATUS, PluginsManager.PLUGIN_NOT_INSTALLED);
-                            getContentResolver().insert(Aware_Plugins.CONTENT_URI, data);
-                            needsRefresh = true;
-                        }
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            //Restore: not on local database, but installed
-            ArrayList<PackageInfo> installed_plugins = PluginsManager.getInstalledPlugins(getApplicationContext());
-            for (PackageInfo pkg : installed_plugins) {
-                //Installed on device, but not on AWARE's database
-                if (!PluginsManager.isLocal(getApplicationContext(), pkg.packageName)) {
-                    try {
-                        if (PluginsManager.isOnServerRepository(plugins, pkg.packageName)) {
-                            JSONObject plugin = PluginsManager.getPluginOnlineInfo(plugins, pkg.packageName);
-
-                            ContentValues data = new ContentValues();
-                            data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
-                            data.put(Aware_Plugins.PLUGIN_DESCRIPTION, plugin.getString("desc"));
-                            data.put(Aware_Plugins.PLUGIN_VERSION, plugin.getString("version"));
-                            data.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, plugin.getString("package"));
-                            data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
-                            data.put(Aware_Plugins.PLUGIN_STATUS, PluginsManager.PLUGIN_DISABLED);
-
-                            getContentResolver().insert(Aware_Plugins.CONTENT_URI, data);
-                            needsRefresh = true;
-                        } else {
-                            //Users' own plugins, add them back to the list
-                            ContentValues data = new ContentValues();
-                            data.put(Aware_Plugins.PLUGIN_NAME, pkg.applicationInfo.loadLabel(getPackageManager()).toString());
-                            data.put(Aware_Plugins.PLUGIN_DESCRIPTION, "Your plugin!");
-                            data.put(Aware_Plugins.PLUGIN_VERSION, pkg.versionName);
-                            data.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, pkg.packageName);
-                            data.put(Aware_Plugins.PLUGIN_AUTHOR, "You");
-                            data.put(Aware_Plugins.PLUGIN_STATUS, PluginsManager.PLUGIN_DISABLED);
-                            data.put(Aware_Plugins.PLUGIN_ICON, PluginsManager.getPluginIcon(getApplicationContext(), pkg.packageName));
-
-                            getContentResolver().insert(Aware_Plugins.CONTENT_URI, data);
-                            needsRefresh = true;
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            return needsRefresh;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean refresh) {
-            super.onPostExecute(refresh);
-            if (swipeToRefresh != null) {
-                swipeToRefresh.setRefreshing(false);
-            }
-            if (refresh) pluginsAdapter.notifyDataSetChanged();
-        }
-    }
+//    public class Async_PluginUpdater extends AsyncTask<Void, View, Boolean> {
+//
+//        boolean needsRefresh = false;
+//
+//        @Override
+//        protected void onPreExecute() {
+//            super.onPreExecute();
+//
+//            //First, clean plugins on the database if they are not installed on the device anymore
+//            ArrayList<String> to_clean = new ArrayList<>();
+//            Cursor on_database = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, null, null, null);
+//            if (on_database != null && on_database.moveToFirst()) {
+//                do {
+//                    String package_name = on_database.getString(on_database.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+//                    PackageInfo installed = PluginsManager.isInstalled(getApplicationContext(), package_name);
+//
+//                    //Clean
+//                    if (installed == null) {
+//                        to_clean.add(package_name);
+//                    }
+//                } while (on_database.moveToNext());
+//            }
+//            if (on_database != null && !on_database.isClosed()) on_database.close();
+//
+//            if (to_clean.size() > 0) {
+//                String to_clean_txt = "";
+//                for (int i = 0; i < to_clean.size(); i++) {
+//                    to_clean_txt += "'" + to_clean.get(i) + "',";
+//                }
+//                to_clean_txt = to_clean_txt.substring(0, to_clean_txt.length() - 1);
+//                getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " in (" + to_clean_txt + ")", null);
+//
+//                needsRefresh = true;
+//            }
+//        }
+//
+//        @Override
+//        protected Boolean doInBackground(Void... params) {
+//            JSONArray plugins = null;
+//
+//            String study_url = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
+//            String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
+//            String protocol = study_url.substring(0, study_url.indexOf(":"));
+//
+//            int study_key = 0;
+//            Cursor studyInfo = Aware.getStudy(getApplicationContext(), study_url);
+//            if (studyInfo != null && studyInfo.moveToFirst()) {
+//                study_key = studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY));
+//            }
+//            if (studyInfo != null && !studyInfo.isClosed()) studyInfo.close();
+//
+//            //Check for updates on the server side
+//            String response;
+//            if (protocol.equals("https")) {
+//                try {
+//                    response = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_host + "/index.php/plugins/get_plugins" + ((study_key > 0) ? "/" + study_key : ""), true);
+//                } catch (FileNotFoundException e) {
+//                    response = null;
+//                }
+//            } else {
+//                response = new Http(getApplicationContext()).dataGET(study_host + "/index.php/plugins/get_plugins" + ((study_key > 0) ? "/" + study_key : ""), true);
+//            }
+//
+//            if (response != null) {
+//                try {
+//                    plugins = new JSONArray(response);
+//
+//                    for (int i = 0; i < plugins.length(); i++) {
+//                        JSONObject plugin = plugins.getJSONObject(i);
+//                        PackageInfo installed = PluginsManager.isInstalled(getApplicationContext(), plugin.getString("package"));
+//                        if (installed != null) {
+//                            //Installed, lets check if it is updated
+//                            if (plugin.getString("version").compareTo(installed.versionName) != 0) {
+//                                ContentValues data = new ContentValues();
+//                                data.put(Aware_Plugins.PLUGIN_DESCRIPTION, plugin.getString("desc"));
+//                                data.put(Aware_Plugins.PLUGIN_VERSION, plugin.getString("version"));
+//                                data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
+//                                data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
+//                                data.put(Aware_Plugins.PLUGIN_STATUS, PluginsManager.PLUGIN_UPDATED);
+//                                getContentResolver().update(Aware_Plugins.CONTENT_URI, data, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + installed.packageName + "'", null);
+//                                needsRefresh = true;
+//                            }
+//                        } else {
+//                            //this is a new plugin available on the server
+//                            ContentValues data = new ContentValues();
+//                            data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
+//                            data.put(Aware_Plugins.PLUGIN_DESCRIPTION, plugin.getString("desc"));
+//                            data.put(Aware_Plugins.PLUGIN_VERSION, plugin.getString("version"));
+//                            data.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, plugin.getString("package"));
+//                            data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
+//                            data.put(Aware_Plugins.PLUGIN_STATUS, PluginsManager.PLUGIN_NOT_INSTALLED);
+//                            getContentResolver().insert(Aware_Plugins.CONTENT_URI, data);
+//                            needsRefresh = true;
+//                        }
+//                    }
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//
+//            //Restore: not on local database, but installed
+//            ArrayList<PackageInfo> installed_plugins = PluginsManager.getInstalledPlugins(getApplicationContext());
+//            for (PackageInfo pkg : installed_plugins) {
+//                //Installed on device, but not on AWARE's database
+//                if (!PluginsManager.isLocal(getApplicationContext(), pkg.packageName)) {
+//                    try {
+//                        if (PluginsManager.isOnServerRepository(plugins, pkg.packageName)) {
+//                            JSONObject plugin = PluginsManager.getPluginOnlineInfo(plugins, pkg.packageName);
+//
+//                            ContentValues data = new ContentValues();
+//                            data.put(Aware_Plugins.PLUGIN_NAME, plugin.getString("title"));
+//                            data.put(Aware_Plugins.PLUGIN_DESCRIPTION, plugin.getString("desc"));
+//                            data.put(Aware_Plugins.PLUGIN_VERSION, plugin.getString("version"));
+//                            data.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, plugin.getString("package"));
+//                            data.put(Aware_Plugins.PLUGIN_AUTHOR, plugin.getString("first_name") + " " + plugin.getString("last_name") + " - " + plugin.getString("email"));
+//                            data.put(Aware_Plugins.PLUGIN_STATUS, PluginsManager.PLUGIN_DISABLED);
+//
+//                            getContentResolver().insert(Aware_Plugins.CONTENT_URI, data);
+//                            needsRefresh = true;
+//                        } else {
+//                            //Users' own plugins, add them back to the list
+//                            ContentValues data = new ContentValues();
+//                            data.put(Aware_Plugins.PLUGIN_NAME, pkg.applicationInfo.loadLabel(getPackageManager()).toString());
+//                            data.put(Aware_Plugins.PLUGIN_DESCRIPTION, "Your plugin!");
+//                            data.put(Aware_Plugins.PLUGIN_VERSION, pkg.versionName);
+//                            data.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, pkg.packageName);
+//                            data.put(Aware_Plugins.PLUGIN_AUTHOR, "You");
+//                            data.put(Aware_Plugins.PLUGIN_STATUS, PluginsManager.PLUGIN_DISABLED);
+//                            data.put(Aware_Plugins.PLUGIN_ICON, PluginsManager.getPluginIcon(getApplicationContext(), pkg.packageName));
+//
+//                            getContentResolver().insert(Aware_Plugins.CONTENT_URI, data);
+//                            needsRefresh = true;
+//                        }
+//                    } catch (JSONException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//            return needsRefresh;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(Boolean refresh) {
+//            super.onPostExecute(refresh);
+//            if (swipeToRefresh != null) {
+//                swipeToRefresh.setRefreshing(false);
+//            }
+//            if (refresh) pluginsAdapter.notifyDataSetChanged();
+//        }
+//    }
 }

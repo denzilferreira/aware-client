@@ -1,13 +1,11 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.jfrog.bintray'
-apply plugin: 'com.github.dcendents.android-maven'
 
 version = version_readable
 group = "com.awareframework"
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.1"
+    buildToolsVersion "25.0.2"
 
     defaultConfig {
         versionCode version_code
@@ -39,37 +37,6 @@ android {
     }
 }
 
-bintray {
-    user = project.hasProperty("bintrayUsername") ? bintrayUsername : ""
-    key = project.hasProperty("bintrayKey") ? bintrayKey : ""
-
-    configurations = ['archives']
-
-    publish = true
-
-    pkg {
-        repo = 'com.awareframework'
-        name = 'com.aware'
-        licenses = ['Apache-2.0']
-        websiteUrl = 'http://www.awareframework.com'
-        issueTrackerUrl = 'https://github.com/denzilferreira/aware-client/issues'
-        labels = ['aar', 'android', 'framework', 'aware']
-        publicDownloadNumbers = true
-        vcsUrl = 'https://github.com/denzilferreira/aware-client.git'
-        desc = "AWARE Framework common library"
-        userOrg = user
-
-        githubRepo = "denzilferreira/aware-client"
-        githubReleaseNotesFile = "README.md"
-        version {
-            name = "$version_readable"
-            desc = bintray.pkg.desc
-            released = new Date()
-            vcsTag = "$version_readable"
-        }
-    }
-}
-
 task generateSourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
     classifier 'sources'
@@ -91,12 +58,6 @@ generateJavadocsJar.dependsOn generateJavadocs
 artifacts {
     archives generateJavadocsJar
     archives generateSourcesJar
-}
-
-repositories {
-    maven {
-        url  "http://dl.bintray.com/jfrog/bintray-tools"
-    }
 }
 
 dependencies {

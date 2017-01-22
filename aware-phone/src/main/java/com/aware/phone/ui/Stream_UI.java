@@ -72,27 +72,6 @@ public class Stream_UI extends Aware_Activity {
 		registerReceiver(stream_updater, filter);
 	}
 
-//    public class CardAdapter extends CursorAdapter {
-//        public CardAdapter( Context context, Cursor c, int flags ) {
-//            super(context, c, flags);
-//        }
-//
-//        @Override
-//        public View newView(Context context, Cursor cursor, ViewGroup parent) {
-//            String package_name = cursor.getString( cursor.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME) );
-//            View card;
-//            card = Aware.getContextCard(getApplicationContext(), package_name);
-//            if( card == null ) card = new View(context);
-//            return card;
-//        }
-//
-//        @Override
-//        public void bindView(View card, Context context, Cursor cursor) {
-//            String package_name = cursor.getString( cursor.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-//            card = Aware.getContextCard(getApplicationContext(), package_name);
-//        }
-//    }
-
 //    private void updateCore() {
 //        core_cards = new MatrixCursor(new String[]{
 //                Aware_Plugins.PLUGIN_ID,
@@ -120,17 +99,6 @@ public class Stream_UI extends Aware_Activity {
 //            core_cards.addRow(wear_card);
 //            cards = new MergeCursor(new Cursor[]{ core_cards, cards });
 //        }
-//    }
-
-//    private void updateCards() {
-//        cards = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, Aware_Plugins.PLUGIN_NAME + " ASC");
-//
-//        if (Aware.DEBUG)
-//            Log.d(Aware.TAG, "ContextCards: " + DatabaseUtils.dumpCursorToString(cards));
-//
-////        updateCore();
-//        card_adapter = new CardAdapter(this, cards, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
-//        stream_container.setAdapter(card_adapter);
 //    }
 	
 	@Override
