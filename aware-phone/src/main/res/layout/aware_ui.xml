@@ -14,6 +14,6 @@
 
     <include
         android:id="@+id/aware_bottombar"
-        layout="@layout/aware_controller" />
+        layout="@layout/aware_controller"/>
 
 </android.support.design.widget.CoordinatorLayout>

@@ -26,6 +26,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -116,6 +117,7 @@ public class Aware_Client extends Aware_Activity {
         REQUIRED_PERMISSIONS.add(Manifest.permission.READ_PHONE_STATE);
 
         addPreferencesFromResource(R.xml.aware_preferences);
+
         setContentView(R.layout.aware_ui);
     }
 
@@ -180,14 +182,6 @@ public class Aware_Client extends Aware_Activity {
                 Applications.isAccessibilityServiceActive(this);
             }
 
-            //Notify the user of being enrolled in a study
-            if (Aware.isStudy(getApplicationContext())) {
-                Snackbar noChanges = Snackbar.make(aware_container, "You are participating in a study! Thanks!", Snackbar.LENGTH_LONG);
-                TextView output = (TextView) noChanges.getView().findViewById(android.support.design.R.id.snackbar_text);
-                output.setTextColor(Color.WHITE);
-                noChanges.show();
-            }
-
             defaultSettings();
 
         } else {
@@ -196,6 +190,16 @@ public class Aware_Client extends Aware_Activity {
             permissionsHandler.putExtra(PermissionsHandler.EXTRA_REDIRECT_ACTIVITY, getPackageName() + "/" + getClass().getName());
             startActivityForResult(permissionsHandler, PermissionsHandler.RC_PERMISSIONS);
             finish();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        //Notify the user of being enrolled in a study
+        if (Aware.isStudy(getApplicationContext())) {
+            Toast.makeText(this, "You are participating in a study! Thanks!", Toast.LENGTH_SHORT).show();
         }
     }
 

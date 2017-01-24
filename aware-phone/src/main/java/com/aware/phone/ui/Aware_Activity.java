@@ -37,8 +37,6 @@ import java.util.ArrayList;
 
 public class Aware_Activity extends AppCompatPreferenceActivity {
 
-    public CoordinatorLayout aware_container;
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -63,8 +61,6 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-
-        aware_container = (CoordinatorLayout) findViewById(R.id.aware_container);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
@@ -150,84 +146,4 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-
-    /**
-     * Navigation adapter
-     *
-     * @author denzil
-     */
-//    public class NavigationAdapter extends ArrayAdapter<String> {
-//        private final String[] items;
-//        private final LayoutInflater inflater;
-//
-//        public NavigationAdapter(Context context, String[] items) {
-//            super(context, R.layout.aware_navigation_item, items);
-//            this.items = items;
-//            this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-//        }
-//
-//        @Override
-//        public View getView(final int position, View convertView, ViewGroup parent) {
-//            LinearLayout row = (LinearLayout) inflater.inflate(R.layout.aware_navigation_item, parent, false);
-//            row.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    switch (position) {
-//                        case 0: //Stream
-//                            Intent stream_ui = new Intent(getApplicationContext(), Stream_UI.class);
-//                            startActivity(stream_ui);
-//                            break;
-//                        case 1: //Sensors
-//                            Intent sensors_ui = new Intent(getApplicationContext(), Aware_Client.class);
-//                            startActivity(sensors_ui);
-//                            break;
-//                        case 2: //Plugins
-//                            Intent playStore = new Intent(Intent.ACTION_VIEW);
-//                            playStore.setData(Uri.parse("market://search?q=awareframework&c=apps"));
-//                            startActivity(playStore);
-//                            break;
-//                        case 3: //Join study
-//                            //TODO: make ui for listing available studies
-//                            if (ContextCompat.checkSelfPermission(Aware_Activity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-//                                ArrayList<String> permission = new ArrayList<>();
-//                                permission.add(Manifest.permission.CAMERA);
-//
-//                                Intent permissions = new Intent(Aware_Activity.this, PermissionsHandler.class);
-//                                permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, permission);
-//                                permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_ACTIVITY, getPackageName() + "/" + getPackageName() + ".ui.Aware_QRCode");
-//                                permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//                                startActivity(permissions);
-//                            } else {
-//                                Intent join_study = new Intent(Aware_Activity.this, Aware_QRCode.class);
-//                                startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
-//                            }
-//                            break;
-//                    }
-//                    if (navigationDrawer != null && navigationList != null)
-//                        navigationDrawer.closeDrawer(navigationList);
-//                }
-//            });
-//            ImageView nav_icon = (ImageView) row.findViewById(R.id.nav_placeholder);
-//            TextView nav_title = (TextView) row.findViewById(R.id.nav_title);
-//
-//            switch (position) {
-//                case 0:
-//                    nav_icon.setImageResource(R.drawable.ic_action_aware_stream);
-//                    break;
-//                case 1:
-//                    nav_icon.setImageResource(R.drawable.ic_action_aware_sensors);
-//                    break;
-//                case 2:
-//                    nav_icon.setImageResource(R.drawable.ic_action_aware_plugins);
-//                    break;
-//                case 3:
-//                    nav_icon.setImageResource(R.drawable.ic_action_aware_studies);
-//                    break;
-//            }
-//            String item = items[position];
-//            nav_title.setText(item);
-//
-//            return row;
-//        }
-//    }
 }
