@@ -152,7 +152,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
     @Override
     public void connectionLost(Throwable throwable) {
-        if (Aware.DEBUG) Log.d(TAG, "MQTT: Connection lost to server... reconnecting in 5 minutes...");
+        if (Aware.DEBUG)
+            Log.d(TAG, "MQTT: Connection lost to server... reconnecting in 5 minutes...");
     }
 
     @Override
@@ -186,7 +187,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
             if (studyInfo != null && studyInfo.moveToFirst()) {
                 study_id = String.valueOf(studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
             }
-            if (studyInfo != null && ! studyInfo.isClosed()) studyInfo.close();
+            if (studyInfo != null && !studyInfo.isClosed()) studyInfo.close();
         }
 
         if (topic.equalsIgnoreCase(Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/broadcasts") || topic.equalsIgnoreCase(study_id + "/" + Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/broadcasts")) {
@@ -246,6 +247,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
     }
 
     private static final MQTTReceiver mqttReceiver = new MQTTReceiver();
+
     /**
      * MQTT broadcast receiver. Allows other services and applications to publish and subscribe to content on MQTT broker:
      * - ACTION_AWARE_MQTT_MSG_PUBLISH - publish a new message to a specified topic - extras: (String) topic; message
@@ -300,7 +302,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                                 if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                             }
                         }
-                        if (subscriptions != null && !subscriptions.isClosed()) subscriptions.close();
+                        if (subscriptions != null && !subscriptions.isClosed())
+                            subscriptions.close();
                     } else {
                         if (Aware.DEBUG) Log.w(TAG, "Failed to subscribe: " + topic);
                     }
@@ -347,33 +350,18 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
         DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
 
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
-            }
-        }
-
-        if (permissions_ok) {
-            if (Aware.is_watch(this)) {
-                Log.d(TAG, "This is an Android Wear device, we can't connect to MQTT. Disabling it!");
-                Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, false);
-                stopSelf();
-            }
+        if (Aware.is_watch(this)) {
+            Log.d(TAG, "This is an Android Wear device, we can't connect to MQTT. Disabling it!");
+            Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, false);
+            stopSelf();
+        } else {
             Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, true);
-
             if (MQTT_CLIENT != null && MQTT_CLIENT.isConnected()) {
-                if (DEBUG) Log.d(TAG, "Connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
+                if (DEBUG)
+                    Log.d(TAG, "Connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
             } else {
                 initializeMQTT();
             }
-
-        } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -508,7 +496,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                         studySubscribe.putExtra(EXTRA_TOPIC, studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)) + "/" + Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/#");
                         sendBroadcast(studySubscribe);
                     }
-                    if (studyInfo != null && ! studyInfo.isClosed()) studyInfo.close();
+                    if (studyInfo != null && !studyInfo.isClosed()) studyInfo.close();
                 }
 
                 //Self-subscribes

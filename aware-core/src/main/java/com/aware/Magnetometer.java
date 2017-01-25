@@ -105,7 +105,7 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
             return;
         }
 
-        LAST_VALUES = new Float[]{event.values[0],event.values[1],event.values[2]};
+        LAST_VALUES = new Float[]{event.values[0], event.values[1], event.values[2]};
 
         ContentValues rowData = new ContentValues();
         rowData.put(Magnetometer_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
@@ -241,51 +241,36 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
-            }
-        }
-
-        if (permissions_ok) {
-
-            if (mMagnetometer == null) {
-                if (Aware.DEBUG) Log.w(TAG, "This device does not have a magnetometer!");
-                Aware.setSetting(this, Aware_Preferences.STATUS_MAGNETOMETER, false);
-                stopSelf();
-            } else {
-                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-                Aware.setSetting(this, Aware_Preferences.STATUS_MAGNETOMETER, true);
-                saveSensorDevice(mMagnetometer);
-
-                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER).length() == 0) {
-                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER, 200000);
-                }
-
-                if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_MAGNETOMETER).length() == 0) {
-                    Aware.setSetting(this, Aware_Preferences.THRESHOLD_MAGNETOMETER, 0.0);
-                }
-
-                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER))
-                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_MAGNETOMETER))) {
-
-                    sensorHandler.removeCallbacksAndMessages(null);
-                    mSensorManager.unregisterListener(this, mMagnetometer);
-                    mSensorManager.registerListener(this, mMagnetometer, Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER)), sensorHandler);
-
-                    FREQUENCY = Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER));
-                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_MAGNETOMETER));
-                }
-                if (Aware.DEBUG) Log.d(TAG, "Magnetometer service active...");
-            }
+        if (mMagnetometer == null) {
+            if (Aware.DEBUG) Log.w(TAG, "This device does not have a magnetometer!");
+            Aware.setSetting(this, Aware_Preferences.STATUS_MAGNETOMETER, false);
+            stopSelf();
         } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
+            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+            Aware.setSetting(this, Aware_Preferences.STATUS_MAGNETOMETER, true);
+            saveSensorDevice(mMagnetometer);
+
+            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER).length() == 0) {
+                Aware.setSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER, 200000);
+            }
+
+            if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_MAGNETOMETER).length() == 0) {
+                Aware.setSetting(this, Aware_Preferences.THRESHOLD_MAGNETOMETER, 0.0);
+            }
+
+            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER))
+                    || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_MAGNETOMETER))) {
+
+                sensorHandler.removeCallbacksAndMessages(null);
+                mSensorManager.unregisterListener(this, mMagnetometer);
+
+                FREQUENCY = Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER));
+                THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_MAGNETOMETER));
+            }
+
+            mSensorManager.registerListener(this, mMagnetometer, Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER)), sensorHandler);
+
+            if (Aware.DEBUG) Log.d(TAG, "Magnetometer service active...");
         }
 
         return super.onStartCommand(intent, flags, startId);

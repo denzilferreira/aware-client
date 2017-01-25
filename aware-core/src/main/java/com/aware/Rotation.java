@@ -248,51 +248,36 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
-            }
-        }
-
-        if (permissions_ok) {
-            if (mRotation == null) {
-                if (Aware.DEBUG) Log.w(TAG, "This device does not have a rotation sensor!");
-                Aware.setSetting(this, Aware_Preferences.STATUS_ROTATION, false);
-                stopSelf();
-            } else {
-                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-                Aware.setSetting(this, Aware_Preferences.STATUS_ROTATION, true);
-                saveSensorDevice(mRotation);
-
-                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_ROTATION).length() == 0) {
-                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_ROTATION, 200000);
-                }
-
-                if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_ROTATION).length() == 0) {
-                    Aware.setSetting(this, Aware_Preferences.THRESHOLD_ROTATION, 0.0);
-                }
-
-                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION))
-                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ROTATION))) {
-
-                    sensorHandler.removeCallbacksAndMessages(null);
-                    mSensorManager.unregisterListener(this, mRotation);
-                    mSensorManager.registerListener(this, mRotation, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION)), sensorHandler);
-
-                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION));
-                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ROTATION));
-                }
-
-                if (Aware.DEBUG) Log.d(TAG, "Rotation service active...");
-            }
+        if (mRotation == null) {
+            if (Aware.DEBUG) Log.w(TAG, "This device does not have a rotation sensor!");
+            Aware.setSetting(this, Aware_Preferences.STATUS_ROTATION, false);
+            stopSelf();
         } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
+            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+            Aware.setSetting(this, Aware_Preferences.STATUS_ROTATION, true);
+            saveSensorDevice(mRotation);
+
+            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_ROTATION).length() == 0) {
+                Aware.setSetting(this, Aware_Preferences.FREQUENCY_ROTATION, 200000);
+            }
+
+            if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_ROTATION).length() == 0) {
+                Aware.setSetting(this, Aware_Preferences.THRESHOLD_ROTATION, 0.0);
+            }
+
+            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION))
+                    || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ROTATION))) {
+
+                sensorHandler.removeCallbacksAndMessages(null);
+                mSensorManager.unregisterListener(this, mRotation);
+
+                FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION));
+                THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ROTATION));
+            }
+
+            mSensorManager.registerListener(this, mRotation, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION)), sensorHandler);
+
+            if (Aware.DEBUG) Log.d(TAG, "Rotation service active...");
         }
 
         return super.onStartCommand(intent, flags, startId);

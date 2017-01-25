@@ -358,23 +358,8 @@ public class Battery extends Aware_Sensor {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
-            }
-        }
-
-        if (permissions_ok) {
-            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-            Aware.setSetting(this, Aware_Preferences.STATUS_BATTERY, true);
-        } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
-        }
+        DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+        Aware.setSetting(this, Aware_Preferences.STATUS_BATTERY, true);
 
         if (Aware.DEBUG) Log.d(TAG, "Battery service active...");
 

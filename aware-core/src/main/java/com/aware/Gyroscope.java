@@ -98,7 +98,7 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
         if (Aware.getSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION).equals("true") && !SignificantMotion.CURRENT_SIGMOTION_STATE)
             return;
 
-        if (LAST_VALUES != null && THRESHOLD > 0 && Math.abs(event.values[0] - LAST_VALUES[0] ) < THRESHOLD
+        if (LAST_VALUES != null && THRESHOLD > 0 && Math.abs(event.values[0] - LAST_VALUES[0]) < THRESHOLD
                 && Math.abs(event.values[1] - LAST_VALUES[1]) < THRESHOLD
                 && Math.abs(event.values[2] - LAST_VALUES[2]) < THRESHOLD) {
             return;
@@ -243,55 +243,39 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
-            }
-        }
-
-        if (permissions_ok) {
-            if (mGyroscope == null) {
-                if (Aware.DEBUG) Log.w(TAG, "This device does not have a gyroscope!");
-                Aware.setSetting(this, Aware_Preferences.STATUS_GYROSCOPE, false);
-                stopSelf();
-            } else {
-
-                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-
-                Aware.setSetting(this, Aware_Preferences.STATUS_GYROSCOPE, true);
-                saveGyroscopeDevice(mGyroscope);
-
-                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_GYROSCOPE).length() == 0) {
-                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_GYROSCOPE, 200000);
-                }
-
-                if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_GYROSCOPE).length() == 0) {
-                    Aware.setSetting(this, Aware_Preferences.THRESHOLD_GYROSCOPE, 0.0);
-                }
-
-                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE))
-                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GYROSCOPE))) {
-                    sensorHandler.removeCallbacksAndMessages(null);
-                    mSensorManager.unregisterListener(this, mGyroscope);
-//                    mSensorManager.registerListener(this, mGyroscope, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE)), FIFO_SIZE, sensorHandler);
-                    mSensorManager.registerListener(this, mGyroscope, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE)), sensorHandler);
-
-                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE));
-                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GYROSCOPE));
-                }
-            }
-
-            if (Aware.DEBUG) Log.d(TAG, "Gyroscope service active: " + FREQUENCY + "ms");
-
+        if (mGyroscope == null) {
+            if (Aware.DEBUG) Log.w(TAG, "This device does not have a gyroscope!");
+            Aware.setSetting(this, Aware_Preferences.STATUS_GYROSCOPE, false);
+            stopSelf();
         } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
+
+            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+
+            Aware.setSetting(this, Aware_Preferences.STATUS_GYROSCOPE, true);
+            saveGyroscopeDevice(mGyroscope);
+
+            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_GYROSCOPE).length() == 0) {
+                Aware.setSetting(this, Aware_Preferences.FREQUENCY_GYROSCOPE, 200000);
+            }
+
+            if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_GYROSCOPE).length() == 0) {
+                Aware.setSetting(this, Aware_Preferences.THRESHOLD_GYROSCOPE, 0.0);
+            }
+
+            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE))
+                    || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GYROSCOPE))) {
+
+                sensorHandler.removeCallbacksAndMessages(null);
+                mSensorManager.unregisterListener(this, mGyroscope);
+
+                FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE));
+                THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GYROSCOPE));
+            }
+
+            mSensorManager.registerListener(this, mGyroscope, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE)), sensorHandler);
         }
+
+        if (Aware.DEBUG) Log.d(TAG, "Gyroscope service active: " + FREQUENCY + "ms");
 
         return super.onStartCommand(intent, flags, startId);
     }

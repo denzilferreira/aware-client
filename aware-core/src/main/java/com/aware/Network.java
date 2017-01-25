@@ -520,26 +520,10 @@ public class Network extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+        Aware.setSetting(this, Aware_Preferences.STATUS_NETWORK_EVENTS, true);
 
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
-            }
-        }
-
-        if (permissions_ok) {
-            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-            Aware.setSetting(this, Aware_Preferences.STATUS_NETWORK_EVENTS, true);
-
-            if (Aware.DEBUG) Log.d(TAG, "Network service active...");
-        } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
-        }
+        if (Aware.DEBUG) Log.d(TAG, "Network service active...");
 
         return super.onStartCommand(intent, flags, startId);
     }

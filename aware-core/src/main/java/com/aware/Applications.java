@@ -253,10 +253,6 @@ public class Applications extends AccessibilityService {
                     }
                 }
             }
-
-//            Intent backgroundService = new Intent(this, BackgroundService.class);
-//            backgroundService.setAction(ACTION_AWARE_APPLICATIONS_HISTORY);
-//            startService(backgroundService);
         }
 
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_KEYBOARD).equals("true") && event.getEventType() == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED) {

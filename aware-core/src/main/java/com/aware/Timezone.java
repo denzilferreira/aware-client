@@ -113,37 +113,19 @@ public class Timezone extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+        Aware.setSetting(this, Aware_Preferences.STATUS_TIMEZONE, true);
 
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
-            }
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE).length() == 0) {
+            Aware.setSetting(this, Aware_Preferences.FREQUENCY_TIMEZONE, 3600);
         }
 
-        if (permissions_ok) {
-            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-            Aware.setSetting(this, Aware_Preferences.STATUS_TIMEZONE, true);
-
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.FREQUENCY_TIMEZONE, 3600);
-            }
-
-            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE))) {
-                mHandler.removeCallbacks(mRunnable);
-                mHandler.post(mRunnable);
-                FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE));
-            }
-
-            if (Aware.DEBUG) Log.d(TAG, "Timezone service active...");
-
-        } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
+        if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE))) {
+            mHandler.removeCallbacks(mRunnable);
+            mHandler.post(mRunnable);
+            FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE));
         }
+        if (Aware.DEBUG) Log.d(TAG, "Timezone service active...");
 
         return super.onStartCommand(intent, flags, startId);
     }

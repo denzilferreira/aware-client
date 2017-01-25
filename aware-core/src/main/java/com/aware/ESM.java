@@ -239,34 +239,17 @@ public class ESM extends Aware_Sensor {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
+        DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+        Aware.setSetting(this, Aware_Preferences.STATUS_ESM, true);
+
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_ESM).equals("true")) {
+            if (isESMWaiting(getApplicationContext()) && !isESMVisible(getApplicationContext())) {
+                notifyESM(getApplicationContext(), true);
             }
         }
 
-        if (permissions_ok) {
-            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-
-            Aware.setSetting(this, Aware_Preferences.STATUS_ESM, true);
-
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_ESM).equals("true")) {
-                if (isESMWaiting(getApplicationContext()) && !isESMVisible(getApplicationContext())) {
-                    notifyESM(getApplicationContext(), true);
-                }
-            }
-
-            if (DEBUG)
-                Log.d(TAG, "ESM service active... Queue = " + ESM_Queue.getQueueSize(getApplicationContext()));
-
-        } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
-        }
+        if (DEBUG)
+            Log.d(TAG, "ESM service active... Queue = " + ESM_Queue.getQueueSize(getApplicationContext()));
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -331,7 +314,8 @@ public class ESM extends Aware_Sensor {
 
                 if (i == 0) { // we check the first ESM item in the queue to see whether any current queue items need to be removed
                     if (esm.optBoolean("esm_replace_queue")) { // clear current queue
-                        if (Aware.DEBUG) Log.d(TAG, "Clearing ESM queue before adding new ESM to queue");
+                        if (Aware.DEBUG)
+                            Log.d(TAG, "Clearing ESM queue before adding new ESM to queue");
 
                         // Remove notification
                         if (mNotificationManager == null)
@@ -517,6 +501,7 @@ public class ESM extends Aware_Sensor {
      * - ACTION_AWARE_ESM_ANSWERED
      * - ACTION_AWARE_ESM_DISMISSED
      * - ACTION_AWARE_ESM_EXPIRED
+     *
      * @author df
      */
     public static class ESMMonitor extends BroadcastReceiver {

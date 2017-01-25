@@ -162,52 +162,37 @@ public class Traffic extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
-            }
-        }
-
-        if (permissions_ok) {
-            if (startTotalRxBytes == TrafficStats.UNSUPPORTED) {
-                Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_NETWORK_TRAFFIC, false);
-                if (Aware.DEBUG) Log.d(TAG, "Device doesn't support traffic statistics! Disabling sensor...");
-                stopSelf();
-            } else {
-                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-                Aware.setSetting(this, Aware_Preferences.STATUS_NETWORK_TRAFFIC, true);
-
-                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC).length() == 0) {
-                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC, 60);
-                }
-
-                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC))) {
-                    mobileRxBytes = TrafficStats.getMobileRxBytes();
-                    mobileTxBytes = TrafficStats.getMobileTxBytes();
-                    mobileRxPackets = TrafficStats.getMobileRxPackets();
-                    mobileTxPackets = TrafficStats.getMobileTxPackets();
-
-                    wifiRxBytes = startTotalRxBytes - mobileRxBytes;
-                    wifiTxBytes = startTotalTxBytes - mobileTxBytes;
-                    wifiRxPackets = startTotalRxPackets - mobileRxPackets;
-                    wifiTxPackets = startTotalTxPackets - mobileTxPackets;
-
-                    mHandler.removeCallbacks(mRunnable);
-                    mHandler.post(mRunnable);
-
-                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC));
-                }
-
-                if (Aware.DEBUG) Log.d(TAG, "Traffic service active...");
-            }
+        if (startTotalRxBytes == TrafficStats.UNSUPPORTED) {
+            Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_NETWORK_TRAFFIC, false);
+            if (Aware.DEBUG)
+                Log.d(TAG, "Device doesn't support traffic statistics! Disabling sensor...");
+            stopSelf();
         } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
+            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+            Aware.setSetting(this, Aware_Preferences.STATUS_NETWORK_TRAFFIC, true);
+
+            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC).length() == 0) {
+                Aware.setSetting(this, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC, 60);
+            }
+
+            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC))) {
+                mobileRxBytes = TrafficStats.getMobileRxBytes();
+                mobileTxBytes = TrafficStats.getMobileTxBytes();
+                mobileRxPackets = TrafficStats.getMobileRxPackets();
+                mobileTxPackets = TrafficStats.getMobileTxPackets();
+
+                wifiRxBytes = startTotalRxBytes - mobileRxBytes;
+                wifiTxBytes = startTotalTxBytes - mobileTxBytes;
+                wifiRxPackets = startTotalRxPackets - mobileRxPackets;
+                wifiTxPackets = startTotalTxPackets - mobileTxPackets;
+
+                mHandler.removeCallbacks(mRunnable);
+                mHandler.post(mRunnable);
+
+                FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC));
+            }
+
+            if (Aware.DEBUG) Log.d(TAG, "Traffic service active...");
         }
 
         return super.onStartCommand(intent, flags, startId);

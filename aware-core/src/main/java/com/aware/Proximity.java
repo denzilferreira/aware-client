@@ -231,52 +231,37 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
-            }
-        }
-
-        if (permissions_ok) {
-            if (mProximity == null) {
-                if (Aware.DEBUG) Log.w(TAG, "This device does not have a proximity sensor!");
-                Aware.setSetting(this, Aware_Preferences.STATUS_PROXIMITY, false);
-                stopSelf();
-            } else {
-
-                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-                Aware.setSetting(this, Aware_Preferences.STATUS_PROXIMITY, true);
-                saveSensorDevice(mProximity);
-
-                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY).length() == 0) {
-                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY, 200000);
-                }
-
-                if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_PROXIMITY).length() == 0) {
-                    Aware.setSetting(this, Aware_Preferences.THRESHOLD_PROXIMITY, 0.0);
-                }
-
-                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY))
-                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_PROXIMITY))) {
-
-                    sensorHandler.removeCallbacksAndMessages(null);
-                    mSensorManager.unregisterListener(this, mProximity);
-                    mSensorManager.registerListener(this, mProximity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY)), sensorHandler);
-
-                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY));
-                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_PROXIMITY));
-                }
-
-                if (Aware.DEBUG) Log.d(TAG, "Proximity service active: " + FREQUENCY + "ms");
-            }
+        if (mProximity == null) {
+            if (Aware.DEBUG) Log.w(TAG, "This device does not have a proximity sensor!");
+            Aware.setSetting(this, Aware_Preferences.STATUS_PROXIMITY, false);
+            stopSelf();
         } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
+
+            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+            Aware.setSetting(this, Aware_Preferences.STATUS_PROXIMITY, true);
+            saveSensorDevice(mProximity);
+
+            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY).length() == 0) {
+                Aware.setSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY, 200000);
+            }
+
+            if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_PROXIMITY).length() == 0) {
+                Aware.setSetting(this, Aware_Preferences.THRESHOLD_PROXIMITY, 0.0);
+            }
+
+            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY))
+                    || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_PROXIMITY))) {
+
+                sensorHandler.removeCallbacksAndMessages(null);
+                mSensorManager.unregisterListener(this, mProximity);
+
+                FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY));
+                THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_PROXIMITY));
+            }
+
+            mSensorManager.registerListener(this, mProximity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY)), sensorHandler);
+
+            if (Aware.DEBUG) Log.d(TAG, "Proximity service active: " + FREQUENCY + "ms");
         }
 
         return super.onStartCommand(intent, flags, startId);

@@ -43,7 +43,7 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
 
     private static boolean LAST_SIGMOTION_STATE = false;
     public static boolean CURRENT_SIGMOTION_STATE = false;
-    private static final double SIGMOTION_THRESHOLD = 2.5f;
+    private static final double SIGMOTION_THRESHOLD = 1.0f;
 
     /**
      * Broadcasted when there is significant motion
@@ -101,35 +101,20 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
-            }
-        }
+        if (mAccelerometer == null) {
+            if (DEBUG)
+                Log.d(TAG, "This device does not have an accelerometer sensor. Can't detect significant motion");
+            Aware.setSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION, false);
+            stopSelf();
 
-        if (permissions_ok) {
-            if (mAccelerometer == null) {
-                if (DEBUG)
-                    Log.d(TAG, "This device does not have an accelerometer sensor. Can't detect significant motion");
-                Aware.setSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION, false);
-                stopSelf();
-
-            } else {
-
-                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-                Aware.setSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION, true);
-
-                mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI, sensorHandler);
-
-                if (Aware.DEBUG) Log.d(TAG, "Significant motion service active...");
-            }
         } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
+
+            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+            Aware.setSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION, true);
+
+            mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI, sensorHandler);
+
+            if (Aware.DEBUG) Log.d(TAG, "Significant motion service active...");
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -158,7 +143,7 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
         double mSignificantEnergy = Math.sqrt(x * x + y * y + z * z) - SensorManager.GRAVITY_EARTH;
         buffer.add(Math.abs(mSignificantEnergy));
 
-        if (buffer.size() == 5) {
+        if (buffer.size() == 40) {
             //remove oldest value
             buffer.remove(0);
 
