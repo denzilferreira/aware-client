@@ -24,13 +24,11 @@ import android.os.PowerManager;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
-import com.aware.providers.Gravity_Provider;
 import com.aware.providers.Gyroscope_Provider;
 import com.aware.providers.Gyroscope_Provider.Gyroscope_Data;
 import com.aware.providers.Gyroscope_Provider.Gyroscope_Sensor;
 import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
-import com.aware.utils.Converters;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,14 +47,13 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
 
     private static SensorManager mSensorManager;
     private static Sensor mGyroscope;
+
     private static HandlerThread sensorThread = null;
     private static Handler sensorHandler = null;
-    private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
-//    private static int FIFO_SIZE = 0;
-    private static float LAST_VALUE_0 = 0;
-    private static float LAST_VALUE_1 = 0;
-    private static float LAST_VALUE_2 = 0;
+
+    private static Float[] LAST_VALUES = null;
+
     private static int FREQUENCY = -1;
     private static double THRESHOLD = 0;
 
@@ -75,7 +72,7 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
      * Until today, no available Android phone samples higher than 208Hz (Nexus 7).
      * http://ilessendata.blogspot.com/2012/11/android-accelerometer-sampling-rates.html
      */
-    private List<ContentValues> data_values = new ArrayList<ContentValues>();
+    private List<ContentValues> data_values = new ArrayList<>();
 
     private static String LABEL = "";
 
@@ -97,22 +94,18 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        //If we are using the significant motion, don't record accelerometer data
+
         if (Aware.getSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION).equals("true") && !SignificantMotion.CURRENT_SIGMOTION_STATE)
             return;
 
-        // Apply threshold.  This applies to each axis independently.  We could
-        // alternatively use Euclidian distance.  If change of values is not
-        // enough, do nothing.
-        if (Math.abs(event.values[0] - LAST_VALUE_0 ) < THRESHOLD
-                && Math.abs(event.values[1] - LAST_VALUE_1) < THRESHOLD
-                && Math.abs(event.values[2] - LAST_VALUE_2) < THRESHOLD) {
+        if (LAST_VALUES != null && THRESHOLD > 0 && Math.abs(event.values[0] - LAST_VALUES[0] ) < THRESHOLD
+                && Math.abs(event.values[1] - LAST_VALUES[1]) < THRESHOLD
+                && Math.abs(event.values[2] - LAST_VALUES[2]) < THRESHOLD) {
             return;
         }
-        // Update last values with new values for the next round.
-        LAST_VALUE_0 = event.values[0];
-        LAST_VALUE_1 = event.values[1];
-        LAST_VALUE_2 = event.values[2];
+
+        LAST_VALUES = new Float[]{event.values[0], event.values[1], event.values[2]};
+
         // Proceed with saving as usual.
         ContentValues rowData = new ContentValues();
         rowData.put(Gyroscope_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
@@ -209,14 +202,14 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
         super.onCreate();
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        powerManager = (PowerManager) getSystemService(POWER_SERVICE);
 
         mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-//        FIFO_SIZE = mGyroscope.getFifoReservedEventCount();
 
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
 
+
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
         wakeLock.acquire();
 

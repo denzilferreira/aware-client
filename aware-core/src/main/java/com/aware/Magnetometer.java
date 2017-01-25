@@ -50,14 +50,13 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
 
     private static SensorManager mSensorManager;
     private static Sensor mMagnetometer;
+
     private static HandlerThread sensorThread = null;
     private static Handler sensorHandler = null;
-    private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
-//    private static int FIFO_SIZE = 0;
-    private static float LAST_VALUE_0 = 0;
-    private static float LAST_VALUE_1 = 0;
-    private static float LAST_VALUE_2 = 0;
+
+    private static Float[] LAST_VALUES = null;
+
     private static int FREQUENCY = -1;
     private static double THRESHOLD = 0;
 
@@ -98,17 +97,16 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        //If we are using the significant motion, don't record accelerometer data
-        if (Aware.getSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION).equals("true") && !SignificantMotion.CURRENT_SIGMOTION_STATE)
-            return;
 
-        // Apply threshold.  If change of values is not enough, do nothing.
-        if (Math.abs(event.values[0] - LAST_VALUE_0 ) < THRESHOLD) {
+        if (LAST_VALUES != null && THRESHOLD > 0 &&
+                Math.abs(event.values[0] - LAST_VALUES[0]) < THRESHOLD &&
+                Math.abs(event.values[0] - LAST_VALUES[1]) < THRESHOLD &&
+                Math.abs(event.values[0] - LAST_VALUES[2]) < THRESHOLD) {
             return;
         }
-        // Update last values with new values for the next round.
-        LAST_VALUE_0 = event.values[0];
-        // Proceed with saving as usual.
+
+        LAST_VALUES = new Float[]{event.values[0],event.values[1],event.values[2]};
+
         ContentValues rowData = new ContentValues();
         rowData.put(Magnetometer_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
         rowData.put(Magnetometer_Data.TIMESTAMP, System.currentTimeMillis());
@@ -204,10 +202,7 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
         super.onCreate();
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-
         mMagnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-//        FIFO_SIZE = mMagnetometer.getFifoReservedEventCount();
 
         DATABASE_TABLES = Magnetometer_Provider.DATABASE_TABLES;
         TABLES_FIELDS = Magnetometer_Provider.TABLES_FIELDS;
@@ -216,6 +211,7 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
 
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
         wakeLock.acquire();
 
@@ -275,9 +271,9 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
 
                 if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER))
                         || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_MAGNETOMETER))) {
+
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mMagnetometer);
-//                    mSensorManager.registerListener(this, mMagnetometer, Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER)), FIFO_SIZE, sensorHandler);
                     mSensorManager.registerListener(this, mMagnetometer, Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER)), sensorHandler);
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER));

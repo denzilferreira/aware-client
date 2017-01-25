@@ -204,26 +204,6 @@ public class Aware_Client extends Aware_Activity {
     }
 
     private void defaultSettings() {
-        final SharedPreferences prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
-        if (!prefs.contains("intro_done")) {
-            prefs.edit().putBoolean("intro_done", true).commit();
-
-            final ViewGroup parent = (ViewGroup) findViewById(android.R.id.content);
-            final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-            LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-
-            final View help_qrcode = inflater.inflate(R.layout.help_qrcode, null);
-
-            parent.addView(help_qrcode, params);
-            help_qrcode.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    parent.removeView(help_qrcode);
-
-                }
-            });
-        }
-
         developerOptions();
         servicesOptions();
         logging();

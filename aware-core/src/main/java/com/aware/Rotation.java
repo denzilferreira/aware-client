@@ -50,14 +50,13 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
 
     private static SensorManager mSensorManager;
     private static Sensor mRotation;
+
     private static HandlerThread sensorThread = null;
     private static Handler sensorHandler = null;
-    private static PowerManager powerManager = null;
     private static PowerManager.WakeLock wakeLock = null;
-//    private static int FIFO_SIZE = 0;
-    private static float LAST_VALUE_0 = 0;
-    private static float LAST_VALUE_1 = 0;
-    private static float LAST_VALUE_2 = 0;
+
+    private static Float[] LAST_VALUES = null;
+
     private static int FREQUENCY = -1;
     private static double THRESHOLD = 0;
 
@@ -76,7 +75,7 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
      * Until today, no available Android phone samples higher than 208Hz (Nexus 7).
      * http://ilessendata.blogspot.com/2012/11/android-accelerometer-sampling-rates.html
      */
-    private List<ContentValues> data_values = new ArrayList<ContentValues>();
+    private List<ContentValues> data_values = new ArrayList<>();
 
     private static String LABEL = "";
 
@@ -98,23 +97,17 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        //If we are using the significant motion, don't record accelerometer data
         if (Aware.getSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION).equals("true") && !SignificantMotion.CURRENT_SIGMOTION_STATE)
             return;
 
-        // Apply threshold.  This applies to each axis independently.  We could
-        // alternatively use Euclidian distance.  If change of values is not
-        // enough, do nothing.
-        if (Math.abs(event.values[0] - LAST_VALUE_0 ) < THRESHOLD
-                && Math.abs(event.values[1] - LAST_VALUE_1) < THRESHOLD
-                && Math.abs(event.values[2] - LAST_VALUE_2) < THRESHOLD) {
+        if (LAST_VALUES != null && THRESHOLD > 0 && Math.abs(event.values[0] - LAST_VALUES[0]) < THRESHOLD
+                && Math.abs(event.values[1] - LAST_VALUES[1]) < THRESHOLD
+                && Math.abs(event.values[2] - LAST_VALUES[2]) < THRESHOLD) {
             return;
         }
-        // Update last values with new values for the next round.
-        LAST_VALUE_0 = event.values[0];
-        LAST_VALUE_1 = event.values[1];
-        LAST_VALUE_2 = event.values[2];
-        // Proceed with saving as usual.
+
+        LAST_VALUES = new Float[]{event.values[0], event.values[1], event.values[2]};
+
         ContentValues rowData = new ContentValues();
         rowData.put(Rotation_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
         rowData.put(Rotation_Data.TIMESTAMP, System.currentTimeMillis());
@@ -216,14 +209,12 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
         TAG = "Aware::Rotation";
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-
         mRotation = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-//        FIFO_SIZE = mRotation.getFifoReservedEventCount();
 
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
 
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
         wakeLock.acquire();
 
@@ -286,9 +277,9 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
 
                 if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION))
                         || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ROTATION))) {
+
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mRotation);
-//                    mSensorManager.registerListener(this, mRotation, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION)), FIFO_SIZE, sensorHandler);
                     mSensorManager.registerListener(this, mRotation, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION)), sensorHandler);
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION));

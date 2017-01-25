@@ -25,6 +25,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
@@ -45,6 +46,7 @@ import com.aware.providers.Aware_Provider;
 import com.aware.providers.Aware_Provider.Aware_Device;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.providers.Aware_Provider.Aware_Settings;
+import com.aware.providers.Battery_Provider;
 import com.aware.providers.Scheduler_Provider;
 import com.aware.utils.Aware_Plugin;
 import com.aware.utils.DownloadPluginService;
@@ -248,6 +250,8 @@ public class Aware extends Service {
 
         IntentFilter boot = new IntentFilter();
         boot.addAction(Intent.ACTION_BOOT_COMPLETED);
+        boot.addAction(Intent.ACTION_SHUTDOWN);
+        boot.addAction(Intent.ACTION_REBOOT);
         registerReceiver(awareBoot, boot);
 
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
@@ -1818,13 +1822,14 @@ public class Aware extends Service {
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(Intent.ACTION_MEDIA_MOUNTED)) {
                 if (Aware.DEBUG) Log.d(TAG, "Resuming AWARE data logging...");
+                Aware.startAWARE(context);
             }
             if (intent.getAction().equals(Intent.ACTION_MEDIA_UNMOUNTED)) {
                 if (Aware.DEBUG)
                     Log.w(TAG, "Stopping AWARE data logging until the SDCard is available again...");
+
+                Aware.stopAWARE(context);
             }
-            Intent aware = new Intent(context, Aware.class);
-            context.startService(aware);
         }
     }
 
@@ -1832,11 +1837,53 @@ public class Aware extends Service {
      * Checks if we still have the accessibility services active or not
      */
     private static final AwareBoot awareBoot = new AwareBoot();
-
     public static class AwareBoot extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Applications.isAccessibilityServiceActive(context); //This shows notification automatically if the accessibility services are off
+            ContentValues rowData = new ContentValues();
+
+            //Force updated phone battery info
+            Intent batt = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+            Bundle extras = batt.getExtras();
+            if (extras != null)  {
+                rowData.put(Battery_Provider.Battery_Data.TIMESTAMP, System.currentTimeMillis());
+                rowData.put(Battery_Provider.Battery_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
+                rowData.put(Battery_Provider.Battery_Data.LEVEL, extras.getInt(BatteryManager.EXTRA_LEVEL));
+                rowData.put(Battery_Provider.Battery_Data.SCALE, extras.getInt(BatteryManager.EXTRA_SCALE));
+                rowData.put(Battery_Provider.Battery_Data.VOLTAGE, extras.getInt(BatteryManager.EXTRA_VOLTAGE));
+                rowData.put(Battery_Provider.Battery_Data.TEMPERATURE, extras.getInt(BatteryManager.EXTRA_TEMPERATURE) / 10);
+                rowData.put(Battery_Provider.Battery_Data.PLUG_ADAPTOR, extras.getInt(BatteryManager.EXTRA_PLUGGED));
+                rowData.put(Battery_Provider.Battery_Data.HEALTH, extras.getInt(BatteryManager.EXTRA_HEALTH));
+                rowData.put(Battery_Provider.Battery_Data.TECHNOLOGY, extras.getString(BatteryManager.EXTRA_TECHNOLOGY));
+            }
+
+            if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
+                Applications.isAccessibilityServiceActive(context); //This shows notification automatically if the accessibility services are off
+                Aware.debug(context, "phone: on");
+                rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_BOOTED);
+            }
+
+            if (intent.getAction().equalsIgnoreCase(Intent.ACTION_SHUTDOWN)) {
+                Aware.debug(context, "phone: off");
+                rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_SHUTDOWN);
+            }
+            if (intent.getAction().equalsIgnoreCase(Intent.ACTION_REBOOT)) {
+                Aware.debug(context, "phone: reboot");
+                rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_REBOOT);
+            }
+
+            try {
+                if (Aware.DEBUG) Log.d(TAG, "Battery: " + rowData.toString());
+                context.getContentResolver().insert(Battery_Provider.Battery_Data.CONTENT_URI, rowData);
+            } catch (SQLiteException e) {
+                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+            } catch (SQLException e) {
+                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+            }
+
+            if (Aware.DEBUG) Log.d(TAG, Battery.ACTION_AWARE_BATTERY_CHANGED);
+            Intent battChanged = new Intent(Battery.ACTION_AWARE_BATTERY_CHANGED);
+            context.sendBroadcast(battChanged);
         }
     }
 

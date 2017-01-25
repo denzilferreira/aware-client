@@ -57,16 +57,6 @@ public class Aware_Sensor extends Service {
      */
     public ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
 
-    /**
-     * Sensor is inactive
-     */
-    public static final int STATUS_SENSOR_OFF = 0;
-
-    /**
-     * Sensor is active
-     */
-    public static final int STATUS_SENSOR_ON = 1;
-
     private Intent aware;
 
     /**
@@ -125,7 +115,6 @@ public class Aware_Sensor extends Service {
         if (contextBroadcaster != null) {
             unregisterReceiver(contextBroadcaster);
         }
-
         Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
     }
 

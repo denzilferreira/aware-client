@@ -100,6 +100,11 @@ public class Battery extends Aware_Sensor {
     public static final int STATUS_PHONE_REBOOT = -2;
 
     /**
+     * {@link Battery_Data#STATUS} Phone finished booting
+     */
+    public static final int STATUS_PHONE_BOOTED = -3;
+
+    /**
      * BroadcastReceiver for Battery module
      * - ACTION_BATTERY_CHANGED: battery values changed
      * - ACTION_BATTERY_PLUGGED_AC: user is charging via AC
@@ -110,7 +115,6 @@ public class Battery extends Aware_Sensor {
      * - ACTION_BATTERY_LOW: battery is running low (15% by Android OS)
      * - ACTION_SHUTDOWN: phone is about to shut down
      * - ACTION_REBOOT: phone is about to reboot
-     * - ACTION_AWARE_WEBSERVICE: request for webservice remote backup
      *
      * @author df
      */
@@ -135,7 +139,7 @@ public class Battery extends Aware_Sensor {
                 rowData.put(Battery_Data.TECHNOLOGY, extras.getString(BatteryManager.EXTRA_TECHNOLOGY));
 
                 try {
-                    if (Aware.DEBUG) Log.d(TAG, "Battery:" + rowData.toString());
+                    if (Aware.DEBUG) Log.d(TAG, "Battery: " + rowData.toString());
                     context.getContentResolver().insert(Battery_Data.CONTENT_URI, rowData);
                 } catch (SQLiteException e) {
                     if (Aware.DEBUG) Log.d(TAG, e.getMessage());

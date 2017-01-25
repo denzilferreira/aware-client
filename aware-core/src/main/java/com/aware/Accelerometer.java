@@ -17,7 +17,6 @@ import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
-import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -28,13 +27,11 @@ import android.util.Log;
 import com.aware.providers.Accelerometer_Provider;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Data;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Sensor;
-import com.aware.providers.Barometer_Provider;
 import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.lang.Math;
 
 /**
  * AWARE Accelerometer module
@@ -49,15 +46,13 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
     private static SensorManager mSensorManager;
     private static Sensor mAccelerometer;
+
     private static HandlerThread sensorThread = null;
     private static Handler sensorHandler = null;
-    private static PowerManager powerManager;
     private static PowerManager.WakeLock wakeLock = null;
     private static String LABEL = "";
-//    private static int FIFO_SIZE = 0;
-    private static float LAST_VALUE_0 = 0;
-    private static float LAST_VALUE_1 = 0;
-    private static float LAST_VALUE_2 = 0;
+
+    private static Float[] LAST_VALUES = null;
 
     private static int FREQUENCY = -1;
     private static double THRESHOLD = 0;
@@ -74,9 +69,10 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     public static final String ACTION_AWARE_ACCELEROMETER_LABEL = "ACTION_AWARE_ACCELEROMETER_LABEL";
     public static final String EXTRA_LABEL = "label";
 
-    private List<ContentValues> data_values = new ArrayList<ContentValues>();
+    private List<ContentValues> data_values = new ArrayList<>();
 
     private static DataLabel dataLabeler = new DataLabel();
+
     public static class DataLabel extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -94,23 +90,17 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        //If we are using the significant motion, don't record accelerometer data
         if (Aware.getSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION).equals("true") && !SignificantMotion.CURRENT_SIGMOTION_STATE)
             return;
 
-        // Apply threshold.  This applies to each axis independently.  We could
-        // alternatively use Euclidian distance.  If change of values is not
-        // enough, do nothing.
-        if (Math.abs(event.values[0] - LAST_VALUE_0 ) < THRESHOLD
-            && Math.abs(event.values[1] - LAST_VALUE_1) < THRESHOLD
-            && Math.abs(event.values[2] - LAST_VALUE_2) < THRESHOLD) {
+        if (LAST_VALUES != null && THRESHOLD > 0 && Math.abs(event.values[0] - LAST_VALUES[0]) < THRESHOLD
+                && Math.abs(event.values[1] - LAST_VALUES[1]) < THRESHOLD
+                && Math.abs(event.values[2] - LAST_VALUES[2]) < THRESHOLD) {
             return;
         }
-        // Update last values with new values for the next round.
-        LAST_VALUE_0 = event.values[0];
-        LAST_VALUE_1 = event.values[1];
-        LAST_VALUE_2 = event.values[2];
-        // Proceed with saving as usual.
+
+        LAST_VALUES = new Float[]{event.values[0], event.values[1], event.values[2]};
+
         ContentValues rowData = new ContentValues();
         rowData.put(Accelerometer_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
         rowData.put(Accelerometer_Data.TIMESTAMP, System.currentTimeMillis());
@@ -208,13 +198,13 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         super.onCreate();
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-//        FIFO_SIZE = mAccelerometer.getFifoReservedEventCount();
 
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
 
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
         wakeLock.acquire();
 
@@ -276,9 +266,9 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
                 if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER))
                         || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ACCELEROMETER))) {
+
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mAccelerometer);
-//                    mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), FIFO_SIZE, sensorHandler);
                     mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), sensorHandler);
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER));
