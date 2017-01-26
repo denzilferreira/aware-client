@@ -461,7 +461,6 @@ public class Scheduler extends Aware_Sensor {
     /**
      * Allow for setting predetermined schedules from MQTT, study configs or other applications
      * JSONArray contains an object with two variables: schedule and package
-     *
      * @param schedules
      */
     public static void setSchedules(Context c, JSONArray schedules) {

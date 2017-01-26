@@ -64,6 +64,7 @@ import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -162,6 +163,7 @@ public class Aware extends Service {
      */
     public static final String SCHEDULE_SPACE_MAINTENANCE = "schedule_aware_space_maintenance";
     public static final String SCHEDULE_SYNC_DATA = "schedule_aware_sync_data";
+    public static final String SCHEDULE_STUDY_COMPLIANCE = "schedule_aware_study_compliance";
 
     /**
      * Deprecated: will be removed in next version
@@ -329,10 +331,17 @@ public class Aware extends Service {
 
                 try {
                     JSONArray status = new JSONArray(study_status);
-                    JSONObject study = status.getJSONObject(0);
 
+                    JSONObject study = status.getJSONObject(0);
                     if (!study.getBoolean("status")) {
                         return false; //study no longer active, make clients quit the study and reset.
+                    }
+
+                    if (study.getString("config").equalsIgnoreCase("[]")) {
+                        Aware.tweakSettings(getApplicationContext(), new JSONArray(study.getString("config")));
+                    } else {
+                        JSONObject configJSON = new JSONObject(study.getString("config"));
+                        Aware.tweakSettings(getApplicationContext(), new JSONArray().put(configJSON));
                     }
 
                 } catch (JSONException e) {
@@ -497,7 +506,6 @@ public class Aware extends Service {
 
             //only the client and self-contained apps need to run the keep alive. Plugins are handled by them.
             if (getApplicationContext().getPackageName().equals("com.aware.phone") || getResources().getBoolean(R.bool.standalone)) {
-
                 try {
                     Scheduler.Schedule watchdog = Scheduler.getSchedule(this, Aware.ACTION_AWARE_KEEP_ALIVE);
                     if (watchdog == null) {
@@ -514,7 +522,7 @@ public class Aware extends Service {
             }
 
             //Boot AWARE services
-            startAWARE();
+            startAWARE(getApplicationContext());
 
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
 
@@ -1141,18 +1149,19 @@ public class Aware extends Service {
 
     /**
      * Allows the dashboard to modify unitary settings for tweaking a configuration for devices.
+     * NOTE: serverConfig only has active settings. It also does not contain credentials or server info.
+     * This function parses the server config and adjusts the local settings to replicate the server latest settings.
      *
      * @param c
-     * @param configs
+     * @param serverConfig
      */
-    protected static void tweakSettings(Context c, JSONArray configs) {
-        //Apply study settings
+    protected static void tweakSettings(Context c, JSONArray serverConfig) {
         JSONArray plugins = new JSONArray();
         JSONArray sensors = new JSONArray();
         JSONArray schedulers = new JSONArray();
-        for (int i = 0; i < configs.length(); i++) {
+        for (int i = 0; i < serverConfig.length(); i++) {
             try {
-                JSONObject element = configs.getJSONObject(i);
+                JSONObject element = serverConfig.getJSONObject(i);
                 if (element.has("plugins")) {
                     plugins = element.getJSONArray("plugins");
                 }
@@ -1167,36 +1176,207 @@ public class Aware extends Service {
             }
         }
 
-        //Set the sensors' settings first
-        for (int i = 0; i < sensors.length(); i++) {
+        try {
+            Log.d(Aware.TAG, "Server config: " + serverConfig.toString(5));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        JSONArray localConfig = new JSONArray();
+        Cursor study = getStudy(c, Aware.getSetting(c, Aware_Preferences.WEBSERVICE_SERVER));
+        int study_id = 0;
+        if (study != null && study.moveToFirst()) {
             try {
-                JSONObject sensor_config = sensors.getJSONObject(i);
-                Aware.setSetting(c, sensor_config.getString("setting"), sensor_config.get("value"), "com.aware.phone");
+                localConfig = new JSONArray(study.getString(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                study_id = study.getInt(study.getColumnIndex(Aware_Provider.Aware_Studies._ID));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        if (study != null && !study.isClosed()) study.close();
+
+        try {
+            Log.d(Aware.TAG, "Local config: " + localConfig.toString(5));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        JSONArray localSensors = new JSONArray();
+        JSONArray localPlugins = new JSONArray();
+        JSONArray localSchedulers = new JSONArray();
+        if (localConfig.length() > 0) {
+            for (int i = 0; i < localConfig.length(); i++) {
+                try {
+                    JSONObject element = localConfig.getJSONObject(i);
+                    if (element.has("sensors"))
+                        localSensors = element.getJSONArray("sensors");
+                    if (element.has("plugins"))
+                        localPlugins = element.getJSONArray("plugins");
+                    if (element.has("schedulers"))
+                        localSchedulers = element.getJSONArray("schedulers");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            try {
+                ArrayList<JSONArray> sensorSync = sensorDiff(sensors, localSensors); //check sensors first
+                if (sensorSync.get(0).length() == 0 && sensorSync.get(1).length() == 0)
+                    return; //nothing to do
+
+                JSONArray enabled = sensorSync.get(0);
+                for (int i = 0; i < enabled.length(); i++) {
+                    try {
+                        JSONObject sensor_config = enabled.getJSONObject(i);
+                        if (sensor_config.getString("setting").contains("status")) {
+                            Aware.setSetting(c, sensor_config.getString("setting"), true, "com.aware.phone");
+                        } else
+                            Aware.setSetting(c, sensor_config.getString("setting"), sensor_config.getString("value"), "com.aware.phone");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                JSONArray disabled = sensorSync.get(1);
+                for (int i = 0; i < disabled.length(); i++) {
+                    try {
+                        JSONObject sensor_config = disabled.getJSONObject(i);
+                        if (sensor_config.getString("setting").contains("status")) {
+                            Aware.setSetting(c, sensor_config.getString("setting"), false, "com.aware.phone");
+                        } else
+                            Aware.setSetting(c, sensor_config.getString("setting"), sensor_config.getString("value"), "com.aware.phone");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                //Update local study configuration
+                for (int i = 0; i < enabled.length(); i++) {
+                    localConfig.getJSONObject(0).getJSONArray("sensors").put(enabled.getJSONObject(i));
+                }
+
+                for (int i = 0; i < disabled.length(); i++) {
+                    JSONObject removed = disabled.getJSONObject(i);
+                    for (int j = 0; j < localConfig.getJSONObject(0).getJSONArray("sensors").length(); j++) {
+                        JSONObject local = localConfig.getJSONObject(0).getJSONArray("sensors").getJSONObject(j);
+                        if (removed.getString("setting").equalsIgnoreCase(local.getString("setting")))
+                            localConfig.getJSONObject(0).getJSONArray("sensors").remove(j);
+                    }
+                }
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
 
-        for (int i = 0; i < plugins.length(); i++) {
-            try {
-                JSONObject plugin_config = plugins.getJSONObject(i);
-                String package_name = plugin_config.getString("plugin");
-                JSONArray plugin_settings = plugin_config.getJSONArray("settings");
-                for (int j = 0; j < plugin_settings.length(); j++) {
-                    JSONObject plugin_setting = plugin_settings.getJSONObject(j);
-                    Aware.setSetting(c, plugin_setting.getString("setting"), plugin_setting.get("value"), package_name);
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
+//        //Set the sensors' settings first
+//        for (int i = 0; i < sensors.length(); i++) {
+//            try {
+//                JSONObject sensor_config = sensors.getJSONObject(i);
+//                Aware.setSetting(c, sensor_config.getString("setting"), sensor_config.get("value"), "com.aware.phone");
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//            }
+//        }
+
+
+//TODO: do the same for the plugins as in the sensors to sync study configurations
+//        for (int i = 0; i < plugins.length(); i++) {
+//            try {
+//                JSONObject plugin_config = plugins.getJSONObject(i);
+//                String package_name = plugin_config.getString("plugin");
+//                JSONArray plugin_settings = plugin_config.getJSONArray("settings");
+//                for (int j = 0; j < plugin_settings.length(); j++) {
+//                    JSONObject plugin_setting = plugin_settings.getJSONObject(j);
+//                    Aware.setSetting(c, plugin_setting.getString("setting"), plugin_setting.get("value"), package_name);
+//                }
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//            }
+//        }
+
+        ContentValues newCfg = new ContentValues();
+        newCfg.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, localConfig.toString());
+        c.getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, newCfg, Aware_Provider.Aware_Studies._ID + "=" + study_id, null);
 
         //Set schedulers
         if (schedulers.length() > 0)
             Scheduler.setSchedules(c, schedulers);
 
+        if (c.getPackageName().equalsIgnoreCase("com.aware.phone")) {
+            Intent uiClient = new Intent("ACTION_AWARE_CLIENT_UI_REFRESH");
+            c.sendBroadcast(uiClient);
+        }
+
         Intent apply = new Intent(Aware.ACTION_AWARE_REFRESH);
         c.sendBroadcast(apply);
+    }
+
+    /**
+     * This function returns a list of sensors to enable and one to disable because of server side configuration changes
+     * @param server
+     * @param local
+     * @return
+     * @throws JSONException
+     */
+    private static ArrayList<JSONArray> sensorDiff(JSONArray server, JSONArray local) throws JSONException {
+        JSONArray to_enable = new JSONArray();
+        JSONArray to_disable = new JSONArray();
+
+        ArrayList<String> immutable_settings = new ArrayList<>();
+        immutable_settings.add("status_mqtt");
+        immutable_settings.add("mqtt_server");
+        immutable_settings.add("mqtt_port");
+        immutable_settings.add("mqtt_keep_alive");
+        immutable_settings.add("mqtt_qos");
+        immutable_settings.add("mqtt_username");
+        immutable_settings.add("mqtt_password");
+        immutable_settings.add("status_esm");
+        immutable_settings.add("study_id");
+        immutable_settings.add("study_start");
+        immutable_settings.add("webservice_server");
+        immutable_settings.add("status_webservice");
+
+        //enable new sensors from the server
+        for (int i = 0; i < server.length(); i++) {
+            JSONObject server_sensor = server.getJSONObject(i);
+            boolean is_present = false;
+            for (int j = 0; j < local.length(); j++) {
+                JSONObject local_sensor = local.getJSONObject(j);
+                if (immutable_settings.contains(local_sensor.getString("setting"))) {
+                    continue; //don't do anything
+                }
+                if (local_sensor.getString("setting").equalsIgnoreCase(server_sensor.getString("setting"))) {
+                    is_present = true;
+                    break;
+                }
+            }
+            if (!is_present) to_enable.put(server_sensor);
+        }
+
+        //disable local sensors that are no longer in the server
+        for (int j = 0; j < local.length(); j++) {
+            JSONObject local_sensor = local.getJSONObject(j);
+            if (immutable_settings.contains(local_sensor.getString("setting"))) {
+                continue; //don't do anything
+            }
+
+            boolean remove = true;
+            for (int i = 0; i < server.length(); i++) {
+                JSONObject server_sensor = server.getJSONObject(i);
+                if (local_sensor.getString("setting").equalsIgnoreCase(server_sensor.getString("setting"))) {
+                    remove = false;
+                    break;
+                }
+            }
+            if (remove) to_disable.put(local_sensor);
+        }
+
+        ArrayList<JSONArray> output = new ArrayList<>();
+        output.add(to_enable);
+        output.add(to_disable);
+
+        return output;
     }
 
     /**
@@ -1837,6 +2017,7 @@ public class Aware extends Service {
      * Checks if we still have the accessibility services active or not
      */
     private static final AwareBoot awareBoot = new AwareBoot();
+
     public static class AwareBoot extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -1845,7 +2026,7 @@ public class Aware extends Service {
             //Force updated phone battery info
             Intent batt = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
             Bundle extras = batt.getExtras();
-            if (extras != null)  {
+            if (extras != null) {
                 rowData.put(Battery_Provider.Battery_Data.TIMESTAMP, System.currentTimeMillis());
                 rowData.put(Battery_Provider.Battery_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
                 rowData.put(Battery_Provider.Battery_Data.LEVEL, extras.getInt(BatteryManager.EXTRA_LEVEL));

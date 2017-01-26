@@ -19,15 +19,15 @@
 
     <style name="Aware_Toolbar" parent="ThemeOverlay.AppCompat.ActionBar">
         <!-- Used to for the title of the Toolbar -->
-        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:textColorPrimary">@android:color/white</item>
         <!-- Used to for the title of the Toolbar when parent is Theme.AppCompat.Light -->
-        <item name="android:textColorPrimaryInverse">#FFFFFF</item>
+        <item name="android:textColorPrimaryInverse">@android:color/white</item>
         <!-- Used to color the text of the action menu icons -->
-        <item name="android:textColorSecondary">#FFFFFF</item>
+        <item name="android:textColorSecondary">@android:color/white</item>
         <!-- Used to color the overflow menu icon -->
-        <item name="actionMenuTextColor">#FFFFFF</item>
+        <item name="actionMenuTextColor">@android:color/white</item>
         <!-- Color of the Toolbar -->
-        <item name="android:background">#33B5E5</item>
+        <item name="android:background">@color/primary</item>
         <item name="android:displayOptions">showHome|homeAsUp|showTitle</item>
     </style>
 </resources>

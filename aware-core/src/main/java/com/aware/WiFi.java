@@ -30,12 +30,9 @@ import com.aware.utils.Aware_Sensor;
 
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * WiFi Module. Scans and returns surrounding WiFi AccessPoints devices information and RSSI dB values.
@@ -331,25 +328,9 @@ public class WiFi extends Aware_Sensor {
                 FutureTask<String> futureWifiInfo = new FutureTask<>(wifiInfo);
                 FutureTask<String> futureScanResults = new FutureTask<>(scanResults);
 
-                ExecutorService executor = Executors.newFixedThreadPool(2);
+                ExecutorService executor = Executors.newFixedThreadPool(1);
                 executor.execute(futureWifiInfo);
                 executor.execute(futureScanResults);
-
-                while (true) {
-                    try {
-                        if (futureWifiInfo.isDone() && futureScanResults.isDone()) {
-                            executor.shutdown();
-                            return;
-                        }
-
-                        if (!futureWifiInfo.isDone()) {
-                            Log.d(WiFi.TAG, "Waiting on WiFi info...");
-                            futureScanResults.get(250L, TimeUnit.MILLISECONDS); //wait 250ms
-                        }
-                    } catch (InterruptedException | ExecutionException e) {
-                        e.printStackTrace();
-                    } catch (TimeoutException e) {}
-                }
             }
         }
     }

@@ -5,17 +5,21 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -26,11 +30,17 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.Toolbar;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -42,9 +52,11 @@ import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.phone.ui.Aware_Activity;
 import com.aware.phone.ui.Aware_Join_Study;
+import com.aware.phone.ui.Stream_UI;
 import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Https;
 import com.aware.utils.SSLManager;
+import com.google.android.gms.vision.text.Line;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -66,6 +78,7 @@ public class Aware_Client extends Aware_Activity {
 
     private static SensorManager mSensorMgr;
     public static ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
+    public static final String ACTION_AWARE_CLIENT_UI_REFRESH = "ACTION_AWARE_CLIENT_UI_REFRESH";
 
     private PreferenceActivity clientUI;
 
@@ -117,14 +130,56 @@ public class Aware_Client extends Aware_Activity {
         REQUIRED_PERMISSIONS.add(Manifest.permission.READ_PHONE_STATE);
 
         addPreferencesFromResource(R.xml.aware_preferences);
-
         setContentView(R.layout.aware_ui);
+
+        IntentFilter uiSync = new IntentFilter(ACTION_AWARE_CLIENT_UI_REFRESH);
+        registerReceiver(uiListener, uiSync);
     }
 
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
         if (preference instanceof PreferenceScreen) {
+
+            setTheme(R.style.Theme_Aware);
+
             Dialog subpref = ((PreferenceScreen) preference).getDialog();
+
+            LinearLayout root = (LinearLayout) subpref.findViewById(android.R.id.list).getParent();
+
+            Toolbar toolbar = new Toolbar(this);
+            toolbar.setBackgroundColor(getColor(R.color.primary));
+            toolbar.setTitleTextColor(getColor(android.R.color.white));
+            toolbar.setTitle(preference.getTitle());
+            root.addView(toolbar, 0); //add to the top
+
+            BottomNavigationView bottom = new BottomNavigationView(this);
+            bottom.inflateMenu(R.menu.aware_bottomnav);
+            bottom.setBackgroundColor(getColor(R.color.primary));
+            bottom.setItemIconTintList(ColorStateList.valueOf(getColor(android.R.color.white)));
+            bottom.setItemTextColor(ColorStateList.valueOf(getColor(android.R.color.white)));
+            bottom.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                    switch (item.getItemId()) {
+                        case R.id.aware_sensors: //Sensors
+                            Intent sensors_ui = new Intent(getApplicationContext(), Aware_Client.class);
+                            startActivity(sensors_ui);
+                            break;
+                        case R.id.aware_plugins: //Plugins
+                            Intent playStore = new Intent(Intent.ACTION_VIEW);
+                            playStore.setData(Uri.parse("market://search?q=awareframework&c=apps"));
+                            startActivity(playStore);
+                            break;
+                        case R.id.aware_stream: //Stream
+                            Intent stream_ui = new Intent(getApplicationContext(), Stream_UI.class);
+                            startActivity(stream_ui);
+                            break;
+                    }
+                    return true;
+                }
+            });
+            root.addView(bottom, root.getChildCount()); //add to the bottom
+
             subpref.setOnDismissListener(new DialogInterface.OnDismissListener() {
                 @Override
                 public void onDismiss(DialogInterface dialog) {
@@ -203,6 +258,14 @@ public class Aware_Client extends Aware_Activity {
         }
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        try {
+            unregisterReceiver(uiListener);
+        } catch (IllegalArgumentException e) {}
+    }
+
     private void defaultSettings() {
         developerOptions();
         servicesOptions();
@@ -236,6 +299,16 @@ public class Aware_Client extends Aware_Activity {
         gravity();
         temperature();
         significant();
+    }
+
+    private UISync uiListener = new UISync();
+    public class UISync extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(ACTION_AWARE_CLIENT_UI_REFRESH)) {
+                defaultSettings();
+            }
+        }
     }
 
     /**
