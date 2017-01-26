@@ -66,5 +66,6 @@ dependencies {
     compile "com.android.support:cardview-v7:$support_libs"
     compile "com.android.support:appcompat-v7:$support_libs"
     compile "com.android.support:design:$support_libs"
+    compile 'net.zetetic:android-database-sqlcipher:3.5.3@aar'
 }
 
