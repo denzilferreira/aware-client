@@ -329,16 +329,7 @@ public class WiFi extends Aware_Sensor {
                 executor.submit(wifiInfo);
                 executor.submit(scanResults);
                 executor.shutdown();
-                /* The awaitTermination is necessary since an IntentService could kill the threads
-                    when its execution is over. However the 1000ms threshold could cause problems in
-                    slower phones. If you find that wifi logging is being interrupted make the
-                    threshold longer
-                 */
-                try {
-                    executor.awaitTermination(1000, TimeUnit.MILLISECONDS);
-                } catch (InterruptedException e) {
-                    if (Aware.DEBUG) Log.d(TAG, "WiFi data recording was interrupted because took more than 1000 ms");
-                }
+
             }
         }
     }
