@@ -249,16 +249,6 @@ public class Aware_Client extends Aware_Activity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-
-        //Notify the user of being enrolled in a study
-        if (Aware.isStudy(getApplicationContext())) {
-            Toast.makeText(this, "You are participating in a study! Thanks!", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
     protected void onPause() {
         super.onPause();
         try {

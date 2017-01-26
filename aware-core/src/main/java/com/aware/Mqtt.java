@@ -38,13 +38,14 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import javax.net.SocketFactory;
+
 /**
  * Service that connects to the MQTT P2P network for AWARE
  *
  * @author denzil
  */
 public class Mqtt extends Aware_Sensor implements MqttCallback {
-
     /**
      * Logging tag (default = "AWARE::MQTT")
      */
@@ -359,7 +360,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
             if (MQTT_CLIENT != null && MQTT_CLIENT.isConnected()) {
                 if (DEBUG)
                     Log.d(TAG, "Connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
-            } else {
+            } else if (MQTT_CLIENT == null) {
                 initializeMQTT();
             }
         }
@@ -423,8 +424,15 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         if (MQTT_PASSWORD.length() > 0)
             MQTT_OPTIONS.setPassword(MQTT_PASSWORD.toCharArray());
 
-        if (MQTT_PROTOCOL.equalsIgnoreCase("ssl"))
-            MQTT_OPTIONS.setSocketFactory(new SSLUtils(this).getSocketFactory(MQTT_SERVER));
+        if (MQTT_PROTOCOL.equalsIgnoreCase("ssl")) {
+            SocketFactory factory = new SSLUtils(this).getSocketFactory(MQTT_SERVER);
+            if (factory != null) {
+                MQTT_OPTIONS.setSocketFactory(factory);
+            } else {
+                Log.e(Mqtt.TAG, "Unable to create SSL factory. Certificate missing?");
+                return; //unable to read the SSL certificate. This happens when the client has yet to download the certificate. Everything resumes when successful.
+            }
+        }
 
         try {
             MQTT_CLIENT = new MqttClient(

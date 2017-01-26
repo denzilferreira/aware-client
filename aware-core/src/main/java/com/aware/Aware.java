@@ -650,7 +650,7 @@ public class Aware extends Service {
                 new AsyncStudyCheck().execute();
             }
         } else {
-            stopAWARE();
+            stopAWARE(this);
 
             ArrayList<String> active_plugins = new ArrayList<>();
             Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
@@ -1156,6 +1156,9 @@ public class Aware extends Service {
      * @param serverConfig
      */
     protected static void tweakSettings(Context c, JSONArray serverConfig) {
+
+        boolean config_changed = false;
+
         JSONArray plugins = new JSONArray();
         JSONArray sensors = new JSONArray();
         JSONArray schedulers = new JSONArray();
@@ -1176,12 +1179,6 @@ public class Aware extends Service {
             }
         }
 
-        try {
-            Log.d(Aware.TAG, "Server config: " + serverConfig.toString(5));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
         JSONArray localConfig = new JSONArray();
         Cursor study = getStudy(c, Aware.getSetting(c, Aware_Preferences.WEBSERVICE_SERVER));
         int study_id = 0;
@@ -1194,12 +1191,6 @@ public class Aware extends Service {
             }
         }
         if (study != null && !study.isClosed()) study.close();
-
-        try {
-            Log.d(Aware.TAG, "Local config: " + localConfig.toString(5));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
 
         JSONArray localSensors = new JSONArray();
         JSONArray localPlugins = new JSONArray();
@@ -1221,99 +1212,193 @@ public class Aware extends Service {
 
             try {
                 ArrayList<JSONArray> sensorSync = sensorDiff(sensors, localSensors); //check sensors first
-                if (sensorSync.get(0).length() == 0 && sensorSync.get(1).length() == 0)
-                    return; //nothing to do
+                if (sensorSync.get(0).length() > 0 || sensorSync.get(1).length() > 0) {
+                    JSONArray enabled = sensorSync.get(0);
+                    for (int i = 0; i < enabled.length(); i++) {
+                        try {
+                            JSONObject sensor_config = enabled.getJSONObject(i);
+                            if (sensor_config.getString("setting").contains("status")) {
+                                Aware.setSetting(c, sensor_config.getString("setting"), true, "com.aware.phone");
+                            } else
+                                Aware.setSetting(c, sensor_config.getString("setting"), sensor_config.getString("value"), "com.aware.phone");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
 
-                JSONArray enabled = sensorSync.get(0);
-                for (int i = 0; i < enabled.length(); i++) {
-                    try {
-                        JSONObject sensor_config = enabled.getJSONObject(i);
-                        if (sensor_config.getString("setting").contains("status")) {
-                            Aware.setSetting(c, sensor_config.getString("setting"), true, "com.aware.phone");
-                        } else
-                            Aware.setSetting(c, sensor_config.getString("setting"), sensor_config.getString("value"), "com.aware.phone");
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                    JSONArray disabled = sensorSync.get(1);
+                    for (int i = 0; i < disabled.length(); i++) {
+                        try {
+                            JSONObject sensor_config = disabled.getJSONObject(i);
+                            if (sensor_config.getString("setting").contains("status")) {
+                                Aware.setSetting(c, sensor_config.getString("setting"), false, "com.aware.phone");
+                            } else
+                                Aware.setSetting(c, sensor_config.getString("setting"), sensor_config.getString("value"), "com.aware.phone");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    if (enabled.length() > 0 || disabled.length() > 0) config_changed = true;
+
+                    if (config_changed) {
+                        //Update local study configuration
+                        for (int i = 0; i < enabled.length(); i++) {
+                            localConfig.getJSONObject(0).getJSONArray("sensors").put(enabled.getJSONObject(i));
+                        }
+
+                        for (int i = 0; i < disabled.length(); i++) {
+                            JSONObject removed = disabled.getJSONObject(i);
+                            for (int j = 0; j < localConfig.getJSONObject(0).getJSONArray("sensors").length(); j++) {
+                                JSONObject local = localConfig.getJSONObject(0).getJSONArray("sensors").getJSONObject(j);
+                                if (removed.getString("setting").equalsIgnoreCase(local.getString("setting")))
+                                    localConfig.getJSONObject(0).getJSONArray("sensors").remove(j);
+                            }
+                        }
                     }
                 }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
 
-                JSONArray disabled = sensorSync.get(1);
-                for (int i = 0; i < disabled.length(); i++) {
-                    try {
-                        JSONObject sensor_config = disabled.getJSONObject(i);
-                        if (sensor_config.getString("setting").contains("status")) {
-                            Aware.setSetting(c, sensor_config.getString("setting"), false, "com.aware.phone");
-                        } else
-                            Aware.setSetting(c, sensor_config.getString("setting"), sensor_config.getString("value"), "com.aware.phone");
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+            try {
+                ArrayList<JSONArray> pluginSync = pluginDiff(plugins, localPlugins);
+                if (pluginSync.get(0).length() > 0 || pluginSync.get(1).length() > 0) {
+                    JSONArray enabled = pluginSync.get(0);
+                    for (int i = 0; i < enabled.length(); i++) {
+                        try {
+                            JSONObject plugin_config = enabled.getJSONObject(i);
+                            String package_name = plugin_config.getString("plugin");
+                            JSONArray plugin_settings = plugin_config.getJSONArray("settings");
+                            for (int j = 0; j < plugin_settings.length(); j++) {
+                                JSONObject plugin_set = plugin_settings.getJSONObject(j);
+                                if (plugin_set.getString("setting").contains("status")) {
+                                    Aware.setSetting(c, plugin_set.getString("setting"), true, package_name);
+                                } else
+                                    Aware.setSetting(c, plugin_set.getString("setting"), plugin_set.getString("value"), package_name);
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    JSONArray disabled = pluginSync.get(1);
+                    for (int i = 0; i < disabled.length(); i++) {
+                        try {
+                            JSONObject plugin_config = disabled.getJSONObject(i);
+                            String package_name = plugin_config.getString("plugin");
+                            JSONArray plugin_settings = plugin_config.getJSONArray("settings");
+                            for (int j = 0; j < plugin_settings.length(); j++) {
+                                JSONObject plugin_set = plugin_settings.getJSONObject(j);
+                                if (plugin_set.getString("setting").contains("status")) {
+                                    Aware.setSetting(c, plugin_set.getString("setting"), false, package_name);
+                                } else
+                                    Aware.setSetting(c, plugin_set.getString("setting"), plugin_set.getString("value"), package_name);
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    if (enabled.length() > 0 || disabled.length() > 0) config_changed = true;
+
+                    if (config_changed) {
+                        if (enabled.length() > 0 && !localConfig.getJSONObject(0).has("plugins")) {
+                            localConfig.getJSONObject(0).put("plugins", new JSONArray());
+                        }
+
+                        //Update local study configuration
+                        for (int i = 0; i < enabled.length(); i++) {
+                            JSONObject plugin = enabled.getJSONObject(i);
+                            localConfig.getJSONObject(0).getJSONArray("plugins").put(plugin);
+                            if (PluginsManager.isInstalled(c, enabled.getJSONObject(i).getString("plugin")) != null) {
+                                Aware.startPlugin(c, enabled.getJSONObject(i).getString("plugin"));
+                            } else
+                                Aware.downloadPlugin(c, enabled.getJSONObject(i).getString("plugin"), false);
+                        }
+
+                        for (int i = 0; i < disabled.length(); i++) {
+                            JSONObject removed = disabled.getJSONObject(i);
+                            for (int j = 0; j < localConfig.getJSONObject(0).getJSONArray("plugins").length(); j++) {
+                                JSONObject local = localConfig.getJSONObject(0).getJSONArray("plugins").getJSONObject(j);
+                                if (removed.getString("plugin").equalsIgnoreCase(local.getString("plugin"))) {
+                                    localConfig.getJSONObject(0).getJSONArray("plugins").remove(j);
+                                    Aware.stopPlugin(c, removed.getString("plugin"));
+                                }
+                            }
+                        }
                     }
                 }
-
-                //Update local study configuration
-                for (int i = 0; i < enabled.length(); i++) {
-                    localConfig.getJSONObject(0).getJSONArray("sensors").put(enabled.getJSONObject(i));
-                }
-
-                for (int i = 0; i < disabled.length(); i++) {
-                    JSONObject removed = disabled.getJSONObject(i);
-                    for (int j = 0; j < localConfig.getJSONObject(0).getJSONArray("sensors").length(); j++) {
-                        JSONObject local = localConfig.getJSONObject(0).getJSONArray("sensors").getJSONObject(j);
-                        if (removed.getString("setting").equalsIgnoreCase(local.getString("setting")))
-                            localConfig.getJSONObject(0).getJSONArray("sensors").remove(j);
-                    }
-                }
-
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
 
-//        //Set the sensors' settings first
-//        for (int i = 0; i < sensors.length(); i++) {
-//            try {
-//                JSONObject sensor_config = sensors.getJSONObject(i);
-//                Aware.setSetting(c, sensor_config.getString("setting"), sensor_config.get("value"), "com.aware.phone");
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//            }
-//        }
+        if (config_changed) {
+            ContentValues newCfg = new ContentValues();
+            newCfg.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, localConfig.toString());
+            c.getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, newCfg, Aware_Provider.Aware_Studies._ID + "=" + study_id, null);
 
+            //Set schedulers
+            if (schedulers.length() > 0)
+                Scheduler.setSchedules(c, schedulers);
 
-//TODO: do the same for the plugins as in the sensors to sync study configurations
-//        for (int i = 0; i < plugins.length(); i++) {
-//            try {
-//                JSONObject plugin_config = plugins.getJSONObject(i);
-//                String package_name = plugin_config.getString("plugin");
-//                JSONArray plugin_settings = plugin_config.getJSONArray("settings");
-//                for (int j = 0; j < plugin_settings.length(); j++) {
-//                    JSONObject plugin_setting = plugin_settings.getJSONObject(j);
-//                    Aware.setSetting(c, plugin_setting.getString("setting"), plugin_setting.get("value"), package_name);
-//                }
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//            }
-//        }
+            Intent apply = new Intent(Aware.ACTION_AWARE_REFRESH);
+            c.sendBroadcast(apply);
+        }
+    }
 
-        ContentValues newCfg = new ContentValues();
-        newCfg.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, localConfig.toString());
-        c.getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, newCfg, Aware_Provider.Aware_Studies._ID + "=" + study_id, null);
+    /**
+     * This function returns a list of plugins to enable and one to disable because of server side configuration changes
+     *
+     * @param server
+     * @param local
+     * @return
+     * @throws JSONException
+     */
+    private static ArrayList<JSONArray> pluginDiff(JSONArray server, JSONArray local) throws JSONException {
+        JSONArray to_enable = new JSONArray();
+        JSONArray to_disable = new JSONArray();
 
-        //Set schedulers
-        if (schedulers.length() > 0)
-            Scheduler.setSchedules(c, schedulers);
-
-        if (c.getPackageName().equalsIgnoreCase("com.aware.phone")) {
-            Intent uiClient = new Intent("ACTION_AWARE_CLIENT_UI_REFRESH");
-            c.sendBroadcast(uiClient);
+        //enable new plugins from the server
+        for (int i = 0; i < server.length(); i++) {
+            JSONObject server_plugin = server.getJSONObject(i);
+            boolean is_present = false;
+            for (int j = 0; j < local.length(); j++) {
+                JSONObject local_plugin = local.getJSONObject(j);
+                if (local_plugin.getString("plugin").equalsIgnoreCase(server_plugin.getString("plugin"))) {
+                    is_present = true;
+                    break;
+                }
+            }
+            if (!is_present) to_enable.put(server_plugin);
         }
 
-        Intent apply = new Intent(Aware.ACTION_AWARE_REFRESH);
-        c.sendBroadcast(apply);
+        //disable local sensors that are no longer in the server
+        for (int j = 0; j < local.length(); j++) {
+            JSONObject local_plugin = local.getJSONObject(j);
+
+            boolean remove = true;
+            for (int i = 0; i < server.length(); i++) {
+                JSONObject server_plugin = server.getJSONObject(i);
+                if (local_plugin.getString("plugin").equalsIgnoreCase(server_plugin.getString("plugin"))) {
+                    remove = false;
+                    break;
+                }
+            }
+            if (remove) to_disable.put(local_plugin);
+        }
+
+        ArrayList<JSONArray> output = new ArrayList<>();
+        output.add(to_enable);
+        output.add(to_disable);
+
+        return output;
     }
 
     /**
      * This function returns a list of sensors to enable and one to disable because of server side configuration changes
+     *
      * @param server
      * @param local
      * @return
