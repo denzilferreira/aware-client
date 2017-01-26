@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
 
 /**
  * WiFi Module. Scans and returns surrounding WiFi AccessPoints devices information and RSSI dB values.
@@ -325,12 +325,20 @@ public class WiFi extends Aware_Sensor {
                 WifiInfoFetch wifiInfo = new WifiInfoFetch(getApplicationContext(), wifi);
                 WifiApResults scanResults = new WifiApResults(getApplicationContext(), wifiManager.getScanResults());
 
-                FutureTask<String> futureWifiInfo = new FutureTask<>(wifiInfo);
-                FutureTask<String> futureScanResults = new FutureTask<>(scanResults);
-
-                ExecutorService executor = Executors.newFixedThreadPool(1);
-                executor.execute(futureWifiInfo);
-                executor.execute(futureScanResults);
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(wifiInfo);
+                executor.submit(scanResults);
+                executor.shutdown();
+                /* The awaitTermination is necessary since an IntentService could kill the threads
+                    when its execution is over. However the 1000ms threshold could cause problems in
+                    slower phones. If you find that wifi logging is being interrupted make the
+                    threshold longer
+                 */
+                try {
+                    executor.awaitTermination(1000, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    if (Aware.DEBUG) Log.d(TAG, "WiFi data recording was interrupted because took more than 1000 ms");
+                }
             }
         }
     }
