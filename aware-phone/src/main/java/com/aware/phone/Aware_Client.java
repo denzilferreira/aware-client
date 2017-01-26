@@ -147,16 +147,16 @@ public class Aware_Client extends Aware_Activity {
             LinearLayout root = (LinearLayout) subpref.findViewById(android.R.id.list).getParent();
 
             Toolbar toolbar = new Toolbar(this);
-            toolbar.setBackgroundColor(getColor(R.color.primary));
-            toolbar.setTitleTextColor(getColor(android.R.color.white));
+            toolbar.setBackgroundColor(ContextCompat.getColor(preferenceScreen.getContext(), R.color.primary));
+            toolbar.setTitleTextColor(ContextCompat.getColor(preferenceScreen.getContext(), android.R.color.white));
             toolbar.setTitle(preference.getTitle());
             root.addView(toolbar, 0); //add to the top
 
             BottomNavigationView bottom = new BottomNavigationView(this);
             bottom.inflateMenu(R.menu.aware_bottomnav);
-            bottom.setBackgroundColor(getColor(R.color.primary));
-            bottom.setItemIconTintList(ColorStateList.valueOf(getColor(android.R.color.white)));
-            bottom.setItemTextColor(ColorStateList.valueOf(getColor(android.R.color.white)));
+            bottom.setBackgroundColor(ContextCompat.getColor(preferenceScreen.getContext(), R.color.primary));
+            bottom.setItemIconTintList(ColorStateList.valueOf(ContextCompat.getColor(preferenceScreen.getContext(), android.R.color.white)));
+            bottom.setItemTextColor(ColorStateList.valueOf(ContextCompat.getColor(preferenceScreen.getContext(), android.R.color.white)));
             bottom.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
                 @Override
                 public boolean onNavigationItemSelected(@NonNull MenuItem item) {
