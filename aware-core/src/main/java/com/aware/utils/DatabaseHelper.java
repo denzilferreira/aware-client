@@ -96,7 +96,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (DEBUG) Log.w(TAG, "Database in use: " + db.getPath());
         for (int i = 0; i < database_tables.length; i++) {
             db.execSQL("CREATE TABLE IF NOT EXISTS " + database_tables[i] + " (" + table_fields[i] + ");");
-            db.execSQL("CREATE INDEX IF NOT EXISTS time_device ON " + database_tables[i] + " (timestamp, device_id);");
+            //db.execSQL("CREATE INDEX IF NOT EXISTS time_device ON " + database_tables[i] + " (timestamp, device_id);");
         }
         db.setVersion(new_version);
     }
@@ -115,7 +115,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             List<String> columns = getColumns(db, database_tables[i]);
             db.execSQL("ALTER TABLE " + database_tables[i] + " RENAME TO temp_" + database_tables[i] + ";");
             db.execSQL("CREATE TABLE " + database_tables[i] + " (" + table_fields[i] + ");");
-            db.execSQL("CREATE INDEX IF NOT EXISTS time_device ON " + database_tables[i] + " (timestamp, device_id);");
+            //db.execSQL("CREATE INDEX IF NOT EXISTS time_device ON " + database_tables[i] + " (timestamp, device_id);");
 
             columns.retainAll(getColumns(db, database_tables[i]));
 

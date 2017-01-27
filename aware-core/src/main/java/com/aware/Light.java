@@ -262,12 +262,13 @@ public class Light extends Aware_Sensor implements SensorEventListener {
 
                 sensorHandler.removeCallbacksAndMessages(null);
                 mSensorManager.unregisterListener(this, mLight);
+                mSensorManager.registerListener(this, mLight, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT)), sensorHandler);
 
                 FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT));
                 THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_LIGHT));
             }
 
-            mSensorManager.registerListener(this, mLight, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT)), sensorHandler);
+
 
             if (Aware.DEBUG) Log.d(TAG, "Light service active: " + FREQUENCY + "ms");
         }
