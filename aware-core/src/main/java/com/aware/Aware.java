@@ -337,9 +337,7 @@ public class Aware extends Service {
                         return false; //study no longer active, make clients quit the study and reset.
                     }
 
-                    if (study.getString("config").equalsIgnoreCase("[]")) {
-                        Aware.tweakSettings(getApplicationContext(), new JSONArray(study.getString("config")));
-                    } else {
+                    if (!study.getString("config").equalsIgnoreCase("[]")) {
                         JSONObject configJSON = new JSONObject(study.getString("config"));
                         Aware.tweakSettings(getApplicationContext(), new JSONArray().put(configJSON));
                     }
