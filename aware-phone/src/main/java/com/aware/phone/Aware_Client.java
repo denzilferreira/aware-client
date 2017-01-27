@@ -132,8 +132,8 @@ public class Aware_Client extends Aware_Activity {
         addPreferencesFromResource(R.xml.aware_preferences);
         setContentView(R.layout.aware_ui);
 
-        IntentFilter uiSync = new IntentFilter(ACTION_AWARE_CLIENT_UI_REFRESH);
-        registerReceiver(uiListener, uiSync);
+        /*IntentFilter uiSync = new IntentFilter(ACTION_AWARE_CLIENT_UI_REFRESH);
+        registerReceiver(uiListener, uiSync);*/
     }
 
     @Override

@@ -274,12 +274,13 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
                 sensorHandler.removeCallbacksAndMessages(null);
                 mSensorManager.unregisterListener(this, mAccelerometer);
+                mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), sensorHandler);
 
                 FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER));
                 THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ACCELEROMETER));
             }
 
-            mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), sensorHandler);
+
 
             if (Aware.DEBUG) Log.d(TAG, "Accelerometer service active: " + FREQUENCY + "ms");
         }

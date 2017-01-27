@@ -337,10 +337,10 @@ public class Aware extends Service {
                         return false; //study no longer active, make clients quit the study and reset.
                     }
 
-                    if (!study.getString("config").equalsIgnoreCase("[]")) {
+                    /*if (!study.getString("config").equalsIgnoreCase("[]")) {
                         JSONObject configJSON = new JSONObject(study.getString("config"));
                         Aware.tweakSettings(getApplicationContext(), new JSONArray().put(configJSON));
-                    }
+                    }*/
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -437,7 +437,7 @@ public class Aware extends Service {
 
     public static void debug(Context c, String message) {
         //Only collect this log if in a study
-        if (!Aware.isStudy(c)) return;
+        /*if (!Aware.isStudy(c)) return;
 
         ContentValues log = new ContentValues();
         log.put(Aware_Provider.Aware_Log.LOG_TIMESTAMP, System.currentTimeMillis());
@@ -446,7 +446,7 @@ public class Aware extends Service {
 
         if (Aware.DEBUG) Log.d(TAG, "Aware_Log: \n" + log.toString());
 
-        c.getContentResolver().insert(Aware_Provider.Aware_Log.CONTENT_URI, log);
+        c.getContentResolver().insert(Aware_Provider.Aware_Log.CONTENT_URI, log);*/
     }
 
     /**
@@ -2085,7 +2085,7 @@ public class Aware extends Service {
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(Intent.ACTION_MEDIA_MOUNTED)) {
                 if (Aware.DEBUG) Log.d(TAG, "Resuming AWARE data logging...");
-                Aware.startAWARE(context);
+                //Aware.startAWARE(context);
             }
             if (intent.getAction().equals(Intent.ACTION_MEDIA_UNMOUNTED)) {
                 if (Aware.DEBUG)

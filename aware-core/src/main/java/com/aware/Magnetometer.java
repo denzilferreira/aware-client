@@ -263,12 +263,13 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
 
                 sensorHandler.removeCallbacksAndMessages(null);
                 mSensorManager.unregisterListener(this, mMagnetometer);
+                mSensorManager.registerListener(this, mMagnetometer, Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER)), sensorHandler);
 
                 FREQUENCY = Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER));
                 THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_MAGNETOMETER));
             }
 
-            mSensorManager.registerListener(this, mMagnetometer, Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER)), sensorHandler);
+
 
             if (Aware.DEBUG) Log.d(TAG, "Magnetometer service active...");
         }
