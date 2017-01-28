@@ -2,7 +2,6 @@ package com.aware;
 
 import android.content.ContentValues;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -13,11 +12,9 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.aware.providers.Significant_Provider;
-import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 
 import java.util.ArrayList;
@@ -43,6 +40,7 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
 
     private static boolean LAST_SIGMOTION_STATE = false;
     public static boolean CURRENT_SIGMOTION_STATE = false;
+    public static boolean isSignificantMotionActive = false;
     private static final double SIGMOTION_THRESHOLD = 1.0f;
 
     /**
@@ -113,6 +111,7 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
             Aware.setSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION, true);
 
             mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI, sensorHandler);
+            isSignificantMotionActive = true;
 
             if (Aware.DEBUG) Log.d(TAG, "Significant motion service active...");
         }
@@ -124,6 +123,7 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
     public void onDestroy() {
         super.onDestroy();
 
+        isSignificantMotionActive =false;
         sensorHandler.removeCallbacksAndMessages(null);
         mSensorManager.unregisterListener(this, mAccelerometer);
         sensorThread.quit();
