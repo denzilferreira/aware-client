@@ -93,7 +93,7 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        if (Aware.getSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION).equals("true") && !SignificantMotion.CURRENT_SIGMOTION_STATE) {
+        if (SignificantMotion.isSignificantMotionActive && !SignificantMotion.CURRENT_SIGMOTION_STATE) {
             if (data_values.size() > 0) {
                 ContentValues[] data_buffer = new ContentValues[data_values.size()];
                 data_values.toArray(data_buffer);

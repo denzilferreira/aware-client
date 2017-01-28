@@ -6,7 +6,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
@@ -21,13 +20,11 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.aware.providers.Gyroscope_Provider;
 import com.aware.providers.Gyroscope_Provider.Gyroscope_Data;
 import com.aware.providers.Gyroscope_Provider.Gyroscope_Sensor;
-import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 
 import java.util.ArrayList;
@@ -95,7 +92,7 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        if (Aware.getSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION).equals("true") && !SignificantMotion.CURRENT_SIGMOTION_STATE) {
+        if (SignificantMotion.isSignificantMotionActive && !SignificantMotion.CURRENT_SIGMOTION_STATE) {
             if (data_values.size() > 0) {
                 ContentValues[] data_buffer = new ContentValues[data_values.size()];
                 data_values.toArray(data_buffer);
