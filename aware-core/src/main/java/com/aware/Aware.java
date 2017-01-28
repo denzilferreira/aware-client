@@ -207,6 +207,8 @@ public class Aware extends Service {
     private static Intent scheduler = null;
     private static Intent significantSrv = null;
 
+    private AsyncStudyCheck studyCheck = null;
+
     /**
      * Singleton instance of the framework
      */
@@ -365,8 +367,17 @@ public class Aware extends Service {
         }
 
         @Override
+        protected void onCancelled(Boolean aBoolean) {
+            super.onCancelled(aBoolean);
+
+            studyCheck = null;
+        }
+
+        @Override
         protected void onPostExecute(Boolean studyStatus) {
             super.onPostExecute(studyStatus);
+
+            studyCheck = null;
 
             if (!studyStatus) {
                 sendBroadcast(new Intent(Aware.ACTION_QUIT_STUDY));
@@ -549,9 +560,6 @@ public class Aware extends Service {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
-                //Check if study is ongoing or any changes to the configuration
-                new AsyncStudyCheck().execute();
             }
 
             if (intent != null && intent.getAction() != null) {
@@ -559,6 +567,13 @@ public class Aware extends Service {
                     complianceStatus(getApplicationContext());
 
                 if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_KEEP_ALIVE)) {
+
+                    //Check if study is ongoing or any changes to the configuration
+                    if (studyCheck == null) {
+                        studyCheck = new AsyncStudyCheck();
+                        studyCheck.execute();
+                    }
+
                     startAWARE(getApplicationContext());
 
                     //Get the active plugins
@@ -2651,7 +2666,7 @@ public class Aware extends Service {
         stopScheduler(context);
     }
 
-    private static boolean is_running(Context context, Class<?> serviceClass) {
+    public static boolean is_running(Context context, Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) context.getSystemService(ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
             if (serviceClass.getName().equals(service.service.getClassName()))
@@ -2667,9 +2682,6 @@ public class Aware extends Service {
      */
     public static void startSignificant(Context context) {
         if (context == null) return;
-
-        if (is_running(context, SignificantMotion.class)) return;
-
         if (significantSrv == null) significantSrv = new Intent(context, SignificantMotion.class);
         context.startService(significantSrv);
     }
@@ -2691,9 +2703,6 @@ public class Aware extends Service {
      */
     public static void startScheduler(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Scheduler.class)) return;
-
         if (scheduler == null) scheduler = new Intent(context, Scheduler.class);
         context.startService(scheduler);
     }
@@ -2713,9 +2722,6 @@ public class Aware extends Service {
      */
     public static void startKeyboard(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Keyboard.class)) return;
-
         if (keyboard == null) keyboard = new Intent(context, Keyboard.class);
         context.startService(keyboard);
     }
@@ -2733,9 +2739,6 @@ public class Aware extends Service {
      */
     public static void startApplications(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Application.class)) return;
-
         if (applicationsSrv == null) applicationsSrv = new Intent(context, Applications.class);
         try {
             context.startService(applicationsSrv);
@@ -2763,9 +2766,6 @@ public class Aware extends Service {
      */
     public static void startInstallations(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Installations.class)) return;
-
         if (installationsSrv == null) installationsSrv = new Intent(context, Installations.class);
         context.startService(installationsSrv);
     }
@@ -2783,9 +2783,6 @@ public class Aware extends Service {
      */
     public static void startESM(Context context) {
         if (context == null) return;
-
-        if (is_running(context, ESM.class)) return;
-
         if (esmSrv == null) esmSrv = new Intent(context, ESM.class);
         context.startService(esmSrv);
     }
@@ -2803,9 +2800,6 @@ public class Aware extends Service {
      */
     public static void startTemperature(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Temperature.class)) return;
-
         if (temperatureSrv == null) temperatureSrv = new Intent(context, Temperature.class);
         context.startService(temperatureSrv);
     }
@@ -2823,9 +2817,6 @@ public class Aware extends Service {
      */
     public static void startLinearAccelerometer(Context context) {
         if (context == null) return;
-
-        if (is_running(context, LinearAccelerometer.class)) return;
-
         if (linear_accelSrv == null)
             linear_accelSrv = new Intent(context, LinearAccelerometer.class);
         context.startService(linear_accelSrv);
@@ -2844,9 +2835,6 @@ public class Aware extends Service {
      */
     public static void startGravity(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Gravity.class)) return;
-
         if (gravitySrv == null) gravitySrv = new Intent(context, Gravity.class);
         context.startService(gravitySrv);
     }
@@ -2864,9 +2852,6 @@ public class Aware extends Service {
      */
     public static void startBarometer(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Barometer.class)) return;
-
         if (barometerSrv == null) barometerSrv = new Intent(context, Barometer.class);
         context.startService(barometerSrv);
     }
@@ -2884,9 +2869,6 @@ public class Aware extends Service {
      */
     public static void startMagnetometer(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Magnetometer.class)) return;
-
         if (magnetoSrv == null) magnetoSrv = new Intent(context, Magnetometer.class);
         context.startService(magnetoSrv);
     }
@@ -2904,9 +2886,6 @@ public class Aware extends Service {
      */
     public static void startProximity(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Proximity.class)) return;
-
         if (proximitySrv == null) proximitySrv = new Intent(context, Proximity.class);
         context.startService(proximitySrv);
     }
@@ -2924,9 +2903,6 @@ public class Aware extends Service {
      */
     public static void startLight(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Light.class)) return;
-
         if (lightSrv == null) lightSrv = new Intent(context, Light.class);
         context.startService(lightSrv);
     }
@@ -2944,9 +2920,6 @@ public class Aware extends Service {
      */
     public static void startRotation(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Rotation.class)) return;
-
         if (rotationSrv == null) rotationSrv = new Intent(context, Rotation.class);
         context.startService(rotationSrv);
     }
@@ -2964,9 +2937,6 @@ public class Aware extends Service {
      */
     public static void startTelephony(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Telephony.class)) return;
-
         if (telephonySrv == null) telephonySrv = new Intent(context, Telephony.class);
         context.startService(telephonySrv);
     }
@@ -2984,9 +2954,6 @@ public class Aware extends Service {
      */
     public static void startWiFi(Context context) {
         if (context == null) return;
-
-        if (is_running(context, WiFi.class)) return;
-
         if (wifiSrv == null) wifiSrv = new Intent(context, WiFi.class);
         context.startService(wifiSrv);
     }
@@ -3001,9 +2968,6 @@ public class Aware extends Service {
      */
     public static void startGyroscope(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Gyroscope.class)) return;
-
         if (gyroSrv == null) gyroSrv = new Intent(context, Gyroscope.class);
         context.startService(gyroSrv);
     }
@@ -3021,9 +2985,6 @@ public class Aware extends Service {
      */
     public static void startAccelerometer(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Accelerometer.class)) return;
-
         if (accelerometerSrv == null) accelerometerSrv = new Intent(context, Accelerometer.class);
         context.startService(accelerometerSrv);
     }
@@ -3041,9 +3002,6 @@ public class Aware extends Service {
      */
     public static void startProcessor(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Processor.class)) return;
-
         if (processorSrv == null) processorSrv = new Intent(context, Processor.class);
         context.startService(processorSrv);
     }
@@ -3061,9 +3019,6 @@ public class Aware extends Service {
      */
     public static void startLocations(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Locations.class)) return;
-
         if (locationsSrv == null) locationsSrv = new Intent(context, Locations.class);
         context.startService(locationsSrv);
     }
@@ -3083,9 +3038,6 @@ public class Aware extends Service {
      */
     public static void startBluetooth(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Bluetooth.class)) return;
-
         if (bluetoothSrv == null) bluetoothSrv = new Intent(context, Bluetooth.class);
         context.startService(bluetoothSrv);
     }
@@ -3103,9 +3055,6 @@ public class Aware extends Service {
      */
     public static void startScreen(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Screen.class)) return;
-
         if (screenSrv == null) screenSrv = new Intent(context, Screen.class);
         context.startService(screenSrv);
     }
@@ -3123,9 +3072,6 @@ public class Aware extends Service {
      */
     public static void startBattery(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Battery.class)) return;
-
         if (batterySrv == null) batterySrv = new Intent(context, Battery.class);
         context.startService(batterySrv);
     }
@@ -3143,9 +3089,6 @@ public class Aware extends Service {
      */
     public static void startNetwork(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Network.class)) return;
-
         if (networkSrv == null) networkSrv = new Intent(context, Network.class);
         context.startService(networkSrv);
     }
@@ -3163,9 +3106,6 @@ public class Aware extends Service {
      */
     public static void startTraffic(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Traffic.class)) return;
-
         if (trafficSrv == null) trafficSrv = new Intent(context, Traffic.class);
         context.startService(trafficSrv);
     }
@@ -3183,9 +3123,6 @@ public class Aware extends Service {
      */
     public static void startTimeZone(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Timezone.class)) return;
-
         if (timeZoneSrv == null) timeZoneSrv = new Intent(context, Timezone.class);
         context.startService(timeZoneSrv);
     }
@@ -3203,9 +3140,6 @@ public class Aware extends Service {
      */
     public static void startCommunication(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Communication.class)) return;
-
         if (communicationSrv == null) communicationSrv = new Intent(context, Communication.class);
         context.startService(communicationSrv);
     }
@@ -3227,9 +3161,6 @@ public class Aware extends Service {
      */
     public static void startMQTT(Context context) {
         if (context == null) return;
-
-        if (is_running(context, Mqtt.class)) return;
-
         if (mqttSrv == null) mqttSrv = new Intent(context, Mqtt.class);
         context.startService(mqttSrv);
     }

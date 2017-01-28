@@ -86,7 +86,6 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        Log.d(TAG, "significant motion: " + SignificantMotion.isSignificantMotionActive);
         if (SignificantMotion.isSignificantMotionActive && !SignificantMotion.CURRENT_SIGMOTION_STATE) {
             if (data_values.size() > 0) {
                 ContentValues[] data_buffer = new ContentValues[data_values.size()];

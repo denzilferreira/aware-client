@@ -26,6 +26,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.ViewGroup;
+import android.widget.ListAdapter;
 import android.widget.Toast;
 
 import com.aware.Applications;
@@ -52,6 +53,8 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     private static boolean permissions_ok = true;
 
     private static SharedPreferences prefs;
+
+    private SettingsSync settingsSync = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,7 +136,10 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
             subpref.setOnDismissListener(new DialogInterface.OnDismissListener() {
                 @Override
                 public void onDismiss(DialogInterface dialog) {
-                    new SettingsSync().execute(preference);
+                    if (settingsSync == null) {
+                        settingsSync = new SettingsSync();
+                        settingsSync.execute(preference);
+                    }
                 }
             });
         }
@@ -150,6 +156,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                 break;
             }
         }
+
         Aware.setSetting(getApplicationContext(), key, value);
         Preference pref = findPreference(key);
         if (CheckBoxPreference.class.isInstance(pref)) {
@@ -184,7 +191,8 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         protected void onProgressUpdate(Preference... values) {
             super.onProgressUpdate(values);
 
-            Log.d(Aware.TAG, "Preference: " + values[0].getKey() + " parent: " + getPreferenceParent(values[0]).getKey());
+            if (Aware.DEBUG)
+                Log.d(Aware.TAG, "Preference: " + values[0].getKey() + " parent: " + getPreferenceParent(values[0]).getKey());
 
             Preference pref = values[0];
             if (CheckBoxPreference.class.isInstance(pref)) {
@@ -199,15 +207,16 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
                             Toast.makeText(getApplicationContext(), "Study URL missing...", Toast.LENGTH_SHORT).show();
                         } else {
-                            Aware.joinStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
-                            Intent study_scan = new Intent();
-                            study_scan.putExtra(Aware_Join_Study.EXTRA_STUDY_URL, Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
-                            setResult(Activity.RESULT_OK, study_scan);
-                            finish();
+                            if (!Aware.isStudy(getApplicationContext())) {
+                                Aware.joinStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
+                                Intent study_scan = new Intent();
+                                study_scan.putExtra(Aware_Join_Study.EXTRA_STUDY_URL, Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
+                                setResult(Activity.RESULT_OK, study_scan);
+                                finish();
+                            }
                         }
                     }
                 }
-
                 if (pref.getKey().contains("status_")) {
                     Preference parent = getPreferenceParent(check);
                     if (PreferenceScreen.class.isInstance(parent)) {
@@ -234,11 +243,25 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                 list.setSummary(list.getEntry());
             }
         }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            settingsSync = null;
+        }
+
+        @Override
+        protected void onCancelled() {
+            super.onCancelled();
+            settingsSync = null;
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
+        Log.d(Aware.TAG, "onResume");
 
         if (!permissions_ok) {
             Intent permissionsHandler = new Intent(this, PermissionsHandler.class);
@@ -250,7 +273,43 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
 
         prefs.registerOnSharedPreferenceChangeListener(this);
 
-        new SettingsSync().execute(findPreference(Aware_Preferences.DEVICE_ID), findPreference(Aware_Preferences.DEVICE_LABEL), findPreference(Aware_Preferences.AWARE_VERSION));
+        //Set the current setting on the UI, asynchronously
+        if (settingsSync == null) {
+            settingsSync = new SettingsSync();
+            settingsSync.execute(
+                    findPreference(Aware_Preferences.DEVICE_ID),
+                    findPreference(Aware_Preferences.DEVICE_LABEL),
+                    findPreference(Aware_Preferences.AWARE_VERSION),
+                    findPreference(Aware_Preferences.STATUS_ACCELEROMETER),
+                    findPreference(Aware_Preferences.STATUS_APPLICATIONS),
+                    findPreference(Aware_Preferences.STATUS_BAROMETER),
+                    findPreference(Aware_Preferences.STATUS_BATTERY),
+                    findPreference(Aware_Preferences.STATUS_BLUETOOTH),
+                    findPreference(Aware_Preferences.STATUS_COMMUNICATION_EVENTS),
+                    findPreference(Aware_Preferences.STATUS_CALLS),
+                    findPreference(Aware_Preferences.STATUS_MESSAGES),
+                    findPreference(Aware_Preferences.STATUS_ESM),
+                    findPreference(Aware_Preferences.STATUS_GRAVITY),
+                    findPreference(Aware_Preferences.STATUS_LOCATION_NETWORK),
+                    findPreference(Aware_Preferences.STATUS_LOCATION_GPS),
+                    findPreference(Aware_Preferences.STATUS_LIGHT),
+                    findPreference(Aware_Preferences.STATUS_LINEAR_ACCELEROMETER),
+                    findPreference(Aware_Preferences.STATUS_NETWORK_EVENTS),
+                    findPreference(Aware_Preferences.STATUS_NETWORK_TRAFFIC),
+                    findPreference(Aware_Preferences.STATUS_MAGNETOMETER),
+                    findPreference(Aware_Preferences.STATUS_PROCESSOR),
+                    findPreference(Aware_Preferences.STATUS_TIMEZONE),
+                    findPreference(Aware_Preferences.STATUS_PROXIMITY),
+                    findPreference(Aware_Preferences.STATUS_ROTATION),
+                    findPreference(Aware_Preferences.STATUS_SCREEN),
+                    findPreference(Aware_Preferences.STATUS_SIGNIFICANT_MOTION),
+                    findPreference(Aware_Preferences.STATUS_TEMPERATURE),
+                    findPreference(Aware_Preferences.STATUS_TELEPHONY),
+                    findPreference(Aware_Preferences.STATUS_WIFI),
+                    findPreference(Aware_Preferences.STATUS_MQTT),
+                    findPreference(Aware_Preferences.STATUS_WEBSERVICE)
+            );
+        }
     }
 
     @Override

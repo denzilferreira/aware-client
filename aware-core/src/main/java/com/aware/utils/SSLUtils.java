@@ -6,9 +6,14 @@ import android.util.Log;
 
 import com.aware.Aware;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.security.KeyManagementException;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
@@ -21,7 +26,6 @@ import javax.net.ssl.TrustManagerFactory;
  */
 public class SSLUtils {
 
-    private SSLContext sslContext;
     private Context mContext;
 
     public SSLUtils( Context c ) {
@@ -29,7 +33,6 @@ public class SSLUtils {
     }
 
     public SSLSocketFactory getSocketFactory( String host ) {
-
         try {
             //load SSL certificate
             InputStream crt = SSLManager.getCertificate(mContext, host);
@@ -45,16 +48,23 @@ public class SSLUtils {
             trustManagerFactory.init(caKS);
 
             //Initialize a SSL connection context, TLSv1.2 (Mosquitto)
-            sslContext = SSLContext.getInstance("TLSv1.2");
+            SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
             sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
 
             //Fix for known-bug on <= JellyBean (4.x)
             System.setProperty("http.keepAlive", "false");
             return(sslContext.getSocketFactory());
 
-        } catch (Exception x){
-            //ignore error of SSL
-            x.printStackTrace();
+        } catch (IOException e){
+//            Log.e(Aware.TAG, "Error reading certificate from storage." + e.getMessage());
+        } catch (NoSuchAlgorithmException e) {
+//            Log.e(Aware.TAG, "Algorithm not supported." + e.getMessage());
+        } catch (CertificateException e) {
+//            Log.e(Aware.TAG, "Certificate exception." + e.getMessage());
+        } catch (KeyManagementException e) {
+//            Log.e(Aware.TAG, "Failed KeyManagement." + e.getMessage());
+        } catch (KeyStoreException e) {
+//            Log.e(Aware.TAG, "Failed KeyStore." + e.getMessage());
         }
 
 //        try {

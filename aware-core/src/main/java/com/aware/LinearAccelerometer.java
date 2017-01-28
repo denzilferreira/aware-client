@@ -91,7 +91,6 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-
         if (SignificantMotion.isSignificantMotionActive && !SignificantMotion.CURRENT_SIGMOTION_STATE) {
             if (data_values.size() > 0) {
                 ContentValues[] data_buffer = new ContentValues[data_values.size()];
