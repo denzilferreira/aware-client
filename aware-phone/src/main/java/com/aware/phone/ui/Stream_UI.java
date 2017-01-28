@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
@@ -112,6 +113,11 @@ public class Stream_UI extends Aware_Activity {
         streamAdapter = new StreamAdapter(getApplicationContext());
         stream_container.setAdapter(streamAdapter);
 	}
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+
+    }
 
     private class StreamAdapter extends BaseAdapter {
         private Context mContext;

@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -103,6 +104,12 @@ public class Plugins_Manager extends Aware_Activity {
 
     //Monitors for external changes in plugin's states and refresh the UI
     private Plugins_Listener plugins_listener = new Plugins_Listener();
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+
+    }
+
     public class Plugins_Listener extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {

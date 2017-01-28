@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -237,6 +238,11 @@ public class Aware_Join_Study extends Aware_Activity {
     }
 
     private static PluginCompliance pluginCompliance = new PluginCompliance();
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        
+    }
 
     public static class PluginCompliance extends BroadcastReceiver {
         @Override

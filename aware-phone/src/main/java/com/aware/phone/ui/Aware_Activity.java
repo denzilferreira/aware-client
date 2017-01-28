@@ -35,7 +35,7 @@ import com.aware.ui.PermissionsHandler;
 
 import java.util.ArrayList;
 
-public class Aware_Activity extends AppCompatPreferenceActivity {
+public abstract class Aware_Activity extends AppCompatPreferenceActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

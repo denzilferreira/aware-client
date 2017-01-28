@@ -1,24 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">AWARE</string>
-    <string name="aware_description">AWARE is an Android\'s framework dedicated to infer, log and share mobile context information between mobile applications. Visit awareframework.com for details.</string>
-    <string name="read_permission">Allow read-only access to the Context Providers data.</string>
-    <string name="write_permission">Allow read and write access to the Context Providers data.</string>
-    <string name="drawer_open">Open</string>
-    <string name="drawer_close">Close</string>
+    <string name="aware_description">AWARE is an Android\'s framework dedicated to infer, log and share mobile context information between mobile applications. Visit http://awareframework.com for details.</string>
+    <string name="read_permission">Allow read-only access to the local data.</string>
+    <string name="write_permission">Allow read and write access to the local data.</string>
     <string name="aware_studies">AWARE Studies</string>
     <string name="aware_sensors">AWARE</string>
     <string name="aware_stream">AWARE Stream</string>
     <string name="aware_plugins">AWARE Plugins</string>
-    <string name="aware_camera_scan">QRCode</string>
-    <string name="aware_developer">Developer</string>
-    <string name="aware_debug_title">Debug</string>
-    <string name="aware_debug_summary">Show in ADB Logcat all debug messages for plugins and AWARE</string>
-    <string name="aware_debug_tag">Logcat tag (by default: AWARE)</string>
-    <string name="aware_debug_tag_summary">Overrides the ADB logcat tag</string>
-    <string name="aware_version">AWARE version</string>
-    <string name="aware_auto_update_version">"???"</string>
-    <string name="aware_device_id">AWARE Device ID</string>
     <string name="aware_esm_questions_title">Questionnaire waiting</string>
     <string name="aware_esm_questions">Tap to answer</string>
     <string name="aware_activate_accessibility">Click here and activate AWARE in Accessibility Services.</string>
@@ -28,9 +17,6 @@
     <string name="aware_study">Study</string>
     <string name="aware_esm_other">Other</string>
     <string name="aware_esm_other_follow">Can you be more specific, please?</string>
-    <string name="aware_dirty">Clean old data?</string>
-    <string name="aware_device_label">Device label</string>
-
     <string name="plugins_required">Plugins needed (install to join)</string>
     <string name="sign_up">Sign Up!</string>
     <string name="install">Install</string>
