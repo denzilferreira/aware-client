@@ -569,7 +569,7 @@ public class Aware extends Service {
                 if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_KEEP_ALIVE)) {
 
                     //Check if study is ongoing or any changes to the configuration
-                    if (studyCheck == null) {
+                    if (studyCheck == null && Aware.isStudy(getApplicationContext())) {
                         studyCheck = new AsyncStudyCheck();
                         studyCheck.execute();
                     }
