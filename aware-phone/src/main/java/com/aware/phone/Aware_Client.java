@@ -26,6 +26,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.ViewGroup;
+import android.widget.ListAdapter;
 import android.widget.Toast;
 
 import com.aware.Applications;
@@ -236,13 +237,41 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                     }
                 }
             }
+
             if (EditTextPreference.class.isInstance(pref)) {
                 EditTextPreference text = (EditTextPreference) findPreference(pref.getKey());
                 text.setSummary(Aware.getSetting(getApplicationContext(), pref.getKey()));
             }
+
             if (ListPreference.class.isInstance(pref)) {
                 ListPreference list = (ListPreference) findPreference(pref.getKey());
                 list.setSummary(list.getEntry());
+            }
+
+            if (PreferenceScreen.class.isInstance(pref)) {
+                PreferenceScreen category = (PreferenceScreen) findPreference(pref.getKey());
+                if (category != null) {
+                    Drawable category_icon = category.getIcon();
+                    if (category_icon != null && Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+                        ListAdapter children = category.getRootAdapter();
+                        for(int i = 0; i < children.getCount(); i++) {
+                            Object obj = children.getItem(i);
+                            if (CheckBoxPreference.class.isInstance(obj)) {
+                                CheckBoxPreference child = (CheckBoxPreference) obj;
+                                if (child.getKey().contains("status_")) {
+                                    if (child.isChecked()) {
+                                        category_icon.setColorFilter(new PorterDuffColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.accent), PorterDuff.Mode.SRC_IN));
+                                    } else {
+                                        category_icon.clearColorFilter();
+                                    }
+
+                                    //Fixed: the icons are redrawn
+                                    onContentChanged();
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
