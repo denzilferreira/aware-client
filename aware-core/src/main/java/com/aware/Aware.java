@@ -1735,10 +1735,6 @@ public class Aware extends Service {
                     //Start engine
                     Aware.startAWARE(getApplicationContext());
 
-                    //Send data to server for the first time, so that this device is immediately visible on the dashboard
-                    Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
-                    sendBroadcast(sync);
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
