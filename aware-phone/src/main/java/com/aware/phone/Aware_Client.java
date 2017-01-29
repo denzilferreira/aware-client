@@ -26,7 +26,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.ViewGroup;
-import android.widget.ListAdapter;
 import android.widget.Toast;
 
 import com.aware.Applications;
@@ -195,29 +194,30 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                 Log.d(Aware.TAG, "Preference: " + values[0].getKey() + " parent: " + getPreferenceParent(values[0]).getKey());
 
             Preference pref = values[0];
+
             if (CheckBoxPreference.class.isInstance(pref)) {
+
                 CheckBoxPreference check = (CheckBoxPreference) findPreference(pref.getKey());
                 check.setChecked(Aware.getSetting(getApplicationContext(), pref.getKey()).equals("true"));
+
                 if (check.isChecked()) {
-                    if (pref.getKey().equals(Aware_Preferences.AWARE_DONATE_USAGE)) {
+                    if (pref.getKey().equalsIgnoreCase(Aware_Preferences.AWARE_DONATE_USAGE)) {
                         Toast.makeText(getApplicationContext(), "Thanks!", Toast.LENGTH_SHORT).show();
                         new AsyncPing().execute();
                     }
-                    if (pref.getKey().equals(Aware_Preferences.STATUS_WEBSERVICE)) {
+                    if (pref.getKey().equalsIgnoreCase(Aware_Preferences.STATUS_WEBSERVICE)) {
                         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
                             Toast.makeText(getApplicationContext(), "Study URL missing...", Toast.LENGTH_SHORT).show();
-                        } else {
-                            if (!Aware.isStudy(getApplicationContext())) {
-                                Aware.joinStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
-                                Intent study_scan = new Intent();
-                                study_scan.putExtra(Aware_Join_Study.EXTRA_STUDY_URL, Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
-                                setResult(Activity.RESULT_OK, study_scan);
-                                finish();
-                            }
+                        }else if (!Aware.isStudy(getApplicationContext())) {
+                            Aware.joinStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
+                            Intent study_scan = new Intent();
+                            study_scan.putExtra(Aware_Join_Study.EXTRA_STUDY_URL, Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
+                            setResult(Activity.RESULT_OK, study_scan);
+                            finish();
                         }
                     }
                 }
-                if (pref.getKey().contains("status_")) {
+                if (check.getKey().contains("status_")) {
                     Preference parent = getPreferenceParent(check);
                     if (PreferenceScreen.class.isInstance(parent)) {
                         PreferenceScreen parent_category = (PreferenceScreen) findPreference(parent.getKey());
@@ -229,6 +229,8 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                                 } else {
                                     category_icon.clearColorFilter();
                                 }
+                                //Fixed: the icons are redrawn
+                                onContentChanged();
                             }
                         }
                     }
@@ -271,9 +273,8 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
 
         prefs.registerOnSharedPreferenceChangeListener(this);
 
-        //Set the current setting on the UI, asynchronously
-        if (settingsSync == null) {
-            settingsSync = new SettingsSync();
+        if (settingsSync == null) settingsSync = new SettingsSync();
+        if (settingsSync.getStatus() != AsyncTask.Status.RUNNING) {
             settingsSync.execute(
                     findPreference(Aware_Preferences.DEVICE_ID),
                     findPreference(Aware_Preferences.DEVICE_LABEL),
