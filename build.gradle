@@ -2,9 +2,8 @@
 project.ext {
     support_libs = (System.getenv("support_libs") as String ?: "25.1.0")
     google_libs = (System.getenv("google_libs") ?: "10.0.1")
-    version_code = 500 + (System.getenv("BUILD_NUMBER") as Integer ?: 999999)
-    version_readable = "4.0." + version_code
-    aware_libs = (System.getenv("aware_libs") as String ?: "4.0.+")
+    version_code = (System.getenv("aware_revision") as Integer ?: 700)
+    version_readable = "4.0." + version_code + "." + (System.getenv("aware_branch") as String ?: "selfie")
 }
 
 buildscript {
@@ -13,8 +12,6 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:2.2.3'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
-        classpath "com.github.dcendents:android-maven-gradle-plugin:1.4.1"
     }
 }
 

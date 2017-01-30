@@ -264,9 +264,6 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                                     } else {
                                         category_icon.clearColorFilter();
                                     }
-
-                                    //Fixed: the icons are redrawn
-                                    onContentChanged();
                                 }
                             }
                         }

@@ -2,7 +2,6 @@
 apply plugin: 'com.android.application'
 
 version = version_readable
-group = "com.awareframework"
 
 android {
     compileSdkVersion 25
@@ -17,13 +16,7 @@ android {
     }
 
     signingConfigs {
-        release {
-            //set values in ~/.gradle/gradle.properties to sign with your own keystore and certificate
-            storeFile file(project.hasProperty("KEYSTORE_FILE") ? KEYSTORE_FILE : "/")
-            storePassword project.hasProperty("KEYSTORE_PASSWORD") ? KEYSTORE_PASSWORD : ""
-            keyAlias project.hasProperty("KEY") ? KEY : ""
-            keyPassword project.hasProperty("KEY_PASSWORD") ? KEY_PASSWORD : ""
-        }
+        release
     }
 
     buildTypes {
@@ -37,6 +30,19 @@ android {
     lintOptions {
         abortOnError false
     }
+}
+
+if (project.hasProperty("storeFile")) {
+    android.signingConfigs.release.storeFile = storeFile
+}
+if (project.hasProperty("storePassword")) {
+    android.signingConfigs.release.storePassword = storePassword
+}
+if (project.hasProperty("keyAlias")) {
+    android.signingConfigs.release.keyAlias = keyAlias
+}
+if (project.hasProperty("keyPassword")) {
+    android.signingConfigs.release.keyPassword = keyPassword
 }
 
 dependencies {
