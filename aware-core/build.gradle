@@ -4,6 +4,8 @@ android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
 
+    enforceUniquePackageName false
+
     defaultConfig {
         versionCode version_code
         versionName version_readable
