@@ -1,7 +1,5 @@
 apply plugin: 'com.android.library'
 
-version = version_readable
-
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
@@ -61,10 +59,6 @@ generateJavadocsJar.dependsOn generateJavadocs
 artifacts {
     archives generateJavadocsJar
     archives generateSourcesJar
-}
-
-repositories {
-    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
