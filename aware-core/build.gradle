@@ -30,17 +30,14 @@ android {
     }
 }
 
-if (project.hasProperty("storeFile")) {
-    android.signingConfigs.release.storeFile = file(storeFile)
-}
-if (project.hasProperty("storePassword")) {
-    android.signingConfigs.release.storePassword = storePassword
-}
-if (project.hasProperty("keyAlias")) {
-    android.signingConfigs.release.keyAlias = keyAlias
-}
-if (project.hasProperty("keyPassword")) {
-    android.signingConfigs.release.keyPassword = keyPassword
+if (System.getenv("storeFile") != null && System.getenv("storePassword") != null && System.getenv("keyAlias") != null && System.getenv("keyPassword") != null) {
+    android.signingConfigs.release.storeFile = file(System.getenv("storeFile"))
+    android.signingConfigs.release.storePassword = System.getenv("storePassword")
+    android.signingConfigs.release.keyAlias = System.getenv("keyAlias")
+    android.signingConfigs.release.keyPassword = System.getenv("keyPassword")
+} else {
+    println("No keystore defined. Unsigned .apk!")
+    android.buildTypes.release.signingConfig = null
 }
 
 task generateSourcesJar(type: Jar) {
