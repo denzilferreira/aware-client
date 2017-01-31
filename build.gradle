@@ -6,7 +6,7 @@ project.ext {
     google_libs = (System.getenv("google_libs") ?: "10.0.1")
     version_code = (System.getenv("aware_revision") as Integer ?: 700)
     version_readable = "4.0." + version_code + "." + (System.getenv("aware_label") as String ?: "selfie")
-    aware_libs = (System.getenv("aware_libs") as String ?: "master-SNAPSHOT")
+    aware_libs = (System.getenv("aware_libs") as String ?: "development-SNAPSHOT")
 }
 
 buildscript {

@@ -63,6 +63,10 @@ artifacts {
     archives generateSourcesJar
 }
 
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
 dependencies {
     compile "org.eclipse.paho:org.eclipse.paho.client.mqttv3:$mqtt_libs"
     compile "com.koushikdutta.ion:ion:$ion_libs"
