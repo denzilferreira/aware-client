@@ -4,8 +4,6 @@ android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
 
-    enforceUniquePackageName false
-
     defaultConfig {
         applicationId "com.aware.tests"
         minSdkVersion 10
