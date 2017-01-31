@@ -150,11 +150,14 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         String value = "";
         Map<String, ?> keys = sharedPreferences.getAll();
-        for (Map.Entry<String, ?> entry : keys.entrySet()) {
-            if (entry.getKey().equalsIgnoreCase(key)) {
-                value = String.valueOf(entry.getValue());
-                break;
-            }
+        if(keys.containsKey(key)) {
+            Object entry = keys.get(key);
+            if (entry instanceof Boolean)
+                value = String.valueOf(sharedPreferences.getBoolean(key, false));
+            else if (entry instanceof String)
+                value = String.valueOf(sharedPreferences.getString(key, "error"));
+            else if (entry instanceof Integer)
+                value = String.valueOf(sharedPreferences.getInt(key, 0));
         }
 
         Aware.setSetting(getApplicationContext(), key, value);
@@ -267,6 +270,8 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                                 }
                             }
                         }
+                        //Fixed: the icons are redrawn
+                        onContentChanged();
                     }
                 }
             }
@@ -315,6 +320,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                     findPreference(Aware_Preferences.STATUS_MESSAGES),
                     findPreference(Aware_Preferences.STATUS_ESM),
                     findPreference(Aware_Preferences.STATUS_GRAVITY),
+                    findPreference(Aware_Preferences.STATUS_GYROSCOPE),
                     findPreference(Aware_Preferences.STATUS_LOCATION_NETWORK),
                     findPreference(Aware_Preferences.STATUS_LOCATION_GPS),
                     findPreference(Aware_Preferences.STATUS_LIGHT),
