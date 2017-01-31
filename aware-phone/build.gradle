@@ -14,7 +14,7 @@ android {
 
     splits {
         abi {
-            enable (System.getenv("aware_label")=="bundle")
+            enable true
             reset()
             include 'armeabi'
             universalApk true
@@ -49,7 +49,7 @@ if (System.getenv("storeFile") != null && System.getenv("storePassword") != null
 }
 
 repositories {
-    maven { url 'https://jitpack.io' } //this allows library generation directly from GitHub source-code
+    maven { url 'https://jitpack.io' }
 }
 
 configurations.all {
@@ -64,20 +64,14 @@ dependencies {
     compile "com.android.support:design:$support_libs"
     compile "me.dm7.barcodescanner:zbar:1.8.4"
 
-    if (System.getenv("aware_label") == "bundle") {
-        compile "com.github.denzilferreira:com.aware.plugin.device_usage:$aware_libs"
-        compile "com.github.denzilferreira:com.aware.plugin.google.activity_recognition:$aware_libs"
-        compile "com.github.denzilferreira:com.aware.plugin.ambient_noise:$aware_libs"
-        compile "com.github.denzilferreira:com.aware.plugin.google.fused_location:$aware_libs"
-        compile "com.github.denzilferreira:com.aware.plugin.openweather:$aware_libs"
-        compile "com.github.denzilferreira:com.aware.plugin.google.auth:$aware_libs"
-        compile "com.github.denzilferreira:com.aware.plugin.studentlife.audio_final:$aware_libs"
-        compile "com.github.denzilferreira:com.aware.plugin.cmu_esm:$aware_libs"
-        compile "com.github.denzilferreira:com.aware.plugin.contacts_list:$aware_libs"
-        compile "com.github.denzilferreira:com.aware.plugin.fitbit:$aware_libs"
-    }
-}
-
-if (System.getenv("aware_label") == "bundle") {
-    android.defaultConfig.applicationId = "com.aware.phone." + System.getenv("aware_label")
+    compile "com.github.denzilferreira:com.aware.plugin.device_usage:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.google.activity_recognition:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.ambient_noise:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.google.fused_location:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.openweather:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.google.auth:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.studentlife.audio_final:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.cmu_esm:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.contacts_list:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.fitbit:$aware_libs"
 }
