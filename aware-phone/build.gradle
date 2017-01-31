@@ -33,7 +33,7 @@ android {
 }
 
 if (project.hasProperty("storeFile")) {
-    android.signingConfigs.release.storeFile = storeFile
+    android.signingConfigs.release.storeFile = file(storeFile)
 }
 if (project.hasProperty("storePassword")) {
     android.signingConfigs.release.storePassword = storePassword
