@@ -13,6 +13,8 @@ import android.content.pm.PackageManager;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,6 +22,7 @@ import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
+import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.support.v4.content.ContextCompat;
@@ -41,6 +44,7 @@ import com.aware.utils.SSLManager;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -51,6 +55,8 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
 
     public static ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
     private static boolean permissions_ok = true;
+    private static Hashtable<String, Boolean> listSensorType;
+    private List<String[]> optionalSensors;
 
     private static SharedPreferences prefs;
 
@@ -59,6 +65,29 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        optionalSensors = new ArrayList<String[]>();
+
+        optionalSensors.add(new String[]{Aware_Preferences.STATUS_ACCELEROMETER, Sensor.STRING_TYPE_ACCELEROMETER});
+        optionalSensors.add(new String[]{Aware_Preferences.STATUS_SIGNIFICANT_MOTION, Sensor.STRING_TYPE_ACCELEROMETER});
+        optionalSensors.add(new String[]{Aware_Preferences.STATUS_BAROMETER, Sensor.STRING_TYPE_PRESSURE});
+        optionalSensors.add(new String[]{Aware_Preferences.STATUS_GRAVITY, Sensor.STRING_TYPE_GRAVITY});
+        optionalSensors.add(new String[]{Aware_Preferences.STATUS_GYROSCOPE, Sensor.STRING_TYPE_GYROSCOPE});
+        optionalSensors.add(new String[]{Aware_Preferences.STATUS_LIGHT, Sensor.STRING_TYPE_LIGHT});
+        optionalSensors.add(new String[]{Aware_Preferences.STATUS_LINEAR_ACCELEROMETER, Sensor.STRING_TYPE_LINEAR_ACCELERATION});
+        optionalSensors.add(new String[]{Aware_Preferences.STATUS_MAGNETOMETER, Sensor.STRING_TYPE_MAGNETIC_FIELD});
+        optionalSensors.add(new String[]{Aware_Preferences.STATUS_PROXIMITY, Sensor.STRING_TYPE_PROXIMITY});
+        optionalSensors.add(new String[]{Aware_Preferences.STATUS_ROTATION, Sensor.STRING_TYPE_ROTATION_VECTOR});
+        optionalSensors.add(new String[]{Aware_Preferences.STATUS_TEMPERATURE, Sensor.STRING_TYPE_AMBIENT_TEMPERATURE});
+
+        SensorManager manager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        List<Sensor> sensors = manager.getSensorList(Sensor.TYPE_ALL);
+        listSensorType = new Hashtable<>();
+        for(int i=0; i<sensors.size(); i++){
+            listSensorType.put(sensors.get(i).getStringType(), true);
+            if (Aware.DEBUG)
+                Log.d(Aware.TAG, "Sensor: " + sensors.get(i).getStringType() + " " + sensors.get(i).getType() + " " + Sensor.TYPE_GYROSCOPE);
+        }
 
         addPreferencesFromResource(R.xml.aware_preferences);
         setContentView(R.layout.aware_ui);
@@ -106,6 +135,13 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
 
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
                 Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php");
+            }
+
+            for (String [] optionalSensor: optionalSensors) {
+                Preference pref = findPreference(optionalSensor[0]);
+                PreferenceGroup parent = getPreferenceParent(pref);
+                if (pref.getKey().equalsIgnoreCase(optionalSensor[0]) && !listSensorType.containsKey(optionalSensor[1]))
+                    parent.setEnabled(false);
             }
 
             try {
