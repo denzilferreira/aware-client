@@ -48,6 +48,14 @@ if (System.getenv("storeFile") != null && System.getenv("storePassword") != null
     android.buildTypes.release.signingConfig = null
 }
 
+repositories {
+    maven { url 'https://jitpack.io' } //this allows library generation directly from GitHub source-code
+}
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
 dependencies {
     compile project(':aware-core')
     compile "com.google.android.gms:play-services-vision:$google_libs"
