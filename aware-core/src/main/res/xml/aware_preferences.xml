@@ -600,7 +600,7 @@
         </PreferenceScreen>
         <PreferenceScreen
             android:icon="@drawable/ic_action_significant"
-            android:key="significant"
+            android:key="significant_motion"
             android:summary="Significant motion"
             android:title="Significant motion">
 
