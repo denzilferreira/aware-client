@@ -37,6 +37,12 @@ android {
     }
 }
 
+//Make bundles have a different package name to avoid client's Play Store updates during a study!
+//Plugins will still get updated if needed
+if (System.getenv("aware_label") == "bundle") {
+    android.defaultConfig.applicationId = "com.aware.phone." + System.getenv("aware_label")
+}
+
 if (System.getenv("storeFile") != null && System.getenv("storePassword") != null && System.getenv("keyAlias") != null && System.getenv("keyPassword") != null) {
     android.signingConfigs.release.storeFile = file(System.getenv("storeFile"))
     android.signingConfigs.release.storePassword = System.getenv("storePassword")
@@ -53,11 +59,10 @@ repositories {
 
 configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-//    all*.exclude group: 'com.awareframework', module: 'aware-phone'
 }
 
 dependencies {
-//    compile project(':aware-core')
+//    compile project(':aware-core') -- already bundled with the plugin's library.
     compile "com.google.android.gms:play-services-vision:$google_libs"
     compile "com.android.support:cardview-v7:$support_libs"
     compile "com.android.support:appcompat-v7:$support_libs"
