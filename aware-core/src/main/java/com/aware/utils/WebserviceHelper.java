@@ -217,19 +217,19 @@ public class WebserviceHelper extends IntentService {
                     int TOTAL_RECORDS = 0;
                     if (remoteData.length() == 0) {
                         if (exists(columnsStr, "double_end_timestamp")) {
-                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "double_end_timestamp != 0" + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "double_end_timestamp != 0" + study_condition, null, "_id ASC");
                             if (counter != null && counter.moveToFirst()) {
                                 TOTAL_RECORDS = counter.getInt(0);
                                 counter.close();
                             }
                         } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
-                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "double_esm_user_answer_timestamp != 0" + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "double_esm_user_answer_timestamp != 0" + study_condition, null, "_id ASC");
                             if (counter != null && counter.moveToFirst()) {
                                 TOTAL_RECORDS = counter.getInt(0);
                                 counter.close();
                             }
                         } else {
-                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "1" + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "1" + study_condition, null, "_id ASC");
                             if (counter != null && counter.moveToFirst()) {
                                 TOTAL_RECORDS = counter.getInt(0);
                                 counter.close();
@@ -239,21 +239,21 @@ public class WebserviceHelper extends IntentService {
                         long last;
                         if (exists(columnsStr, "double_end_timestamp")) {
                             last = remoteData.getJSONObject(0).getLong("double_end_timestamp");
-                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + " AND double_end_timestamp != 0" + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + " AND double_end_timestamp != 0" + study_condition, null, "_id ASC");
                             if (counter != null && counter.moveToFirst()) {
                                 TOTAL_RECORDS = counter.getInt(0);
                                 counter.close();
                             }
                         } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
                             last = remoteData.getJSONObject(0).getLong("double_esm_user_answer_timestamp");
-                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + " AND double_esm_user_answer_timestamp != 0" + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + " AND double_esm_user_answer_timestamp != 0" + study_condition, null, "_id ASC");
                             if (counter != null && counter.moveToFirst()) {
                                 TOTAL_RECORDS = counter.getInt(0);
                                 counter.close();
                             }
                         } else {
                             last = remoteData.getJSONObject(0).getLong("timestamp");
-                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + study_condition, null, "_id ASC");
                             if (counter != null && counter.moveToFirst()) {
                                 TOTAL_RECORDS = counter.getInt(0);
                                 counter.close();
@@ -282,9 +282,9 @@ public class WebserviceHelper extends IntentService {
                         Cursor context_data;
                         if (remoteData.length() == 0) {
                             if (exists(columnsStr, "double_end_timestamp")) {
-                                context_data = getContentResolver().query(CONTENT_URI, null, "double_end_timestamp != 0" + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
+                                context_data = getContentResolver().query(CONTENT_URI, null, "double_end_timestamp != 0" + study_condition, null, "_id ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
                             } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
-                                context_data = getContentResolver().query(CONTENT_URI, null, "double_esm_user_answer_timestamp != 0" + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
+                                context_data = getContentResolver().query(CONTENT_URI, null, "double_esm_user_answer_timestamp != 0" + study_condition, null, "_id ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
                             } else {
                                 context_data = getContentResolver().query(CONTENT_URI, null, "1" + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
                             }
@@ -292,13 +292,13 @@ public class WebserviceHelper extends IntentService {
                             long last;
                             if (exists(columnsStr, "double_end_timestamp")) {
                                 last = remoteData.getJSONObject(0).getLong("double_end_timestamp");
-                                context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + " AND double_end_timestamp != 0" + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
+                                context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + " AND double_end_timestamp != 0" + study_condition, null, "_id ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
                             } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
                                 last = remoteData.getJSONObject(0).getLong("double_esm_user_answer_timestamp");
-                                context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + " AND double_esm_user_answer_timestamp != 0" + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
+                                context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + " AND double_esm_user_answer_timestamp != 0" + study_condition, null, "_id ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
                             } else {
                                 last = remoteData.getJSONObject(0).getLong("timestamp");
-                                context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
+                                context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + study_condition, null, "_id ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
                             }
                         }
 
