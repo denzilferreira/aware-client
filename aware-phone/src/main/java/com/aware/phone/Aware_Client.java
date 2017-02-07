@@ -325,6 +325,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         }
     }
 
+
     @Override
     protected void onResume() {
         super.onResume();
