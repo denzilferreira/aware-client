@@ -105,7 +105,7 @@ public class WebserviceHelper extends IntentService {
         /**
          * Max number of rows to place on the HTTP(s) post
          */
-        int MAX_POST_SIZE = 10000; //recommended for phones. This loads ~ 1-2MB data worth for HTTP POST as JSON, depending on the fields size (e.g. blobs)
+        int MAX_POST_SIZE = 5000; //recommended for phones. This loads ~ 1-2MB data worth for HTTP POST as JSON, depending on the fields size (e.g. blobs)
         if (Aware.is_watch(getApplicationContext())) {
             MAX_POST_SIZE = 100; //default for watch (we have a limit of 100KB of data packet size (Message API restrictions)
         }
@@ -217,47 +217,53 @@ public class WebserviceHelper extends IntentService {
                     int TOTAL_RECORDS = 0;
                     if (remoteData.length() == 0) {
                         if (exists(columnsStr, "double_end_timestamp")) {
-                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "double_end_timestamp != 0" + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "double_end_timestamp != 0" + study_condition, null, "_id ASC");
                             if (counter != null && counter.moveToFirst()) {
                                 TOTAL_RECORDS = counter.getInt(0);
                                 counter.close();
                             }
+                            if(counter != null && !counter.isClosed()) counter.close();
                         } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
-                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "double_esm_user_answer_timestamp != 0" + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "double_esm_user_answer_timestamp != 0" + study_condition, null, "_id ASC");
                             if (counter != null && counter.moveToFirst()) {
                                 TOTAL_RECORDS = counter.getInt(0);
                                 counter.close();
                             }
+                            if(counter != null && !counter.isClosed()) counter.close();
                         } else {
-                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "1" + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "1" + study_condition, null, "_id ASC");
                             if (counter != null && counter.moveToFirst()) {
                                 TOTAL_RECORDS = counter.getInt(0);
                                 counter.close();
                             }
+                            if(counter != null && !counter.isClosed()) counter.close();
                         }
                     } else {
                         long last;
                         if (exists(columnsStr, "double_end_timestamp")) {
                             last = remoteData.getJSONObject(0).getLong("double_end_timestamp");
-                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + " AND double_end_timestamp != 0" + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + " AND double_end_timestamp != 0" + study_condition, null, "_id ASC");
                             if (counter != null && counter.moveToFirst()) {
                                 TOTAL_RECORDS = counter.getInt(0);
                                 counter.close();
                             }
+                            if(counter != null && !counter.isClosed()) counter.close();
                         } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
                             last = remoteData.getJSONObject(0).getLong("double_esm_user_answer_timestamp");
-                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + " AND double_esm_user_answer_timestamp != 0" + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + " AND double_esm_user_answer_timestamp != 0" + study_condition, null, "_id ASC");
                             if (counter != null && counter.moveToFirst()) {
                                 TOTAL_RECORDS = counter.getInt(0);
                                 counter.close();
                             }
+                            if(counter != null && !counter.isClosed()) counter.close();
                         } else {
                             last = remoteData.getJSONObject(0).getLong("timestamp");
-                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + study_condition, null, "timestamp ASC");
+                            Cursor counter = getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + study_condition, null, "_id ASC");
                             if (counter != null && counter.moveToFirst()) {
                                 TOTAL_RECORDS = counter.getInt(0);
                                 counter.close();
                             }
+                            if(counter != null && !counter.isClosed()) counter.close();
                         }
                     }
 
@@ -278,13 +284,19 @@ public class WebserviceHelper extends IntentService {
                     long start = System.currentTimeMillis();
 
                     int UPLOADED = 0;
+                    int BATCHES = (int) Math.ceil(TOTAL_RECORDS / (double)MAX_POST_SIZE);
                     while (UPLOADED < TOTAL_RECORDS) { //paginate cursor so it does not explode the phone's memory
+                        if(Aware.DEBUG)
+                            Log.d(Aware.TAG,"Syncing " + UPLOADED + " out of " + TOTAL_RECORDS + " from table " + DATABASE_TABLE);
+                        if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
+                            notifyUser("Syncing batch " + (UPLOADED + MAX_POST_SIZE) / MAX_POST_SIZE + " of " + BATCHES + " from " + DATABASE_TABLE, false, true);
+                        }
                         Cursor context_data;
                         if (remoteData.length() == 0) {
                             if (exists(columnsStr, "double_end_timestamp")) {
-                                context_data = getContentResolver().query(CONTENT_URI, null, "double_end_timestamp != 0" + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
+                                context_data = getContentResolver().query(CONTENT_URI, null, "double_end_timestamp != 0" + study_condition, null, "_id ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
                             } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
-                                context_data = getContentResolver().query(CONTENT_URI, null, "double_esm_user_answer_timestamp != 0" + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
+                                context_data = getContentResolver().query(CONTENT_URI, null, "double_esm_user_answer_timestamp != 0" + study_condition, null, "_id ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
                             } else {
                                 context_data = getContentResolver().query(CONTENT_URI, null, "1" + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
                             }
@@ -292,13 +304,13 @@ public class WebserviceHelper extends IntentService {
                             long last;
                             if (exists(columnsStr, "double_end_timestamp")) {
                                 last = remoteData.getJSONObject(0).getLong("double_end_timestamp");
-                                context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + " AND double_end_timestamp != 0" + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
+                                context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + " AND double_end_timestamp != 0" + study_condition, null, "_id ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
                             } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
                                 last = remoteData.getJSONObject(0).getLong("double_esm_user_answer_timestamp");
-                                context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + " AND double_esm_user_answer_timestamp != 0" + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
+                                context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + " AND double_esm_user_answer_timestamp != 0" + study_condition, null, "_id ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
                             } else {
                                 last = remoteData.getJSONObject(0).getLong("timestamp");
-                                context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + study_condition, null, "timestamp ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
+                                context_data = getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + study_condition, null, "_id ASC LIMIT " + UPLOADED + ", " + MAX_POST_SIZE);
                             }
                         }
 

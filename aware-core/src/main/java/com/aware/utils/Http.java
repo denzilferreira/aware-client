@@ -153,20 +153,23 @@ public class Http {
                 stream = new GZIPInputStream(stream);
             }
 
-            BufferedReader br = new BufferedReader(new InputStreamReader(stream));
-
-            String page_content = "";
-            String line;
-            while( (line = br.readLine()) != null ) {
-                page_content+=line;
+            String result = "";
+            try(BufferedReader br = new BufferedReader(new InputStreamReader(stream))){
+                StringBuilder page_content = new StringBuilder("");
+                String line;
+                while( (line = br.readLine()) != null ) {
+                    page_content.append(line);
+                }
+                result = page_content.toString();
             }
+            stream.close();
 
             if (Aware.DEBUG) {
 //                Log.d(TAG, "Request: POST, URL: " + url + "\nData:" + builder.build().getEncodedQuery());
 //                Log.i(TAG,"Answer:" + page_content );
             }
 
-            return page_content;
+            return result;
 		}catch (UnsupportedEncodingException e) {
 			Log.e(TAG,e.getMessage());
 			return null;
