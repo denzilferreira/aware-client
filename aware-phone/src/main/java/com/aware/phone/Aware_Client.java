@@ -59,8 +59,6 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     private List<String[]> optionalSensors;
 
     private static SharedPreferences prefs;
-    private static SharedPreferences.OnSharedPreferenceChangeListener listener;
-
     private SettingsSync settingsSync = null;
 
     @Override
@@ -84,7 +82,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         SensorManager manager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         List<Sensor> sensors = manager.getSensorList(Sensor.TYPE_ALL);
         listSensorType = new Hashtable<>();
-        for(int i=0; i<sensors.size(); i++){
+        for (int i = 0; i < sensors.size(); i++) {
             listSensorType.put(sensors.get(i).getStringType(), true);
             if (Aware.DEBUG)
                 Log.d(Aware.TAG, "Sensor: " + sensors.get(i).getStringType() + " " + sensors.get(i).getType() + " " + Sensor.TYPE_GYROSCOPE);
@@ -138,7 +136,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                 Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php");
             }
 
-            for (String [] optionalSensor: optionalSensors) {
+            for (String[] optionalSensor : optionalSensors) {
                 Preference pref = findPreference(optionalSensor[0]);
                 PreferenceGroup parent = getPreferenceParent(pref);
                 if (pref.getKey().equalsIgnoreCase(optionalSensor[0]) && !listSensorType.containsKey(optionalSensor[1]))
@@ -156,43 +154,6 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
             if (!Aware.is_watch(this)) {
                 Applications.isAccessibilityServiceActive(this);
             }
-
-            listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
-                @Override
-                public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                    String value = "";
-                    Map<String, ?> keys = sharedPreferences.getAll();
-                    if(keys.containsKey(key)) {
-                        Object entry = keys.get(key);
-                        if (entry instanceof Boolean)
-                            value = String.valueOf(sharedPreferences.getBoolean(key, false));
-                        else if (entry instanceof String)
-                            value = String.valueOf(sharedPreferences.getString(key, "error"));
-                        else if (entry instanceof Integer)
-                            value = String.valueOf(sharedPreferences.getInt(key, 0));
-                    }
-
-                    Aware.setSetting(getApplicationContext(), key, value);
-                    Preference pref = findPreference(key);
-                    if (CheckBoxPreference.class.isInstance(pref)) {
-                        CheckBoxPreference check = (CheckBoxPreference) findPreference(key);
-                        check.setChecked(Aware.getSetting(getApplicationContext(), key).equals("true"));
-
-                        //update the parent to show active/inactive
-                        new SettingsSync().execute(pref);
-                    }
-                    if (EditTextPreference.class.isInstance(pref)) {
-                        EditTextPreference text = (EditTextPreference) findPreference(key);
-                        text.setSummary(Aware.getSetting(getApplicationContext(), key));
-                    }
-                    if (ListPreference.class.isInstance(pref)) {
-                        ListPreference list = (ListPreference) findPreference(key);
-                        list.setSummary(list.getEntry());
-                    }
-
-                    Aware.toggleSensors(getApplicationContext());
-                }
-            };
         }
     }
 
@@ -224,7 +185,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         String value = "";
         Map<String, ?> keys = sharedPreferences.getAll();
-        if(keys.containsKey(key)) {
+        if (keys.containsKey(key)) {
             Object entry = keys.get(key);
             if (entry instanceof Boolean)
                 value = String.valueOf(sharedPreferences.getBoolean(key, false));
@@ -286,7 +247,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                     if (pref.getKey().equalsIgnoreCase(Aware_Preferences.STATUS_WEBSERVICE)) {
                         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
                             Toast.makeText(getApplicationContext(), "Study URL missing...", Toast.LENGTH_SHORT).show();
-                        }else if (!Aware.isStudy(getApplicationContext())) {
+                        } else if (!Aware.isStudy(getApplicationContext())) {
                             Aware.joinStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
                             Intent study_scan = new Intent();
                             study_scan.putExtra(Aware_Join_Study.EXTRA_STUDY_URL, Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
@@ -331,7 +292,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                     Drawable category_icon = category.getIcon();
                     if (category_icon != null && Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
                         ListAdapter children = category.getRootAdapter();
-                        for(int i = 0; i < children.getCount(); i++) {
+                        for (int i = 0; i < children.getCount(); i++) {
                             Object obj = children.getItem(i);
                             if (CheckBoxPreference.class.isInstance(obj)) {
                                 CheckBoxPreference child = (CheckBoxPreference) obj;
@@ -374,9 +335,11 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
             permissionsHandler.putExtra(PermissionsHandler.EXTRA_REDIRECT_ACTIVITY, getPackageName() + "/" + getClass().getName());
             startActivityForResult(permissionsHandler, PermissionsHandler.RC_PERMISSIONS);
             finish();
+            return;
         }
 
-        prefs.registerOnSharedPreferenceChangeListener(listener);
+        prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
+        prefs.registerOnSharedPreferenceChangeListener(this);
 
         if (settingsSync == null) settingsSync = new SettingsSync();
         if (settingsSync.getStatus() != AsyncTask.Status.RUNNING) {
@@ -421,7 +384,8 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     protected void onPause() {
         super.onPause();
 
-        prefs.unregisterOnSharedPreferenceChangeListener(listener);
+        if (prefs != null)
+            prefs.unregisterOnSharedPreferenceChangeListener(this);
     }
 
     private class AsyncPing extends AsyncTask<Void, Void, Boolean> {
