@@ -59,6 +59,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     private List<String[]> optionalSensors;
 
     private static SharedPreferences prefs;
+    private static SharedPreferences.OnSharedPreferenceChangeListener listener;
 
     private SettingsSync settingsSync = null;
 
@@ -155,6 +156,43 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
             if (!Aware.is_watch(this)) {
                 Applications.isAccessibilityServiceActive(this);
             }
+
+            listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+                @Override
+                public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+                    String value = "";
+                    Map<String, ?> keys = sharedPreferences.getAll();
+                    if(keys.containsKey(key)) {
+                        Object entry = keys.get(key);
+                        if (entry instanceof Boolean)
+                            value = String.valueOf(sharedPreferences.getBoolean(key, false));
+                        else if (entry instanceof String)
+                            value = String.valueOf(sharedPreferences.getString(key, "error"));
+                        else if (entry instanceof Integer)
+                            value = String.valueOf(sharedPreferences.getInt(key, 0));
+                    }
+
+                    Aware.setSetting(getApplicationContext(), key, value);
+                    Preference pref = findPreference(key);
+                    if (CheckBoxPreference.class.isInstance(pref)) {
+                        CheckBoxPreference check = (CheckBoxPreference) findPreference(key);
+                        check.setChecked(Aware.getSetting(getApplicationContext(), key).equals("true"));
+
+                        //update the parent to show active/inactive
+                        new SettingsSync().execute(pref);
+                    }
+                    if (EditTextPreference.class.isInstance(pref)) {
+                        EditTextPreference text = (EditTextPreference) findPreference(key);
+                        text.setSummary(Aware.getSetting(getApplicationContext(), key));
+                    }
+                    if (ListPreference.class.isInstance(pref)) {
+                        ListPreference list = (ListPreference) findPreference(key);
+                        list.setSummary(list.getEntry());
+                    }
+
+                    Aware.toggleSensors(getApplicationContext());
+                }
+            };
         }
     }
 
@@ -338,7 +376,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
             finish();
         }
 
-        prefs.registerOnSharedPreferenceChangeListener(this);
+        prefs.registerOnSharedPreferenceChangeListener(listener);
 
         if (settingsSync == null) settingsSync = new SettingsSync();
         if (settingsSync.getStatus() != AsyncTask.Status.RUNNING) {
@@ -382,7 +420,8 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     @Override
     protected void onPause() {
         super.onPause();
-        prefs.unregisterOnSharedPreferenceChangeListener(this);
+
+        prefs.unregisterOnSharedPreferenceChangeListener(listener);
     }
 
     private class AsyncPing extends AsyncTask<Void, Void, Boolean> {
