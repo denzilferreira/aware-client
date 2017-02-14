@@ -33,44 +33,46 @@ import java.util.List;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private final boolean DEBUG = true;
+
     private final String TAG = "DatabaseHelper";
 
     private final String database_name;
     private final String[] database_tables;
     private final String[] table_fields;
     private final int new_version;
-    private HashMap<String, String> renamed_columns = new HashMap<>();
 
-    private SQLiteDatabase database;
+    private HashMap<String, String> renamed_columns = new HashMap<>();
     private Context mContext;
 
     /**
-     * Get the folder for storing the database.  In a separate method so that it can be
-     * customized more easily.
+     * Get base database folder
      *
-     * @param context Application context
-     * @return Folder for Aware databases
+     * @param context
+     * @return
      */
-    public File getAwareDatabaseDirectory(Context context) {
+    private File getAwareDatabaseDirectory(Context context) {
         File aware_folder;
         if (!context.getResources().getBoolean(R.bool.standalone)) {
-            // sdcard/AWARE/     (shareable, does not delete when uninstalling)
-            aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString());
+            aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString()); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
         } else {
-            // sdcard/Android/<app_package_name>/AWARE/    (not shareable, deletes when uninstalling package)
-            aware_folder = new File(ContextCompat.getExternalFilesDirs(context, null)[0] + "/AWARE"); //compatible with API 10+
+            aware_folder = new File(ContextCompat.getExternalFilesDirs(context, null)[0] + "/AWARE"); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
+        }
+
+        if (!aware_folder.exists()) {
+            boolean created = aware_folder.mkdirs();
+            if (!created) return null;
         }
         return aware_folder;
     }
 
     /**
-     * Get a certain database directory.  Thin wrapper over getAwareDatabaseDirectory.
+     * Get database from base folder
      *
-     * @param context       Application context (for getting files dir)
-     * @param database_name Name of database we want
-     * @return File of database.
+     * @param context
+     * @param database_name
+     * @return
      */
-    public File getAwareDatabaseFile(Context context, String database_name) {
+    private File getAwareDatabaseFile(Context context, String database_name) {
         return new File(getAwareDatabaseDirectory(context), database_name);
     }
 
@@ -83,8 +85,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         this.new_version = database_version;
         this.mContext = context;
 
-        File aware_folder = getAwareDatabaseDirectory(context);
-        aware_folder.mkdirs();
+        getAwareDatabaseDirectory(context);
     }
 
     public void setRenamedColumns(HashMap<String, String> renamed) {
@@ -105,15 +106,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (DEBUG) Log.w(TAG, "Upgrading database: " + db.getPath());
 
-        db.beginTransaction();
         for (int i = 0; i < database_tables.length; i++) {
-
-            //Create a new table if doesn't exist
             db.execSQL("CREATE TABLE IF NOT EXISTS " + database_tables[i] + " (" + table_fields[i] + ");");
 
             //Modify existing tables if there are changes, while retaining old data. This also works for brand new tables, where nothing is changed.
             List<String> columns = getColumns(db, database_tables[i]);
+
             db.execSQL("ALTER TABLE " + database_tables[i] + " RENAME TO temp_" + database_tables[i] + ";");
+
             db.execSQL("CREATE TABLE " + database_tables[i] + " (" + table_fields[i] + ");");
             db.execSQL("CREATE INDEX IF NOT EXISTS time_device ON " + database_tables[i] + " (timestamp, device_id);");
 
@@ -137,54 +137,55 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             db.execSQL("DROP TABLE temp_" + database_tables[i] + ";");
         }
         db.setVersion(new_version);
-        db.setTransactionSuccessful();
-        db.endTransaction();
     }
 
     /**
      * Creates a String of a JSONArray representation of a database cursor result
      *
-     * @param crs
+     * @param cursor
      * @return String
      */
-    public static String cursorToString(Cursor crs) {
-        JSONArray arr = new JSONArray();
-        crs.moveToFirst();
-        while (!crs.isAfterLast()) {
-            int nColumns = crs.getColumnCount();
-            JSONObject row = new JSONObject();
-            for (int i = 0; i < nColumns; i++) {
-                String colName = crs.getColumnName(i);
-                if (colName != null) {
-                    try {
-                        switch (crs.getType(i)) {
-                            case Cursor.FIELD_TYPE_BLOB:
-                                row.put(colName, crs.getBlob(i).toString());
-                                break;
-                            case Cursor.FIELD_TYPE_FLOAT:
-                                row.put(colName, crs.getDouble(i));
-                                break;
-                            case Cursor.FIELD_TYPE_INTEGER:
-                                row.put(colName, crs.getLong(i));
-                                break;
-                            case Cursor.FIELD_TYPE_NULL:
-                                row.put(colName, null);
-                                break;
-                            case Cursor.FIELD_TYPE_STRING:
-                                row.put(colName, crs.getString(i));
-                                break;
+    public static String cursorToString(Cursor cursor) {
+        JSONArray jsonArray = new JSONArray();
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                int nColumns = cursor.getColumnCount();
+                JSONObject row = new JSONObject();
+                for (int i = 0; i < nColumns; i++) {
+                    String colName = cursor.getColumnName(i);
+                    if (colName != null) {
+                        try {
+                            switch (cursor.getType(i)) {
+                                case Cursor.FIELD_TYPE_BLOB:
+                                    row.put(colName, cursor.getBlob(i).toString());
+                                    break;
+                                case Cursor.FIELD_TYPE_FLOAT:
+                                    row.put(colName, cursor.getDouble(i));
+                                    break;
+                                case Cursor.FIELD_TYPE_INTEGER:
+                                    row.put(colName, cursor.getLong(i));
+                                    break;
+                                case Cursor.FIELD_TYPE_NULL:
+                                    row.put(colName, null);
+                                    break;
+                                case Cursor.FIELD_TYPE_STRING:
+                                    row.put(colName, cursor.getString(i));
+                                    break;
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
                         }
-                    } catch (JSONException e) {
                     }
                 }
-            }
-            arr.put(row);
-            if (!crs.moveToNext()) break;
+                jsonArray.put(row);
+            } while (cursor.moveToNext());
         }
-        return arr.toString();
+        if (cursor != null && ! cursor.isClosed()) cursor.close();
+
+        return jsonArray.toString();
     }
 
-    public static List<String> getColumns(SQLiteDatabase db, String tableName) {
+    private static List<String> getColumns(SQLiteDatabase db, String tableName) {
         List<String> ar = null;
         Cursor c = null;
         try {
@@ -203,21 +204,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public SQLiteDatabase getWritableDatabase() {
-        if (database != null) {
-            if (!database.isOpen()) {
-                database = null;
-            } else if (!database.isReadOnly()) {
-                //Database is ready, return it for efficiency
-                return database;
-            }
-        }
-
-        //Get reference to database file, we might not have it.
-        File database_file = getAwareDatabaseFile(mContext, database_name);
         try {
+            File database_file = getAwareDatabaseFile(mContext, database_name);
             SQLiteDatabase current_database = SQLiteDatabase.openDatabase(database_file.getPath(), null, SQLiteDatabase.CREATE_IF_NECESSARY);
             int current_version = current_database.getVersion();
-
             if (current_version != new_version) {
                 if (current_version == 0) {
                     onCreate(current_database);
@@ -226,8 +216,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 }
             }
             onOpen(current_database);
-            database = current_database;
-            return database;
+            return current_database;
         } catch (SQLException e) {
             return null;
         }
@@ -235,28 +224,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public SQLiteDatabase getReadableDatabase() {
-        if (database != null) {
-            if (!database.isOpen()) {
-                database = null;
-            } else if (!database.isReadOnly()) {
-                //Database is ready, return it for efficiency
-                return database;
-            }
-        }
-
         try {
-            return getWritableDatabase();
-        } catch (SQLException e) {
-            //we will try to open it read-only as requested.
-        }
-
-        //Get reference to database file, we might not have it.
-        File database_file = getAwareDatabaseFile(mContext, database_name);
-        try {
+            File database_file = getAwareDatabaseFile(mContext, database_name);
             SQLiteDatabase current_database = SQLiteDatabase.openDatabase(database_file.getPath(), null, SQLiteDatabase.OPEN_READONLY);
             onOpen(current_database);
-            database = current_database;
-            return database;
+            return current_database;
         } catch (SQLException e) {
             return null;
         }

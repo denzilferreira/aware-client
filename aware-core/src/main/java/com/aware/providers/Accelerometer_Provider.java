@@ -345,7 +345,6 @@ public class Accelerometer_Provider extends ContentProvider {
         try {
             Cursor c = qb.query(database, projection, selection, selectionArgs, null, null, sortOrder);
             c.setNotificationUri(getContext().getContentResolver(), uri);
-            database.close();
             return c;
         } catch (IllegalStateException e) {
             if (Aware.DEBUG) Log.e(Aware.TAG, e.getMessage());
