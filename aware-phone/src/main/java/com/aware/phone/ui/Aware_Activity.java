@@ -53,6 +53,7 @@ public abstract class Aware_Activity extends AppCompatPreferenceActivity {
             if (resultCode == Activity.RESULT_OK) {
                 finish();
                 Intent preferences = new Intent(this, Aware_Client.class);
+                preferences.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(preferences);
             }
         }

@@ -105,9 +105,9 @@ public class WebserviceHelper extends IntentService {
         /**
          * Max number of rows to place on the HTTP(s) post
          */
-        int MAX_POST_SIZE = 5000; //recommended for phones. This loads ~ 1-2MB data worth for HTTP POST as JSON, depending on the fields size (e.g. blobs)
+        int MAX_POST_SIZE = 25000;
         if (Aware.is_watch(getApplicationContext())) {
-            MAX_POST_SIZE = 100; //default for watch (we have a limit of 100KB of data packet size (Message API restrictions)
+            MAX_POST_SIZE = 100; //default for Android Wear (we have a limit of 100KB of data packet size (Message API restrictions)
         }
 
         String DEVICE_ID = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
@@ -285,12 +285,17 @@ public class WebserviceHelper extends IntentService {
 
                     int UPLOADED = 0;
                     int BATCHES = (int) Math.ceil(TOTAL_RECORDS / (double)MAX_POST_SIZE);
+
+                    long batch_start = System.currentTimeMillis();
+
                     while (UPLOADED < TOTAL_RECORDS) { //paginate cursor so it does not explode the phone's memory
                         if(Aware.DEBUG)
                             Log.d(Aware.TAG,"Syncing " + UPLOADED + " out of " + TOTAL_RECORDS + " from table " + DATABASE_TABLE);
+
                         if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
                             notifyUser("Syncing batch " + (UPLOADED + MAX_POST_SIZE) / MAX_POST_SIZE + " of " + BATCHES + " from " + DATABASE_TABLE, false, true);
                         }
+
                         Cursor context_data;
                         if (remoteData.length() == 0) {
                             if (exists(columnsStr, "double_end_timestamp")) {
@@ -349,14 +354,19 @@ public class WebserviceHelper extends IntentService {
                                 try {
                                     success = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                                     if (DEBUG)
-                                        Log.d(Aware.TAG, "Sync " + DATABASE_TABLE + " OK");
+                                        Log.d(Aware.TAG, "Sync " + DATABASE_TABLE + " OK in " + DateUtils.formatElapsedTime((System.currentTimeMillis()-batch_start)/1000) + " seconds");
+
+                                    batch_start = System.currentTimeMillis();
+
                                 } catch (FileNotFoundException e) {
                                     success = null;
                                 }
                             } else {
                                 success = new Http(getApplicationContext()).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                                 if (DEBUG)
-                                    Log.d(Aware.TAG, "Sync " + DATABASE_TABLE + " OK");
+                                    Log.d(Aware.TAG, "Sync " + DATABASE_TABLE + " OK in " + DateUtils.formatElapsedTime((System.currentTimeMillis()-batch_start)/1000) + " seconds");
+
+                                batch_start = System.currentTimeMillis();
                             }
 
                             //Something went wrong, e.g., server is down, lost internet, etc.
