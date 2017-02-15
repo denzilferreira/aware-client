@@ -387,7 +387,7 @@ public class Aware_Join_Study extends Aware_Activity {
                 @Override
                 public void onClick(View v) {
                     Toast.makeText(Aware_Join_Study.this, "Installing...", Toast.LENGTH_SHORT).show();
-                    Aware.downloadPlugin(getApplicationContext(), mDataset.get(position).packageName, false);
+                    Aware.downloadPlugin(getApplicationContext(), mDataset.get(position).packageName, study_url, false);
                 }
             });
             if (mDataset.get(position).installed) {
