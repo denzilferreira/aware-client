@@ -1362,7 +1362,7 @@ public class Aware extends Service {
                             if (PluginsManager.isInstalled(c, enabled.getJSONObject(i).getString("plugin")) != null) {
                                 Aware.startPlugin(c, enabled.getJSONObject(i).getString("plugin"));
                             } else
-                                Aware.downloadPlugin(c, enabled.getJSONObject(i).getString("plugin"), false);
+                                Aware.downloadPlugin(c, enabled.getJSONObject(i).getString("plugin"), null, false);
                         }
 
                         for (int i = 0; i < disabled.length(); i++) {
