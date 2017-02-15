@@ -242,7 +242,6 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                         }
                         if (category_icon != null) parent.setIcon(category_icon);
                     } catch (NoSuchFieldException | IllegalAccessException e) {
-                        e.printStackTrace();
                     }
                 } else {
                     try {
@@ -256,7 +255,6 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                         }
                         if (category_icon != null) parent.setIcon(category_icon);
                     } catch (NoSuchFieldException | IllegalAccessException e) {
-                        e.printStackTrace();
                     }
                 }
             }
