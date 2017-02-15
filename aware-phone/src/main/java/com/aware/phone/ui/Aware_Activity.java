@@ -33,7 +33,7 @@ import com.aware.ui.PermissionsHandler;
 
 import java.util.ArrayList;
 
-public class Aware_Activity extends AppCompatPreferenceActivity {
+public class Aware_Activity extends AppCompatPreferenceActivity implements View.OnClickListener {
 
     private DrawerLayout navigationDrawer;
     private ListView navigationList;
@@ -97,6 +97,7 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
 
         if (Aware.isStudy(this)) {
             navigationToggle.setDrawerIndicatorEnabled(false);
+            navigationToggle.setToolbarNavigationClickListener(this);
             navigationDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         }
     }
@@ -158,6 +159,17 @@ public class Aware_Activity extends AppCompatPreferenceActivity {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         if (navigationToggle != null) navigationToggle.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (Aware.isStudy(this)) {
+            if (this instanceof Aware_Client) {
+                Toast.makeText(getApplicationContext(), "Already at top level.", Toast.LENGTH_SHORT).show();
+            }else
+            // Navigation toggler looks like a back button, so act like it
+                onBackPressed();
+        }
     }
 
     /**
