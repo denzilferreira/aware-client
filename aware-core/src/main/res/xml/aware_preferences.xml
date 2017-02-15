@@ -745,7 +745,7 @@
 
         </PreferenceScreen>
         <PreferenceScreen
-            android:icon="@drawable/ic_action_study"
+            android:icon="@drawable/ic_action_webservice"
             android:key="webservice"
             android:summary="Study and sync settings"
             android:title="AWARE Study">
