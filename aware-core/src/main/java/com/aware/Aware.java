@@ -795,10 +795,12 @@ public class Aware extends Service {
      * @param package_name
      * @param is_update
      */
-    public static void downloadPlugin(Context context, String package_name, boolean is_update) {
+    public static void downloadPlugin(Context context, String package_name, String study_custom_url, boolean is_update) {
         Intent pluginIntent = new Intent(context, DownloadPluginService.class);
         pluginIntent.putExtra("package_name", package_name);
         pluginIntent.putExtra("is_update", is_update);
+        if (study_custom_url != null)
+            pluginIntent.putExtra("study_url", study_custom_url);
         context.startService(pluginIntent);
     }
 
