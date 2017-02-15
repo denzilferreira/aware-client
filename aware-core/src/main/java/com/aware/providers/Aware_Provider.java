@@ -7,6 +7,7 @@ import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteCantOpenDatabaseException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
@@ -221,23 +222,22 @@ public class Aware_Provider extends ContentProvider {
     private HashMap<String, String> studiesMap;
     private HashMap<String, String> logMap;
 
-    private DatabaseHelper databaseHelper;
+    private DatabaseHelper databaseHelper = null;
 
-//    private boolean initializeDB() {
-//        if (databaseHelper == null) {
-//            databaseHelper = new DatabaseHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
-//        }
-//        if (databaseHelper != null && (database == null || !database.isOpen())) {
-//            database = databaseHelper.getWritableDatabase();
-//        }
-//        return (database != null && databaseHelper != null);
-//    }
+    private void initializeDB() {
+        if (databaseHelper == null) {
+            databaseHelper = new DatabaseHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
+        }
+    }
 
     /**
      * Delete entry from the database
      */
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
+
+        initializeDB();
+
         SQLiteDatabase database = databaseHelper.getWritableDatabase();
         if (database == null) return 0;
 
@@ -267,7 +267,6 @@ public class Aware_Provider extends ContentProvider {
 
         database.setTransactionSuccessful();
         database.endTransaction();
-        database.close();
 
         getContext().getContentResolver().notifyChange(uri, null);
 
@@ -307,6 +306,9 @@ public class Aware_Provider extends ContentProvider {
      */
     @Override
     public Uri insert(Uri uri, ContentValues initialValues) {
+
+        initializeDB();
+
         SQLiteDatabase database = databaseHelper.getWritableDatabase();
         if (database == null) return null;
 
@@ -323,11 +325,9 @@ public class Aware_Provider extends ContentProvider {
                     getContext().getContentResolver().notifyChange(devUri, null);
                     database.setTransactionSuccessful();
                     database.endTransaction();
-                    database.close();
                     return devUri;
                 }
                 database.endTransaction();
-                database.close();
                 throw new SQLException("Failed to insert row into " + uri);
             case SETTING:
                 long sett_id = database.insertWithOnConflict(DATABASE_TABLES[1], Aware_Settings.SETTING_KEY, values, SQLiteDatabase.CONFLICT_IGNORE);
@@ -337,11 +337,9 @@ public class Aware_Provider extends ContentProvider {
                     getContext().getContentResolver().notifyChange(settUri, null);
                     database.setTransactionSuccessful();
                     database.endTransaction();
-                    database.close();
                     return settUri;
                 }
                 database.endTransaction();
-                database.close();
                 throw new SQLException("Failed to insert row into " + uri);
             case PLUGIN:
                 long plug_id = database.insertWithOnConflict(DATABASE_TABLES[2], Aware_Plugins.PLUGIN_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
@@ -350,11 +348,9 @@ public class Aware_Provider extends ContentProvider {
                     getContext().getContentResolver().notifyChange(settUri, null);
                     database.setTransactionSuccessful();
                     database.endTransaction();
-                    database.close();
                     return settUri;
                 }
                 database.endTransaction();
-                database.close();
                 throw new SQLException("Failed to insert row into " + uri);
             case STUDY:
                 long study_id = database.insertWithOnConflict(DATABASE_TABLES[3], Aware_Studies.STUDY_DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
@@ -363,11 +359,9 @@ public class Aware_Provider extends ContentProvider {
                     getContext().getContentResolver().notifyChange(settUri, null);
                     database.setTransactionSuccessful();
                     database.endTransaction();
-                    database.close();
                     return settUri;
                 }
                 database.endTransaction();
-                database.close();
                 throw new SQLException("Failed to insert row into " + uri);
             case LOG:
                 long log_id = database.insertWithOnConflict(DATABASE_TABLES[4], Aware_Log.LOG_DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
@@ -376,15 +370,12 @@ public class Aware_Provider extends ContentProvider {
                     getContext().getContentResolver().notifyChange(settUri, null);
                     database.setTransactionSuccessful();
                     database.endTransaction();
-                    database.close();
                     return settUri;
                 }
                 database.endTransaction();
-                database.close();
                 throw new SQLException("Failed to insert row into " + uri);
             default:
                 database.endTransaction();
-                database.close();
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
     }
@@ -460,8 +451,6 @@ public class Aware_Provider extends ContentProvider {
         logMap.put(Aware_Log.LOG_DEVICE_ID, Aware_Log.LOG_DEVICE_ID);
         logMap.put(Aware_Log.LOG_MESSAGE, Aware_Log.LOG_MESSAGE);
 
-        databaseHelper = new DatabaseHelper( getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS );
-
         return true;
     }
 
@@ -471,6 +460,8 @@ public class Aware_Provider extends ContentProvider {
      */
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+
+        initializeDB();
 
         SQLiteDatabase database = databaseHelper.getReadableDatabase();
         if (database == null) return null;
@@ -516,6 +507,8 @@ public class Aware_Provider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 
+        initializeDB();
+
         SQLiteDatabase database = databaseHelper.getWritableDatabase();
         if (database == null) return 0;
 
@@ -540,13 +533,11 @@ public class Aware_Provider extends ContentProvider {
                 break;
             default:
                 database.endTransaction();
-                database.close();
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
 
         database.setTransactionSuccessful();
         database.endTransaction();
-        database.close();
 
         getContext().getContentResolver().notifyChange(uri, null);
 

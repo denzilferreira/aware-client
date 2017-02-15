@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.support.v4.content.ContextCompat;
@@ -32,7 +33,7 @@ import java.util.List;
  */
 public class DatabaseHelper extends SQLiteOpenHelper {
 
-    private final boolean DEBUG = true;
+    private final boolean DEBUG = false;
 
     private final String TAG = "DatabaseHelper";
 
@@ -42,50 +43,50 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private final int new_version;
 
     private HashMap<String, String> renamed_columns = new HashMap<>();
-    private Context mContext;
 
-    /**
-     * Get base database folder
-     *
-     * @param context
-     * @return
-     */
-    private File getAwareDatabaseDirectory(Context context) {
+    private Context mContext;
+    private SQLiteDatabase database;
+
+    private SQLiteDatabase getDatabase() {
+        //Avoid multiple instances of the same database object, singleton enforced
+        if (database != null) {
+
+            if (DEBUG)
+                Log.d(TAG, "Already initialised database: " + database.getPath());
+
+            return database;
+        }
+
         File aware_folder;
-        if (!context.getResources().getBoolean(R.bool.standalone)) {
+        if (!mContext.getResources().getBoolean(R.bool.standalone)) {
             aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString()); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
         } else {
-            aware_folder = new File(ContextCompat.getExternalFilesDirs(context, null)[0] + "/AWARE"); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
+            aware_folder = new File(ContextCompat.getExternalFilesDirs(mContext, null)[0] + "/AWARE"); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
         }
 
         if (!aware_folder.exists()) {
-            boolean created = aware_folder.mkdirs();
-            if (!created) return null;
+            aware_folder.mkdirs();
         }
-        return aware_folder;
-    }
 
-    /**
-     * Get database from base folder
-     *
-     * @param context
-     * @param database_name
-     * @return
-     */
-    private File getAwareDatabaseFile(Context context, String database_name) {
-        return new File(getAwareDatabaseDirectory(context), database_name);
+        if (DEBUG)
+            Log.d(TAG, "Initialising database: " + new File(aware_folder, this.database_name).getPath());
+
+        return SQLiteDatabase.openOrCreateDatabase(new File(aware_folder, this.database_name).getPath(), null);
     }
 
     public DatabaseHelper(Context context, String database_name, CursorFactory cursor_factory, int database_version, String[] database_tables, String[] table_fields) {
         super(context, database_name, cursor_factory, database_version);
 
+        if (DEBUG)
+            Log.d(TAG, "Loading: " + database_name + "... version: " + database_version);
+
+        this.mContext = context;
         this.database_name = database_name;
         this.database_tables = database_tables;
         this.table_fields = table_fields;
         this.new_version = database_version;
-        this.mContext = context;
 
-        getAwareDatabaseDirectory(context);
+        database = getWritableDatabase();
     }
 
     public void setRenamedColumns(HashMap<String, String> renamed) {
@@ -94,7 +95,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        if (DEBUG) Log.w(TAG, "Database in use: " + db.getPath());
+        if (DEBUG) Log.w(TAG, "Creating database: " + db.getPath());
+
         for (int i = 0; i < database_tables.length; i++) {
             db.execSQL("CREATE TABLE IF NOT EXISTS " + database_tables[i] + " (" + table_fields[i] + ");");
             db.execSQL("CREATE INDEX IF NOT EXISTS time_device ON " + database_tables[i] + " (timestamp, device_id);");
@@ -180,57 +182,72 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 jsonArray.put(row);
             } while (cursor.moveToNext());
         }
-        if (cursor != null && ! cursor.isClosed()) cursor.close();
+        if (cursor != null && !cursor.isClosed()) cursor.close();
 
         return jsonArray.toString();
     }
 
     private static List<String> getColumns(SQLiteDatabase db, String tableName) {
-        List<String> ar = null;
-        Cursor c = null;
+        List<String> columns = null;
+        Cursor database_meta = null;
         try {
-            c = db.rawQuery("SELECT * FROM " + tableName + " LIMIT 1", null);
-            if (c != null) {
-                ar = new ArrayList<>(Arrays.asList(c.getColumnNames()));
+            database_meta = db.rawQuery("SELECT * FROM " + tableName + " LIMIT 1", null);
+            if (database_meta != null) {
+                columns = new ArrayList<>(Arrays.asList(database_meta.getColumnNames()));
             }
         } catch (Exception e) {
-            Log.v(tableName, e.getMessage(), e);
             e.printStackTrace();
         } finally {
-            if (c != null) c.close();
+            if (database_meta != null) database_meta.close();
         }
-        return ar;
+        return columns;
     }
 
     @Override
-    public SQLiteDatabase getWritableDatabase() {
+    public synchronized SQLiteDatabase getWritableDatabase() {
+        if (database != null) {
+            if (!database.isOpen()) {
+                database = null;
+            } else if (!database.isReadOnly()) {
+                return database;
+            }
+        }
         try {
-            File database_file = getAwareDatabaseFile(mContext, database_name);
-            SQLiteDatabase current_database = SQLiteDatabase.openDatabase(database_file.getPath(), null, SQLiteDatabase.CREATE_IF_NECESSARY);
-            int current_version = current_database.getVersion();
+            database = getDatabase();
+            int current_version = database.getVersion();
             if (current_version != new_version) {
-                if (current_version == 0) {
-                    onCreate(current_database);
-                } else {
-                    onUpgrade(current_database, current_version, new_version);
+
+                database.beginTransaction();
+
+                try {
+                    if (current_version == 0) {
+                        onCreate(database);
+                    } else {
+                        onUpgrade(database, current_version, new_version);
+                    }
+
+                    database.setTransactionSuccessful();
+
+                } finally {
+                    database.endTransaction();
                 }
             }
-            onOpen(current_database);
-            return current_database;
+            onOpen(database);
+            return database;
         } catch (SQLException e) {
             return null;
         }
     }
 
     @Override
-    public SQLiteDatabase getReadableDatabase() {
-        try {
-            File database_file = getAwareDatabaseFile(mContext, database_name);
-            SQLiteDatabase current_database = SQLiteDatabase.openDatabase(database_file.getPath(), null, SQLiteDatabase.OPEN_READONLY);
-            onOpen(current_database);
-            return current_database;
-        } catch (SQLException e) {
-            return null;
+    public synchronized SQLiteDatabase getReadableDatabase() {
+        if (database != null) {
+            if (!database.isOpen()) {
+                database = null;
+            } else {
+                return database;
+            }
         }
+        return getWritableDatabase();
     }
 }

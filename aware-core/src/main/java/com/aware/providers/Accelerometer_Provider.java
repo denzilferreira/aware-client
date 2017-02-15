@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteCantOpenDatabaseException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
@@ -127,11 +128,20 @@ public class Accelerometer_Provider extends ContentProvider {
                     + Accelerometer_Data.ACCURACY + " integer default 0,"
                     + Accelerometer_Data.LABEL + " text default ''"};
 
+    private void initializeDB() {
+        if (databaseHelper == null) {
+            databaseHelper = new DatabaseHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
+        }
+    }
+
     /**
      * Delete entry from the database
      */
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
+
+        initializeDB();
+
         SQLiteDatabase database = databaseHelper.getWritableDatabase();
         if (database == null) return 0;
 
@@ -153,7 +163,6 @@ public class Accelerometer_Provider extends ContentProvider {
 
         database.setTransactionSuccessful();
         database.endTransaction();
-        database.close();
 
         getContext().getContentResolver().notifyChange(uri, null);
 
@@ -181,6 +190,9 @@ public class Accelerometer_Provider extends ContentProvider {
      */
     @Override
     public Uri insert(Uri uri, ContentValues initialValues) {
+
+        initializeDB();
+
         SQLiteDatabase database = databaseHelper.getWritableDatabase();
         if (database == null) return null;
 
@@ -196,11 +208,9 @@ public class Accelerometer_Provider extends ContentProvider {
                     getContext().getContentResolver().notifyChange(accelUri, null);
                     database.setTransactionSuccessful();
                     database.endTransaction();
-                    database.close();
                     return accelUri;
                 }
                 database.endTransaction();
-                database.close();
                 throw new SQLException("Failed to insert row into " + uri);
             case ACCEL_DATA:
                 long accelData_id = database.insertWithOnConflict(DATABASE_TABLES[1], Accelerometer_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
@@ -209,15 +219,12 @@ public class Accelerometer_Provider extends ContentProvider {
                     getContext().getContentResolver().notifyChange(accelDataUri, null);
                     database.setTransactionSuccessful();
                     database.endTransaction();
-                    database.close();
                     return accelDataUri;
                 }
                 database.endTransaction();
-                database.close();
                 throw new SQLException("Failed to insert row into " + uri);
             default:
                 database.endTransaction();
-                database.close();
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
     }
@@ -231,6 +238,9 @@ public class Accelerometer_Provider extends ContentProvider {
      */
     @Override
     public int bulkInsert(Uri uri, ContentValues[] values) {
+
+        initializeDB();
+
         SQLiteDatabase database = databaseHelper.getWritableDatabase();
         if (database == null) return 0;
 
@@ -275,7 +285,6 @@ public class Accelerometer_Provider extends ContentProvider {
 
         database.setTransactionSuccessful();
         database.endTransaction();
-        database.close();
 
         getContext().getContentResolver().notifyChange(uri, null);
 
@@ -315,8 +324,6 @@ public class Accelerometer_Provider extends ContentProvider {
         accelDataMap.put(Accelerometer_Data.ACCURACY, Accelerometer_Data.ACCURACY);
         accelDataMap.put(Accelerometer_Data.LABEL, Accelerometer_Data.LABEL);
 
-        databaseHelper = new DatabaseHelper( getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS );
-
         return true;
     }
 
@@ -325,6 +332,8 @@ public class Accelerometer_Provider extends ContentProvider {
      */
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+
+        initializeDB();
 
         SQLiteDatabase database = databaseHelper.getReadableDatabase();
         if (database == null) return null;
@@ -358,6 +367,8 @@ public class Accelerometer_Provider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 
+        initializeDB();
+
         SQLiteDatabase database = databaseHelper.getWritableDatabase();
         if (database == null) return 0;
 
@@ -373,13 +384,11 @@ public class Accelerometer_Provider extends ContentProvider {
                 break;
             default:
                 database.endTransaction();
-                database.close();
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
 
         database.setTransactionSuccessful();
         database.endTransaction();
-        database.close();
 
         getContext().getContentResolver().notifyChange(uri, null);
 

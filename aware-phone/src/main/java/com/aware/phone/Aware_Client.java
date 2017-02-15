@@ -56,7 +56,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     public static ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
     private static boolean permissions_ok = true;
     private static Hashtable<String, Boolean> listSensorType;
-    private List<String[]> optionalSensors;
+    private List<String[]> optionalSensors = new ArrayList<>();
 
     private static SharedPreferences prefs;
     private SettingsSync settingsSync = null;
@@ -64,8 +64,6 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        optionalSensors = new ArrayList<String[]>();
 
         optionalSensors.add(new String[]{Aware_Preferences.STATUS_ACCELEROMETER, Sensor.STRING_TYPE_ACCELEROMETER});
         optionalSensors.add(new String[]{Aware_Preferences.STATUS_SIGNIFICANT_MOTION, Sensor.STRING_TYPE_ACCELEROMETER});
@@ -109,6 +107,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         }
 
         if (permissions_ok) {
+
             Intent startAware = new Intent(this, Aware.class);
             startService(startAware);
 
