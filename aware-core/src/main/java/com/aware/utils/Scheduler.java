@@ -1218,7 +1218,7 @@ public class Scheduler extends Aware_Sensor {
     }
 
     public boolean is_interval_elapsed(Calendar date_one, Calendar date_two, long required_minutes) {
-        long elapsed = (date_one.getTimeInMillis() - date_two.getTimeInMillis()) / 1000 / 60;
+        long elapsed = Math.round((date_one.getTimeInMillis() - date_two.getTimeInMillis()) / 1000 / 60.0);
         if (DEBUG)
             Log.d(Scheduler.TAG, "Checking interval elapsed: " + elapsed + " vs " + required_minutes + " minutes elapsed");
 
