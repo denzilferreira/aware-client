@@ -64,6 +64,7 @@ public class WebserviceHelper extends Service {
 
 
     private static final Map<String, Boolean> SYNCED_TABLES = Collections.synchronizedMap(new HashMap<String, Boolean>());
+
     // Handler that receives messages from the thread
     private final class ServiceHandler extends Handler {
 
@@ -72,21 +73,21 @@ public class WebserviceHelper extends Service {
             // Two threads to sync data with the server
             executor = Executors.newFixedThreadPool(2);
         }
+
         @Override
         public void handleMessage(Message msg) {
             Bundle bundle = msg.getData();
 
 
-            synchronized (SYNCED_TABLES){
-                if(!SYNCED_TABLES.containsKey(bundle.getString("DATABASE_TABLE")) || (SYNCED_TABLES.containsKey(bundle.getString("DATABASE_TABLE")) && SYNCED_TABLES.get(bundle.getString("DATABASE_TABLE")))){
+            synchronized (SYNCED_TABLES) {
+                if (!SYNCED_TABLES.containsKey(bundle.getString("DATABASE_TABLE")) || (SYNCED_TABLES.containsKey(bundle.getString("DATABASE_TABLE")) && SYNCED_TABLES.get(bundle.getString("DATABASE_TABLE")))) {
                     Log.d(Aware.TAG, "Tried to sync for the first time for " + bundle.getString("DATABASE_TABLE"));
                     SYNCED_TABLES.put(bundle.getString("DATABASE_TABLE"), false);
-                    Context context= (Context) msg.obj;
+                    Context context = (Context) msg.obj;
                     notificationID++;
                     SyncTable syncTable = new SyncTable(context, bundle.getBoolean("DEBUG"), bundle.getString("DATABASE_TABLE"), bundle.getString("TABLES_FIELDS"), bundle.getString("ACTION"), bundle.getString("CONTENT_URI_STRING"), bundle.getString("DEVICE_ID"), bundle.getString("WEBSERVER"), bundle.getBoolean("WEBSERVICE_SIMPLE"), bundle.getBoolean("WEBSERVICE_REMOVE_DATA"), bundle.getInt("MAX_POST_SIZE"), notificationID);
                     executor.submit(syncTable);
-                }
-                else{
+                } else {
                     Log.d(Aware.TAG, "Tried to sync again for " + bundle.getString("DATABASE_TABLE"));
                 }
             }
@@ -122,7 +123,7 @@ public class WebserviceHelper extends Service {
 
         if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
             notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-           // notifyUser(getApplicationContext(), "Synching initiated...", false, true, WEBSERVICES_NOTIFICATION_ID);
+            // notifyUser(getApplicationContext(), "Synching initiated...", false, true, WEBSERVICES_NOTIFICATION_ID);
         }
         sync_start = System.currentTimeMillis();
     }
@@ -141,14 +142,19 @@ public class WebserviceHelper extends Service {
             PendingIntent clickIntent = PendingIntent.getActivity(mContext, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
             mBuilder.setContentIntent(clickIntent);
 
-            try { notManager.notify(id, mBuilder.build()); }
-            catch (NullPointerException e) { if(Aware.DEBUG) Log.d(Aware.TAG, "Notification exception: " + e); }
+            try {
+                notManager.notify(id, mBuilder.build());
+            } catch (NullPointerException e) {
+                if (Aware.DEBUG) Log.d(Aware.TAG, "Notification exception: " + e);
+            }
         } else {
-            try { notManager.cancel(id); }
-            catch (NullPointerException e) { if(Aware.DEBUG) Log.d(Aware.TAG, "Notification exception: " + e); }
+            try {
+                notManager.cancel(id);
+            } catch (NullPointerException e) {
+                if (Aware.DEBUG) Log.d(Aware.TAG, "Notification exception: " + e);
+            }
         }
     }
-
 
 
     @Override
@@ -157,7 +163,7 @@ public class WebserviceHelper extends Service {
         String WEBSERVER = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
 
         //Fixed: not part of a study, do nothing
-        if (WEBSERVER.length() == 0 || WEBSERVER.equalsIgnoreCase("https://api.awareframework.com/index.php")){
+        if (WEBSERVER.length() == 0 || WEBSERVER.equalsIgnoreCase("https://api.awareframework.com/index.php")) {
             stopSelf();
             return START_NOT_STICKY;
         }
@@ -210,23 +216,22 @@ public class WebserviceHelper extends Service {
             // For each start request, send a message to start a job and deliver the
             // start ID so we know which request we're stopping when we finish the job
 
-                    Message msg = mServiceHandler.obtainMessage();
-                    Bundle bundle = new Bundle();
-                    bundle.putBoolean("DEBUG", DEBUG);
-                    bundle.putString("DEVICE_ID", DEVICE_ID);
-                    bundle.putString("WEBSERVER", WEBSERVER);
-                    bundle.putBoolean("WEBSERVICE_SIMPLE", WEBSERVICE_SIMPLE);
-                    bundle.putBoolean("WEBSERVICE_REMOVE_DATA", WEBSERVICE_REMOVE_DATA);
-                    bundle.putInt("MAX_POST_SIZE", MAX_POST_SIZE);
-                    bundle.putString("DATABASE_TABLE",intent.getStringExtra(EXTRA_TABLE));
-                    bundle.putString("TABLES_FIELDS", intent.getStringExtra(EXTRA_FIELDS));
-                    bundle.putString("ACTION",intent.getAction());
-                    bundle.putString("CONTENT_URI_STRING",intent.getStringExtra(EXTRA_CONTENT_URI));
-                    msg.obj = getApplicationContext();
-                    msg.setData(bundle);
-                    msg.arg1 = startId;
-                    mServiceHandler.sendMessage(msg);
-
+            Message msg = mServiceHandler.obtainMessage();
+            Bundle bundle = new Bundle();
+            bundle.putBoolean("DEBUG", DEBUG);
+            bundle.putString("DEVICE_ID", DEVICE_ID);
+            bundle.putString("WEBSERVER", WEBSERVER);
+            bundle.putBoolean("WEBSERVICE_SIMPLE", WEBSERVICE_SIMPLE);
+            bundle.putBoolean("WEBSERVICE_REMOVE_DATA", WEBSERVICE_REMOVE_DATA);
+            bundle.putInt("MAX_POST_SIZE", MAX_POST_SIZE);
+            bundle.putString("DATABASE_TABLE", intent.getStringExtra(EXTRA_TABLE));
+            bundle.putString("TABLES_FIELDS", intent.getStringExtra(EXTRA_FIELDS));
+            bundle.putString("ACTION", intent.getAction());
+            bundle.putString("CONTENT_URI_STRING", intent.getStringExtra(EXTRA_CONTENT_URI));
+            msg.obj = getApplicationContext();
+            msg.setData(bundle);
+            msg.arg1 = startId;
+            mServiceHandler.sendMessage(msg);
 
 
         }
@@ -271,8 +276,7 @@ public class WebserviceHelper extends Service {
         }
 
 
-
-        private String createRemoteTable(){
+        private String createRemoteTable() {
             //Check first if we have database table remotely, otherwise create it!
             Hashtable<String, String> fields = new Hashtable<>();
             fields.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
@@ -296,7 +300,7 @@ public class WebserviceHelper extends Service {
 
         }
 
-        private String[] getTableColumnsNames(Uri CONTENT_URI){
+        private String[] getTableColumnsNames(Uri CONTENT_URI) {
             String[] columnsStr = new String[]{};
             Cursor columnsDB = mContext.getContentResolver().query(CONTENT_URI, null, null, null, null);
             if (columnsDB != null && columnsDB.moveToFirst()) {
@@ -306,7 +310,7 @@ public class WebserviceHelper extends Service {
             return columnsStr;
         }
 
-        private String getLatestRecordInDatabase(){
+        private String getLatestRecordInDatabase() {
             Hashtable<String, String> request = new Hashtable<>();
             request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
 
@@ -327,12 +331,13 @@ public class WebserviceHelper extends Service {
                 } else {
                     latest = new Http(mContext).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
                 }
-                if (latest == null) return Thread.currentThread().getName(); //unable to reach the server, cancel this sync
+                if (latest == null)
+                    return Thread.currentThread().getName(); //unable to reach the server, cancel this sync
             }
             return latest;
         }
 
-        private String getRemoteSyncCondition(){
+        private String getRemoteSyncCondition() {
             //If in a study, get only data from joined date onwards
             String study_condition = "";
             if (Aware.isStudy(mContext)) {
@@ -351,7 +356,7 @@ public class WebserviceHelper extends Service {
             return study_condition;
         }
 
-        private int getNumberOfRecordsToSync(Uri CONTENT_URI, String[] columnsStr, String latest, String study_condition) throws JSONException{
+        private int getNumberOfRecordsToSync(Uri CONTENT_URI, String[] columnsStr, String latest, String study_condition) throws JSONException {
             JSONArray remoteData = new JSONArray(latest);
 
             int TOTAL_RECORDS = 0;
@@ -362,21 +367,21 @@ public class WebserviceHelper extends Service {
                         TOTAL_RECORDS = counter.getInt(0);
                         counter.close();
                     }
-                    if(counter != null && !counter.isClosed()) counter.close();
+                    if (counter != null && !counter.isClosed()) counter.close();
                 } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
                     Cursor counter = mContext.getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "double_esm_user_answer_timestamp != 0" + study_condition, null, "_id ASC");
                     if (counter != null && counter.moveToFirst()) {
                         TOTAL_RECORDS = counter.getInt(0);
                         counter.close();
                     }
-                    if(counter != null && !counter.isClosed()) counter.close();
+                    if (counter != null && !counter.isClosed()) counter.close();
                 } else {
                     Cursor counter = mContext.getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "1" + study_condition, null, "_id ASC");
                     if (counter != null && counter.moveToFirst()) {
                         TOTAL_RECORDS = counter.getInt(0);
                         counter.close();
                     }
-                    if(counter != null && !counter.isClosed()) counter.close();
+                    if (counter != null && !counter.isClosed()) counter.close();
                 }
             } else {
                 long last;
@@ -387,7 +392,7 @@ public class WebserviceHelper extends Service {
                         TOTAL_RECORDS = counter.getInt(0);
                         counter.close();
                     }
-                    if(counter != null && !counter.isClosed()) counter.close();
+                    if (counter != null && !counter.isClosed()) counter.close();
                 } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
                     last = remoteData.getJSONObject(0).getLong("double_esm_user_answer_timestamp");
                     Cursor counter = mContext.getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + " AND double_esm_user_answer_timestamp != 0" + study_condition, null, "_id ASC");
@@ -395,7 +400,7 @@ public class WebserviceHelper extends Service {
                         TOTAL_RECORDS = counter.getInt(0);
                         counter.close();
                     }
-                    if(counter != null && !counter.isClosed()) counter.close();
+                    if (counter != null && !counter.isClosed()) counter.close();
                 } else {
                     last = remoteData.getJSONObject(0).getLong("timestamp");
                     Cursor counter = mContext.getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + study_condition, null, "_id ASC");
@@ -403,21 +408,19 @@ public class WebserviceHelper extends Service {
                         TOTAL_RECORDS = counter.getInt(0);
                         counter.close();
                     }
-                    if(counter != null && !counter.isClosed()) counter.close();
+                    if (counter != null && !counter.isClosed()) counter.close();
                 }
             }
-
 
 
             if (DEBUG)
                 Log.d(Aware.TAG, "Syncing " + TOTAL_RECORDS + " records from " + DATABASE_TABLE);
 
 
-
             return TOTAL_RECORDS;
         }
 
-        private Cursor getSyncContextData(JSONArray remoteData , Uri CONTENT_URI, String study_condition, String[] columnsStr, int uploaded_records) throws JSONException{
+        private Cursor getSyncContextData(JSONArray remoteData, Uri CONTENT_URI, String study_condition, String[] columnsStr, int uploaded_records) throws JSONException {
             Cursor context_data;
             if (remoteData.length() == 0) {
                 if (exists(columnsStr, "double_end_timestamp")) {
@@ -443,7 +446,7 @@ public class WebserviceHelper extends Service {
             return context_data;
         }
 
-        private void performDatabaseSpaceMaintenance(Uri CONTENT_URI, long last){
+        private void performDatabaseSpaceMaintenance(Uri CONTENT_URI, long last) {
             ArrayList<String> highFrequencySensors = new ArrayList<>();
             highFrequencySensors.add("accelerometer");
             highFrequencySensors.add("gyroscope");
@@ -473,7 +476,7 @@ public class WebserviceHelper extends Service {
             }
         }
 
-        private boolean syncBatch(Cursor context_data, Uri CONTENT_URI) throws JSONException{
+        private boolean syncBatch(Cursor context_data, Uri CONTENT_URI) throws JSONException {
             JSONArray rows = new JSONArray();
             if (context_data != null && context_data.moveToFirst()) {
                 do {
@@ -555,13 +558,13 @@ public class WebserviceHelper extends Service {
                             JSONArray remoteData = new JSONArray(latest);
                             long start = System.currentTimeMillis();
                             int uploaded_records = 0;
-                            int batches = (int) Math.ceil(total_records / (double)MAX_POST_SIZE);
+                            int batches = (int) Math.ceil(total_records / (double) MAX_POST_SIZE);
                             boolean syncSuccess = true;
 
                             while (uploaded_records < total_records && syncSuccess) { //paginate cursor so it does not explode the phone's memory
 
-                                if(Aware.DEBUG)
-                                    Log.d(Aware.TAG,"Syncing " + uploaded_records + " out of " + total_records + " from table " + DATABASE_TABLE);
+                                if (Aware.DEBUG)
+                                    Log.d(Aware.TAG, "Syncing " + uploaded_records + " out of " + total_records + " from table " + DATABASE_TABLE);
 
                                 if (!Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
                                     notifyUser(mContext, "Syncing batch " + (uploaded_records + MAX_POST_SIZE) / MAX_POST_SIZE + " of " + batches + " from " + DATABASE_TABLE, false, true, NOTIFICATION_ID);
@@ -575,10 +578,9 @@ public class WebserviceHelper extends Service {
                                 Log.d(Aware.TAG, DATABASE_TABLE + " sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis() - start) / 1000));
 
                             if (!Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
-                                notifyUser(mContext, "Finished syncing "+ DATABASE_TABLE +". Thanks!", true, false, NOTIFICATION_ID);
+                                notifyUser(mContext, "Finished syncing " + DATABASE_TABLE + ". Thanks!", true, false, NOTIFICATION_ID);
                             }
-                        }
-                        else{
+                        } else {
                             if (DEBUG)
                                 Log.d(Aware.TAG, "Nothing to sync: " + total_records + " records from " + DATABASE_TABLE);
 
@@ -587,9 +589,8 @@ public class WebserviceHelper extends Service {
 
                     } catch (JSONException e) {
                         e.printStackTrace();
-                    }
-                    finally {
-                        synchronized (SYNCED_TABLES){
+                    } finally {
+                        synchronized (SYNCED_TABLES) {
                             SYNCED_TABLES.put(DATABASE_TABLE, true);
                         }
                     }
