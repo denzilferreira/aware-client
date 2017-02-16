@@ -502,6 +502,7 @@ public class WebserviceHelper extends Service {
                 } while (context_data.moveToNext());
 
                 context_data.close(); //clear phone's memory immediately
+
                 Hashtable<String, String> request = new Hashtable<>();
                 request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
                 request.put("data", rows.toString());

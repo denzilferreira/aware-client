@@ -429,7 +429,7 @@ public class Scheduler extends Aware_Sensor {
                 e.printStackTrace();
             }
         }
-        if (scheduleData != null && ! scheduleData.isClosed()) scheduleData.close();
+        if (scheduleData != null && !scheduleData.isClosed()) scheduleData.close();
         return output;
     }
 
@@ -452,7 +452,7 @@ public class Scheduler extends Aware_Sensor {
                 e.printStackTrace();
             }
         }
-        if (scheduleData != null && ! scheduleData.isClosed()) scheduleData.close();
+        if (scheduleData != null && !scheduleData.isClosed()) scheduleData.close();
         return output;
     }
 
@@ -633,7 +633,7 @@ public class Scheduler extends Aware_Sensor {
 
         public Schedule addHour(int hour) throws JSONException {
             JSONArray hours = getHours();
-            for(int i = 0; i < hours.length(); i++) {
+            for (int i = 0; i < hours.length(); i++) {
                 int m = hours.getInt(i);
                 if (m == hour) return this;
             }
@@ -679,7 +679,7 @@ public class Scheduler extends Aware_Sensor {
 
         public Schedule addMinute(int minute) throws JSONException {
             JSONArray minutes = getMinutes();
-            for(int i = 0; i < minutes.length(); i++) {
+            for (int i = 0; i < minutes.length(); i++) {
                 int m = minutes.getInt(i);
                 if (m == minute) return this;
             }
@@ -769,7 +769,7 @@ public class Scheduler extends Aware_Sensor {
          */
         public Schedule addWeekday(String week_day) throws JSONException {
             JSONArray weekdays = getWeekdays();
-            for(int i = 0; i < weekdays.length(); i++) {
+            for (int i = 0; i < weekdays.length(); i++) {
                 String m = weekdays.getString(i);
                 if (m.equalsIgnoreCase(week_day)) return this;
             }
@@ -798,7 +798,7 @@ public class Scheduler extends Aware_Sensor {
          */
         public Schedule addMonth(String month) throws JSONException {
             JSONArray months = getMonths();
-            for(int i = 0; i < months.length(); i++) {
+            for (int i = 0; i < months.length(); i++) {
                 String m = months.getString(i);
                 if (m.equalsIgnoreCase(month)) return this;
             }
@@ -1141,8 +1141,8 @@ public class Scheduler extends Aware_Sensor {
 
             if (last_time_triggered != null && last_time_triggered.moveToFirst()) {
                 last_triggered = last_time_triggered.getLong(last_time_triggered.getColumnIndex(Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED));
-                last_time_triggered.close();
             }
+            if (last_time_triggered != null && !last_time_triggered.isClosed()) last_time_triggered.close();
 
             // This is a scheduled task on a specific timestamp.
             // NOTE: Once triggered, it's deleted from the database automatically.

@@ -204,9 +204,7 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
             sendBroadcast(accel_dev);
 
             if (Aware.DEBUG) Log.d(TAG, "Linear-accelerometer sensor: " + rowData.toString());
-
         }
-
         if (accelInfo != null && !accelInfo.isClosed()) accelInfo.close();
     }
 

@@ -1624,8 +1624,6 @@ public class Aware extends Service {
                         complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
                         complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "rejoined study. abandoning previous");
 
-                        dbStudy.close();
-
                         //Update the information to the latest
                         ContentValues studyData = new ContentValues();
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
@@ -1645,6 +1643,8 @@ public class Aware extends Service {
                             Log.d(Aware.TAG, "Rejoined study data: " + studyData.toString());
                         }
                     }
+
+                    if (dbStudy != null && !dbStudy.isClosed()) dbStudy.close();
 
                     //Apply study settings
                     JSONArray plugins = new JSONArray();
@@ -1778,6 +1778,7 @@ public class Aware extends Service {
             } while (enabled_plugins.moveToNext());
         }
         if (enabled_plugins != null && !enabled_plugins.isClosed()) enabled_plugins.close();
+
         if (active_plugins.size() > 0) {
             for (String package_name : active_plugins) {
                 stopPlugin(context, package_name);
@@ -1879,8 +1880,8 @@ public class Aware extends Service {
                         if (current_status.getInt(current_status.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == PluginsManager.PLUGIN_UPDATED) { //was updated, set to active now
                             rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
                         }
-                        current_status.close();
                     }
+                    if ( current_status != null && ! current_status.isClosed()) current_status.close();
 
                     context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
 
