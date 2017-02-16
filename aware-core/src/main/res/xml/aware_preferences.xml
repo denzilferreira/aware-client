@@ -599,7 +599,7 @@
 
         </PreferenceScreen>
         <PreferenceScreen
-            android:icon="@drawable/ic_action_significant"
+            android:icon="@drawable/ic_action_significant_motion"
             android:key="significant_motion"
             android:summary="Significant motion"
             android:title="Significant motion">
@@ -745,7 +745,7 @@
 
         </PreferenceScreen>
         <PreferenceScreen
-            android:icon="@drawable/ic_action_study"
+            android:icon="@drawable/ic_action_webservice"
             android:key="webservice"
             android:summary="Study and sync settings"
             android:title="AWARE Study">

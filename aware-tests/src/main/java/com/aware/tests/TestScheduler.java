@@ -34,9 +34,8 @@ public class TestScheduler implements AwareTest {
 //        testTimer(context);
 //        testContextual(context);
 //        testConditional(context);
-//        testTime(context);
-
-        testRandom(context);
+        testTime(context);
+//        testRandom(context);
 
         Aware.startScheduler(context);
     }
@@ -63,13 +62,30 @@ public class TestScheduler implements AwareTest {
         try {
             Scheduler.Schedule conditional = new Scheduler.Schedule("time");
             conditional
-                    .addHour(16)
-                    .addMinute(42)
+                    .addHour(10).addMinute(25)
                     .setActionType(Scheduler.ACTION_TYPE_SERVICE)
                     .setActionClass(c.getPackageName() + "/" + Aware_TTS.class.getName())
                     .addActionExtra(Aware_TTS.EXTRA_TTS_TEXT, "Yay!")
                     .addActionExtra(Aware_TTS.EXTRA_TTS_REQUESTER, c.getPackageName());
             Scheduler.saveSchedule(c, conditional);
+
+            Scheduler.Schedule conditional2 = new Scheduler.Schedule("time_2");
+            conditional2
+                    .addHour(10).addMinute(27)
+                    .setActionType(Scheduler.ACTION_TYPE_SERVICE)
+                    .setActionClass(c.getPackageName() + "/" + Aware_TTS.class.getName())
+                    .addActionExtra(Aware_TTS.EXTRA_TTS_TEXT, "Yay!")
+                    .addActionExtra(Aware_TTS.EXTRA_TTS_REQUESTER, c.getPackageName());
+            Scheduler.saveSchedule(c, conditional2);
+
+            Scheduler.Schedule conditional3 = new Scheduler.Schedule("time_3");
+            conditional3
+                    .addHour(10).addMinute(30)
+                    .setActionType(Scheduler.ACTION_TYPE_SERVICE)
+                    .setActionClass(c.getPackageName() + "/" + Aware_TTS.class.getName())
+                    .addActionExtra(Aware_TTS.EXTRA_TTS_TEXT, "Yay!")
+                    .addActionExtra(Aware_TTS.EXTRA_TTS_REQUESTER, c.getPackageName());
+            Scheduler.saveSchedule(c, conditional3);
         } catch (JSONException e) {
             e.printStackTrace();
         }

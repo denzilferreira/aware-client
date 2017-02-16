@@ -2,7 +2,6 @@
 package com.aware;
 
 import android.app.ActivityManager;
-import android.app.Application;
 import android.app.Service;
 import android.app.UiModeManager;
 import android.content.BroadcastReceiver;
@@ -37,6 +36,7 @@ import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -66,7 +66,6 @@ import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -74,7 +73,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 
 import dalvik.system.DexFile;
@@ -795,10 +793,12 @@ public class Aware extends Service {
      * @param package_name
      * @param is_update
      */
-    public static void downloadPlugin(Context context, String package_name, boolean is_update) {
+    public static void downloadPlugin(Context context, String package_name, String study_custom_url, boolean is_update) {
         Intent pluginIntent = new Intent(context, DownloadPluginService.class);
         pluginIntent.putExtra("package_name", package_name);
         pluginIntent.putExtra("is_update", is_update);
+        if (study_custom_url != null)
+            pluginIntent.putExtra("study_url", study_custom_url);
         context.startService(pluginIntent);
     }
 
@@ -807,71 +807,57 @@ public class Aware extends Service {
      *
      * @param context:      application context
      * @param package_name: plugin's package name
-     * @return View for reuse (instance of LinearLayout)
+     * @return View for reuse
      */
     public static View getContextCard(final Context context, final String package_name) {
 
-        String bundled_package = "";
+        boolean is_bundled = false;
         PackageInfo pkg = PluginsManager.isInstalled(context, package_name);
         if (pkg != null && pkg.versionName.equals("bundled")) {
-            bundled_package = context.getPackageName();
+            is_bundled = true;
         }
 
-        if (!isClassAvailable(context, package_name, "ContextCard")) {
-            Log.d(Aware.TAG, "No ContextCard: " + package_name);
-            return null;
+        if (is_bundled) {
+            if (!isClassAvailable(context, context.getPackageName(), "ContextCard")) {
+                Log.d(Aware.TAG, "No ContextCard detected for " + context.getPackageName());
+                return new View(context);
+            }
+        } else {
+            if (!isClassAvailable(context, package_name, "ContextCard")) {
+                Log.d(Aware.TAG, "No ContextCard detected for " + package_name);
+                return new View(context);
+            }
         }
 
-        String ui_class = package_name + ".ContextCard";
         try {
-            Context packageContext = context.createPackageContext(((bundled_package.length() > 0) ? bundled_package : package_name), Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
-            Class<?> fragment_loader = packageContext.getClassLoader().loadClass(ui_class);
-            Object fragment = fragment_loader.newInstance();
-            Method[] allMethods = fragment_loader.getDeclaredMethods();
-            Method m = null;
-            for (Method mItem : allMethods) {
-                String mName = mItem.getName();
-                if (mName.contains("getContextCard")) {
-                    mItem.setAccessible(true);
-                    m = mItem;
-                    break;
-                }
-            }
+            String contextCardClass = ((is_bundled) ? context.getPackageName() + "/" + package_name : package_name ) + ".ContextCard";
+            Context reflectedContext = context.createPackageContext(((is_bundled) ? context.getPackageName() : package_name), Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
+            Class<?> reflectedContextCard = reflectedContext.getClassLoader().loadClass(contextCardClass);
+            Object contextCard = reflectedContextCard.newInstance();
+            Method getContextCard = contextCard.getClass().getDeclaredMethod("getContextCard", Context.class);
+            getContextCard.setAccessible(true);
 
-            View ui = null;
-            try {
-                ui = (View) m.invoke(fragment, packageContext);
-            } catch (InvocationTargetException e) {
-                Log.d(TAG, e.getCause().getMessage());
-                return ui;
-            }
-
+            View ui = (View) getContextCard.invoke(contextCard, reflectedContext);
             if (ui != null) {
-                ui.setId(new Random(System.currentTimeMillis()).nextInt());
                 ui.setBackgroundColor(Color.WHITE);
                 ui.setPadding(0, 0, 0, 10);
 
                 LinearLayout card = new LinearLayout(context);
-                card.setId(new Random(System.currentTimeMillis()).nextInt());
 
                 LinearLayout.LayoutParams card_params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                 card.setLayoutParams(card_params);
                 card.setOrientation(LinearLayout.VERTICAL);
 
                 LinearLayout info = new LinearLayout(context);
-                info.setId(new Random(System.currentTimeMillis()).nextInt());
-
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
                 info.setLayoutParams(params);
                 info.setOrientation(LinearLayout.HORIZONTAL);
                 info.setBackgroundColor(Color.parseColor("#33B5E5"));
 
                 TextView plugin_header = new TextView(context);
-                plugin_header.setId(new Random(System.currentTimeMillis()).nextInt());
-
                 plugin_header.setText(PluginsManager.getPluginName(context, package_name));
                 plugin_header.setTextColor(Color.WHITE);
-                plugin_header.setPadding(10, 0, 0, 0);
+                plugin_header.setPadding(16, 0, 0, 0);
                 params.gravity = android.view.Gravity.CENTER_VERTICAL;
                 plugin_header.setLayoutParams(params);
                 info.addView(plugin_header);
@@ -879,27 +865,27 @@ public class Aware extends Service {
                 //Check if plugin has settings. Add button if it does.
                 if (isClassAvailable(context, package_name, "Settings")) {
                     ImageView infoSettings = new ImageView(context);
-                    infoSettings.setId(new Random(System.currentTimeMillis()).nextInt());
-
                     infoSettings.setBackgroundResource(R.drawable.ic_action_plugin_settings);
-                    infoSettings.setAdjustViewBounds(true);
-                    infoSettings.setMaxWidth(10);
                     infoSettings.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-
-                            String bundled_package = "";
+                            boolean is_bundled = false;
                             PackageInfo pkg = PluginsManager.isInstalled(context, package_name);
                             if (pkg != null && pkg.versionName.equals("bundled")) {
-                                bundled_package = context.getPackageName();
+                                is_bundled = true;
                             }
 
                             Intent open_settings = new Intent();
-                            open_settings.setComponent(new ComponentName(((bundled_package.length() > 0) ? bundled_package : package_name), package_name + ".Settings"));
+                            open_settings.setComponent(new ComponentName(((is_bundled) ? context.getPackageName() : package_name ), package_name + ".Settings"));
                             open_settings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                             context.startActivity(open_settings);
                         }
                     });
+                    ViewGroup.LayoutParams paramsHeader = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                    paramsHeader.height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 46, context.getResources().getDisplayMetrics());
+                    paramsHeader.width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 46, context.getResources().getDisplayMetrics());
+                    infoSettings.setLayoutParams(paramsHeader);
+
                     info.addView(infoSettings);
 
                     //Add settings shortcut to card
@@ -911,23 +897,11 @@ public class Aware extends Service {
 
                 return card;
             } else {
-                return null;
+                return new View(context);
             }
-        } catch (NameNotFoundException e) {
-            Log.d(TAG, e.getCause().getMessage());
-        } catch (ClassNotFoundException e) {
-            Log.d(TAG, e.getCause().getMessage());
-        } catch (IllegalAccessException e) {
-            Log.d(TAG, e.getCause().getMessage());
-        } catch (IllegalArgumentException e) {
-            Log.d(TAG, e.getCause().getMessage());
-        } catch (NullPointerException e) {
-            Log.d(TAG, e.getCause().getMessage());
-        } catch (InstantiationException e) {
-            Log.d(TAG, e.getCause().getMessage());
+        } catch (InstantiationException | NoSuchMethodException | NameNotFoundException | IllegalAccessException | ClassNotFoundException | InvocationTargetException e) {
+            return new View(context);
         }
-
-        return null;
     }
 
     /**
@@ -1360,7 +1334,7 @@ public class Aware extends Service {
                             if (PluginsManager.isInstalled(c, enabled.getJSONObject(i).getString("plugin")) != null) {
                                 Aware.startPlugin(c, enabled.getJSONObject(i).getString("plugin"));
                             } else
-                                Aware.downloadPlugin(c, enabled.getJSONObject(i).getString("plugin"), false);
+                                Aware.downloadPlugin(c, enabled.getJSONObject(i).getString("plugin"), null, false);
                         }
 
                         for (int i = 0; i < disabled.length(); i++) {

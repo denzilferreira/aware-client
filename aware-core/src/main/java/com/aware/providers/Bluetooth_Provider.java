@@ -109,33 +109,14 @@ public class Bluetooth_Provider extends ContentProvider {
             + Bluetooth_Data.BT_LABEL + " text default ''"
     };
 
-    private static UriMatcher sUriMatcher = null;
-    private static HashMap<String, String> bluetoothDeviceMap = null;
-    private static HashMap<String, String> bluetoothDataMap = null;
-    private static DatabaseHelper databaseHelper = null;
-    private static SQLiteDatabase database = null;
+    private UriMatcher sUriMatcher = null;
+    private HashMap<String, String> bluetoothDeviceMap = null;
+    private HashMap<String, String> bluetoothDataMap = null;
+    private DatabaseHelper databaseHelper = null;
 
-    private boolean initializeDB() {
+    private void initializeDB() {
         if (databaseHelper == null) {
             databaseHelper = new DatabaseHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
-        }
-        if (databaseHelper != null && (database == null || !database.isOpen())) {
-            database = databaseHelper.getWritableDatabase();
-        }
-        return (database != null && databaseHelper != null);
-    }
-
-    /**
-     * Recreates the ContentProvider
-     */
-    public static void resetDB(Context c) {
-        Log.d("AWARE", "Resetting " + DATABASE_NAME + "...");
-
-        File db = new File(DATABASE_NAME);
-        db.delete();
-        databaseHelper = new DatabaseHelper(c, DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
-        if (databaseHelper != null) {
-            database = databaseHelper.getWritableDatabase();
         }
     }
 
@@ -144,30 +125,31 @@ public class Bluetooth_Provider extends ContentProvider {
      */
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        if (!initializeDB()) {
-            Log.w(AUTHORITY, "Database unavailable...");
-            return 0;
-        }
+        initializeDB();
 
-        int count = 0;
+        SQLiteDatabase database = databaseHelper.getWritableDatabase();
+        if (database == null) return 0;
+
+        //lock database for transaction
+        database.beginTransaction();
+
+        int count;
         switch (sUriMatcher.match(uri)) {
             case BT_DEV:
-                database.beginTransaction();
                 count = database.delete(DATABASE_TABLES[0], selection,
                         selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
                 break;
             case BT_DATA:
-                database.beginTransaction();
                 count = database.delete(DATABASE_TABLES[1], selection,
                         selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
                 break;
             default:
+                database.endTransaction();
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
+
+        database.setTransactionSuccessful();
+        database.endTransaction();
 
         getContext().getContentResolver().notifyChange(uri, null);
         return count;
@@ -194,17 +176,17 @@ public class Bluetooth_Provider extends ContentProvider {
      */
     @Override
     public Uri insert(Uri uri, ContentValues initialValues) {
-        if (!initializeDB()) {
-            Log.w(AUTHORITY, "Database unavailable...");
-            return null;
-        }
+        initializeDB();
 
-        ContentValues values = (initialValues != null) ? new ContentValues(
-                initialValues) : new ContentValues();
+        SQLiteDatabase database = databaseHelper.getWritableDatabase();
+        if (database == null) return null;
+
+        ContentValues values = (initialValues != null) ? new ContentValues(initialValues) : new ContentValues();
+
+        database.beginTransaction();
 
         switch (sUriMatcher.match(uri)) {
             case BT_DEV:
-                database.beginTransaction();
                 long rowId = database.insertWithOnConflict(DATABASE_TABLES[0],
                         Bluetooth_Sensor.BT_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
                 database.setTransactionSuccessful();
@@ -216,9 +198,9 @@ public class Bluetooth_Provider extends ContentProvider {
                             null);
                     return bluetoothUri;
                 }
+                database.endTransaction();
                 throw new SQLException("Failed to insert row into " + uri);
             case BT_DATA:
-                database.beginTransaction();
                 long btId = database.insertWithOnConflict(DATABASE_TABLES[1],
                         Bluetooth_Data.BT_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
                 database.setTransactionSuccessful();
@@ -230,9 +212,10 @@ public class Bluetooth_Provider extends ContentProvider {
                             null);
                     return bluetoothUri;
                 }
+                database.endTransaction();
                 throw new SQLException("Failed to insert row into " + uri);
             default:
-
+                database.endTransaction();
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
     }
@@ -284,10 +267,10 @@ public class Bluetooth_Provider extends ContentProvider {
     public Cursor query(Uri uri, String[] projection, String selection,
                         String[] selectionArgs, String sortOrder) {
 
-        if (!initializeDB()) {
-            Log.w(AUTHORITY, "Database unavailable...");
-            return null;
-        }
+        initializeDB();
+
+        SQLiteDatabase database = databaseHelper.getReadableDatabase();
+        if (database == null) return null;
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
 
@@ -301,7 +284,6 @@ public class Bluetooth_Provider extends ContentProvider {
                 qb.setProjectionMap(bluetoothDataMap);
                 break;
             default:
-
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
         try {
@@ -324,30 +306,31 @@ public class Bluetooth_Provider extends ContentProvider {
     public int update(Uri uri, ContentValues values, String selection,
                       String[] selectionArgs) {
 
-        if (!initializeDB()) {
-            Log.w(AUTHORITY, "Database unavailable...");
-            return 0;
-        }
+        initializeDB();
+
+        SQLiteDatabase database = databaseHelper.getWritableDatabase();
+        if (database == null) return 0;
+
+        database.beginTransaction();
 
         int count = 0;
         switch (sUriMatcher.match(uri)) {
             case BT_DEV:
-                database.beginTransaction();
                 count = database.update(DATABASE_TABLES[0], values, selection,
                         selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
                 break;
             case BT_DATA:
-                database.beginTransaction();
                 count = database.update(DATABASE_TABLES[1], values, selection,
                         selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
                 break;
             default:
+                database.endTransaction();
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
+
+        database.setTransactionSuccessful();
+        database.endTransaction();
+
         getContext().getContentResolver().notifyChange(uri, null);
         return count;
     }
