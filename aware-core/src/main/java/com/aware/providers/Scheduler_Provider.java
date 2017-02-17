@@ -70,6 +70,7 @@ public class Scheduler_Provider extends ContentProvider {
     private HashMap<String, String> dataMap = null;
 
     private DatabaseHelper databaseHelper = null;
+    private SQLiteDatabase database = null;
 
     private void initializeDB() {
         if (databaseHelper == null) {
@@ -85,8 +86,7 @@ public class Scheduler_Provider extends ContentProvider {
 
         initializeDB();
 
-        SQLiteDatabase database = databaseHelper.getWritableDatabase();
-        if (database == null) return 0;
+        if (database == null || database.isReadOnly()) database = databaseHelper.getWritableDatabase();
 
         database.beginTransaction();
 
@@ -127,8 +127,7 @@ public class Scheduler_Provider extends ContentProvider {
     public Uri insert(Uri uri, ContentValues initialValues) {
         initializeDB();
 
-        SQLiteDatabase database = databaseHelper.getWritableDatabase();
-        if (database == null) return null;
+        if (database == null || database.isReadOnly()) database = databaseHelper.getWritableDatabase();
 
         ContentValues values = (initialValues != null) ? new ContentValues(initialValues) : new ContentValues();
 
@@ -180,8 +179,7 @@ public class Scheduler_Provider extends ContentProvider {
 
         initializeDB();
 
-        SQLiteDatabase database = databaseHelper.getReadableDatabase();
-        if (database == null) return null;
+        if (database == null || !database.isReadOnly()) database = databaseHelper.getReadableDatabase();
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         switch (sUriMatcher.match(uri)) {
@@ -210,8 +208,7 @@ public class Scheduler_Provider extends ContentProvider {
 
         initializeDB();
 
-        SQLiteDatabase database = databaseHelper.getWritableDatabase();
-        if (database == null) return 0;
+        if (database == null || database.isReadOnly()) database = databaseHelper.getWritableDatabase();
 
         database.beginTransaction();
 

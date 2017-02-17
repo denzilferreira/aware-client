@@ -649,6 +649,12 @@ public class Scheduler extends Aware_Sensor {
          */
         public int getDailyLatest() throws JSONException {
             JSONArray hours = getHours();
+
+            //Handle case when random is requested without a time frame
+            if (hours.length() == 0) {
+                return 23;
+            }
+
             int max = 0;
             for (int i = 0; i < hours.length(); i++) {
                 if (hours.getInt(i) >= max) max = hours.getInt(i);
@@ -667,6 +673,12 @@ public class Scheduler extends Aware_Sensor {
          */
         public int getDailyEarliest() throws JSONException {
             JSONArray hours = getHours();
+
+            //Handle case when random is requested without a time frame
+            if (hours.length() == 0) {
+                return 0;
+            }
+
             int min = 23;
             for (int i = 0; i < hours.length(); i++) {
                 if (hours.getInt(i) <= min) min = hours.getInt(i);
