@@ -109,7 +109,6 @@ public class Scheduler extends Aware_Sensor {
     public static void saveSchedule(Context context, Schedule schedule) {
         try {
             ArrayList<String> global_settings = new ArrayList<>();
-            global_settings.add(Aware.SCHEDULE_SPACE_MAINTENANCE);
             global_settings.add(Aware.SCHEDULE_SYNC_DATA);
 
             boolean is_global = global_settings.contains(schedule.getScheduleID());
@@ -376,7 +375,6 @@ public class Scheduler extends Aware_Sensor {
     public static void removeSchedule(Context context, String schedule_id) {
 
         ArrayList<String> global_settings = new ArrayList<>();
-        global_settings.add(Aware.SCHEDULE_SPACE_MAINTENANCE);
         global_settings.add(Aware.SCHEDULE_SYNC_DATA);
 
         boolean is_global = global_settings.contains(schedule_id);
@@ -412,7 +410,6 @@ public class Scheduler extends Aware_Sensor {
     public static Schedule getSchedule(Context context, String schedule_id) {
 
         ArrayList<String> global_settings = new ArrayList<>();
-        global_settings.add(Aware.SCHEDULE_SPACE_MAINTENANCE);
         global_settings.add(Aware.SCHEDULE_SYNC_DATA);
 
         boolean is_global = global_settings.contains(schedule_id);
