@@ -166,7 +166,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static List<String> getColumns(SQLiteDatabase db, String tableName) {
         List<String> columns = null;
         Cursor database_meta = db.rawQuery("SELECT * FROM " + tableName + " LIMIT 1", null);
-        if (database_meta != null && database_meta.moveToFirst()) {
+        if (database_meta != null) {
             columns = new ArrayList<>(Arrays.asList(database_meta.getColumnNames()));
         }
         if (database_meta != null && !database_meta.isClosed()) database_meta.close();
