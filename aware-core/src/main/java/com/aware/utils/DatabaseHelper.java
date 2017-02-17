@@ -6,15 +6,12 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
-import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.aware.Aware;
-import com.aware.Aware_Preferences;
 import com.aware.R;
 
 import org.json.JSONArray;
@@ -37,33 +34,35 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private final boolean DEBUG = true;
 
-    private final String TAG = "AwareDBHelper";
-
-    private final String database_name;
-    private final String[] database_tables;
-    private final String[] table_fields;
-    private final int new_version;
-    private final CursorFactory cursor_factory;
+    private String TAG = "AwareDBHelper";
+    private String databaseName;
+    private String[] databaseTables;
+    private String[] tableFields;
+    private int newVersion;
+    private CursorFactory cursorFactory;
+    private SQLiteDatabase database;
 
     private HashMap<String, String> renamed_columns = new HashMap<>();
-
     private Context mContext;
-    private SQLiteDatabase database;
+
+    private static DatabaseHelper mSelf;
 
     public DatabaseHelper(Context context, String database_name, CursorFactory cursor_factory, int database_version, String[] database_tables, String[] table_fields) {
         super(context, database_name, cursor_factory, database_version);
 
-        if (DEBUG)
-            Log.d(TAG, "Loading: " + database_name + "... version: " + database_version);
-
-        this.mContext = context;
-        this.database_name = database_name;
-        this.database_tables = database_tables;
-        this.table_fields = table_fields;
-        this.new_version = database_version;
-        this.cursor_factory = cursor_factory;
-
+        mContext = context;
+        databaseName = database_name;
+        databaseTables = database_tables;
+        tableFields = table_fields;
+        newVersion = database_version;
+        cursorFactory = cursor_factory;
         database = getWritableDatabase();
+    }
+
+    public static synchronized DatabaseHelper getDatabaseHelper(Context context, String database_name, CursorFactory cursor_factory, int database_version, String[] database_tables, String[] table_fields) {
+        if (mSelf == null)
+            mSelf = new DatabaseHelper(context, database_name, cursor_factory, database_version, database_tables, table_fields);
+        return mSelf;
     }
 
     public void setRenamedColumns(HashMap<String, String> renamed) {
@@ -74,29 +73,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         if (DEBUG) Log.w(TAG, "Creating database: " + db.getPath());
 
-        for (int i = 0; i < database_tables.length; i++) {
-            db.execSQL("CREATE TABLE IF NOT EXISTS " + database_tables[i] + " (" + table_fields[i] + ");");
-            db.execSQL("CREATE INDEX IF NOT EXISTS time_device ON " + database_tables[i] + " (timestamp, device_id);");
+        for (int i = 0; i < databaseTables.length; i++) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS " + databaseTables[i] + " (" + tableFields[i] + ");");
+            db.execSQL("CREATE INDEX IF NOT EXISTS time_device ON " + databaseTables[i] + " (timestamp, device_id);");
         }
-        db.setVersion(new_version);
+        db.setVersion(newVersion);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (DEBUG) Log.w(TAG, "Upgrading database: " + db.getPath());
 
-        for (int i = 0; i < database_tables.length; i++) {
-            db.execSQL("CREATE TABLE IF NOT EXISTS " + database_tables[i] + " (" + table_fields[i] + ");");
+        for (int i = 0; i < databaseTables.length; i++) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS " + databaseTables[i] + " (" + tableFields[i] + ");");
 
             //Modify existing tables if there are changes, while retaining old data. This also works for brand new tables, where nothing is changed.
-            List<String> columns = getColumns(db, database_tables[i]);
+            List<String> columns = getColumns(db, databaseTables[i]);
 
-            db.execSQL("ALTER TABLE " + database_tables[i] + " RENAME TO temp_" + database_tables[i] + ";");
+            db.execSQL("ALTER TABLE " + databaseTables[i] + " RENAME TO temp_" + databaseTables[i] + ";");
 
-            db.execSQL("CREATE TABLE " + database_tables[i] + " (" + table_fields[i] + ");");
-            db.execSQL("CREATE INDEX IF NOT EXISTS time_device ON " + database_tables[i] + " (timestamp, device_id);");
+            db.execSQL("CREATE TABLE " + databaseTables[i] + " (" + tableFields[i] + ");");
+            db.execSQL("CREATE INDEX IF NOT EXISTS time_device ON " + databaseTables[i] + " (timestamp, device_id);");
 
-            columns.retainAll(getColumns(db, database_tables[i]));
+            columns.retainAll(getColumns(db, databaseTables[i]));
 
             String cols = TextUtils.join(",", columns);
             String new_cols = cols;
@@ -110,12 +109,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
             //restore old data back
             if (DEBUG)
-                Log.d(TAG, String.format("INSERT INTO %s (%s) SELECT %s from temp_%s;", database_tables[i], new_cols, cols, database_tables[i]));
+                Log.d(TAG, String.format("INSERT INTO %s (%s) SELECT %s from temp_%s;", databaseTables[i], new_cols, cols, databaseTables[i]));
 
-            db.execSQL(String.format("INSERT INTO %s (%s) SELECT %s from temp_%s;", database_tables[i], new_cols, cols, database_tables[i]));
-            db.execSQL("DROP TABLE temp_" + database_tables[i] + ";");
+            db.execSQL(String.format("INSERT INTO %s (%s) SELECT %s from temp_%s;", databaseTables[i], new_cols, cols, databaseTables[i]));
+            db.execSQL("DROP TABLE temp_" + databaseTables[i] + ";");
         }
-        db.setVersion(new_version);
+        db.setVersion(newVersion);
     }
 
     /**
@@ -185,25 +184,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }
         }
         try {
-            database = getDatabase(false);
+            database = getDatabaseFile();
             int current_version = database.getVersion();
-            if (current_version != new_version) {
-
+            if (current_version != newVersion) {
                 database.beginTransaction();
-
                 try {
                     if (current_version == 0) {
                         onCreate(database);
                     } else {
-                        onUpgrade(database, current_version, new_version);
+                        onUpgrade(database, current_version, newVersion);
                     }
-
                     database.setTransactionSuccessful();
-
                 } finally {
                     database.endTransaction();
                 }
             }
+
+            onOpen(database);
             return database;
         } catch (SQLException e) {
             return null;
@@ -215,12 +212,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (database != null) {
             if (!database.isOpen()) {
                 database = null;
-            } else if (database.isReadOnly()) {
-                return database;
             }
         }
         try {
-            database = getDatabase(true);
+            database = getDatabaseFile();
+            onOpen(database);
             return database;
         } catch (SQLException e) {
             return null;
@@ -230,10 +226,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     /**
      * Retuns the SQLiteDatabase
      *
-     * @param readOnly
      * @return
      */
-    private synchronized SQLiteDatabase getDatabase(boolean readOnly) {
+    private synchronized SQLiteDatabase getDatabaseFile() {
         File aware_folder;
         if (!mContext.getResources().getBoolean(R.bool.standalone)) {
             aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString()); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
@@ -245,9 +240,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             aware_folder.mkdirs();
         }
 
-        if (readOnly) {
-            return SQLiteDatabase.openDatabase(new File(aware_folder, this.database_name).getPath(), this.cursor_factory, SQLiteDatabase.OPEN_READONLY);
-        }
-        return SQLiteDatabase.openDatabase(new File(aware_folder, this.database_name).getPath(), this.cursor_factory, SQLiteDatabase.OPEN_READWRITE);
+        database = SQLiteDatabase.openOrCreateDatabase(new File(aware_folder, this.databaseName).getPath(), this.cursorFactory);
+        return database;
     }
 }

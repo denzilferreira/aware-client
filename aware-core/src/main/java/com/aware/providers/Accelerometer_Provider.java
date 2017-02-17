@@ -49,8 +49,6 @@ public class Accelerometer_Provider extends ContentProvider {
     private UriMatcher sUriMatcher;
     private HashMap<String, String> accelDeviceMap;
     private HashMap<String, String> accelDataMap;
-    private DatabaseHelper databaseHelper;
-    private SQLiteDatabase database;
 
     /**
      * Accelerometer device info
@@ -129,10 +127,14 @@ public class Accelerometer_Provider extends ContentProvider {
                     + Accelerometer_Data.ACCURACY + " integer default 0,"
                     + Accelerometer_Data.LABEL + " text default ''"};
 
-    private void initializeDB() {
-        if (databaseHelper == null) {
-            databaseHelper = new DatabaseHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
-        }
+    private static DatabaseHelper dbHelper;
+    private static SQLiteDatabase database;
+
+    private void initialiseDatabase() {
+        if (dbHelper == null)
+            dbHelper = new DatabaseHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
+        if (database == null)
+            database = dbHelper.getWritableDatabase();
     }
 
     /**
@@ -141,9 +143,7 @@ public class Accelerometer_Provider extends ContentProvider {
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
 
-        initializeDB();
-
-        if (database == null || database.isReadOnly()) database = databaseHelper.getWritableDatabase();
+        initialiseDatabase();
 
         database.beginTransaction();
 
@@ -190,9 +190,7 @@ public class Accelerometer_Provider extends ContentProvider {
     @Override
     public Uri insert(Uri uri, ContentValues initialValues) {
 
-        initializeDB();
-
-        if (database == null || database.isReadOnly()) database = databaseHelper.getWritableDatabase();
+        initialiseDatabase();
 
         ContentValues values = (initialValues != null) ? new ContentValues(initialValues) : new ContentValues();
 
@@ -237,9 +235,7 @@ public class Accelerometer_Provider extends ContentProvider {
     @Override
     public int bulkInsert(Uri uri, ContentValues[] values) {
 
-        initializeDB();
-
-        if (database == null || database.isReadOnly()) database = databaseHelper.getWritableDatabase();
+        initialiseDatabase();
 
         database.beginTransaction();
 
@@ -321,6 +317,8 @@ public class Accelerometer_Provider extends ContentProvider {
         accelDataMap.put(Accelerometer_Data.ACCURACY, Accelerometer_Data.ACCURACY);
         accelDataMap.put(Accelerometer_Data.LABEL, Accelerometer_Data.LABEL);
 
+        initialiseDatabase();
+
         return true;
     }
 
@@ -330,9 +328,7 @@ public class Accelerometer_Provider extends ContentProvider {
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 
-        initializeDB();
-
-        if (database == null || database.isReadOnly()) database = databaseHelper.getReadableDatabase();
+        initialiseDatabase();
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         switch (sUriMatcher.match(uri)) {
@@ -363,9 +359,7 @@ public class Accelerometer_Provider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 
-        initializeDB();
-
-        if (database == null || database.isReadOnly()) database = databaseHelper.getWritableDatabase();
+        initialiseDatabase();
 
         database.beginTransaction();
 

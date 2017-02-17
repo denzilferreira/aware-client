@@ -222,13 +222,14 @@ public class Aware_Provider extends ContentProvider {
     private HashMap<String, String> studiesMap;
     private HashMap<String, String> logMap;
 
-    private DatabaseHelper databaseHelper = null;
-    private SQLiteDatabase database = null;
+    private static DatabaseHelper dbHelper;
+    private static SQLiteDatabase database;
 
-    private void initializeDB() {
-        if (databaseHelper == null) {
-            databaseHelper = new DatabaseHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
-        }
+    private void initialiseDatabase() {
+        if (dbHelper == null)
+            dbHelper = new DatabaseHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
+        if (database == null)
+            database = dbHelper.getWritableDatabase();
     }
 
     /**
@@ -237,9 +238,7 @@ public class Aware_Provider extends ContentProvider {
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
 
-        initializeDB();
-
-        if (database == null || database.isReadOnly()) database = databaseHelper.getWritableDatabase();
+        initialiseDatabase();
 
         database.beginTransaction();
 
@@ -307,9 +306,7 @@ public class Aware_Provider extends ContentProvider {
     @Override
     public Uri insert(Uri uri, ContentValues initialValues) {
 
-        initializeDB();
-
-        if (database == null || database.isReadOnly()) database = databaseHelper.getWritableDatabase();
+        initialiseDatabase();
 
         ContentValues values = (initialValues != null) ? new ContentValues(initialValues) : new ContentValues();
 
@@ -450,6 +447,8 @@ public class Aware_Provider extends ContentProvider {
         logMap.put(Aware_Log.LOG_DEVICE_ID, Aware_Log.LOG_DEVICE_ID);
         logMap.put(Aware_Log.LOG_MESSAGE, Aware_Log.LOG_MESSAGE);
 
+        initialiseDatabase();
+
         return true;
     }
 
@@ -460,9 +459,7 @@ public class Aware_Provider extends ContentProvider {
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 
-        initializeDB();
-
-        if (database == null || !database.isReadOnly()) database = databaseHelper.getReadableDatabase();
+        initialiseDatabase();
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         switch (sUriMatcher.match(uri)) {
@@ -505,9 +502,7 @@ public class Aware_Provider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 
-        initializeDB();
-
-        if (database == null || database.isReadOnly()) database = databaseHelper.getWritableDatabase();
+        initialiseDatabase();
 
         database.beginTransaction();
 

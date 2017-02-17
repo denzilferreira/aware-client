@@ -73,12 +73,15 @@ public class Keyboard_Provider extends ContentProvider {
 
     private UriMatcher sUriMatcher = null;
     private HashMap<String, String> dataMap = null;
-    private DatabaseHelper databaseHelper = null;
 
-    private void initializeDB() {
-        if (databaseHelper == null) {
-            databaseHelper = new DatabaseHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
-        }
+    private static DatabaseHelper dbHelper;
+    private static SQLiteDatabase database;
+
+    private void initialiseDatabase() {
+        if (dbHelper == null)
+            dbHelper = new DatabaseHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
+        if (database == null)
+            database = dbHelper.getWritableDatabase();
     }
 
     /**
@@ -87,10 +90,7 @@ public class Keyboard_Provider extends ContentProvider {
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
 
-        initializeDB();
-
-        SQLiteDatabase database = databaseHelper.getWritableDatabase();
-        if (database == null) return 0;
+        initialiseDatabase();
 
         //lock database for transaction
         database.beginTransaction();
@@ -132,10 +132,7 @@ public class Keyboard_Provider extends ContentProvider {
     @Override
     public Uri insert(Uri uri, ContentValues initialValues) {
 
-        initializeDB();
-
-        SQLiteDatabase database = databaseHelper.getWritableDatabase();
-        if (database == null) return null;
+        initialiseDatabase();
 
         ContentValues values = (initialValues != null) ? new ContentValues(initialValues) : new ContentValues();
 
@@ -187,6 +184,8 @@ public class Keyboard_Provider extends ContentProvider {
         dataMap.put(Keyboard_Data.IS_PASSWORD,
                 Keyboard_Data.IS_PASSWORD);
 
+        initialiseDatabase();
+
         return true;
     }
 
@@ -197,10 +196,7 @@ public class Keyboard_Provider extends ContentProvider {
     public Cursor query(Uri uri, String[] projection, String selection,
                         String[] selectionArgs, String sortOrder) {
 
-        initializeDB();
-
-        SQLiteDatabase database = databaseHelper.getReadableDatabase();
-        if (database == null) return null;
+        initialiseDatabase();
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         switch (sUriMatcher.match(uri)) {
@@ -230,10 +226,7 @@ public class Keyboard_Provider extends ContentProvider {
     public int update(Uri uri, ContentValues values, String selection,
                       String[] selectionArgs) {
 
-        initializeDB();
-
-        SQLiteDatabase database = databaseHelper.getWritableDatabase();
-        if (database == null) return 0;
+        initialiseDatabase();
 
         database.beginTransaction();
 
