@@ -191,7 +191,6 @@ public class Light extends Aware_Sensor implements SensorEventListener {
 
             if (Aware.DEBUG) Log.d(TAG, "Light sensor info: " + rowData.toString());
         }
-
         if (sensorInfo != null && !sensorInfo.isClosed()) sensorInfo.close();
     }
 

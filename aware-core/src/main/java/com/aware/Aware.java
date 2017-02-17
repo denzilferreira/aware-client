@@ -138,12 +138,6 @@ public class Aware extends Service {
     public static final String EXTRA_PLUGIN = "extra_plugin";
 
     /**
-     * Received broadcast on all modules
-     * - Cleans old data from the content providers
-     */
-    public static final String ACTION_AWARE_SPACE_MAINTENANCE = "ACTION_AWARE_SPACE_MAINTENANCE";
-
-    /**
      * Used by Plugin Manager to refresh UI
      */
     public static final String ACTION_AWARE_UPDATE_PLUGINS_INFO = "ACTION_AWARE_UPDATE_PLUGINS_INFO";
@@ -166,7 +160,6 @@ public class Aware extends Service {
     /**
      * Used on the scheduler class to define global schedules for AWARE, SYNC and SPACE MAINTENANCE actions
      */
-    public static final String SCHEDULE_SPACE_MAINTENANCE = "schedule_aware_space_maintenance";
     public static final String SCHEDULE_SYNC_DATA = "schedule_aware_sync_data";
     public static final String SCHEDULE_STUDY_COMPLIANCE = "schedule_aware_study_compliance";
     public static final String SCHEDULE_KEEP_ALIVE = "schedule_aware_keep_alive";
@@ -638,59 +631,6 @@ public class Aware extends Service {
                             e.printStackTrace();
                         }
                     }
-                }
-            }
-
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0) {
-                String[] frequency = new String[]{"never", "weekly", "monthly", "daily", "always"};
-                int frequency_space_maintenance = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA));
-
-                if (DEBUG && frequency_space_maintenance != 0)
-                    Log.d(TAG, "Space maintenance is: " + frequency[frequency_space_maintenance]);
-
-                try {
-                    if (frequency_space_maintenance == 0 || frequency_space_maintenance == 4) { //if always, we clear old data as soon as we upload to server
-                        Scheduler.removeSchedule(getApplicationContext(), SCHEDULE_SPACE_MAINTENANCE);
-                    } else {
-                        Scheduler.Schedule cleanup = new Scheduler.Schedule(SCHEDULE_SPACE_MAINTENANCE);
-                        switch (frequency_space_maintenance) {
-                            case 1: //weekly, by default every Sunday
-                                cleanup.addWeekday("Sunday")
-                                        .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                        .setActionIntentAction(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
-                                break;
-                            case 2: //monthly
-                                cleanup.addMonth("January")
-                                        .addMonth("February")
-                                        .addMonth("March")
-                                        .addMonth("April")
-                                        .addMonth("May")
-                                        .addMonth("June")
-                                        .addMonth("July")
-                                        .addMonth("August")
-                                        .addMonth("September")
-                                        .addMonth("October")
-                                        .addMonth("November")
-                                        .addMonth("December")
-                                        .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                        .setActionIntentAction(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
-                                break;
-                            case 3: //daily
-                                cleanup.addWeekday("Monday")
-                                        .addWeekday("Tuesday")
-                                        .addWeekday("Wednesday")
-                                        .addWeekday("Thursday")
-                                        .addWeekday("Friday")
-                                        .addWeekday("Saturday")
-                                        .addWeekday("Sunday")
-                                        .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                        .setActionIntentAction(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
-                                break;
-                        }
-                        Scheduler.saveSchedule(getApplicationContext(), cleanup);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
             }
         } else {
@@ -1624,8 +1564,6 @@ public class Aware extends Service {
                         complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
                         complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "rejoined study. abandoning previous");
 
-                        dbStudy.close();
-
                         //Update the information to the latest
                         ContentValues studyData = new ContentValues();
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
@@ -1645,6 +1583,8 @@ public class Aware extends Service {
                             Log.d(Aware.TAG, "Rejoined study data: " + studyData.toString());
                         }
                     }
+
+                    if (dbStudy != null && !dbStudy.isClosed()) dbStudy.close();
 
                     //Apply study settings
                     JSONArray plugins = new JSONArray();
@@ -1778,6 +1718,7 @@ public class Aware extends Service {
             } while (enabled_plugins.moveToNext());
         }
         if (enabled_plugins != null && !enabled_plugins.isClosed()) enabled_plugins.close();
+
         if (active_plugins.size() > 0) {
             for (String package_name : active_plugins) {
                 stopPlugin(context, package_name);
@@ -1879,8 +1820,8 @@ public class Aware extends Service {
                         if (current_status.getInt(current_status.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == PluginsManager.PLUGIN_UPDATED) { //was updated, set to active now
                             rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
                         }
-                        current_status.close();
                     }
+                    if ( current_status != null && ! current_status.isClosed()) current_status.close();
 
                     context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
 

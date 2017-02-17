@@ -481,8 +481,6 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
 
                         getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
 
-                        dbStudy.close();
-
                         //Update the information to the latest
                         ContentValues studyData = new ContentValues();
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
@@ -502,6 +500,8 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                             Log.d(Aware.TAG, "Rejoined study data: " + studyData.toString());
                         }
                     }
+
+                    if (dbStudy != null && !dbStudy.isClosed()) dbStudy.close();
 
                     Intent study_scan = new Intent();
                     study_scan.putExtra(Aware_Join_Study.EXTRA_STUDY_URL, study_url);

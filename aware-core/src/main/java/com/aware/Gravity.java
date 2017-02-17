@@ -205,7 +205,6 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
 
             if (Aware.DEBUG) Log.d(TAG, "Gravity sensor: " + rowData.toString());
         }
-
         if (sensorInfo != null && !sensorInfo.isClosed()) sensorInfo.close();
     }
 

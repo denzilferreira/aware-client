@@ -249,16 +249,16 @@ public class Installations extends Aware_Sensor {
                     Cursor get_application_info = context.getContentResolver().query(Installations_Data.CONTENT_URI, new String[]{Installations_Data.APPLICATION_NAME}, Installations_Data.PACKAGE_NAME + " like '" + packageName + "'", null, Installations_Data.TIMESTAMP + " DESC LIMIT 1");
                     if (get_application_info != null && get_application_info.moveToFirst()) {
                         appName = get_application_info.getString(get_application_info.getColumnIndex(Applications_History.APPLICATION_NAME));
-                        get_application_info.close();
                     }
+                    if (get_application_info != null && ! get_application_info.isClosed()) get_application_info.close();
 
                     if (appName.length() == 0) {
                         //try application history as last resort
                         get_application_info = context.getContentResolver().query(Applications_History.CONTENT_URI, new String[]{Applications_History.APPLICATION_NAME}, Applications_History.PACKAGE_NAME + " like '" + packageName + "'", null, Applications_History.TIMESTAMP + " DESC LIMIT 1");
                         if (get_application_info != null && get_application_info.moveToFirst()) {
                             appName = get_application_info.getString(get_application_info.getColumnIndex(Applications_History.APPLICATION_NAME));
-                            get_application_info.close();
                         }
+                        if (get_application_info != null && ! get_application_info.isClosed()) get_application_info.close();
                     }
 
                     ContentValues rowData = new ContentValues();

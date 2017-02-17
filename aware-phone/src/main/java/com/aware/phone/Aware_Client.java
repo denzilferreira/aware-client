@@ -158,6 +158,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         if (EditTextPreference.class.isInstance(pref)) {
             EditTextPreference text = (EditTextPreference) findPreference(key);
             text.setSummary(Aware.getSetting(getApplicationContext(), key));
+            text.setText(Aware.getSetting(getApplicationContext(), key));
         }
         if (ListPreference.class.isInstance(pref)) {
             ListPreference list = (ListPreference) findPreference(key);
@@ -206,6 +207,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
 
             if (EditTextPreference.class.isInstance(pref)) {
                 EditTextPreference text = (EditTextPreference) findPreference(pref.getKey());
+                text.setText(Aware.getSetting(getApplicationContext(), pref.getKey()));
                 text.setSummary(Aware.getSetting(getApplicationContext(), pref.getKey()));
             }
 
@@ -354,7 +356,18 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                     findPreference(Aware_Preferences.STATUS_TELEPHONY),
                     findPreference(Aware_Preferences.STATUS_WIFI),
                     findPreference(Aware_Preferences.STATUS_MQTT),
-                    findPreference(Aware_Preferences.STATUS_WEBSERVICE));
+                    findPreference(Aware_Preferences.MQTT_SERVER),
+                    findPreference(Aware_Preferences.MQTT_PORT),
+                    findPreference(Aware_Preferences.MQTT_USERNAME),
+                    findPreference(Aware_Preferences.MQTT_PASSWORD),
+                    findPreference(Aware_Preferences.MQTT_KEEP_ALIVE),
+                    findPreference(Aware_Preferences.MQTT_QOS),
+                    findPreference(Aware_Preferences.MQTT_PROTOCOL),
+                    findPreference(Aware_Preferences.STATUS_WEBSERVICE),
+                    findPreference(Aware_Preferences.WEBSERVICE_SERVER),
+                    findPreference(Aware_Preferences.FREQUENCY_WEBSERVICE),
+                    findPreference(Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA)
+            );
         }
     }
 

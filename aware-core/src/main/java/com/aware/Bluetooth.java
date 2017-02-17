@@ -11,6 +11,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -23,6 +24,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
@@ -53,7 +55,7 @@ public class Bluetooth extends Aware_Sensor {
     /**
      * This device's bluetooth adapter
      */
-    private static final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    private static BluetoothAdapter bluetoothAdapter;
 
     /**
      * Broadcasted event: new bluetooth device detected
@@ -104,6 +106,9 @@ public class Bluetooth extends Aware_Sensor {
         super.onCreate();
 
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        bluetoothAdapter  = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2)? ((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter() : BluetoothAdapter.getDefaultAdapter();
+        if(bluetoothAdapter == null) return;
+
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
         DATABASE_TABLES = Bluetooth_Provider.DATABASE_TABLES;
@@ -115,6 +120,7 @@ public class Bluetooth extends Aware_Sensor {
         filter.addAction(BluetoothDevice.ACTION_FOUND);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+        filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         registerReceiver(bluetoothMonitor, filter);
 
         Intent backgroundService = new Intent(ACTION_AWARE_BLUETOOTH_REQUEST_SCAN);
@@ -128,7 +134,7 @@ public class Bluetooth extends Aware_Sensor {
         enableBT.putExtra("action", ACTION_AWARE_ENABLE_BT);
 
         if (!bluetoothAdapter.isEnabled()) {
-            notifyMissingBluetooth(getApplicationContext());
+            notifyMissingBluetooth(getApplicationContext(), false);
         }
 
         if (Aware.DEBUG) Log.d(TAG, "Bluetooth service created!");
@@ -138,7 +144,6 @@ public class Bluetooth extends Aware_Sensor {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && intent.hasExtra("action") && intent.getStringExtra("action").equalsIgnoreCase(ACTION_AWARE_ENABLE_BT)) {
             bluetoothAdapter.enable();
-            bluetoothAdapter.startDiscovery();
         }
 
         boolean permissions_ok = true;
@@ -234,7 +239,10 @@ public class Bluetooth extends Aware_Sensor {
                 if (extras == null) return;
 
                 BluetoothDevice btDevice = extras.getParcelable(BluetoothDevice.EXTRA_DEVICE);
-                if (btDevice == null) return;
+                if (btDevice == null) {
+                    if (Aware.DEBUG) Log.d(TAG, "No Bluetooth device was discovered during the scan");
+                    return;
+                }
 
                 Short btDeviceRSSI = extras.getShort(BluetoothDevice.EXTRA_RSSI);
 
@@ -275,10 +283,39 @@ public class Bluetooth extends Aware_Sensor {
                 context.sendBroadcast(scanStart);
             }
 
+            if (intent.getAction().equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                if(intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1)
+                        == BluetoothAdapter.STATE_OFF){
+                    notifyMissingBluetooth(context.getApplicationContext(), false);
+
+                }else if(intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1)
+                        == BluetoothAdapter.STATE_ON){
+                    notifyMissingBluetooth(context.getApplicationContext(), true);
+                }
+            }
+
             if (intent.getAction().equals(ACTION_AWARE_BLUETOOTH_REQUEST_SCAN)) {
-                Intent backgroundService = new Intent(context, BackgroundService.class);
-                backgroundService.setAction(Bluetooth.ACTION_AWARE_BLUETOOTH_REQUEST_SCAN);
-                context.startService(backgroundService);
+                if (!bluetoothAdapter.isDiscovering()) {
+                    if (bluetoothAdapter.isEnabled()) {
+                        bluetoothAdapter.startDiscovery();
+                    } else {
+                        //Bluetooth is off
+                        if (Aware.DEBUG) Log.d(TAG, "Bluetooth is turned off...");
+                        ContentValues rowData = new ContentValues();
+                        rowData.put(Bluetooth_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
+                        rowData.put(Bluetooth_Data.TIMESTAMP, System.currentTimeMillis());
+                        rowData.put(Bluetooth_Data.BT_NAME, "disabled");
+                        rowData.put(Bluetooth_Data.BT_ADDRESS, "disabled");
+                        rowData.put(Bluetooth_Data.BT_LABEL, "disabled");
+                        try {
+                            context.getContentResolver().insert(Bluetooth_Data.CONTENT_URI, rowData);
+                        } catch (SQLiteException e) {
+                            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                        } catch (SQLException e) {
+                            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                        }
+                    }
+                }
             }
         }
     }
@@ -303,43 +340,29 @@ public class Bluetooth extends Aware_Sensor {
         if (sensorBT != null && ! sensorBT.isClosed()) sensorBT.close();
     }
 
-    public static class BackgroundService extends IntentService {
-        public BackgroundService() {
-            super(TAG + " background service");
-        }
+    private static void notifyMissingBluetooth(Context c, boolean dismiss) {
+        if (!dismiss) {
+            //Remind the user that we need Bluetooth on for data collection
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(c)
+                    .setSmallIcon(R.drawable.ic_stat_aware_accessibility)
+                    .setContentTitle("AWARE: Bluetooth needed")
+                    .setContentText("Tap to enable Bluetooth for nearby scanning.")
+                    .setDefaults(Notification.DEFAULT_ALL)
+                    .setOnlyAlertOnce(true)
+                    .setAutoCancel(true)
+                    .setContentIntent(PendingIntent.getService(c, 123, enableBT, PendingIntent.FLAG_UPDATE_CURRENT));
 
-        @Override
-        protected void onHandleIntent(Intent intent) {
-            if (intent.getAction().equals(ACTION_AWARE_BLUETOOTH_REQUEST_SCAN)) {
-                if (!bluetoothAdapter.isDiscovering()) {
-                    if (bluetoothAdapter.isEnabled()) {
-                        bluetoothAdapter.startDiscovery();
-                    } else {
-                        //Bluetooth is off
-                        if (Aware.DEBUG) Log.d(TAG, "Bluetooth is turned off...");
-                        ContentValues rowData = new ContentValues();
-                        rowData.put(Bluetooth_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-                        rowData.put(Bluetooth_Data.TIMESTAMP, System.currentTimeMillis());
-                        rowData.put(Bluetooth_Data.BT_NAME, "disabled");
-                        rowData.put(Bluetooth_Data.BT_ADDRESS, "disabled");
-                        rowData.put(Bluetooth_Data.BT_LABEL, "disabled");
-                        getContentResolver().insert(Bluetooth_Data.CONTENT_URI, rowData);
-                    }
-                }
+            try {
+                notificationManager.notify(123, builder.build());
+            } catch (NullPointerException e) {
+                if (Aware.DEBUG) Log.d(Aware.TAG, "Notification exception: " + e);
+            }
+        } else {
+            try {
+                notificationManager.cancel(123);
+            } catch (NullPointerException e) {
+                if (Aware.DEBUG) Log.d(Aware.TAG, "Notification exception: " + e);
             }
         }
-    }
-
-    private static void notifyMissingBluetooth(Context c) {
-        //Remind the user that we need Bluetooth on for data collection
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(c)
-                .setSmallIcon(R.drawable.ic_stat_aware_accessibility)
-                .setContentTitle("AWARE: Bluetooth needed")
-                .setContentText("Tap to enable Bluetooth for nearby scanning.")
-                .setDefaults(Notification.DEFAULT_ALL)
-                .setOnlyAlertOnce(true)
-                .setAutoCancel(true)
-                .setContentIntent(PendingIntent.getService(c, 123, enableBT, PendingIntent.FLAG_UPDATE_CURRENT));
-        notificationManager.notify(123, builder.build());
     }
 }
