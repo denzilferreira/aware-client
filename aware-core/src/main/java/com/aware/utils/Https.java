@@ -165,13 +165,13 @@ public class Https {
 
             return result;
 		}catch (UnsupportedEncodingException e) {
-			Log.e(TAG, e.getMessage());
+                Log.e(TAG, "Sync HTTPS dataPost encoding error: " + e.getMessage());
 			return null;
 		} catch (IOException | NullPointerException e) {
-			Log.e(TAG, e.getMessage());
+                Log.e(TAG, "Sync HTTPS dataPost io/null error: " + e.getMessage());
 			return null;
 		} catch (IllegalStateException e ) {
-			Log.e(TAG, e.getMessage());
+                Log.e(TAG, "Sync HTTPS dataPost state error: " + e.getMessage());
 			return null;
 		}
 	}

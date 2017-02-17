@@ -33,6 +33,7 @@ import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -64,6 +65,7 @@ public class WebserviceHelper extends Service {
 
 
     private static final Map<String, Boolean> SYNCED_TABLES = Collections.synchronizedMap(new HashMap<String, Boolean>());
+    private static final ArrayList<String> highFrequencySensors = new ArrayList<>();
 
     // Handler that receives messages from the thread
     private final class ServiceHandler extends Handler {
@@ -103,9 +105,17 @@ public class WebserviceHelper extends Service {
     @Override
     public void onCreate() {
 
-        synchronized (this) {
+        highFrequencySensors.add("accelerometer");
+        highFrequencySensors.add("gyroscope");
+        highFrequencySensors.add("barometer");
+        highFrequencySensors.add("gravity");
+        highFrequencySensors.add("light");
+        highFrequencySensors.add("linear_accelerometer");
+        highFrequencySensors.add("magnetometer");
+        highFrequencySensors.add("rotation");
+        highFrequencySensors.add("temperature");
+        highFrequencySensors.add("proximity");
 
-        }
 
         HandlerThread thread = new HandlerThread("ServiceStartArguments",
                 android.os.Process.THREAD_PRIORITY_BACKGROUND);
@@ -420,7 +430,7 @@ public class WebserviceHelper extends Service {
             return TOTAL_RECORDS;
         }
 
-        private Cursor getSyncContextData(JSONArray remoteData, Uri CONTENT_URI, String study_condition, String[] columnsStr, int uploaded_records) throws JSONException {
+        private Cursor getSyncData(JSONArray remoteData, Uri CONTENT_URI, String study_condition, String[] columnsStr, int uploaded_records) throws JSONException {
             Cursor context_data;
             if (remoteData.length() == 0) {
                 if (exists(columnsStr, "double_end_timestamp")) {
@@ -447,37 +457,48 @@ public class WebserviceHelper extends Service {
         }
 
         private void performDatabaseSpaceMaintenance(Uri CONTENT_URI, long last) {
-            ArrayList<String> highFrequencySensors = new ArrayList<>();
-            highFrequencySensors.add("accelerometer");
-            highFrequencySensors.add("gyroscope");
-            highFrequencySensors.add("barometer");
-            highFrequencySensors.add("gravity");
-            highFrequencySensors.add("light");
-            highFrequencySensors.add("linear_accelerometer");
-            highFrequencySensors.add("magnetometer");
-            highFrequencySensors.add("rotation");
-            highFrequencySensors.add("temperature");
-            highFrequencySensors.add("proximity");
 
-            //Clean the local database, now that it is uploaded to the server, if required
-            if ((Aware.getSetting(mContext, Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0
-                    && Integer.parseInt(Aware.getSetting(mContext, Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA)) == 4
-                    && highFrequencySensors.contains(DATABASE_TABLE))
-                    || WEBSERVICE_REMOVE_DATA) {
-
+            if(WEBSERVICE_REMOVE_DATA){
                 mContext.getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null);
+            }
+            else if(Aware.getSetting(mContext, Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0){
 
-                if (DEBUG)
-                    Log.d(Aware.TAG, "Sync finished. Deleted local old records for " + DATABASE_TABLE);
-
-                if (!Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
-                    notifyUser(mContext, "Sync finished. Cleaned old records from " + DATABASE_TABLE, false, true, NOTIFICATION_ID);
+                Calendar cal = Calendar.getInstance();
+                cal.setTimeInMillis(last);
+                int rowsDeleted = 0;
+                switch (Integer.parseInt(Aware.getSetting(mContext, Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA))){
+                    case 1: //Weekly
+                        cal.add(Calendar.DAY_OF_YEAR, -7);
+                        if (Aware.DEBUG)
+                            Log.d(Aware.TAG, " Cleaning locally any data older than last week (yyyy/mm/dd): " + cal.get(Calendar.YEAR) + '/' + (cal.get(Calendar.MONTH) + 1) + '/' + cal.get(Calendar.DAY_OF_MONTH));
+                        rowsDeleted = mContext.getContentResolver().delete(CONTENT_URI, "timestamp < " + cal.getTimeInMillis(), null);
+                        break;
+                    case 2: //Monthly
+                        cal.add(Calendar.MONTH, -1);
+                        if (Aware.DEBUG)
+                            Log.d(Aware.TAG, " Cleaning locally any data older than last month (yyyy/mm/dd): " + cal.get(Calendar.YEAR) + '/' + (cal.get(Calendar.MONTH) + 1) + '/' + cal.get(Calendar.DAY_OF_MONTH));
+                        rowsDeleted = mContext.getContentResolver().delete(CONTENT_URI, "timestamp < " + cal.getTimeInMillis(), null);
+                        break;
+                    case 3: //Daily
+                        cal.add(Calendar.DAY_OF_YEAR, -1);
+                        if (Aware.DEBUG)
+                            Log.d(Aware.TAG, "Cleaning locally any data older than today (yyyy/mm/dd): " + cal.get(Calendar.YEAR) + '/' + (cal.get(Calendar.MONTH) + 1) + '/' + cal.get(Calendar.DAY_OF_MONTH) + " from " + CONTENT_URI.toString());
+                        rowsDeleted = mContext.getContentResolver().delete(CONTENT_URI, "timestamp < " + cal.getTimeInMillis(), null);
+                        break;
+                    case 4: //Always (experimental)
+                        if(highFrequencySensors.contains(DATABASE_TABLE))
+                            rowsDeleted = mContext.getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null);
+                        break;
                 }
+
+                if (DEBUG && rowsDeleted > 0)
+                    Log.d(Aware.TAG, "Cleaned " + rowsDeleted + " from " + CONTENT_URI.toString());
             }
         }
 
-        private boolean syncBatch(Cursor context_data, Uri CONTENT_URI) throws JSONException {
+        private long syncBatch(Cursor context_data) throws JSONException {
             JSONArray rows = new JSONArray();
+            long lastSynced = 0;
             if (context_data != null && context_data.moveToFirst()) {
                 do {
                     JSONObject row = new JSONObject();
@@ -502,6 +523,7 @@ public class WebserviceHelper extends Service {
                 } while (context_data.moveToNext());
 
                 context_data.close(); //clear phone's memory immediately
+                lastSynced = rows.getJSONObject(rows.length() - 1).getLong("timestamp"); //last record to be synced
 
                 Hashtable<String, String> request = new Hashtable<>();
                 request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
@@ -526,15 +548,11 @@ public class WebserviceHelper extends Service {
                 if (success == null) {
                     if (DEBUG)
                         Log.d(Aware.TAG, DATABASE_TABLE + " FAILED to sync. Server down?");
-                    return false;
-                } else { //Are we performing database space maintenance?
-
-                    performDatabaseSpaceMaintenance(CONTENT_URI, rows.getJSONObject(rows.length() - 1).getLong("timestamp"));
-
+                    return 0;
                 }
             }
 
-            return true;
+            return lastSynced;
         }
 
         @Override
@@ -556,24 +574,32 @@ public class WebserviceHelper extends Service {
 
                         if (total_records > 0) {
 
-                            JSONArray remoteData = new JSONArray(latest);
+                            JSONArray remoteLatestData = new JSONArray(latest);
                             long start = System.currentTimeMillis();
                             int uploaded_records = 0;
                             int batches = (int) Math.ceil(total_records / (double) MAX_POST_SIZE);
-                            boolean syncSuccess = true;
+                            long lastSynced;
+                            long removeFrom = 0;
 
-                            while (uploaded_records < total_records && syncSuccess) { //paginate cursor so it does not explode the phone's memory
+                            do { //paginate cursor so it does not explode the phone's memory
 
                                 if (Aware.DEBUG)
                                     Log.d(Aware.TAG, "Syncing " + uploaded_records + " out of " + total_records + " from table " + DATABASE_TABLE);
 
-                                if (!Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
+                                if (!Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_SILENT).equals("true"))
                                     notifyUser(mContext, "Syncing batch " + (uploaded_records + MAX_POST_SIZE) / MAX_POST_SIZE + " of " + batches + " from " + DATABASE_TABLE, false, true, NOTIFICATION_ID);
-                                }
 
-                                syncSuccess = syncBatch(getSyncContextData(remoteData, CONTENT_URI, study_condition, columnsStr, uploaded_records), CONTENT_URI);
+                                lastSynced = syncBatch(getSyncData(remoteLatestData, CONTENT_URI, study_condition, columnsStr, uploaded_records));
+
+                                if(lastSynced > 0)
+                                    removeFrom = lastSynced;
                                 uploaded_records += MAX_POST_SIZE;
-                            }
+
+                            }while (uploaded_records < total_records && lastSynced > 0);
+
+                            //Are we performing database space maintenance?
+                            if(removeFrom > 0)
+                                performDatabaseSpaceMaintenance(CONTENT_URI, removeFrom);
 
                             if (DEBUG)
                                 Log.d(Aware.TAG, DATABASE_TABLE + " sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis() - start) / 1000));

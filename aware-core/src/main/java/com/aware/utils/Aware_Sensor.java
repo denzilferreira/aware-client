@@ -82,7 +82,6 @@ public class Aware_Sensor extends Service {
         filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
         filter.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
         filter.addAction(Aware.ACTION_AWARE_STOP_SENSORS);
-        filter.addAction(Aware.ACTION_AWARE_SPACE_MAINTENANCE);
         registerReceiver(contextBroadcaster, filter);
 
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
@@ -170,55 +169,6 @@ public class Aware_Sensor extends Service {
                 stopSelf();
             }
 
-            if (intent.getAction().equals(Aware.ACTION_AWARE_SPACE_MAINTENANCE) && Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0 ) {
-                Calendar cal = Calendar.getInstance();
-                cal.setTimeInMillis(System.currentTimeMillis());
-
-                switch (Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA))) {
-                    case 1: //weekly
-                        if (DATABASE_TABLES != null && CONTEXT_URIS != null) {
-                            cal.add(Calendar.DAY_OF_YEAR, -7);
-                            if (Aware.DEBUG)
-                                Log.d(TAG, TAG + " cleaning locally any data older than last week (yyyy/mm/dd): " + cal.get(Calendar.YEAR) + '/' + (cal.get(Calendar.MONTH) + 1) + '/' + cal.get(Calendar.DAY_OF_MONTH));
-                            for (int i = 0; i < DATABASE_TABLES.length; i++) {
-                                //Clear locally
-                                String where = "timestamp < " + cal.getTimeInMillis();
-                                int rowsDeleted = context.getContentResolver().delete(CONTEXT_URIS[i], where, null);
-                                if (Aware.DEBUG)
-                                    Log.d(TAG, "Cleaned " + rowsDeleted + " from " + CONTEXT_URIS[i].toString());
-                            }
-                        }
-                        break;
-                    case 2: //monthly
-                        if (DATABASE_TABLES != null && CONTEXT_URIS != null) {
-                            cal.add(Calendar.MONTH, -1);
-                            if (Aware.DEBUG)
-                                Log.d(TAG, TAG + " cleaning locally any data older than last month (yyyy/mm/dd): " + cal.get(Calendar.YEAR) + '/' + (cal.get(Calendar.MONTH) + 1) + '/' + cal.get(Calendar.DAY_OF_MONTH));
-                            for (int i = 0; i < DATABASE_TABLES.length; i++) {
-                                //Clear locally
-                                String where = "timestamp < " + cal.getTimeInMillis();
-                                int rowsDeleted = context.getContentResolver().delete(CONTEXT_URIS[i], where, null);
-                                if (Aware.DEBUG)
-                                    Log.d(TAG, "Cleaned " + rowsDeleted + " from " + CONTEXT_URIS[i].toString());
-                            }
-                        }
-                        break;
-                    case 3: //daily
-                        if (DATABASE_TABLES != null && CONTEXT_URIS != null) {
-                            cal.add(Calendar.DAY_OF_YEAR, -1);
-                            if (Aware.DEBUG)
-                                Log.d(TAG, TAG + " cleaning locally any data older than today (yyyy/mm/dd): " + cal.get(Calendar.YEAR) + '/' + (cal.get(Calendar.MONTH) + 1) + '/' + cal.get(Calendar.DAY_OF_MONTH));
-                            for (int i = 0; i < DATABASE_TABLES.length; i++) {
-                                //Clear locally
-                                String where = "timestamp < " + cal.getTimeInMillis();
-                                int rowsDeleted = context.getContentResolver().delete(CONTEXT_URIS[i], where, null);
-                                if (Aware.DEBUG)
-                                    Log.d(TAG, "Cleaned " + rowsDeleted + " from " + CONTEXT_URIS[i].toString());
-                            }
-                        }
-                        break;
-                }
-            }
         }
     }
 
