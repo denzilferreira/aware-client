@@ -147,8 +147,6 @@ public class Https {
                 stream = new GZIPInputStream(stream);
             }
 
-            if(Aware.DEBUG)
-                Log.d(Aware.TAG,"Syncing about to create the result");
             String result = "";
             try(BufferedReader br = new BufferedReader(new InputStreamReader(stream))){
                 StringBuilder page_content = new StringBuilder("");
