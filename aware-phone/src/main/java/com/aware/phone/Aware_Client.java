@@ -158,6 +158,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         if (EditTextPreference.class.isInstance(pref)) {
             EditTextPreference text = (EditTextPreference) findPreference(key);
             text.setSummary(Aware.getSetting(getApplicationContext(), key));
+            text.setText(Aware.getSetting(getApplicationContext(), key));
         }
         if (ListPreference.class.isInstance(pref)) {
             ListPreference list = (ListPreference) findPreference(key);
