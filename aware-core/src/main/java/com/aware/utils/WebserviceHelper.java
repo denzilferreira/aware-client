@@ -516,7 +516,11 @@ public class WebserviceHelper extends Service {
                         } else if (c_name.contains("integer")) {
                             row.put(c_name, context_data.getInt(context_data.getColumnIndex(c_name)));
                         } else {
-                            row.put(c_name, context_data.getString(context_data.getColumnIndex(c_name)));
+                            String str = "";
+                            if (!context_data.isNull(context_data.getColumnIndex(c_name))) { //fixes nulls and batch inserts not being possible
+                                str = context_data.getString(context_data.getColumnIndex(c_name));
+                            }
+                            row.put(c_name, str);
                         }
                     }
                     rows.put(row);
