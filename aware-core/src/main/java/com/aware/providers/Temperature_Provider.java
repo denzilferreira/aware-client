@@ -123,7 +123,7 @@ public class Temperature_Provider extends ContentProvider {
     private UriMatcher sUriMatcher = null;
     private HashMap<String, String> sensorMap = null;
     private HashMap<String, String> sensorDataMap = null;
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -325,8 +325,6 @@ public class Temperature_Provider extends ContentProvider {
                 Temperature_Data.TEMPERATURE_CELSIUS);
         sensorDataMap.put(Temperature_Data.ACCURACY, Temperature_Data.ACCURACY);
         sensorDataMap.put(Temperature_Data.LABEL, Temperature_Data.LABEL);
-
-        initialiseDatabase();
 
         return true;
     }

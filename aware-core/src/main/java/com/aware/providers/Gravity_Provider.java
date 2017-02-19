@@ -130,7 +130,7 @@ public class Gravity_Provider extends ContentProvider {
 	private HashMap<String, String> sensorDeviceMap = null;
 	private HashMap<String, String> sensorDataMap = null;
 
-	private static DatabaseHelper dbHelper;
+	private DatabaseHelper dbHelper;
 	private static SQLiteDatabase database;
 
 	private void initialiseDatabase() {
@@ -329,8 +329,6 @@ public class Gravity_Provider extends ContentProvider {
         sensorDataMap.put(Gravity_Data.VALUES_2, Gravity_Data.VALUES_2);
         sensorDataMap.put(Gravity_Data.ACCURACY, Gravity_Data.ACCURACY);
         sensorDataMap.put(Gravity_Data.LABEL, Gravity_Data.LABEL);
-
-		initialiseDatabase();
 	    
 		return true;
 	}

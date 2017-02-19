@@ -86,7 +86,7 @@ public class Installations_Provider extends ContentProvider {
     private UriMatcher sUriMatcher = null;
     private HashMap<String, String> installationsMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -190,8 +190,6 @@ public class Installations_Provider extends ContentProvider {
         installationsMap.put(Installations_Data.INSTALLATION_STATUS, Installations_Data.INSTALLATION_STATUS);
         installationsMap.put(Installations_Data.PACKAGE_VERSION_NAME, Installations_Data.PACKAGE_VERSION_NAME);
         installationsMap.put(Installations_Data.PACKAGE_VERSION_CODE, Installations_Data.PACKAGE_VERSION_CODE);
-
-        initialiseDatabase();
 
         return true;
     }

@@ -99,7 +99,7 @@ public class Mqtt_Provider extends ContentProvider {
 	private HashMap<String, String> messagesMap = null;
 	private HashMap<String, String> subscriptionMap = null;
 
-	private static DatabaseHelper dbHelper;
+	private DatabaseHelper dbHelper;
 	private static SQLiteDatabase database;
 
 	private void initialiseDatabase() {
@@ -233,8 +233,6 @@ public class Mqtt_Provider extends ContentProvider {
         subscriptionMap.put(Mqtt_Subscriptions.DEVICE_ID,
                 Mqtt_Subscriptions.DEVICE_ID);
         subscriptionMap.put(Mqtt_Subscriptions.TOPIC, Mqtt_Subscriptions.TOPIC);
-
-		initialiseDatabase();
 	    
 		return true;
 	}

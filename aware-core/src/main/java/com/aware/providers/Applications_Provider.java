@@ -197,7 +197,7 @@ public class Applications_Provider extends ContentProvider {
     private HashMap<String, String> notificationMap = null;
     private HashMap<String, String> crashesMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -427,8 +427,6 @@ public class Applications_Provider extends ContentProvider {
                 Applications_Crashes.ERROR_CONDITION);
         crashesMap.put(Applications_Crashes.IS_SYSTEM_APP,
                 Applications_Crashes.IS_SYSTEM_APP);
-
-        initialiseDatabase();
 
         return true;
     }

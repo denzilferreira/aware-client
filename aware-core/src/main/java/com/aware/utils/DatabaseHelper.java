@@ -45,11 +45,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private HashMap<String, String> renamed_columns = new HashMap<>();
     private Context mContext;
 
-    private static DatabaseHelper mSelf;
-
     public DatabaseHelper(Context context, String database_name, CursorFactory cursor_factory, int database_version, String[] database_tables, String[] table_fields) {
         super(context, database_name, cursor_factory, database_version);
-
         mContext = context;
         databaseName = database_name;
         databaseTables = database_tables;
@@ -57,12 +54,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         newVersion = database_version;
         cursorFactory = cursor_factory;
         database = getWritableDatabase();
-    }
-
-    public static synchronized DatabaseHelper getDatabaseHelper(Context context, String database_name, CursorFactory cursor_factory, int database_version, String[] database_tables, String[] table_fields) {
-        if (mSelf == null)
-            mSelf = new DatabaseHelper(context, database_name, cursor_factory, database_version, database_tables, table_fields);
-        return mSelf;
     }
 
     public void setRenamedColumns(HashMap<String, String> renamed) {

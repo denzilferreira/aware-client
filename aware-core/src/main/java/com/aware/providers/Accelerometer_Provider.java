@@ -127,7 +127,7 @@ public class Accelerometer_Provider extends ContentProvider {
                     + Accelerometer_Data.ACCURACY + " integer default 0,"
                     + Accelerometer_Data.LABEL + " text default ''"};
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -316,8 +316,6 @@ public class Accelerometer_Provider extends ContentProvider {
         accelDataMap.put(Accelerometer_Data.VALUES_2, Accelerometer_Data.VALUES_2);
         accelDataMap.put(Accelerometer_Data.ACCURACY, Accelerometer_Data.ACCURACY);
         accelDataMap.put(Accelerometer_Data.LABEL, Accelerometer_Data.LABEL);
-
-        initialiseDatabase();
 
         return true;
     }

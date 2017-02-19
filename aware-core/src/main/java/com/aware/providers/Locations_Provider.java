@@ -89,7 +89,7 @@ public class Locations_Provider extends ContentProvider {
     private static UriMatcher sUriMatcher = null;
     private static HashMap<String, String> locationsProjectionMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -201,8 +201,6 @@ public class Locations_Provider extends ContentProvider {
         locationsProjectionMap.put(Locations_Data.ACCURACY,
                 Locations_Data.ACCURACY);
         locationsProjectionMap.put(Locations_Data.LABEL, Locations_Data.LABEL);
-
-        initialiseDatabase();
 
         return true;
     }

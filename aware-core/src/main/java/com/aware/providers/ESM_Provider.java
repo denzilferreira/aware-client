@@ -85,7 +85,7 @@ public class ESM_Provider extends ContentProvider {
     private UriMatcher sUriMatcher = null;
     private HashMap<String, String> questionsMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -188,8 +188,6 @@ public class ESM_Provider extends ContentProvider {
         questionsMap.put(ESM_Data.ANSWER, ESM_Data.ANSWER);
         questionsMap.put(ESM_Data.NOTIFICATION_TIMEOUT, ESM_Data.NOTIFICATION_TIMEOUT);
         questionsMap.put(ESM_Data.TRIGGER, ESM_Data.TRIGGER);
-
-        initialiseDatabase();
 
         return true;
     }

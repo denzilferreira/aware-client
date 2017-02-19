@@ -75,7 +75,7 @@ public class Significant_Provider extends ContentProvider {
     private UriMatcher sUriMatcher = null;
     private HashMap<String, String> sensorDataMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -214,8 +214,6 @@ public class Significant_Provider extends ContentProvider {
                 Significant_Data.DEVICE_ID);
         sensorDataMap.put(Significant_Data.IS_MOVING,
                 Significant_Data.IS_MOVING);
-
-        initialiseDatabase();
 
         return true;
     }

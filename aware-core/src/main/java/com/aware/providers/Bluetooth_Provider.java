@@ -113,7 +113,7 @@ public class Bluetooth_Provider extends ContentProvider {
     private HashMap<String, String> bluetoothDeviceMap = null;
     private HashMap<String, String> bluetoothDataMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -255,8 +255,6 @@ public class Bluetooth_Provider extends ContentProvider {
         bluetoothDataMap.put(Bluetooth_Data.BT_NAME, Bluetooth_Data.BT_NAME);
         bluetoothDataMap.put(Bluetooth_Data.BT_RSSI, Bluetooth_Data.BT_RSSI);
         bluetoothDataMap.put(Bluetooth_Data.BT_LABEL, Bluetooth_Data.BT_LABEL);
-
-        initialiseDatabase();
 
         return true;
     }
