@@ -4,6 +4,7 @@ package com.aware.utils;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.aware.Aware;
@@ -39,12 +40,14 @@ public class Http {
 	 * Logging tag (default = "AWARE")
 	 */
 	private static String TAG = "AWARE::HTML";
+    private static int timeout = 60 * 1000;
 
-	private static Context sContext;
+	public Http(Context c) {}
 
-	public Http(Context c) {
-		sContext = c;
-	}
+    public Http setTimeout(int connection_timeout) {
+        timeout = connection_timeout;
+        return this;
+    }
 
     /**
      * Request a GET from an URL.
@@ -58,8 +61,8 @@ public class Http {
 
             URL path = new URL(url);
             HttpURLConnection path_connection = (HttpURLConnection) path.openConnection();
-            path_connection.setReadTimeout(10000);
-            path_connection.setConnectTimeout(10000);
+            path_connection.setReadTimeout(timeout);
+            path_connection.setConnectTimeout(timeout);
             path_connection.setRequestMethod("GET");
             path_connection.setDoInput(true);
 
@@ -81,23 +84,21 @@ public class Http {
                 stream = new GZIPInputStream(stream);
             }
 
-            BufferedReader br = new BufferedReader(new InputStreamReader(stream));
-
-            String page_content = "";
-            String line;
-            while( (line = br.readLine()) != null ) {
-                page_content+=line;
+            String result;
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(stream))) {
+                StringBuilder page_content = new StringBuilder("");
+                String line;
+                while ((line = br.readLine()) != null) {
+                    page_content.append(line);
+                }
+                result = page_content.toString();
+                br.close();
             }
+            stream.close();
 
-            if (Aware.DEBUG) {
-//                Log.i(TAG,"Request: GET, URL: " + url);
-//                Log.i(TAG,"Answer:" + page_content );
-            }
-
-            return page_content;
-
+            return result;
         } catch (IOException e) {
-            if(Aware.DEBUG) Log.e(TAG,e.getMessage());
+            Log.e(TAG, "Sync HTTP dataGet io/null error: " + e.getMessage());
             return null;
         }
     }
@@ -116,8 +117,8 @@ public class Http {
 
             URL path = new URL(url);
             HttpURLConnection path_connection = (HttpURLConnection) path.openConnection();
-            path_connection.setReadTimeout(10000);
-            path_connection.setConnectTimeout(10000);
+            path_connection.setReadTimeout(timeout);
+            path_connection.setConnectTimeout(timeout);
             path_connection.setRequestMethod("POST");
             path_connection.setDoOutput(true);
 
@@ -153,31 +154,28 @@ public class Http {
                 stream = new GZIPInputStream(stream);
             }
 
-            String result = "";
-            try(BufferedReader br = new BufferedReader(new InputStreamReader(stream))){
+            String result;
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(stream))) {
                 StringBuilder page_content = new StringBuilder("");
                 String line;
-                while( (line = br.readLine()) != null ) {
+                while ((line = br.readLine()) != null) {
                     page_content.append(line);
                 }
                 result = page_content.toString();
+                br.close();
             }
             stream.close();
 
-            if (Aware.DEBUG) {
-//                Log.d(TAG, "Request: POST, URL: " + url + "\nData:" + builder.build().getEncodedQuery());
-//                Log.i(TAG,"Answer:" + page_content );
-            }
-
             return result;
+
 		}catch (UnsupportedEncodingException e) {
-			Log.e(TAG,e.getMessage());
+            Log.e(TAG, "Sync HTTP dataPost encoding error: " + e.getMessage());
 			return null;
 		} catch (IOException e) {
-			Log.e(TAG,e.getMessage());
+            Log.e(TAG, "Sync HTTP dataPost io/null error: " + e.getMessage());
 			return null;
 		} catch (IllegalStateException e ) {
-			Log.e(TAG,e.getMessage());
+            Log.e(TAG, "Sync HTTP dataPost state error: " + e.getMessage());
 			return null;
 		}
 	}
