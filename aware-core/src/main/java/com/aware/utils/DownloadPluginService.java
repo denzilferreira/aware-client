@@ -68,12 +68,12 @@ public class DownloadPluginService extends IntentService {
         String response;
         if( protocol.equals("https") ) {
             try {
-                response = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET( study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/plugins/get_plugin/" + package_name, true);
+                response = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET( study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/plugins/get_plugin/" + package_name, true);
             } catch (FileNotFoundException e ) {
                 response = null;
             }
         } else {
-            response = new Http(getApplicationContext()).dataGET( study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/plugins/get_plugin/" + package_name, true);
+            response = new Http().dataGET( study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/plugins/get_plugin/" + package_name, true);
         }
 
         if( response != null ) {
