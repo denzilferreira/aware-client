@@ -304,7 +304,7 @@ public class Aware extends Service {
             }
 
             try {
-                new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), "https://api.awareframework.com/index.php")).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
+                new Https(SSLManager.getHTTPS(getApplicationContext(), "https://api.awareframework.com/index.php")).dataPOST("https://api.awareframework.com/index.php/awaredev/alive", device_ping, true);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
@@ -322,7 +322,7 @@ public class Aware extends Service {
             studyCheck.put("study_check", "1");
 
             try {
-                String study_status = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER)))
+                String study_status = new Https(SSLManager.getHTTPS(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER)))
                         .dataPOST(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER), studyCheck, true);
 
                 if (study_status == null)
@@ -1465,12 +1465,12 @@ public class Aware extends Service {
 //                }
 
                 try {
-                    request = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), full_url)).dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                    request = new Https(SSLManager.getHTTPS(getApplicationContext(), full_url)).dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
                 } catch (FileNotFoundException e) {
                     request = null;
                 }
             } else {
-                request = new Http(getApplicationContext()).dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                request = new Http().dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
             }
 
             if (request != null) {
@@ -1503,12 +1503,12 @@ public class Aware extends Service {
                         SSLManager.handleUrl(getApplicationContext(), full_url, true);
 
                         try {
-                            answer = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), full_url)).dataPOST(full_url, data, true);
+                            answer = new Https(SSLManager.getHTTPS(getApplicationContext(), full_url)).dataPOST(full_url, data, true);
                         } catch (FileNotFoundException e) {
                             answer = null;
                         }
                     } else {
-                        answer = new Http(getApplicationContext()).dataPOST(full_url, data, true);
+                        answer = new Http().dataPOST(full_url, data, true);
                     }
 
                     if (answer == null) {

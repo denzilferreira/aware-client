@@ -91,12 +91,12 @@ public class StudyUtils extends IntentService {
 //            }
 
             try {
-                request = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), full_url)).dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                request = new Https(SSLManager.getHTTPS(getApplicationContext(), full_url)).dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
             } catch (FileNotFoundException e) {
                 request = null;
             }
         } else {
-            request = new Http(getApplicationContext()).dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+            request = new Http().dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
         }
 
         if (request != null) {
@@ -126,12 +126,12 @@ public class StudyUtils extends IntentService {
                     SSLManager.handleUrl(getApplicationContext(), full_url, true);
 
                     try {
-                        answer = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), full_url)).dataPOST(full_url, data, true);
+                        answer = new Https(SSLManager.getHTTPS(getApplicationContext(), full_url)).dataPOST(full_url, data, true);
                     } catch (FileNotFoundException e) {
                         answer = null;
                     }
                 } else {
-                    answer = new Http(getApplicationContext()).dataPOST(full_url, data, true);
+                    answer = new Http().dataPOST(full_url, data, true);
                 }
 
                 if (answer == null) {
