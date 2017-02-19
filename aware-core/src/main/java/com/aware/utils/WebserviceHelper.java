@@ -298,12 +298,12 @@ public class WebserviceHelper extends Service {
                 //Create table if doesn't exist on the remote webservice server
                 if (protocol.equals("https")) {
                     try {
-                        response = new Https(mContext, SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
+                        response = new Https(SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
                     } catch (FileNotFoundException e) {
                         response = null;
                     }
                 } else {
-                    response = new Http(mContext).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
+                    response = new Http().dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
                 }
             }
             return response;
@@ -334,12 +334,12 @@ public class WebserviceHelper extends Service {
                 // Normal AWARE API always gets here.
                 if (protocol.equals("https")) {
                     try {
-                        latest = new Https(mContext, SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
+                        latest = new Https(SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
                     } catch (FileNotFoundException e) {
                         latest = null;
                     }
                 } else {
-                    latest = new Http(mContext).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
+                    latest = new Http().dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
                 }
                 if (latest == null)
                     return Thread.currentThread().getName(); //unable to reach the server, cancel this sync
@@ -536,14 +536,14 @@ public class WebserviceHelper extends Service {
                 String success;
                 if (protocol.equals("https")) {
                     try {
-                        success = new Https(mContext, SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+                        success = new Https(SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                         if (DEBUG)
                             Log.d(Aware.TAG, "Sync " + DATABASE_TABLE + " OK");
                     } catch (FileNotFoundException e) {
                         success = null;
                     }
                 } else {
-                    success = new Http(mContext).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+                    success = new Http().dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                     if (DEBUG)
                         Log.d(Aware.TAG, "Sync " + DATABASE_TABLE + " OK");
                 }
@@ -564,7 +564,7 @@ public class WebserviceHelper extends Service {
 
             if (ACTION.equals(ACTION_AWARE_WEBSERVICE_SYNC_TABLE)) {
                 Uri CONTENT_URI = Uri.parse(CONTENT_URI_STRING);
-                String response = "";
+                String response;
                 response = createRemoteTable();
 
                 if (response != null || WEBSERVICE_SIMPLE) {
@@ -637,12 +637,12 @@ public class WebserviceHelper extends Service {
 
                 if (protocol.equals("https")) {
                     try {
-                        new Https(mContext, SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
+                        new Https(SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                     }
                 } else {
-                    new Http(mContext).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
+                    new Http().dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
                 }
             }
 

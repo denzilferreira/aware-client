@@ -1,16 +1,9 @@
 package com.aware.utils;
 
-import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.aware.Aware;
-import com.aware.R;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -35,7 +28,6 @@ import java.util.zip.GZIPInputStream;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.TrustManagerFactory;
 
 public class Https {
@@ -46,10 +38,9 @@ public class Https {
 
     /**
      * Initialise a HTTPS client
-     * @param c
-     * @param certificate
+     * @param certificate SSL certificate
      */
-    public Https(Context c, InputStream certificate) {
+    public Https(InputStream certificate) {
         if (certificate == null) {
             Log.e(TAG, "Unable to read certificate!");
             return;
@@ -96,9 +87,9 @@ public class Https {
     /**
      * Make a POST to the URL, with the Hashtable<String, String> data, using gzip
      *
-     * @param url
-     * @param data
-     * @param is_gzipped
+     * @param url POST URL
+     * @param data Data to be sent
+     * @param is_gzipped Gzip data or not
      * @return String with server response. If gzipped, use Https.undoGZIP on the response.
      */
     public synchronized String dataPOST(String url, Hashtable<String, String> data, boolean is_gzipped) {
@@ -177,7 +168,7 @@ public class Https {
     /**
      * Request a GET from an URL.
      *
-     * @param url
+     * @param url GET URL
      * @return HttpEntity with the content of the reply. Use EntityUtils to get content.
      */
     public synchronized String dataGET(String url, boolean is_gzipped) {
@@ -231,25 +222,4 @@ public class Https {
         }
     }
 
-    public String HttpsCertificateInfo(HttpsURLConnection con) {
-        String output = "";
-        if (con != null) {
-            try {
-                output = "Response Code : " + con.getResponseCode() + "\n";
-                output += "Cipher Suite : " + con.getCipherSuite() + "\n";
-                Certificate[] certs = con.getServerCertificates();
-                for (Certificate cert : certs) {
-                    output += ("Cert Type : " + cert.getType()) + "\n";
-                    output += ("Cert Hash Code : " + cert.hashCode()) + "\n";
-                    output += ("Cert Public Key Algorithm : " + cert.getPublicKey().getAlgorithm()) + "\n";
-                    output += ("Cert Public Key Format : " + cert.getPublicKey().getFormat()) + "\n\n";
-                }
-            } catch (SSLPeerUnverifiedException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return output;
-    }
 }
