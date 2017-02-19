@@ -222,7 +222,7 @@ public class Aware extends Service {
     private final IBinder serviceBinder = new ServiceBinder();
 
     public class ServiceBinder extends Binder {
-        Aware getService() {
+        public Aware getService() {
             return Aware.getService();
         }
     }
