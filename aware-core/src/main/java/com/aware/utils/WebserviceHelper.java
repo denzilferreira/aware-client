@@ -562,7 +562,6 @@ public class WebserviceHelper extends Service {
         @Override
         public String call() throws Exception {
 
-
             if (ACTION.equals(ACTION_AWARE_WEBSERVICE_SYNC_TABLE)) {
                 Uri CONTENT_URI = Uri.parse(CONTENT_URI_STRING);
                 String response = "";

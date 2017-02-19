@@ -222,7 +222,7 @@ public class Aware_Provider extends ContentProvider {
     private HashMap<String, String> studiesMap;
     private HashMap<String, String> logMap;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -446,8 +446,6 @@ public class Aware_Provider extends ContentProvider {
         logMap.put(Aware_Log.LOG_TIMESTAMP, Aware_Log.LOG_TIMESTAMP);
         logMap.put(Aware_Log.LOG_DEVICE_ID, Aware_Log.LOG_DEVICE_ID);
         logMap.put(Aware_Log.LOG_MESSAGE, Aware_Log.LOG_MESSAGE);
-
-        initialiseDatabase();
 
         return true;
     }

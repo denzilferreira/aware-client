@@ -74,7 +74,7 @@ public class Keyboard_Provider extends ContentProvider {
     private UriMatcher sUriMatcher = null;
     private HashMap<String, String> dataMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -183,8 +183,6 @@ public class Keyboard_Provider extends ContentProvider {
                 Keyboard_Data.CURRENT_TEXT);
         dataMap.put(Keyboard_Data.IS_PASSWORD,
                 Keyboard_Data.IS_PASSWORD);
-
-        initialiseDatabase();
 
         return true;
     }

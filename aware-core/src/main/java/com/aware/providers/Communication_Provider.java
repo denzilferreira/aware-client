@@ -113,7 +113,7 @@ public class Communication_Provider extends ContentProvider {
 	private HashMap<String, String> callsProjectionMap = null;
 	private HashMap<String, String> messageProjectionMap = null;
 
-	private static DatabaseHelper dbHelper;
+	private DatabaseHelper dbHelper;
 	private static SQLiteDatabase database;
 
 	private void initialiseDatabase() {
@@ -248,8 +248,6 @@ public class Communication_Provider extends ContentProvider {
                 Messages_Data.DEVICE_ID);
         messageProjectionMap.put(Messages_Data.TYPE, Messages_Data.TYPE);
         messageProjectionMap.put(Messages_Data.TRACE, Messages_Data.TRACE);
-
-		initialiseDatabase();
 	    
 		return true;
 	}

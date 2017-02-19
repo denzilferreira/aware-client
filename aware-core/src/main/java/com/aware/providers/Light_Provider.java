@@ -121,7 +121,7 @@ public class Light_Provider extends ContentProvider {
     private HashMap<String, String> sensorMap = null;
     private HashMap<String, String> sensorDataMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -319,8 +319,6 @@ public class Light_Provider extends ContentProvider {
         sensorDataMap.put(Light_Data.LIGHT_LUX, Light_Data.LIGHT_LUX);
         sensorDataMap.put(Light_Data.ACCURACY, Light_Data.ACCURACY);
         sensorDataMap.put(Light_Data.LABEL, Light_Data.LABEL);
-
-        initialiseDatabase();
 
         return true;
     }

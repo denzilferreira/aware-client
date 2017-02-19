@@ -129,7 +129,7 @@ public class Rotation_Provider extends ContentProvider {
     private HashMap<String, String> sensorMap = null;
     private HashMap<String, String> sensorDataMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -332,8 +332,6 @@ public class Rotation_Provider extends ContentProvider {
         sensorDataMap.put(Rotation_Data.VALUES_3, Rotation_Data.VALUES_3);
         sensorDataMap.put(Rotation_Data.ACCURACY, Rotation_Data.ACCURACY);
         sensorDataMap.put(Rotation_Data.LABEL, Rotation_Data.LABEL);
-
-        initialiseDatabase();
 
         return true;
     }

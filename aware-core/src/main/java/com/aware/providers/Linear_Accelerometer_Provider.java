@@ -131,7 +131,7 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
     private HashMap<String, String> accelDeviceMap = null;
     private HashMap<String, String> accelDataMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -349,8 +349,6 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
                 Linear_Accelerometer_Data.ACCURACY);
         accelDataMap.put(Linear_Accelerometer_Data.LABEL,
                 Linear_Accelerometer_Data.LABEL);
-
-        initialiseDatabase();
 
         return true;
     }

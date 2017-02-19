@@ -79,7 +79,7 @@ public class Network_Provider extends ContentProvider {
     private UriMatcher sUriMatcher = null;
     private HashMap<String, String> networkProjectionMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -182,8 +182,6 @@ public class Network_Provider extends ContentProvider {
         networkProjectionMap.put(Network_Data.TYPE, Network_Data.TYPE);
         networkProjectionMap.put(Network_Data.SUBTYPE, Network_Data.SUBTYPE);
         networkProjectionMap.put(Network_Data.STATE, Network_Data.STATE);
-
-        initialiseDatabase();
 
         return true;
     }

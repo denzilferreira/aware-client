@@ -128,7 +128,7 @@ public class Magnetometer_Provider extends ContentProvider {
     private HashMap<String, String> sensorDeviceMap = null;
     private HashMap<String, String> sensorDataMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -342,8 +342,6 @@ public class Magnetometer_Provider extends ContentProvider {
         sensorDataMap.put(Magnetometer_Data.ACCURACY,
                 Magnetometer_Data.ACCURACY);
         sensorDataMap.put(Magnetometer_Data.LABEL, Magnetometer_Data.LABEL);
-
-        initialiseDatabase();
 
         return true;
     }

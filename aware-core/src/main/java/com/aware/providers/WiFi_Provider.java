@@ -114,7 +114,7 @@ public class WiFi_Provider extends ContentProvider {
     private UriMatcher sUriMatcher = null;
     private HashMap<String, String> wifiDataMap = null;
     private HashMap<String, String> wifiDeviceMap = null;
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -249,8 +249,6 @@ public class WiFi_Provider extends ContentProvider {
         wifiDeviceMap.put(WiFi_Sensor.MAC_ADDRESS, WiFi_Sensor.MAC_ADDRESS);
         wifiDeviceMap.put(WiFi_Sensor.BSSID, WiFi_Sensor.BSSID);
         wifiDeviceMap.put(WiFi_Sensor.SSID, WiFi_Sensor.SSID);
-
-        initialiseDatabase();
 
         return true;
     }

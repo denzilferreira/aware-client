@@ -221,7 +221,7 @@ public class Telephony_Provider extends ContentProvider {
     private HashMap<String, String> gsmNeighborsMap = null;
     private HashMap<String, String> cdmaMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -460,8 +460,6 @@ public class Telephony_Provider extends ContentProvider {
         cdmaMap.put(CDMA_Data.EVDO_DBM, CDMA_Data.EVDO_DBM);
         cdmaMap.put(CDMA_Data.EVDO_ECIO, CDMA_Data.EVDO_ECIO);
         cdmaMap.put(CDMA_Data.EVDO_SNR, CDMA_Data.EVDO_SNR);
-
-        initialiseDatabase();
 
         return true;
     }

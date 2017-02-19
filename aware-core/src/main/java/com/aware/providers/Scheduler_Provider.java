@@ -69,7 +69,7 @@ public class Scheduler_Provider extends ContentProvider {
     private UriMatcher sUriMatcher = null;
     private HashMap<String, String> dataMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -165,8 +165,6 @@ public class Scheduler_Provider extends ContentProvider {
         dataMap.put(Scheduler_Data.SCHEDULE, Scheduler_Data.SCHEDULE);
         dataMap.put(Scheduler_Data.LAST_TRIGGERED, Scheduler_Data.LAST_TRIGGERED);
         dataMap.put(Scheduler_Data.PACKAGE_NAME, Scheduler_Data.PACKAGE_NAME);
-
-        initialiseDatabase();
 
         return true;
     }

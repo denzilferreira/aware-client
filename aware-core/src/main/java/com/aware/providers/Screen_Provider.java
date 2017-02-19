@@ -74,7 +74,7 @@ public class Screen_Provider extends ContentProvider {
     private UriMatcher sUriMatcher = null;
     private HashMap<String, String> screenProjectionMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -172,8 +172,6 @@ public class Screen_Provider extends ContentProvider {
         screenProjectionMap.put(Screen_Data.DEVICE_ID, Screen_Data.DEVICE_ID);
         screenProjectionMap.put(Screen_Data.SCREEN_STATUS,
                 Screen_Data.SCREEN_STATUS);
-
-        initialiseDatabase();
 
         return true;
     }

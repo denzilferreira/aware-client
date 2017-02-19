@@ -123,7 +123,7 @@ public class Gyroscope_Provider extends ContentProvider {
     private static HashMap<String, String> gyroDeviceMap = null;
     private static HashMap<String, String> gyroDataMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -329,8 +329,6 @@ public class Gyroscope_Provider extends ContentProvider {
         gyroDataMap.put(Gyroscope_Data.VALUES_2, Gyroscope_Data.VALUES_2);
         gyroDataMap.put(Gyroscope_Data.ACCURACY, Gyroscope_Data.ACCURACY);
         gyroDataMap.put(Gyroscope_Data.LABEL, Gyroscope_Data.LABEL);
-
-        initialiseDatabase();
 
         return true;
     }

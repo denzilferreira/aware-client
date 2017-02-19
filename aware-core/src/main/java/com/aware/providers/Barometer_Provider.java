@@ -122,7 +122,7 @@ public class Barometer_Provider extends ContentProvider {
     private HashMap<String, String> sensorMap = null;
     private HashMap<String, String> sensorDataMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -321,8 +321,6 @@ public class Barometer_Provider extends ContentProvider {
                 Barometer_Data.AMBIENT_PRESSURE);
         sensorDataMap.put(Barometer_Data.ACCURACY, Barometer_Data.ACCURACY);
         sensorDataMap.put(Barometer_Data.LABEL, Barometer_Data.LABEL);
-
-        initialiseDatabase();
 
         return true;
     }

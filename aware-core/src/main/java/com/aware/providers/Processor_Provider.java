@@ -86,7 +86,7 @@ public class Processor_Provider extends ContentProvider {
     private UriMatcher sUriMatcher = null;
     private HashMap<String, String> processorProjectionMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -198,8 +198,6 @@ public class Processor_Provider extends ContentProvider {
                 Processor_Data.SYSTEM_LOAD);
         processorProjectionMap.put(Processor_Data.IDLE_LOAD,
                 Processor_Data.IDLE_LOAD);
-
-        initialiseDatabase();
 
         return true;
     }

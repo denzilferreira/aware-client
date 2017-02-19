@@ -145,7 +145,7 @@ public class Battery_Provider extends ContentProvider {
 	private HashMap<String, String> batteryDischargesMap = null;
 	private HashMap<String, String> batteryChargesMap = null;
 
-	private static DatabaseHelper dbHelper;
+	private DatabaseHelper dbHelper;
 	private static SQLiteDatabase database;
 
 	private void initialiseDatabase() {
@@ -331,8 +331,6 @@ public class Battery_Provider extends ContentProvider {
                 Battery_Charges.BATTERY_END);
         batteryChargesMap.put(Battery_Charges.END_TIMESTAMP,
                 Battery_Charges.END_TIMESTAMP);
-
-		initialiseDatabase();
 	    
 		return true;
 	}

@@ -82,7 +82,7 @@ public class Traffic_Provider extends ContentProvider {
     private UriMatcher sUriMatcher = null;
     private HashMap<String, String> trafficProjectionMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -191,8 +191,6 @@ public class Traffic_Provider extends ContentProvider {
                 Traffic_Data.RECEIVED_PACKETS);
         trafficProjectionMap.put(Traffic_Data.SENT_PACKETS,
                 Traffic_Data.SENT_PACKETS);
-
-        initialiseDatabase();
 
         return true;
     }

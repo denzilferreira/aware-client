@@ -74,7 +74,7 @@ public class TimeZone_Provider extends ContentProvider {
     private UriMatcher sUriMatcher = null;
     private HashMap<String, String> timeZoneMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -171,8 +171,6 @@ public class TimeZone_Provider extends ContentProvider {
         timeZoneMap.put(TimeZone_Data.TIMESTAMP, TimeZone_Data.TIMESTAMP);
         timeZoneMap.put(TimeZone_Data.DEVICE_ID, TimeZone_Data.DEVICE_ID);
         timeZoneMap.put(TimeZone_Data.TIMEZONE, TimeZone_Data.TIMEZONE);
-
-        initialiseDatabase();
 
         return true;
     }

@@ -123,7 +123,7 @@ public class Proximity_Provider extends ContentProvider {
     private HashMap<String, String> sensorMap = null;
     private HashMap<String, String> sensorDataMap = null;
 
-    private static DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
     private static SQLiteDatabase database;
 
     private void initialiseDatabase() {
@@ -323,8 +323,6 @@ public class Proximity_Provider extends ContentProvider {
         sensorDataMap.put(Proximity_Data.PROXIMITY, Proximity_Data.PROXIMITY);
         sensorDataMap.put(Proximity_Data.ACCURACY, Proximity_Data.ACCURACY);
         sensorDataMap.put(Proximity_Data.LABEL, Proximity_Data.LABEL);
-
-        initialiseDatabase();
 
         return true;
     }
