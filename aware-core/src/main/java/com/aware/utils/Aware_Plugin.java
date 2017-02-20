@@ -96,13 +96,14 @@ public class Aware_Plugin extends Service {
             startService(aware);
         }
 
-        if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
-            Intent study_SSL = new Intent(this, SSLManager.class);
-            study_SSL.putExtra(SSLManager.EXTRA_SERVER, Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
-            startService(study_SSL);
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
+                Intent study_SSL = new Intent(this, SSLManager.class);
+                study_SSL.putExtra(SSLManager.EXTRA_SERVER, Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
+                startService(study_SSL);
+            }
+            Aware.debug(this, "created: " + getClass().getName() + " package: " + getPackageName());
         }
-
-        Aware.debug(this, "created: " + getClass().getName() + " package: " + getPackageName());
     }
 
     @Override
@@ -117,7 +118,9 @@ public class Aware_Plugin extends Service {
     public void onDestroy() {
         super.onDestroy();
 
-        Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
+        }
 
         if (contextBroadcaster != null) {
             unregisterReceiver(contextBroadcaster);
