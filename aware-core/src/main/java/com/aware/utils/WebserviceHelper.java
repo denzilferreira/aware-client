@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -56,42 +57,47 @@ public class WebserviceHelper extends Service {
     private static NotificationManager notManager;
     private long sync_start = 0;
 
-    private Looper mServiceLooper;
-    ExecutorService executor;
+    private int notificationID = 0;
 
-    private static int notificationID = 0;
+    private SyncQueue mSyncFastQueue;
+    private Looper mServiceLooperFastQueue;
+    private ExecutorService executorFastQueue;
 
-    private ServiceHandler mServiceHandler;
+    private SyncQueue mSyncSlowQueueA;
+    private Looper mServiceLooperSlowQueueA;
+    ExecutorService executorSlowQueueA;
+
+    private SyncQueue mSyncSlowQueueB;
+    private Looper mServiceLooperSlowQueueB;
+    ExecutorService executorSlowQueueB;
+
+    private boolean nextSlowQueue = false;
 
 
-    private static final Map<String, Boolean> SYNCED_TABLES = Collections.synchronizedMap(new HashMap<String, Boolean>());
+    private Map<String, Boolean> SYNCED_TABLES;
     private static final ArrayList<String> highFrequencySensors = new ArrayList<>();
 
     // Handler that receives messages from the thread
-    private final class ServiceHandler extends Handler {
+    private final class SyncQueue extends Handler {
+        ExecutorService executor;
 
-        public ServiceHandler(Looper looper) {
+        public SyncQueue(Looper looper, ExecutorService executor) {
             super(looper);
-            // Two threads to sync data with the server
-            executor = Executors.newFixedThreadPool(2);
+            // One thread to sync data with the server
+            this.executor = executor;
         }
 
         @Override
         public void handleMessage(Message msg) {
             Bundle bundle = msg.getData();
 
-
-            synchronized (SYNCED_TABLES) {
-                if (!SYNCED_TABLES.containsKey(bundle.getString("DATABASE_TABLE")) || (SYNCED_TABLES.containsKey(bundle.getString("DATABASE_TABLE")) && SYNCED_TABLES.get(bundle.getString("DATABASE_TABLE")))) {
-                    Log.d(Aware.TAG, "Tried to sync for the first time for " + bundle.getString("DATABASE_TABLE"));
-                    SYNCED_TABLES.put(bundle.getString("DATABASE_TABLE"), false);
-                    Context context = (Context) msg.obj;
-                    notificationID++;
-                    SyncTable syncTable = new SyncTable(context, bundle.getBoolean("DEBUG"), bundle.getString("DATABASE_TABLE"), bundle.getString("TABLES_FIELDS"), bundle.getString("ACTION"), bundle.getString("CONTENT_URI_STRING"), bundle.getString("DEVICE_ID"), bundle.getString("WEBSERVER"), bundle.getBoolean("WEBSERVICE_SIMPLE"), bundle.getBoolean("WEBSERVICE_REMOVE_DATA"), bundle.getInt("MAX_POST_SIZE"), notificationID);
-                    executor.submit(syncTable);
-                } else {
-                    Log.d(Aware.TAG, "Tried to sync again for " + bundle.getString("DATABASE_TABLE"));
-                }
+            Context context = (Context) msg.obj;
+            SyncTable syncTable = new SyncTable(context, bundle.getBoolean("DEBUG"), bundle.getString("DATABASE_TABLE"), bundle.getString("TABLES_FIELDS"), bundle.getString("ACTION"), bundle.getString("CONTENT_URI_STRING"), bundle.getString("DEVICE_ID"), bundle.getString("WEBSERVER"), bundle.getBoolean("WEBSERVICE_SIMPLE"), bundle.getBoolean("WEBSERVICE_REMOVE_DATA"), bundle.getInt("MAX_POST_SIZE"), bundle.getInt("notificationID"));
+            try {
+                executor.submit(syncTable).get();
+            } catch (InterruptedException | ExecutionException e) {
+                if(Aware.DEBUG)
+                    Log.e(Aware.TAG, e.getMessage());
             }
 
             // Stop the service using the startId, so that we don't stop
@@ -104,37 +110,53 @@ public class WebserviceHelper extends Service {
 
     @Override
     public void onCreate() {
+        super.onCreate();
 
         highFrequencySensors.add("accelerometer");
         highFrequencySensors.add("gyroscope");
         highFrequencySensors.add("barometer");
         highFrequencySensors.add("gravity");
-        highFrequencySensors.add("light");
         highFrequencySensors.add("linear_accelerometer");
         highFrequencySensors.add("magnetometer");
         highFrequencySensors.add("rotation");
         highFrequencySensors.add("temperature");
         highFrequencySensors.add("proximity");
 
+        notificationID = 0;
+        SYNCED_TABLES = Collections.synchronizedMap(new HashMap<String, Boolean>());
 
-        HandlerThread thread = new HandlerThread("ServiceStartArguments",
+
+        HandlerThread threadFast = new HandlerThread("SyncFastQueue",
                 android.os.Process.THREAD_PRIORITY_BACKGROUND);
-        thread.start();
+        threadFast.start();
+
+        HandlerThread threadSlowA = new HandlerThread("SyncSlowAQueue",
+                android.os.Process.THREAD_PRIORITY_BACKGROUND);
+        threadSlowA.start();
+
+        HandlerThread threadSlowB = new HandlerThread("SyncSlowBQueue",
+                android.os.Process.THREAD_PRIORITY_BACKGROUND);
+        threadSlowB.start();
+
 
         // Get the HandlerThread's Looper and use it for our Handler
-        mServiceLooper = thread.getLooper();
-        mServiceHandler = new ServiceHandler(mServiceLooper);
+        mServiceLooperFastQueue = threadFast.getLooper();
+        executorFastQueue = Executors.newSingleThreadExecutor();
+        mSyncFastQueue = new SyncQueue(mServiceLooperFastQueue, executorFastQueue);
 
-        super.onCreate();
+        mServiceLooperSlowQueueA = threadSlowA.getLooper();
+        executorSlowQueueA = Executors.newSingleThreadExecutor();
+        mSyncSlowQueueA = new SyncQueue(mServiceLooperSlowQueueA, executorSlowQueueA);
 
+        mServiceLooperSlowQueueB = threadSlowB.getLooper();
+        executorSlowQueueB = Executors.newSingleThreadExecutor();
+        mSyncSlowQueueB = new SyncQueue(mServiceLooperSlowQueueB, executorSlowQueueB);
 
         if (Aware.DEBUG)
             Log.d(Aware.TAG, "Synching all the databases...");
 
-        if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
+        if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SILENT).equals("true"))
             notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            // notifyUser(getApplicationContext(), "Synching initiated...", false, true, WEBSERVICES_NOTIFICATION_ID);
-        }
         sync_start = System.currentTimeMillis();
     }
 
@@ -175,7 +197,7 @@ public class WebserviceHelper extends Service {
         //Fixed: not part of a study, do nothing
         if (WEBSERVER.length() == 0 || WEBSERVER.equalsIgnoreCase("https://api.awareframework.com/index.php")) {
             stopSelf();
-            return START_NOT_STICKY;
+            return START_REDELIVER_INTENT;
         }
 
 
@@ -204,7 +226,7 @@ public class WebserviceHelper extends Service {
                     if (Aware.DEBUG)
                         Log.d(Aware.TAG, "Only sync data if charging...");
                     stopSelf();
-                    return START_NOT_STICKY;
+                    return START_REDELIVER_INTENT;
                 }
             }
 
@@ -219,35 +241,66 @@ public class WebserviceHelper extends Service {
                     if (Aware.DEBUG)
                         Log.d(Aware.TAG, "Sync data only over Wi-Fi. Will try again later...");
                     stopSelf();
-                    return START_NOT_STICKY;
+                    return START_REDELIVER_INTENT;
                 }
             }
 
             // For each start request, send a message to start a job and deliver the
             // start ID so we know which request we're stopping when we finish the job
 
-            Message msg = mServiceHandler.obtainMessage();
-            Bundle bundle = new Bundle();
-            bundle.putBoolean("DEBUG", DEBUG);
-            bundle.putString("DEVICE_ID", DEVICE_ID);
-            bundle.putString("WEBSERVER", WEBSERVER);
-            bundle.putBoolean("WEBSERVICE_SIMPLE", WEBSERVICE_SIMPLE);
-            bundle.putBoolean("WEBSERVICE_REMOVE_DATA", WEBSERVICE_REMOVE_DATA);
-            bundle.putInt("MAX_POST_SIZE", MAX_POST_SIZE);
-            bundle.putString("DATABASE_TABLE", intent.getStringExtra(EXTRA_TABLE));
-            bundle.putString("TABLES_FIELDS", intent.getStringExtra(EXTRA_FIELDS));
-            bundle.putString("ACTION", intent.getAction());
-            bundle.putString("CONTENT_URI_STRING", intent.getStringExtra(EXTRA_CONTENT_URI));
-            msg.obj = getApplicationContext();
-            msg.setData(bundle);
-            msg.arg1 = startId;
-            mServiceHandler.sendMessage(msg);
+            String table = intent.getStringExtra(EXTRA_TABLE);
+
+            if (!SYNCED_TABLES.containsKey(table)) {
+                if(Aware.DEBUG)
+                    Log.d(Aware.TAG, "Tried to sync for the first time " + table);
+                SYNCED_TABLES.put(table, true);
+                if(!highFrequencySensors.contains(table)){ //Non High Frequency sensors go together
+                    Message msg = buildMessage(mSyncFastQueue, intent, DEBUG, DEVICE_ID, WEBSERVER, WEBSERVICE_SIMPLE, WEBSERVICE_REMOVE_DATA, MAX_POST_SIZE, startId, notificationID++);
+                    mSyncFastQueue.sendMessage(msg);
+                }
+                else if(nextSlowQueue){ // High frequency sensors are split in two threads
+                    Message msg = buildMessage(mSyncSlowQueueA, intent, DEBUG, DEVICE_ID, WEBSERVER, WEBSERVICE_SIMPLE, WEBSERVICE_REMOVE_DATA, MAX_POST_SIZE, startId, notificationID++);
+                    mSyncSlowQueueA.sendMessage(msg);
+                    nextSlowQueue = !nextSlowQueue;
+                }
+                else{
+                    Message msg = buildMessage(mSyncSlowQueueB, intent, DEBUG, DEVICE_ID, WEBSERVER, WEBSERVICE_SIMPLE, WEBSERVICE_REMOVE_DATA, MAX_POST_SIZE, startId, notificationID++);
+                    mSyncSlowQueueB.sendMessage(msg);
+                    nextSlowQueue = !nextSlowQueue;
+                }
+            } else {
+                if(Aware.DEBUG)
+                    Log.d(Aware.TAG, "Tried to sync again for " + table);
+            }
+
 
 
         }
 
         // If we get killed, after returning from here, restart
-        return START_NOT_STICKY;
+        return START_REDELIVER_INTENT;
+    }
+
+    private Message buildMessage(SyncQueue queue, Intent intent, boolean DEBUG, String DEVICE_ID, String WEBSERVER, boolean WEBSERVICE_SIMPLE, boolean WEBSERVICE_REMOVE_DATA, int MAX_POST_SIZE, int startId, int notificationID){
+        Message msg = queue.obtainMessage();
+        Bundle bundle = new Bundle();
+        bundle.putBoolean("DEBUG", DEBUG);
+        bundle.putString("DEVICE_ID", DEVICE_ID);
+        bundle.putString("WEBSERVER", WEBSERVER);
+        bundle.putBoolean("WEBSERVICE_SIMPLE", WEBSERVICE_SIMPLE);
+        bundle.putBoolean("WEBSERVICE_REMOVE_DATA", WEBSERVICE_REMOVE_DATA);
+        bundle.putInt("MAX_POST_SIZE", MAX_POST_SIZE);
+        bundle.putInt("notificationID", notificationID);
+        bundle.putString("DATABASE_TABLE", intent.getStringExtra(EXTRA_TABLE));
+        bundle.putString("TABLES_FIELDS", intent.getStringExtra(EXTRA_FIELDS));
+        bundle.putString("ACTION", intent.getAction());
+        bundle.putString("CONTENT_URI_STRING", intent.getStringExtra(EXTRA_CONTENT_URI));
+        msg.obj = getApplicationContext();
+        msg.setData(bundle);
+        msg.arg1 = startId;
+
+        return msg;
+
     }
 
     /**
@@ -298,12 +351,12 @@ public class WebserviceHelper extends Service {
                 //Create table if doesn't exist on the remote webservice server
                 if (protocol.equals("https")) {
                     try {
-                        response = new Https(mContext, SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
+                        response = new Https(SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
                     } catch (FileNotFoundException e) {
                         response = null;
                     }
                 } else {
-                    response = new Http(mContext).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
+                    response = new Http().dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/create_table", fields, true);
                 }
             }
             return response;
@@ -334,12 +387,12 @@ public class WebserviceHelper extends Service {
                 // Normal AWARE API always gets here.
                 if (protocol.equals("https")) {
                     try {
-                        latest = new Https(mContext, SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
+                        latest = new Https(SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
                     } catch (FileNotFoundException e) {
                         latest = null;
                     }
                 } else {
-                    latest = new Http(mContext).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
+                    latest = new Http().dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
                 }
                 if (latest == null)
                     return Thread.currentThread().getName(); //unable to reach the server, cancel this sync
@@ -536,14 +589,14 @@ public class WebserviceHelper extends Service {
                 String success;
                 if (protocol.equals("https")) {
                     try {
-                        success = new Https(mContext, SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+                        success = new Https(SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                         if (DEBUG)
                             Log.d(Aware.TAG, "Sync " + DATABASE_TABLE + " OK");
                     } catch (FileNotFoundException e) {
                         success = null;
                     }
                 } else {
-                    success = new Http(mContext).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
+                    success = new Http().dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
                     if (DEBUG)
                         Log.d(Aware.TAG, "Sync " + DATABASE_TABLE + " OK");
                 }
@@ -564,7 +617,7 @@ public class WebserviceHelper extends Service {
 
             if (ACTION.equals(ACTION_AWARE_WEBSERVICE_SYNC_TABLE)) {
                 Uri CONTENT_URI = Uri.parse(CONTENT_URI_STRING);
-                String response = "";
+                String response;
                 response = createRemoteTable();
 
                 if (response != null || WEBSERVICE_SIMPLE) {
@@ -619,10 +672,6 @@ public class WebserviceHelper extends Service {
 
                     } catch (JSONException e) {
                         e.printStackTrace();
-                    } finally {
-                        synchronized (SYNCED_TABLES) {
-                            SYNCED_TABLES.put(DATABASE_TABLE, true);
-                        }
                     }
                 }
             }
@@ -637,12 +686,12 @@ public class WebserviceHelper extends Service {
 
                 if (protocol.equals("https")) {
                     try {
-                        new Https(mContext, SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
+                        new Https(SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                     }
                 } else {
-                    new Http(mContext).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
+                    new Http().dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/clear_table", request, true);
                 }
             }
 
@@ -666,8 +715,14 @@ public class WebserviceHelper extends Service {
     @Override
     public void onDestroy() {
 
-        mServiceLooper.quitSafely();
-        executor.shutdown();
+        mServiceLooperFastQueue.quitSafely();
+        mServiceLooperSlowQueueA.quitSafely();
+        mServiceLooperSlowQueueB.quitSafely();
+        executorFastQueue.shutdown();
+        executorSlowQueueA.shutdown();
+        executorSlowQueueB.shutdown();
+        if(Aware.DEBUG)
+            Log.d(Aware.TAG, "Destroying sync service");
 
     }
 }

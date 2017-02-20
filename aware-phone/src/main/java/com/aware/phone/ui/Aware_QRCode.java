@@ -357,12 +357,12 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
 //                }
 
                 try {
-                    request = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                    request = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
                 } catch (FileNotFoundException e) {
                     request = null;
                 }
             } else {
-                request = new Http(getApplicationContext()).dataGET(study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                request = new Http().dataGET(study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
             }
 
             if (request != null) {
@@ -389,12 +389,12 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                     String answer;
                     if (protocol.equals("https")) {
                         try {
-                            answer = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataPOST(study_url, data, true);
+                            answer = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url)).dataPOST(study_url, data, true);
                         } catch (FileNotFoundException e) {
                             answer = null;
                         }
                     } else {
-                        answer = new Http(getApplicationContext()).dataPOST(study_url, data, true);
+                        answer = new Http().dataPOST(study_url, data, true);
                     }
 
                     if (answer != null) {

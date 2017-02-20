@@ -1,20 +1,13 @@
 
 package com.aware.utils;
 
-import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.aware.Aware;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -23,12 +16,10 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.zip.GZIPInputStream;
 
-import javax.net.ssl.HttpsURLConnection;
 
 /**
  * HTML POST/GET client wrapper
@@ -42,7 +33,7 @@ public class Http {
 	private static String TAG = "AWARE::HTML";
     private static int timeout = 60 * 1000;
 
-	public Http(Context c) {}
+	public Http() {}
 
     public Http setTimeout(int connection_timeout) {
         timeout = connection_timeout;
@@ -51,7 +42,7 @@ public class Http {
 
     /**
      * Request a GET from an URL.
-     * @param url
+     * @param url GET URL
      * @return String with the content of the reply
      */
     public synchronized String dataGET(String url, boolean is_gzipped) {
@@ -105,9 +96,9 @@ public class Http {
 
 	/**
 	 * Make a POST to the URL, with the Hashtable<String, String> data, using gzip compression
-	 * @param url
-	 * @param data
-     * @param is_gzipped
+	 * @param url POST URL
+	 * @param data Data to send
+     * @param is_gzipped Gzip data or not
 	 * @return String with server response. If GZipped, use Http.undoGZIP to recover data
 	 */
 	public synchronized String dataPOST(String url, Hashtable<String, String> data, boolean is_gzipped) {
