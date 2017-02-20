@@ -1,6 +1,7 @@
 
 package com.aware;
 
+import android.Manifest;
 import android.app.ActivityManager;
 import android.app.Service;
 import android.app.UiModeManager;
@@ -258,9 +259,6 @@ public class Aware extends Service {
             return;
         }
 
-        //Boot core AWARE services
-        startAWARE(getApplicationContext());
-
         //If Android M+ and client or standalone, ask to be added to the whilelist of Doze
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (getPackageName().equals("com.aware.phone") || getResources().getBoolean(R.bool.standalone))) {
 //            Intent intent = new Intent();
@@ -474,6 +472,10 @@ public class Aware extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        //Fix: do nothing until we have permissions to the storage. This prevents plugins from crashing.
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            return super.onStartCommand(intent, flags, startId);
+        }
 
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
 
