@@ -1,7 +1,9 @@
 
 package com.aware.utils;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
@@ -43,6 +45,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private SQLiteDatabase database;
 
     private HashMap<String, String> renamed_columns = new HashMap<>();
+
     private Context mContext;
 
     public DatabaseHelper(Context context, String database_name, CursorFactory cursor_factory, int database_version, String[] database_tables, String[] table_fields) {
@@ -53,7 +56,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         tableFields = table_fields;
         newVersion = database_version;
         cursorFactory = cursor_factory;
-        database = getWritableDatabase();
+//        database = getWritableDatabase(); //don't do this here
     }
 
     public void setRenamedColumns(HashMap<String, String> renamed) {
@@ -63,7 +66,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         if (DEBUG) Log.w(TAG, "Creating database: " + db.getPath());
-
         for (int i = 0; i < databaseTables.length; i++) {
             db.execSQL("CREATE TABLE IF NOT EXISTS " + databaseTables[i] + " (" + tableFields[i] + ");");
             db.execSQL("CREATE INDEX IF NOT EXISTS time_device ON " + databaseTables[i] + " (timestamp, device_id);");
@@ -167,14 +169,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public synchronized SQLiteDatabase getWritableDatabase() {
-        if (database != null) {
-            if (!database.isOpen()) {
-                database = null;
-            } else if (!database.isReadOnly()) {
-                return database;
-            }
-        }
         try {
+            if (database != null) {
+                if (!database.isOpen()) {
+                    database = null;
+                } else if (!database.isReadOnly()) {
+                    return database;
+                }
+            }
             database = getDatabaseFile();
             int current_version = database.getVersion();
             if (current_version != newVersion) {
@@ -190,26 +192,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     database.endTransaction();
                 }
             }
-
-            onOpen(database);
+//            onOpen(database);
             return database;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             return null;
         }
     }
 
     @Override
     public synchronized SQLiteDatabase getReadableDatabase() {
-        if (database != null) {
-            if (!database.isOpen()) {
-                database = null;
-            }
-        }
         try {
+            if (database != null) {
+                if (!database.isOpen()) {
+                    database = null;
+                }
+            }
             database = getDatabaseFile();
-            onOpen(database);
+//            onOpen(database);
             return database;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             return null;
         }
     }
@@ -220,18 +221,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      * @return
      */
     private synchronized SQLiteDatabase getDatabaseFile() {
-        File aware_folder;
-        if (!mContext.getResources().getBoolean(R.bool.standalone)) {
-            aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString()); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
-        } else {
-            aware_folder = new File(ContextCompat.getExternalFilesDirs(mContext, null)[0] + "/AWARE"); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
-        }
+        if (mContext.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            File aware_folder;
+            if (!mContext.getResources().getBoolean(R.bool.standalone)) {
+                aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString()); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
+            } else {
+                aware_folder = new File(ContextCompat.getExternalFilesDirs(mContext, null)[0] + "/AWARE"); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
+            }
 
-        if (!aware_folder.exists()) {
-            aware_folder.mkdirs();
-        }
+            if (!aware_folder.exists()) {
+                aware_folder.mkdirs();
+            }
 
-        database = SQLiteDatabase.openOrCreateDatabase(new File(aware_folder, this.databaseName).getPath(), this.cursorFactory);
-        return database;
+            database = SQLiteDatabase.openOrCreateDatabase(new File(aware_folder, this.databaseName).getPath(), this.cursorFactory);
+            return database;
+        }
+        return null;
     }
 }

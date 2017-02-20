@@ -216,11 +216,8 @@ public class Aware extends Service {
 
     }
 
-    /**
-     * Activity-Service binder
-     */
-    private final IBinder serviceBinder = new ServiceBinder();
 
+    private final IBinder serviceBinder = new ServiceBinder();
     public class ServiceBinder extends Binder {
         public Aware getService() {
             return Aware.getService();

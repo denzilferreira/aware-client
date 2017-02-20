@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.IBinder;
 import android.util.Log;
@@ -99,7 +100,9 @@ public class Aware_Sensor extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
+        }
         return super.onStartCommand(intent, flags, startId);
     }
 
