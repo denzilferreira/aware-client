@@ -297,9 +297,8 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     }
 
     private final IBinder serviceBinder = new ServiceBinder();
-
     public class ServiceBinder extends Binder {
-        Accelerometer getService() {
+        public Accelerometer getService() {
             return Accelerometer.getService();
         }
     }

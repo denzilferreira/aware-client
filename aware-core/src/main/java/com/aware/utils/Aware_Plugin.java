@@ -75,8 +75,7 @@ public class Aware_Plugin extends Service {
      */
     public static final int STATUS_PLUGIN_ON = 1;
 
-    Aware framework;
-    boolean mBound = false;
+    private Intent aware;
 
     @Override
     public void onCreate() {
@@ -93,8 +92,8 @@ public class Aware_Plugin extends Service {
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
         if (!getResources().getBoolean(R.bool.standalone)) {
-            Intent aware = new Intent(getApplicationContext(), Aware.class);
-            bindService(aware, mConnection, Context.BIND_AUTO_CREATE);
+            aware = new Intent(getApplicationContext(), Aware.class);
+            startService(aware);
         }
 
         if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
@@ -119,31 +118,16 @@ public class Aware_Plugin extends Service {
     public void onDestroy() {
         super.onDestroy();
 
-        if (mBound) {
-            unbindService(mConnection);
-            mBound = false;
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
         }
 
         if (contextBroadcaster != null) {
             unregisterReceiver(contextBroadcaster);
         }
 
-        Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
+        if (aware != null) stopService(aware);
     }
-
-    private ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Aware.ServiceBinder binder = (Aware.ServiceBinder) service;
-            framework = binder.getService();
-            mBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mBound = false;
-        }
-    };
 
     /**
      * Interface to share context with other applications/plugins<br/>
