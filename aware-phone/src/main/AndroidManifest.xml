@@ -88,8 +88,7 @@
             android:label="@string/aware_stream"
             android:launchMode="singleTop"
             android:noHistory="true"
-            android:theme="@style/Theme.Aware">
-        </activity>
+            android:theme="@style/Theme.Aware"/>
         <activity
             android:name="com.aware.phone.ui.Aware_QRCode"
             android:configChanges="keyboardHidden|orientation|screenSize"

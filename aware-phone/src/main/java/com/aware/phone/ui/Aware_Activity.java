@@ -2,6 +2,7 @@ package com.aware.phone.ui;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -81,7 +82,11 @@ public abstract class Aware_Activity extends AppCompatPreferenceActivity {
                         case R.id.aware_plugins: //Plugins
                             Intent playStore = new Intent(Intent.ACTION_VIEW);
                             playStore.setData(Uri.parse("market://search?q=awareframework&c=apps"));
-                            startActivity(playStore);
+                            try {
+                                startActivity(playStore);
+                            } catch (ActivityNotFoundException e) {
+                                Toast.makeText(getApplicationContext(), "Google Play Store installed?", Toast.LENGTH_SHORT).show();
+                            }
                             break;
                         case R.id.aware_stream: //Stream
                             Intent stream_ui = new Intent(getApplicationContext(), Stream_UI.class);

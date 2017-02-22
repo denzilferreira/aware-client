@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -60,8 +61,8 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
 
     private static boolean permissions_ok;
 
-    private static Hashtable<String, Boolean> listSensorType;
-    private List<String[]> optionalSensors = new ArrayList<>();
+    private static Hashtable<Integer, Boolean> listSensorType;
+    private Hashtable<String, Integer> optionalSensors = new Hashtable<>();
 
     private static SharedPreferences prefs;
 
@@ -69,25 +70,23 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        optionalSensors.add(new String[]{Aware_Preferences.STATUS_ACCELEROMETER, Sensor.STRING_TYPE_ACCELEROMETER});
-        optionalSensors.add(new String[]{Aware_Preferences.STATUS_SIGNIFICANT_MOTION, Sensor.STRING_TYPE_ACCELEROMETER});
-        optionalSensors.add(new String[]{Aware_Preferences.STATUS_BAROMETER, Sensor.STRING_TYPE_PRESSURE});
-        optionalSensors.add(new String[]{Aware_Preferences.STATUS_GRAVITY, Sensor.STRING_TYPE_GRAVITY});
-        optionalSensors.add(new String[]{Aware_Preferences.STATUS_GYROSCOPE, Sensor.STRING_TYPE_GYROSCOPE});
-        optionalSensors.add(new String[]{Aware_Preferences.STATUS_LIGHT, Sensor.STRING_TYPE_LIGHT});
-        optionalSensors.add(new String[]{Aware_Preferences.STATUS_LINEAR_ACCELEROMETER, Sensor.STRING_TYPE_LINEAR_ACCELERATION});
-        optionalSensors.add(new String[]{Aware_Preferences.STATUS_MAGNETOMETER, Sensor.STRING_TYPE_MAGNETIC_FIELD});
-        optionalSensors.add(new String[]{Aware_Preferences.STATUS_PROXIMITY, Sensor.STRING_TYPE_PROXIMITY});
-        optionalSensors.add(new String[]{Aware_Preferences.STATUS_ROTATION, Sensor.STRING_TYPE_ROTATION_VECTOR});
-        optionalSensors.add(new String[]{Aware_Preferences.STATUS_TEMPERATURE, Sensor.STRING_TYPE_AMBIENT_TEMPERATURE});
+        optionalSensors.put(Aware_Preferences.STATUS_ACCELEROMETER, Sensor.TYPE_ACCELEROMETER);
+        optionalSensors.put(Aware_Preferences.STATUS_SIGNIFICANT_MOTION, Sensor.TYPE_ACCELEROMETER);
+        optionalSensors.put(Aware_Preferences.STATUS_BAROMETER, Sensor.TYPE_PRESSURE);
+        optionalSensors.put(Aware_Preferences.STATUS_GRAVITY, Sensor.TYPE_GRAVITY);
+        optionalSensors.put(Aware_Preferences.STATUS_GYROSCOPE, Sensor.TYPE_GYROSCOPE);
+        optionalSensors.put(Aware_Preferences.STATUS_LIGHT, Sensor.TYPE_LIGHT);
+        optionalSensors.put(Aware_Preferences.STATUS_LINEAR_ACCELEROMETER, Sensor.TYPE_LINEAR_ACCELERATION);
+        optionalSensors.put(Aware_Preferences.STATUS_MAGNETOMETER, Sensor.TYPE_MAGNETIC_FIELD);
+        optionalSensors.put(Aware_Preferences.STATUS_PROXIMITY, Sensor.TYPE_PROXIMITY);
+        optionalSensors.put(Aware_Preferences.STATUS_ROTATION, Sensor.TYPE_ROTATION_VECTOR);
+        optionalSensors.put(Aware_Preferences.STATUS_TEMPERATURE, Sensor.TYPE_AMBIENT_TEMPERATURE);
 
         SensorManager manager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         List<Sensor> sensors = manager.getSensorList(Sensor.TYPE_ALL);
         listSensorType = new Hashtable<>();
         for (int i = 0; i < sensors.size(); i++) {
-            listSensorType.put(sensors.get(i).getStringType(), true);
-            if (Aware.DEBUG)
-                Log.d(Aware.TAG, "Sensor: " + sensors.get(i).getStringType() + " " + sensors.get(i).getType());
+            listSensorType.put(sensors.get(i).getType(), true);
         }
 
         addPreferencesFromResource(R.xml.aware_preferences);
@@ -240,9 +239,9 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                         Drawable category_icon = ContextCompat.getDrawable(getApplicationContext(), icon_id);
                         if (category_icon != null && Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
                             category_icon.setColorFilter(new PorterDuffColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.accent), PorterDuff.Mode.SRC_IN));
+                            parent.setIcon(category_icon);
                             onContentChanged();
                         }
-                        if (category_icon != null) parent.setIcon(category_icon);
                     } catch (NoSuchFieldException | IllegalAccessException e) {
                     }
                 } else {
@@ -253,9 +252,9 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                         Drawable category_icon = ContextCompat.getDrawable(getApplicationContext(), icon_id);
                         if (category_icon != null && Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
                             category_icon.clearColorFilter();
+                            parent.setIcon(category_icon);
                             onContentChanged();
                         }
-                        if (category_icon != null) parent.setIcon(category_icon);
                     } catch (NoSuchFieldException | IllegalAccessException e) {
                     }
                 }
@@ -274,7 +273,6 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
             permissionsHandler.putExtra(PermissionsHandler.EXTRA_REDIRECT_ACTIVITY, getPackageName() + "/" + getClass().getName());
             startActivityForResult(permissionsHandler, PermissionsHandler.RC_PERMISSIONS);
             finish();
-            return;
         } else {
             Intent startAware = new Intent(this, Aware.class);
             startService(startAware);
@@ -303,10 +301,11 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                 Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, "https://api.awareframework.com/index.php");
             }
 
-            for (String[] optionalSensor : optionalSensors) {
-                Preference pref = findPreference(optionalSensor[0]);
+            Set<String> keys = optionalSensors.keySet();
+            for (String optionalSensor : keys) {
+                Preference pref = findPreference(optionalSensor);
                 PreferenceGroup parent = getPreferenceParent(pref);
-                if (pref.getKey().equalsIgnoreCase(optionalSensor[0]) && !listSensorType.containsKey(optionalSensor[1]))
+                if (pref.getKey().equalsIgnoreCase(optionalSensor) && !listSensorType.containsKey(optionalSensors.get(optionalSensor)))
                     parent.setEnabled(false);
             }
 

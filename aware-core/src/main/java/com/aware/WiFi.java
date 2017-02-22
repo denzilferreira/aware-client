@@ -18,6 +18,7 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -300,10 +301,12 @@ public class WiFi extends Aware_Sensor {
             WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
 
             if (intent.getAction().equals(WiFi.ACTION_AWARE_WIFI_REQUEST_SCAN)) {
-                if (wifiManager.isWifiEnabled() || wifiManager.isScanAlwaysAvailable()) {
+                if (wifiManager.isWifiEnabled()) {
                     Intent scanStart = new Intent(ACTION_AWARE_WIFI_SCAN_STARTED);
                     sendBroadcast(scanStart);
                     wifiManager.startScan();
+
+//                    || ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2)?wifiManager.isScanAlwaysAvailable():true)
                 } else {
                     if (DEBUG) {
                         Log.d(TAG, "WiFi is off");

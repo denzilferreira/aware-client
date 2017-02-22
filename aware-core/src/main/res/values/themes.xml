@@ -4,6 +4,8 @@
         <item name="colorPrimary">@color/primary</item>
         <item name="colorAccent">@color/accent</item>
         <item name="colorPrimaryDark">@color/primaryDark</item>
+        <item name="android:listViewStyle">@style/ListViewPreferences</item>
+        <item name="android:windowBackground">@android:color/background_light</item>
     </style>
 
     <style name="Theme.AppCompat.Translucent">
@@ -15,6 +17,10 @@
         <item name="android:colorBackgroundCacheHint">@null</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowAnimationStyle">@android:style/Animation</item>
+    </style>
+
+    <style name="ListViewPreferences" parent="@android:style/Widget.ListView">
+        <item name="android:background">@android:color/background_light</item>
     </style>
 
     <style name="Aware_Toolbar" parent="ThemeOverlay.AppCompat.ActionBar">

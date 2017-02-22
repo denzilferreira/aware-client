@@ -221,7 +221,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      * @return
      */
     private synchronized SQLiteDatabase getDatabaseFile() {
-        if (mContext.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             File aware_folder;
             if (!mContext.getResources().getBoolean(R.bool.standalone)) {
                 aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString()); // sdcard/AWARE/ (shareable, does not delete when uninstalling)

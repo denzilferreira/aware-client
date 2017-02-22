@@ -105,11 +105,9 @@ public class Bluetooth extends Aware_Sensor {
     public void onCreate() {
         super.onCreate();
 
-        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        bluetoothAdapter  = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2)? ((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter() : BluetoothAdapter.getDefaultAdapter();
-        if(bluetoothAdapter == null) return;
-
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+
 
         DATABASE_TABLES = Bluetooth_Provider.DATABASE_TABLES;
         TABLES_FIELDS = Bluetooth_Provider.TABLES_FIELDS;
@@ -129,6 +127,9 @@ public class Bluetooth extends Aware_Sensor {
         REQUIRED_PERMISSIONS.add(Manifest.permission.BLUETOOTH);
         REQUIRED_PERMISSIONS.add(Manifest.permission.BLUETOOTH_ADMIN);
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_COARSE_LOCATION); //we need this permission for BT scanning to work
+
+        bluetoothAdapter  = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2)? ((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter() : BluetoothAdapter.getDefaultAdapter();
+        if(bluetoothAdapter == null) return;
 
         enableBT = new Intent(this, Bluetooth.class);
         enableBT.putExtra("action", ACTION_AWARE_ENABLE_BT);
