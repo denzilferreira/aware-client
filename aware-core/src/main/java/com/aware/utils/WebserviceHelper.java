@@ -389,13 +389,13 @@ public class WebserviceHelper extends Service {
                     try {
                         latest = new Https(SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
                     } catch (FileNotFoundException e) {
-                        latest = null;
+                        return "[]";
                     }
                 } else {
                     latest = new Http().dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
                 }
                 if (latest == null)
-                    return Thread.currentThread().getName(); //unable to reach the server, cancel this sync
+                    return "[]";
             }
             return latest;
         }
@@ -626,6 +626,13 @@ public class WebserviceHelper extends Service {
                         String[] columnsStr = getTableColumnsNames(CONTENT_URI);
                         String latest = getLatestRecordInDatabase();
                         String study_condition = getRemoteSyncCondition();
+
+                        if (Aware.DEBUG) {
+                            Log.d("Sync", "Response table check (nothing is good!): " + response);
+                            Log.d("Sync", "Latest: " + latest);
+                            Log.d("Sync", "Study condition: " + study_condition);
+                        }
+
                         int total_records = getNumberOfRecordsToSync(CONTENT_URI, columnsStr, latest, study_condition);
 
                         if (total_records > 0) {
