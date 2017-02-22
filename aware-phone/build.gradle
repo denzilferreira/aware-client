@@ -1,7 +1,4 @@
-
 apply plugin: 'com.android.application'
-
-version = version_readable
 
 android {
     compileSdkVersion 25
@@ -13,6 +10,14 @@ android {
         versionName version_readable
         targetSdkVersion 25
         minSdkVersion 10 //Android 2.3.3
+    }
+
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'armeabi'
+        }
     }
 
     signingConfigs {
@@ -32,6 +37,12 @@ android {
     }
 }
 
+//Make bundles have a different package name to avoid client's Play Store updates during a study!
+//Plugins will still get updated if needed
+if (System.getenv("aware_label") == "bundle") {
+    android.defaultConfig.applicationId = "com.aware.phone." + System.getenv("aware_label")
+}
+
 if (System.getenv("storeFile") != null && System.getenv("storePassword") != null && System.getenv("keyAlias") != null && System.getenv("keyPassword") != null) {
     android.signingConfigs.release.storeFile = file(System.getenv("storeFile"))
     android.signingConfigs.release.storePassword = System.getenv("storePassword")
@@ -42,13 +53,31 @@ if (System.getenv("storeFile") != null && System.getenv("storePassword") != null
     android.buildTypes.release.signingConfig = null
 }
 
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
 dependencies {
-    compile project(':aware-core')
+//    compile project(':aware-core') -- already bundled with the plugin's library.
     compile "com.google.android.gms:play-services-vision:$google_libs"
     compile "com.android.support:cardview-v7:$support_libs"
     compile "com.android.support:appcompat-v7:$support_libs"
     compile "com.android.support:design:$support_libs"
     compile "com.android.support:gridlayout-v7:$support_libs"
     compile "me.dm7.barcodescanner:zbar:1.8.4"
-}
 
+    compile "com.github.denzilferreira:com.aware.plugin.device_usage:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.google.activity_recognition:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.ambient_noise:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.google.fused_location:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.openweather:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.google.auth:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.studentlife.audio_final:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.cmu_esm:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.contacts_list:$aware_libs"
+    compile "com.github.denzilferreira:com.aware.plugin.fitbit:$aware_libs"
+}
