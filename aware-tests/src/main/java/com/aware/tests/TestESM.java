@@ -295,10 +295,10 @@ public class TestESM implements AwareTest {
             factory.addESM(esmPAM);
             factory.addESM(esmDate);
 
-//            ESM.queueESM(context, factory.build());
-            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
-            queue.putExtra(ESM.EXTRA_ESM, factory.build());
-            context.sendBroadcast(queue);
+            ESM.queueESM(context, factory.build());
+//            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
+//            queue.putExtra(ESM.EXTRA_ESM, factory.build());
+//            context.sendBroadcast(queue);
 
         } catch (JSONException e) {
             e.printStackTrace();
