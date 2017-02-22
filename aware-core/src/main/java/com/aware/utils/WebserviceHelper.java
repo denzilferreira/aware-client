@@ -1,6 +1,7 @@
 
 package com.aware.utils;
 
+import android.app.ActivityManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -12,6 +13,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -32,6 +34,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -42,6 +46,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class WebserviceHelper extends Service {
 
@@ -188,6 +194,42 @@ public class WebserviceHelper extends Service {
         }
     }
 
+    private int getBatchSize() {
+        double availableRam;
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN){
+
+            String load;
+            try (RandomAccessFile reader = new RandomAccessFile("/proc/meminfo", "r")){
+                load = reader.readLine();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                load = "0";
+            }
+
+            // Get the Number value from the string
+            Pattern p = Pattern.compile("(\\d+)");
+            Matcher m = p.matcher(load);
+            String value = "";
+            while (m.find())
+                value = m.group(1);
+
+            availableRam = Double.parseDouble(value) / 1048576.0;
+        }else{
+            ActivityManager actManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
+            actManager.getMemoryInfo(memInfo);
+            availableRam = memInfo.totalMem / 1048576000.0;
+        }
+
+        if (availableRam <= 1.0)
+            return 1000;
+        else if (availableRam <= 2.0)
+            return 3000;
+        else if (availableRam <= 4.0)
+            return 10000;
+        else
+            return 20000;
+    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -207,7 +249,7 @@ public class WebserviceHelper extends Service {
         /**
          * Max number of rows to place on the HTTP(s) post
          */
-        int MAX_POST_SIZE = 10000;
+        int MAX_POST_SIZE = getBatchSize();
         if (Aware.is_watch(getApplicationContext())) {
             MAX_POST_SIZE = 100; //default for Android Wear (we have a limit of 100KB of data packet size (Message API restrictions)
         }
