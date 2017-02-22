@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.view.PagerAdapter;
@@ -82,8 +83,17 @@ public class ESM_DateTime extends ESM_Question {
                     final Calendar chour = Calendar.getInstance();
                     int hour = chour.get(Calendar.HOUR_OF_DAY);
                     int minute = chour.get(Calendar.MINUTE);
-                    timePicker.setHour(hour);
-                    timePicker.setMinute(minute);
+                    if (Build.VERSION.SDK_INT >=23) {
+                        timePicker.setHour(hour);
+                    } else {
+                        timePicker.setCurrentHour(hour);
+                    }
+                    if (Build.VERSION.SDK_INT >= 23) {
+                        timePicker.setMinute(minute);
+                    } else {
+                        timePicker.setCurrentMinute(minute);
+                    }
+
                     timePicker.setOnTimeChangedListener(new TimePicker.OnTimeChangedListener() {
                         @Override
                         public void onTimeChanged(TimePicker timePicker, int hour, int minute) {

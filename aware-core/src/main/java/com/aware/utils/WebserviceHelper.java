@@ -218,7 +218,7 @@ public class WebserviceHelper extends Service {
         if (intent.getAction().equals(ACTION_AWARE_WEBSERVICE_SYNC_TABLE)) {
 
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_CHARGING).equals("true")) {
-                Intent batt = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+                Intent batt = getApplicationContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
                 int plugged = batt.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
                 boolean isCharging = (plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB);
 

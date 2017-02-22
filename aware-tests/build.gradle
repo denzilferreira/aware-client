@@ -26,4 +26,8 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile project(':aware-core')
+    compile "com.android.support:cardview-v7:$support_libs"
+    compile "com.android.support:appcompat-v7:$support_libs"
+    compile "com.android.support:gridlayout-v7:$support_libs"
+    compile "com.android.support:design:$support_libs"
 }

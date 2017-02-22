@@ -26,7 +26,7 @@ public class TestESM implements AwareTest {
 
     @Override
     public void test(Context context) {
-//        testESMS(context);
+        testESMS(context);
 //        trialESMS(context);
 //        testFlow(context);
 //        testTimeoutQueue(context);
@@ -34,7 +34,7 @@ public class TestESM implements AwareTest {
 //        testDateTime(context);
 //        testPAM(context);
 //        testOptionsOverflow(context);
-        testNotificationRetries(context);
+//        testNotificationRetries(context);
 
         Aware.startESM(context);
     }
@@ -229,7 +229,6 @@ public class TestESM implements AwareTest {
                     .setTrigger("test")
                     .setReplaceQueue(true)
                     .setSubmitButton("OK")
-//                    .setNotificationTimeout(10)
                     .setInstructions("Freetext ESM");
 
             ESM_Checkbox esmCheckbox = new ESM_Checkbox();
@@ -238,7 +237,6 @@ public class TestESM implements AwareTest {
                     .addCheck("Other")
                     .setTitle("Checkbox")
                     .setTrigger("test")
-//                    .setExpirationThreshold(60)
                     .setSubmitButton("OK")
                     .setInstructions("Checkbox ESM");
 
@@ -276,6 +274,12 @@ public class TestESM implements AwareTest {
                     .setInstructions("Scale ESM")
                     .setSubmitButton("OK");
 
+            ESM_DateTime esmDate = new ESM_DateTime();
+            esmDate.setTitle("Date and Time")
+                    .setTrigger("AWARE Test")
+                    .setInstructions("Specify date and time")
+                    .setSubmitButton("OK");
+
             ESM_PAM esmPAM = new ESM_PAM();
             esmPAM.setTitle("PAM")
                     .setInstructions("Pick the closest to how you feel right now.")
@@ -283,17 +287,18 @@ public class TestESM implements AwareTest {
                     .setTrigger("AWARE Test");
 
             factory.addESM(esmFreetext);
-//            factory.addESM(esmCheckbox);
-//            factory.addESM(esmLikert);
-//            factory.addESM(esmQuickAnswer);
-//            factory.addESM(esmRadio);
-//            factory.addESM(esmScale);
-//            factory.addESM(esmPAM);
+            factory.addESM(esmCheckbox);
+            factory.addESM(esmLikert);
+            factory.addESM(esmQuickAnswer);
+            factory.addESM(esmRadio);
+            factory.addESM(esmScale);
+            factory.addESM(esmPAM);
+            factory.addESM(esmDate);
 
-            ESM.queueESM(context, factory.build());
-//            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
-//            queue.putExtra(ESM.EXTRA_ESM, factory.build());
-//            context.sendBroadcast(queue);
+//            ESM.queueESM(context, factory.build());
+            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
+            queue.putExtra(ESM.EXTRA_ESM, factory.build());
+            context.sendBroadcast(queue);
 
         } catch (JSONException e) {
             e.printStackTrace();

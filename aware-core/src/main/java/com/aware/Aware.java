@@ -2058,7 +2058,7 @@ public class Aware extends Service {
             ContentValues rowData = new ContentValues();
 
             //Force updated phone battery info
-            Intent batt = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+            Intent batt = context.getApplicationContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
             Bundle extras = batt.getExtras();
             if (extras != null) {
                 rowData.put(Battery_Provider.Battery_Data.TIMESTAMP, System.currentTimeMillis());

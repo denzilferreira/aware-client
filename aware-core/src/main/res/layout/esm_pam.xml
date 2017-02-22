@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/LinearLayout1"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
@@ -25,15 +26,15 @@
         android:layout_alignParentTop="true"
         android:padding="10dp" />
 
-    <GridLayout
+    <android.support.v7.widget.GridLayout
         android:id="@+id/esm_pam"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/esm_instructions"
         android:layout_centerHorizontal="true"
-        android:columnCount="4"
-        android:rowCount="4"
-        android:useDefaultMargins="true"
+        app:columnCount="4"
+        app:rowCount="4"
+        app:useDefaultMargins="true"
         android:layout_gravity="center_horizontal">
 
         <ImageView
@@ -211,7 +212,7 @@
             android:padding="2dp"
             android:scaleType="centerCrop"
             android:src="@drawable/square" />
-    </GridLayout>
+    </android.support.v7.widget.GridLayout>
 
     <LinearLayout
         android:id="@+id/LinearLayout1"

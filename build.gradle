@@ -2,7 +2,7 @@
 project.ext {
     mqtt_libs = (System.getenv("mqtt_libs") as String ?: "1.1.0")
     ion_libs = (System.getenv("ion_libs") as String ?: "2.1.6")
-    support_libs = (System.getenv("support_libs") as String ?: "25.1.1")
+    support_libs = (System.getenv("support_libs") as String ?: "25.2.0")
     google_libs = (System.getenv("google_libs") ?: "10.0.1")
     version_code = (System.getenv("aware_revision") as Integer ?: 700)
     version_readable = "4.0." + version_code + "." + (System.getenv("aware_label") as String ?: "selfie")
