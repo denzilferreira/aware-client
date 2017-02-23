@@ -149,10 +149,12 @@ public class Bluetooth extends Aware_Sensor {
         }
 
         boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && PermissionChecker.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            for (String p : REQUIRED_PERMISSIONS) {
+                if (PermissionChecker.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+                    permissions_ok = false;
+                    break;
+                }
             }
         }
 
