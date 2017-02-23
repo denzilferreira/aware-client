@@ -3,6 +3,8 @@ package com.aware;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.app.UiModeManager;
 import android.content.BroadcastReceiver;
@@ -35,6 +37,7 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
 import android.telephony.TelephonyManager;
@@ -586,6 +589,9 @@ public class Aware extends Service {
                             startPlugin(getApplicationContext(), package_name);
                         }
                     }
+
+                    //remind the user to charge
+                    checkBatteryLeft();
                 }
             }
 
@@ -658,6 +664,29 @@ public class Aware extends Service {
         }
 
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    private void checkBatteryLeft() {
+        final int CHARGE_REMINDER = 5555;
+        if (Aware.getSetting(this, Aware_Preferences.REMIND_TO_CHARGE).equals("true")) {
+            Intent batt = getApplicationContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+            Bundle extras = batt.getExtras();
+            if (extras.getInt(BatteryManager.EXTRA_LEVEL) <= 15 && extras.getInt(BatteryManager.EXTRA_STATUS) != BatteryManager.BATTERY_STATUS_CHARGING) {
+                NotificationManager notManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
+                mBuilder.setSmallIcon(R.drawable.ic_stat_aware_recharge);
+                mBuilder.setContentTitle(getApplicationContext().getResources().getString(R.string.app_name));
+                mBuilder.setContentText("Please recharge the phone as soon as you can.");
+                mBuilder.setAutoCancel(true);
+                mBuilder.setOnlyAlertOnce(true); //notify the user only once
+                mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
+
+                PendingIntent clickIntent = PendingIntent.getActivity(getApplicationContext(), 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
+                mBuilder.setContentIntent(clickIntent);
+
+                notManager.notify(CHARGE_REMINDER, mBuilder.build());
+            }
+        }
     }
 
     /**

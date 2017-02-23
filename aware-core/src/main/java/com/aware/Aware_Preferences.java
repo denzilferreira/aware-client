@@ -542,4 +542,9 @@ public class Aware_Preferences {
      * Activate/deactivate significant motion sensing
      */
     public static final String STATUS_SIGNIFICANT_MOTION = "status_significant_motion";
+
+    /**
+     * If in a study, remind the user to charge the phone when at 15%.
+     */
+    public static final String REMIND_TO_CHARGE = "remind_to_charge";
 }
