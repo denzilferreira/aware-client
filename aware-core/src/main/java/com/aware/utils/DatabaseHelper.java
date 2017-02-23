@@ -11,6 +11,7 @@ import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.PermissionChecker;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -221,7 +222,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      * @return
      */
     private synchronized SQLiteDatabase getDatabaseFile() {
-        if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        if (PermissionChecker.checkSelfPermission(mContext, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             File aware_folder;
             if (!mContext.getResources().getBoolean(R.bool.standalone)) {
                 aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString()); // sdcard/AWARE/ (shareable, does not delete when uninstalling)

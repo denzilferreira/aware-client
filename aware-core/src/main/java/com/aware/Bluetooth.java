@@ -30,6 +30,7 @@ import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.PermissionChecker;
 import android.util.Log;
 
 import com.aware.providers.Bluetooth_Provider;
@@ -149,7 +150,7 @@ public class Bluetooth extends Aware_Sensor {
 
         boolean permissions_ok = true;
         for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+            if (PermissionChecker.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
                 permissions_ok = false;
                 break;
             }

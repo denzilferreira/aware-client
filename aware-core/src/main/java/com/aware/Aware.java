@@ -36,6 +36,7 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.PermissionChecker;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.util.TypedValue;
@@ -474,7 +475,7 @@ public class Aware extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         //Fix: do nothing until we have permissions to the storage. This prevents plugins from crashing.
-        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+        if (PermissionChecker.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             return super.onStartCommand(intent, flags, startId);
         }
 

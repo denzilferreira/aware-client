@@ -21,6 +21,7 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.PermissionChecker;
 import android.util.Log;
 
 import com.aware.providers.WiFi_Provider;
@@ -118,7 +119,7 @@ public class WiFi extends Aware_Sensor {
     public int onStartCommand(Intent intent, int flags, int startId) {
         boolean permissions_ok = true;
         for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+            if (PermissionChecker.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
                 permissions_ok = false;
                 break;
             }

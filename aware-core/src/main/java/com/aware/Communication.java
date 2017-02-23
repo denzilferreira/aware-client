@@ -15,6 +15,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.provider.CallLog.Calls;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.PermissionChecker;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -345,7 +346,7 @@ public class Communication extends Aware_Sensor {
 
         boolean permissions_ok = true;
         for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+            if (PermissionChecker.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
                 permissions_ok = false;
                 break;
             }
