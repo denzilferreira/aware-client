@@ -119,7 +119,7 @@ public class WiFi extends Aware_Sensor {
     public int onStartCommand(Intent intent, int flags, int startId) {
         boolean permissions_ok = true;
         for (String p : REQUIRED_PERMISSIONS) {
-            if (PermissionChecker.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && PermissionChecker.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
                 permissions_ok = false;
                 break;
             }
