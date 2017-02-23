@@ -45,7 +45,7 @@ public class Http {
      * @param url GET URL
      * @return String with the content of the reply
      */
-    public synchronized String dataGET(String url, boolean is_gzipped) {
+    public String dataGET(final String url, final boolean is_gzipped) {
         if( url.length() == 0 ) return null;
 
         try {
@@ -101,7 +101,7 @@ public class Http {
      * @param is_gzipped Gzip data or not
 	 * @return String with server response. If GZipped, use Http.undoGZIP to recover data
 	 */
-	public synchronized String dataPOST(String url, Hashtable<String, String> data, boolean is_gzipped) {
+	public String dataPOST(final String url, final Hashtable<String, String> data, final boolean is_gzipped) {
         if( url.length() == 0 ) return null;
 
 		try{
