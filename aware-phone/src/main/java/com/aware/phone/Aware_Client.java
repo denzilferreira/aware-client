@@ -277,6 +277,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
             startActivityForResult(permissionsHandler, PermissionsHandler.RC_PERMISSIONS);
             finish();
             return;
+
         } else {
             Intent startAware = new Intent(this, Aware.class);
             startService(startAware);
