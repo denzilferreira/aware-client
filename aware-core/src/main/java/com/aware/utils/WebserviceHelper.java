@@ -58,27 +58,25 @@ public class WebserviceHelper extends Service {
     public static final String EXTRA_FIELDS = "fields";
     public static final String EXTRA_CONTENT_URI = "uri";
 
-    private static final int WEBSERVICES_NOTIFICATION_ID = 98765;
-
     private static NotificationManager notManager;
+
     private long sync_start = 0;
-
     private int notificationID = 0;
+    private static int total_rows_synced = 0;
 
-    private SyncQueue mSyncFastQueue;
-    private Looper mServiceLooperFastQueue;
-    private ExecutorService executorFastQueue;
+    private static SyncQueue mSyncFastQueue;
+    private static Looper mServiceLooperFastQueue;
+    private static ExecutorService executorFastQueue;
 
-    private SyncQueue mSyncSlowQueueA;
-    private Looper mServiceLooperSlowQueueA;
-    ExecutorService executorSlowQueueA;
+    private static SyncQueue mSyncSlowQueueA;
+    private static Looper mServiceLooperSlowQueueA;
+    private static ExecutorService executorSlowQueueA;
 
-    private SyncQueue mSyncSlowQueueB;
-    private Looper mServiceLooperSlowQueueB;
-    ExecutorService executorSlowQueueB;
+    private static SyncQueue mSyncSlowQueueB;
+    private static Looper mServiceLooperSlowQueueB;
+    private static ExecutorService executorSlowQueueB;
 
     private boolean nextSlowQueue = false;
-
 
     private Map<String, Boolean> SYNCED_TABLES;
     private static final ArrayList<String> highFrequencySensors = new ArrayList<>();
@@ -96,11 +94,11 @@ public class WebserviceHelper extends Service {
         @Override
         public void handleMessage(Message msg) {
             Bundle bundle = msg.getData();
-
             Context context = (Context) msg.obj;
             SyncTable syncTable = new SyncTable(context, bundle.getBoolean("DEBUG"), bundle.getString("DATABASE_TABLE"), bundle.getString("TABLES_FIELDS"), bundle.getString("ACTION"), bundle.getString("CONTENT_URI_STRING"), bundle.getString("DEVICE_ID"), bundle.getString("WEBSERVER"), bundle.getBoolean("WEBSERVICE_SIMPLE"), bundle.getBoolean("WEBSERVICE_REMOVE_DATA"), bundle.getInt("MAX_POST_SIZE"), bundle.getInt("notificationID"));
             try {
-                executor.submit(syncTable).get();
+                if (!executor.isTerminated())
+                    executor.submit(syncTable).get();
             } catch (InterruptedException | ExecutionException e) {
                 if(Aware.DEBUG)
                     Log.e(Aware.TAG, e.getMessage());
@@ -110,8 +108,6 @@ public class WebserviceHelper extends Service {
             // the service in the middle of handling another job
             stopSelf(msg.arg1);
         }
-
-
     }
 
     @Override
@@ -131,7 +127,6 @@ public class WebserviceHelper extends Service {
         notificationID = 0;
         SYNCED_TABLES = Collections.synchronizedMap(new HashMap<String, Boolean>());
 
-
         HandlerThread threadFast = new HandlerThread("SyncFastQueue",
                 android.os.Process.THREAD_PRIORITY_BACKGROUND);
         threadFast.start();
@@ -143,7 +138,6 @@ public class WebserviceHelper extends Service {
         HandlerThread threadSlowB = new HandlerThread("SyncSlowBQueue",
                 android.os.Process.THREAD_PRIORITY_BACKGROUND);
         threadSlowB.start();
-
 
         // Get the HandlerThread's Looper and use it for our Handler
         mServiceLooperFastQueue = threadFast.getLooper();
@@ -163,6 +157,7 @@ public class WebserviceHelper extends Service {
 
         if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SILENT).equals("true"))
             notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
         sync_start = System.currentTimeMillis();
     }
 
@@ -250,6 +245,8 @@ public class WebserviceHelper extends Service {
          * Max number of rows to place on the HTTP(s) post
          */
         int MAX_POST_SIZE = getBatchSize();
+        if(Aware.DEBUG) Log.d(Aware.TAG, "Synching in batches of " + MAX_POST_SIZE + " records.");
+
         if (Aware.is_watch(getApplicationContext())) {
             MAX_POST_SIZE = 100; //default for Android Wear (we have a limit of 100KB of data packet size (Message API restrictions)
         }
@@ -363,7 +360,6 @@ public class WebserviceHelper extends Service {
         private int MAX_POST_SIZE;
         private int NOTIFICATION_ID;
 
-
         SyncTable(Context c, boolean debug, String table, String fields, String action, String uri, String deviceID, String webServer, boolean webServiceSimple, boolean webServiceRemoveData, int maxPostSize, int notificationID) {
             mContext = c;
             DEVICE_ID = deviceID;
@@ -379,7 +375,6 @@ public class WebserviceHelper extends Service {
             MAX_POST_SIZE = maxPostSize;
             NOTIFICATION_ID = notificationID;
         }
-
 
         private String createRemoteTable() {
             //Check first if we have database table remotely, otherwise create it!
@@ -402,13 +397,12 @@ public class WebserviceHelper extends Service {
                 }
             }
             return response;
-
         }
 
         private String[] getTableColumnsNames(Uri CONTENT_URI) {
             String[] columnsStr = new String[]{};
             Cursor columnsDB = mContext.getContentResolver().query(CONTENT_URI, null, null, null, null);
-            if (columnsDB != null && columnsDB.moveToFirst()) {
+            if (columnsDB != null) {
                 columnsStr = columnsDB.getColumnNames();
             }
             if (columnsDB != null && !columnsDB.isClosed()) columnsDB.close();
@@ -517,10 +511,10 @@ public class WebserviceHelper extends Service {
                 }
             }
 
-
             if (DEBUG)
                 Log.d(Aware.TAG, "Syncing " + TOTAL_RECORDS + " records from " + DATABASE_TABLE);
 
+            total_rows_synced += TOTAL_RECORDS;
 
             return TOTAL_RECORDS;
         }
@@ -770,9 +764,9 @@ public class WebserviceHelper extends Service {
         executorFastQueue.shutdown();
         executorSlowQueueA.shutdown();
         executorSlowQueueB.shutdown();
-        if(Aware.DEBUG)
-            Log.d(Aware.TAG, "Destroying sync service");
 
+        long total_seconds = (System.currentTimeMillis()-sync_start)/1000;
+        if(Aware.DEBUG) Log.d(Aware.TAG, "Syncing all databases finished. Took: " + DateUtils.formatElapsedTime(total_seconds) + ". Benchmark: " + total_rows_synced/total_seconds + " rows/second");
     }
 }
 

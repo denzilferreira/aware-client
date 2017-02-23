@@ -423,10 +423,7 @@ public class Aware extends Service {
      */
     public static boolean is_watch(Context c) {
         UiModeManager uiManager = (UiModeManager) c.getSystemService(Context.UI_MODE_SERVICE);
-        if (uiManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_WATCH) {
-            return true;
-        }
-        return false;
+        return (uiManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_WATCH);
     }
 
     /**
@@ -479,7 +476,8 @@ public class Aware extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         //Fix: do nothing until we have permissions to the storage. This prevents plugins from crashing.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && PermissionChecker.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                PermissionChecker.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             return super.onStartCommand(intent, flags, startId);
         }
 
@@ -642,6 +640,10 @@ public class Aware extends Service {
                     }
                 }
             }
+
+            //Start core AWARE services
+            startAWARE(getApplicationContext());
+
         } else {
             ArrayList<String> active_plugins = new ArrayList<>();
             Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
@@ -660,7 +662,8 @@ public class Aware extends Service {
                 if (Aware.DEBUG) Log.w(TAG, "AWARE plugins disabled...");
             }
 
-            stopAWARE(this);
+            //Stop core AWARE services
+            stopAWARE(getApplicationContext());
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -676,7 +679,7 @@ public class Aware extends Service {
                 NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
                 mBuilder.setSmallIcon(R.drawable.ic_stat_aware_recharge);
                 mBuilder.setContentTitle(getApplicationContext().getResources().getString(R.string.app_name));
-                mBuilder.setContentText("Please recharge the phone as soon as you can.");
+                mBuilder.setContentText("Please, recharge your phone as soon as possible.");
                 mBuilder.setAutoCancel(true);
                 mBuilder.setOnlyAlertOnce(true); //notify the user only once
                 mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
