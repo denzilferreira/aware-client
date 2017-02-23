@@ -110,12 +110,4 @@ public class PermissionsHandler extends Activity {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        //Let AWARE know we have accepted the permissions
-        Aware.startAWARE(getApplicationContext());
-    }
 }
