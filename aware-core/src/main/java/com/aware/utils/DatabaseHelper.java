@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
 import android.os.Environment;
@@ -223,7 +224,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      * @return
      */
     private synchronized SQLiteDatabase getDatabaseFile() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && PermissionChecker.checkSelfPermission(mContext, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        try {
             File aware_folder;
             if (!mContext.getResources().getBoolean(R.bool.standalone)) {
                 aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString()); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
@@ -237,7 +238,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
             database = SQLiteDatabase.openOrCreateDatabase(new File(aware_folder, this.databaseName).getPath(), this.cursorFactory);
             return database;
+        } catch (SQLiteException e) {
+            return null;
         }
-        return null;
     }
 }
