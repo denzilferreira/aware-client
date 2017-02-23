@@ -30,8 +30,8 @@ public class Http {
 	/**
 	 * Logging tag (default = "AWARE")
 	 */
-	private static String TAG = "AWARE::HTML";
-    private static int timeout = 60 * 1000;
+	private String TAG = "AWARE::HTML";
+    private int timeout = 60 * 1000;
 
 	public Http() {}
 
@@ -160,14 +160,12 @@ public class Http {
             return result;
 
 		}catch (UnsupportedEncodingException e) {
-            Log.e(TAG, "Sync HTTP dataPost encoding error: " + e.getMessage());
-			return null;
+//            Log.e(TAG, "Sync HTTP dataPost encoding error: " + e.getMessage());
 		} catch (IOException e) {
-            Log.e(TAG, "Sync HTTP dataPost io/null error: " + e.getMessage());
-			return null;
+//            Log.e(TAG, "Sync HTTP dataPost io/null error: " + e.getMessage());
 		} catch (IllegalStateException e ) {
-            Log.e(TAG, "Sync HTTP dataPost state error: " + e.getMessage());
-			return null;
+//            Log.e(TAG, "Sync HTTP dataPost state error: " + e.getMessage());
 		}
+        return null;
 	}
 }

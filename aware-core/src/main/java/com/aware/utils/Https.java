@@ -28,13 +28,14 @@ import java.util.zip.GZIPInputStream;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
 public class Https {
 
-    private static final String TAG = "AWARE::HTTPS";
-    private static SSLContext sslContext;
-    private static int timeout = 60 * 1000;
+    private final String TAG = "AWARE::HTTPS";
+    private static SSLSocketFactory sslSocketFactory;
+    private int timeout = 60 * 1000;
 
     /**
      * Initialise a HTTPS client
@@ -42,7 +43,13 @@ public class Https {
      */
     public Https(InputStream certificate) {
         if (certificate == null) {
-            Log.e(TAG, "Unable to read certificate!");
+            Log.e(TAG, "SSL: unable to read certificate!");
+            return;
+        }
+
+        //we already have this object initialised
+        if (sslSocketFactory != null) {
+            Log.i(TAG, "SSL [OK]");
             return;
         }
 
@@ -60,11 +67,14 @@ public class Https {
             trustManagerFactory.init(keyStore); //add our keystore to the trusted keystores
 
             //Initialize a SSL connection context
-            sslContext = SSLContext.getInstance("TLS");
+            SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+            sslSocketFactory = sslContext.getSocketFactory();
 
             //Fix for known-bug on <= JellyBean (4.x)
             System.setProperty("http.keepAlive", "false");
+
+            Log.i(TAG, "SSL [init]");
 
         } catch (CertificateException e) {
             Log.e(TAG, "CertificateException " + e.getMessage());
@@ -80,7 +90,7 @@ public class Https {
     }
 
     public Https setTimeout(int connection_timeout) {
-        timeout = connection_timeout;
+        this.timeout = connection_timeout;
         return this;
     }
 
@@ -92,7 +102,7 @@ public class Https {
      * @param is_gzipped Gzip data or not
      * @return String with server response. If gzipped, use Https.undoGZIP on the response.
      */
-    public synchronized String dataPOST(String url, Hashtable<String, String> data, boolean is_gzipped) {
+    public String dataPOST(final String url, final Hashtable<String, String> data, final boolean is_gzipped) {
 
         if (url.length() == 0) return null;
 
@@ -101,7 +111,7 @@ public class Https {
             URL path = new URL(url);
 
             HttpsURLConnection path_connection = (HttpsURLConnection) path.openConnection();
-            path_connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            path_connection.setSSLSocketFactory(sslSocketFactory);
             path_connection.setReadTimeout(timeout);
             path_connection.setConnectTimeout(timeout);
             path_connection.setRequestMethod("POST");
@@ -154,15 +164,13 @@ public class Https {
 
             return result;
         } catch (UnsupportedEncodingException e) {
-            Log.e(TAG, "Sync HTTPS dataPost encoding error: " + e.getMessage());
-            return null;
+//            Log.e(TAG, "Sync HTTPS dataPost encoding error: " + e.getMessage());
         } catch (IOException | NullPointerException e) {
-            Log.e(TAG, "Sync HTTPS dataPost io/null error: " + e.getMessage());
-            return null;
+//            Log.e(TAG, "Sync HTTPS dataPost io/null error: " + e.getMessage());
         } catch (IllegalStateException e) {
-            Log.e(TAG, "Sync HTTPS dataPost state error: " + e.getMessage());
-            return null;
+//            Log.e(TAG, "Sync HTTPS dataPost state error: " + e.getMessage());
         }
+        return null;
     }
 
     /**
@@ -171,14 +179,14 @@ public class Https {
      * @param url GET URL
      * @return HttpEntity with the content of the reply. Use EntityUtils to get content.
      */
-    public synchronized String dataGET(String url, boolean is_gzipped) {
+    public String dataGET(final String url, final boolean is_gzipped) {
         if (url.length() == 0) return null;
 
         try {
 
             URL path = new URL(url);
             HttpsURLConnection path_connection = (HttpsURLConnection) path.openConnection();
-            path_connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            path_connection.setSSLSocketFactory(sslSocketFactory);
             path_connection.setReadTimeout(timeout);
             path_connection.setConnectTimeout(timeout);
             path_connection.setRequestMethod("GET");
@@ -217,9 +225,10 @@ public class Https {
             return result;
 
         } catch (IOException | NullPointerException e) {
-            Log.e(TAG, "Sync HTTPS dataGet io/null error: " + e.getMessage());
-            return null;
+//            Log.e(TAG, "Sync HTTPS dataGet io/null error: " + e.getMessage());
         }
+
+        return null;
     }
 
 }
