@@ -766,7 +766,8 @@ public class WebserviceHelper extends Service {
         executorSlowQueueB.shutdown();
 
         long total_seconds = (System.currentTimeMillis()-sync_start)/1000;
-        if(Aware.DEBUG) Log.d(Aware.TAG, "Syncing all databases finished. Took: " + DateUtils.formatElapsedTime(total_seconds) + ". Benchmark: " + total_rows_synced/total_seconds + " rows/second");
+        if(Aware.DEBUG) Log.d(Aware.TAG, "Syncing all databases finished. Took: " + DateUtils.formatElapsedTime(total_seconds)
+                + ". Benchmark: " + ((total_seconds > 0)?(total_rows_synced/total_seconds):total_rows_synced)+ " rows/second");
     }
 }
 
