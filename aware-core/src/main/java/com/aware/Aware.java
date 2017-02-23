@@ -476,15 +476,16 @@ public class Aware extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         //Request missing permission
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                PermissionChecker.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (PermissionChecker.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE});
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
+                Intent permissions = new Intent(this, PermissionsHandler.class);
+                permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE});
+                permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(permissions);
 
-            return super.onStartCommand(intent, flags, startId);
+                return super.onStartCommand(intent, flags, startId);
+            }
         }
 
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
