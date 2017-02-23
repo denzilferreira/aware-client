@@ -346,6 +346,8 @@ public class Applications extends AccessibilityService {
         Intent aware = new Intent(this, Aware.class);
         startService(aware);
 
+        Aware.startAWARE(this);
+
         DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
     }
 

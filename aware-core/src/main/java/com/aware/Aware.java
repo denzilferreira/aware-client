@@ -56,6 +56,7 @@ import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.providers.Aware_Provider.Aware_Settings;
 import com.aware.providers.Battery_Provider;
 import com.aware.providers.Scheduler_Provider;
+import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Plugin;
 import com.aware.utils.DownloadPluginService;
 import com.aware.utils.Http;
@@ -219,7 +220,6 @@ public class Aware extends Service {
     public static Aware getService() {
         if (awareSrv == null) awareSrv = new Aware();
         return awareSrv;
-
     }
 
 
@@ -475,9 +475,15 @@ public class Aware extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        //Fix: do nothing until we have permissions to the storage. This prevents plugins from crashing.
+        //Request missing permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
                 PermissionChecker.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+
+            Intent permissions = new Intent(this, PermissionsHandler.class);
+            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE});
+            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(permissions);
+
             return super.onStartCommand(intent, flags, startId);
         }
 
