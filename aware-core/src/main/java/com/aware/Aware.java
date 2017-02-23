@@ -221,6 +221,7 @@ public class Aware extends Service {
 
 
     private final IBinder serviceBinder = new ServiceBinder();
+
     public class ServiceBinder extends Binder {
         public Aware getService() {
             return Aware.getService();
@@ -555,7 +556,7 @@ public class Aware extends Service {
             }
 
             if (intent != null && intent.getAction() != null) {
-                if( intent.getAction().equalsIgnoreCase(ACTION_AWARE_STUDY_COMPLIANCE))
+                if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_STUDY_COMPLIANCE))
                     complianceStatus(getApplicationContext());
 
                 if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_KEEP_ALIVE)) {
@@ -577,7 +578,8 @@ public class Aware extends Service {
                             active_plugins.add(package_name);
                         } while (enabled_plugins.moveToNext());
                     }
-                    if (enabled_plugins != null && !enabled_plugins.isClosed()) enabled_plugins.close();
+                    if (enabled_plugins != null && !enabled_plugins.isClosed())
+                        enabled_plugins.close();
 
                     if (active_plugins.size() > 0) {
                         for (String package_name : active_plugins) {
@@ -771,7 +773,7 @@ public class Aware extends Service {
         }
 
         try {
-            String contextCardClass = ((is_bundled) ? context.getPackageName() + "/" + package_name : package_name ) + ".ContextCard";
+            String contextCardClass = ((is_bundled) ? context.getPackageName() + "/" + package_name : package_name) + ".ContextCard";
             Context reflectedContext = context.createPackageContext(((is_bundled) ? context.getPackageName() : package_name), Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
             Class<?> reflectedContextCard = reflectedContext.getClassLoader().loadClass(contextCardClass);
             Object contextCard = reflectedContextCard.newInstance();
@@ -817,7 +819,7 @@ public class Aware extends Service {
                             }
 
                             Intent open_settings = new Intent();
-                            open_settings.setComponent(new ComponentName(((is_bundled) ? context.getPackageName() : package_name ), package_name + ".Settings"));
+                            open_settings.setComponent(new ComponentName(((is_bundled) ? context.getPackageName() : package_name), package_name + ".Settings"));
                             open_settings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                             context.startActivity(open_settings);
                         }
@@ -1822,7 +1824,8 @@ public class Aware extends Service {
                             rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
                         }
                     }
-                    if ( current_status != null && ! current_status.isClosed()) current_status.close();
+                    if (current_status != null && !current_status.isClosed())
+                        current_status.close();
 
                     context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
 
@@ -2056,50 +2059,54 @@ public class Aware extends Service {
     public static class AwareBoot extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            ContentValues rowData = new ContentValues();
-
-            //Force updated phone battery info
-            Intent batt = context.getApplicationContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-            Bundle extras = batt.getExtras();
-            if (extras != null) {
-                rowData.put(Battery_Provider.Battery_Data.TIMESTAMP, System.currentTimeMillis());
-                rowData.put(Battery_Provider.Battery_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                rowData.put(Battery_Provider.Battery_Data.LEVEL, extras.getInt(BatteryManager.EXTRA_LEVEL));
-                rowData.put(Battery_Provider.Battery_Data.SCALE, extras.getInt(BatteryManager.EXTRA_SCALE));
-                rowData.put(Battery_Provider.Battery_Data.VOLTAGE, extras.getInt(BatteryManager.EXTRA_VOLTAGE));
-                rowData.put(Battery_Provider.Battery_Data.TEMPERATURE, extras.getInt(BatteryManager.EXTRA_TEMPERATURE) / 10);
-                rowData.put(Battery_Provider.Battery_Data.PLUG_ADAPTOR, extras.getInt(BatteryManager.EXTRA_PLUGGED));
-                rowData.put(Battery_Provider.Battery_Data.HEALTH, extras.getInt(BatteryManager.EXTRA_HEALTH));
-                rowData.put(Battery_Provider.Battery_Data.TECHNOLOGY, extras.getString(BatteryManager.EXTRA_TECHNOLOGY));
-            }
-
-            if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
-                Applications.isAccessibilityServiceActive(context); //This shows notification automatically if the accessibility services are off
-                Aware.debug(context, "phone: on");
-                rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_BOOTED);
-            }
-
-            if (intent.getAction().equalsIgnoreCase(Intent.ACTION_SHUTDOWN)) {
-                Aware.debug(context, "phone: off");
-                rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_SHUTDOWN);
-            }
-            if (intent.getAction().equalsIgnoreCase(Intent.ACTION_REBOOT)) {
-                Aware.debug(context, "phone: reboot");
-                rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_REBOOT);
-            }
-
             try {
-                if (Aware.DEBUG) Log.d(TAG, "Battery: " + rowData.toString());
-                context.getContentResolver().insert(Battery_Provider.Battery_Data.CONTENT_URI, rowData);
-            } catch (SQLiteException e) {
-                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-            } catch (SQLException e) {
-                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-            }
+                ContentValues rowData = new ContentValues();
 
-            if (Aware.DEBUG) Log.d(TAG, Battery.ACTION_AWARE_BATTERY_CHANGED);
-            Intent battChanged = new Intent(Battery.ACTION_AWARE_BATTERY_CHANGED);
-            context.sendBroadcast(battChanged);
+                //Force updated phone battery info
+                Intent batt = context.getApplicationContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+                Bundle extras = batt.getExtras();
+                if (extras != null) {
+                    rowData.put(Battery_Provider.Battery_Data.TIMESTAMP, System.currentTimeMillis());
+                    rowData.put(Battery_Provider.Battery_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
+                    rowData.put(Battery_Provider.Battery_Data.LEVEL, extras.getInt(BatteryManager.EXTRA_LEVEL));
+                    rowData.put(Battery_Provider.Battery_Data.SCALE, extras.getInt(BatteryManager.EXTRA_SCALE));
+                    rowData.put(Battery_Provider.Battery_Data.VOLTAGE, extras.getInt(BatteryManager.EXTRA_VOLTAGE));
+                    rowData.put(Battery_Provider.Battery_Data.TEMPERATURE, extras.getInt(BatteryManager.EXTRA_TEMPERATURE) / 10);
+                    rowData.put(Battery_Provider.Battery_Data.PLUG_ADAPTOR, extras.getInt(BatteryManager.EXTRA_PLUGGED));
+                    rowData.put(Battery_Provider.Battery_Data.HEALTH, extras.getInt(BatteryManager.EXTRA_HEALTH));
+                    rowData.put(Battery_Provider.Battery_Data.TECHNOLOGY, extras.getString(BatteryManager.EXTRA_TECHNOLOGY));
+                }
+
+                if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
+                    Applications.isAccessibilityServiceActive(context); //This shows notification automatically if the accessibility services are off
+                    Aware.debug(context, "phone: on");
+                    rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_BOOTED);
+                }
+
+                if (intent.getAction().equalsIgnoreCase(Intent.ACTION_SHUTDOWN)) {
+                    Aware.debug(context, "phone: off");
+                    rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_SHUTDOWN);
+                }
+                if (intent.getAction().equalsIgnoreCase(Intent.ACTION_REBOOT)) {
+                    Aware.debug(context, "phone: reboot");
+                    rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_REBOOT);
+                }
+
+                try {
+                    if (Aware.DEBUG) Log.d(TAG, "Battery: " + rowData.toString());
+                    context.getContentResolver().insert(Battery_Provider.Battery_Data.CONTENT_URI, rowData);
+                } catch (SQLiteException e) {
+                    if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                } catch (SQLException e) {
+                    if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                }
+
+                if (Aware.DEBUG) Log.d(TAG, Battery.ACTION_AWARE_BATTERY_CHANGED);
+                Intent battChanged = new Intent(Battery.ACTION_AWARE_BATTERY_CHANGED);
+                context.sendBroadcast(battChanged);
+            } catch (RuntimeException e) {
+                //Gingerbread does not allow these intents. Disregard for 2.3.3
+            }
         }
     }
 
