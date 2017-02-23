@@ -36,6 +36,8 @@ public class PermissionsHandler extends Activity {
 
     private ArrayList<String> permissionsNeeded;
 
+    private boolean success = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,6 +73,7 @@ public class PermissionsHandler extends Activity {
         } else {
             Intent activity = new Intent();
             setResult(Activity.RESULT_OK, activity);
+            success = true;
             finish();
         }
     }
@@ -104,10 +107,18 @@ public class PermissionsHandler extends Activity {
                     setResult(Activity.RESULT_OK, redirect);
                     startActivity(redirect);
                 }
+                success = true;
                 finish();
             }
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (success) Aware.startAWARE(getApplicationContext());
     }
 }
