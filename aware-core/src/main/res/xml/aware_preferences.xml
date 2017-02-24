@@ -793,6 +793,21 @@
                 android:persistent="true"
                 android:summary="%s"
                 android:title="Clean-up old data?" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="webservice_silent"
+                android:persistent="true"
+                android:summary="Disable data sync notifications"
+                android:title="Quiet sync" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="remind_to_charge"
+                android:persistent="true"
+                android:summary="Remind to charge when 15%"
+                android:title="Battery reminder" />
+
         </PreferenceScreen>
     </PreferenceCategory>
 
@@ -840,12 +855,6 @@
                 android:summary="WARNING: This may cause problems with some sensors or plugins if they rely on history data (e.g., battery charges, discharges, ...)"
                 android:title="Wipe data on upload" />
 
-            <CheckBoxPreference
-                android:defaultValue="false"
-                android:key="webservice_silent"
-                android:persistent="true"
-                android:summary="Disable data sync notifications"
-                android:title="Quiet sync" />
         </PreferenceScreen>
 
     </PreferenceCategory>

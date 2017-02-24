@@ -8,9 +8,12 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Build;
 import android.os.Environment;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.PermissionChecker;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -37,16 +40,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private final boolean DEBUG = true;
 
     private String TAG = "AwareDBHelper";
+
     private String databaseName;
     private String[] databaseTables;
     private String[] tableFields;
     private int newVersion;
     private CursorFactory cursorFactory;
     private SQLiteDatabase database;
+    private Context mContext;
 
     private HashMap<String, String> renamed_columns = new HashMap<>();
-
-    private Context mContext;
 
     public DatabaseHelper(Context context, String database_name, CursorFactory cursor_factory, int database_version, String[] database_tables, String[] table_fields) {
         super(context, database_name, cursor_factory, database_version);
@@ -56,7 +59,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         tableFields = table_fields;
         newVersion = database_version;
         cursorFactory = cursor_factory;
-//        database = getWritableDatabase(); //don't do this here
     }
 
     public void setRenamedColumns(HashMap<String, String> renamed) {
@@ -177,7 +179,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     return database;
                 }
             }
+
             database = getDatabaseFile();
+            if (database == null) return null;
+
             int current_version = database.getVersion();
             if (current_version != newVersion) {
                 database.beginTransaction();
@@ -192,7 +197,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     database.endTransaction();
                 }
             }
-//            onOpen(database);
             return database;
         } catch (Exception e) {
             return null;
@@ -208,7 +212,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 }
             }
             database = getDatabaseFile();
-//            onOpen(database);
             return database;
         } catch (Exception e) {
             return null;
@@ -221,7 +224,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      * @return
      */
     private synchronized SQLiteDatabase getDatabaseFile() {
-        if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        try {
             File aware_folder;
             if (!mContext.getResources().getBoolean(R.bool.standalone)) {
                 aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString()); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
@@ -235,7 +238,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
             database = SQLiteDatabase.openOrCreateDatabase(new File(aware_folder, this.databaseName).getPath(), this.cursorFactory);
             return database;
+        } catch (SQLiteException e) {
+            return null;
         }
-        return null;
     }
 }

@@ -253,63 +253,46 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (mGravity == null) {
-            if (Aware.DEBUG) Log.w(TAG, "This device does not have a gravity sensor!");
-            Aware.setSetting(this, Aware_Preferences.STATUS_GRAVITY, false);
-            stopSelf();
-        } else {
-            Aware.setSetting(this, Aware_Preferences.STATUS_GRAVITY, true);
-            saveSensorDevice(mGravity);
+        super.onStartCommand(intent, flags, startId);
 
-            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_GRAVITY).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.FREQUENCY_GRAVITY, 200000);
+        if (PERMISSIONS_OK) {
+            if (mGravity == null) {
+                if (Aware.DEBUG) Log.w(TAG, "This device does not have a gravity sensor!");
+                Aware.setSetting(this, Aware_Preferences.STATUS_GRAVITY, false);
+                stopSelf();
+            } else {
+                Aware.setSetting(this, Aware_Preferences.STATUS_GRAVITY, true);
+                saveSensorDevice(mGravity);
+
+                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_GRAVITY).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_GRAVITY, 200000);
+                }
+
+                if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_GRAVITY).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.THRESHOLD_GRAVITY, 0.0);
+                }
+
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY))
+                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GRAVITY))) {
+
+                    sensorHandler.removeCallbacksAndMessages(null);
+                    mSensorManager.unregisterListener(this, mGravity);
+
+                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY));
+                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GRAVITY));
+                }
+
+                mSensorManager.registerListener(this, mGravity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY)), sensorHandler);
+
+                if (Aware.DEBUG) Log.d(TAG, "Gravity service active: " + FREQUENCY + "ms");
             }
-
-            if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_GRAVITY).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.THRESHOLD_GRAVITY, 0.0);
-            }
-
-            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY))
-                    || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GRAVITY))) {
-
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mGravity);
-
-                FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY));
-                THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GRAVITY));
-            }
-
-            mSensorManager.registerListener(this, mGravity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GRAVITY)), sensorHandler);
-
-            if (Aware.DEBUG) Log.d(TAG, "Gravity service active: " + FREQUENCY + "ms");
         }
 
-        return super.onStartCommand(intent, flags, startId);
-    }
-
-    //Singleton instance of this service
-    private static Gravity gravitySrv = Gravity.getService();
-
-    /**
-     * Get singleton instance to service
-     *
-     * @return Gravity obj
-     */
-    public static Gravity getService() {
-        if (gravitySrv == null) gravitySrv = new Gravity();
-        return gravitySrv;
-    }
-
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        Gravity getService() {
-            return Gravity.getService();
-        }
+        return START_STICKY;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
+        return null;
     }
 }

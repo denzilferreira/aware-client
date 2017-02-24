@@ -240,64 +240,47 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (mMagnetometer == null) {
-            if (Aware.DEBUG) Log.w(TAG, "This device does not have a magnetometer!");
-            Aware.setSetting(this, Aware_Preferences.STATUS_MAGNETOMETER, false);
-            stopSelf();
-        } else {
-            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-            Aware.setSetting(this, Aware_Preferences.STATUS_MAGNETOMETER, true);
-            saveSensorDevice(mMagnetometer);
+        super.onStartCommand(intent, flags, startId);
 
-            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER, 200000);
+        if (PERMISSIONS_OK) {
+            if (mMagnetometer == null) {
+                if (Aware.DEBUG) Log.w(TAG, "This device does not have a magnetometer!");
+                Aware.setSetting(this, Aware_Preferences.STATUS_MAGNETOMETER, false);
+                stopSelf();
+            } else {
+                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+                Aware.setSetting(this, Aware_Preferences.STATUS_MAGNETOMETER, true);
+                saveSensorDevice(mMagnetometer);
+
+                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER, 200000);
+                }
+
+                if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_MAGNETOMETER).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.THRESHOLD_MAGNETOMETER, 0.0);
+                }
+
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER))
+                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_MAGNETOMETER))) {
+
+                    sensorHandler.removeCallbacksAndMessages(null);
+                    mSensorManager.unregisterListener(this, mMagnetometer);
+
+                    FREQUENCY = Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER));
+                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_MAGNETOMETER));
+                }
+
+                mSensorManager.registerListener(this, mMagnetometer, Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER)), sensorHandler);
+
+                if (Aware.DEBUG) Log.d(TAG, "Magnetometer service active...");
             }
-
-            if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_MAGNETOMETER).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.THRESHOLD_MAGNETOMETER, 0.0);
-            }
-
-            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER))
-                    || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_MAGNETOMETER))) {
-
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mMagnetometer);
-
-                FREQUENCY = Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER));
-                THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_MAGNETOMETER));
-            }
-
-            mSensorManager.registerListener(this, mMagnetometer, Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER)), sensorHandler);
-
-            if (Aware.DEBUG) Log.d(TAG, "Magnetometer service active...");
         }
 
-        return super.onStartCommand(intent, flags, startId);
-    }
-
-    //Singleton instance of this service
-    private static Magnetometer magnetometerSrv = Magnetometer.getService();
-
-    /**
-     * Get singleton instance to service
-     *
-     * @return Magnetometer obj
-     */
-    public static Magnetometer getService() {
-        if (magnetometerSrv == null) magnetometerSrv = new Magnetometer();
-        return magnetometerSrv;
-    }
-
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        Magnetometer getService() {
-            return Magnetometer.getService();
-        }
+        return START_STICKY;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
+        return null;
     }
 }

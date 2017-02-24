@@ -247,40 +247,43 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
 
-        if (mAccelerometer == null) {
-            if (Aware.DEBUG) Log.w(TAG, "This device does not have an accelerometer!");
-            Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, false);
-            stopSelf();
-        } else {
-            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-            Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, true);
-            saveAccelerometerDevice(mAccelerometer);
+        if (PERMISSIONS_OK) {
+            if (mAccelerometer == null) {
+                if (Aware.DEBUG) Log.w(TAG, "This device does not have an accelerometer!");
+                Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, false);
+                stopSelf();
+            } else {
+                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+                Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, true);
+                saveAccelerometerDevice(mAccelerometer);
 
-            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER, 200000);
+                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER, 200000);
+                }
+
+                if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_ACCELEROMETER).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.THRESHOLD_ACCELEROMETER, 0.0);
+                }
+
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER))
+                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ACCELEROMETER))) {
+
+                    sensorHandler.removeCallbacksAndMessages(null);
+                    mSensorManager.unregisterListener(this, mAccelerometer);
+
+                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER));
+                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ACCELEROMETER));
+                }
+
+                mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), sensorHandler);
+
+                if (Aware.DEBUG) Log.d(TAG, "Accelerometer service active: " + FREQUENCY + "ms");
             }
-
-            if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_ACCELEROMETER).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.THRESHOLD_ACCELEROMETER, 0.0);
-            }
-
-            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER))
-                    || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ACCELEROMETER))) {
-
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mAccelerometer);
-
-                FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER));
-                THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ACCELEROMETER));
-            }
-
-            mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), sensorHandler);
-
-            if (Aware.DEBUG) Log.d(TAG, "Accelerometer service active: " + FREQUENCY + "ms");
         }
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     //Singleton instance of this service
@@ -297,6 +300,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     }
 
     private final IBinder serviceBinder = new ServiceBinder();
+
     public class ServiceBinder extends Binder {
         public Accelerometer getService() {
             return Accelerometer.getService();

@@ -239,64 +239,47 @@ public class Light extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (mLight == null) {
-            if (Aware.DEBUG) Log.w(TAG, "This device does not have a light sensor!");
-            Aware.setSetting(this, Aware_Preferences.STATUS_LIGHT, false);
-            stopSelf();
-        } else {
-            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-            Aware.setSetting(this, Aware_Preferences.STATUS_LIGHT, true);
-            saveSensorDevice(mLight);
+        super.onStartCommand(intent, flags, startId);
 
-            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_LIGHT).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.FREQUENCY_LIGHT, 200000);
+        if (PERMISSIONS_OK) {
+            if (mLight == null) {
+                if (Aware.DEBUG) Log.w(TAG, "This device does not have a light sensor!");
+                Aware.setSetting(this, Aware_Preferences.STATUS_LIGHT, false);
+                stopSelf();
+            } else {
+                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+                Aware.setSetting(this, Aware_Preferences.STATUS_LIGHT, true);
+                saveSensorDevice(mLight);
+
+                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_LIGHT).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_LIGHT, 200000);
+                }
+
+                if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_LIGHT).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.THRESHOLD_LIGHT, 0.0);
+                }
+
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT))
+                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_LIGHT))) {
+
+                    sensorHandler.removeCallbacksAndMessages(null);
+                    mSensorManager.unregisterListener(this, mLight);
+
+                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT));
+                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_LIGHT));
+                }
+
+                mSensorManager.registerListener(this, mLight, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT)), sensorHandler);
+
+                if (Aware.DEBUG) Log.d(TAG, "Light service active: " + FREQUENCY + "ms");
             }
-
-            if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_LIGHT).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.THRESHOLD_LIGHT, 0.0);
-            }
-
-            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT))
-                    || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_LIGHT))) {
-
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mLight);
-
-                FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT));
-                THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_LIGHT));
-            }
-
-            mSensorManager.registerListener(this, mLight, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT)), sensorHandler);
-
-            if (Aware.DEBUG) Log.d(TAG, "Light service active: " + FREQUENCY + "ms");
         }
 
-        return super.onStartCommand(intent, flags, startId);
-    }
-
-    //Singleton instance of this service
-    private static Light lightSrv = Light.getService();
-
-    /**
-     * Get singleton instance to service
-     *
-     * @return Light obj
-     */
-    public static Light getService() {
-        if (lightSrv == null) lightSrv = new Light();
-        return lightSrv;
-    }
-
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        Light getService() {
-            return Light.getService();
-        }
+        return START_STICKY;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
+        return null;
     }
 }

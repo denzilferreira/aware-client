@@ -22,9 +22,6 @@ import com.aware.utils.Aware_Sensor;
  * Timezone module. Keeps track of changes in the device Timezone.
  *
  * @author Nikola
- *         Changes log:
- *         17 June 2013
- *         - Added copyright notice, AWARE device ID to timezone context provider (@author Denzil Ferreira <denzil.ferreira@ee.oulu.fi>)
  */
 public class Timezone extends Aware_Sensor {
 
@@ -64,32 +61,9 @@ public class Timezone extends Aware_Sensor {
         }
     };
 
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    /**
-     * Activity-Service binder
-     */
-    public class ServiceBinder extends Binder {
-        Timezone getService() {
-            return Timezone.getService();
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
-    }
-
-    private static Timezone timezoneSrv = Timezone.getService();
-
-    /**
-     * Singleton instance of this service
-     *
-     * @return {@link Timezone} obj
-     */
-    public static Timezone getService() {
-        if (timezoneSrv == null) timezoneSrv = new Timezone();
-        return timezoneSrv;
+        return null;
     }
 
     @Override
@@ -113,21 +87,25 @@ public class Timezone extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-        Aware.setSetting(this, Aware_Preferences.STATUS_TIMEZONE, true);
+        super.onStartCommand(intent, flags, startId);
 
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE).length() == 0) {
-            Aware.setSetting(this, Aware_Preferences.FREQUENCY_TIMEZONE, 3600);
+        if (PERMISSIONS_OK) {
+            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+            Aware.setSetting(this, Aware_Preferences.STATUS_TIMEZONE, true);
+
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE).length() == 0) {
+                Aware.setSetting(this, Aware_Preferences.FREQUENCY_TIMEZONE, 3600);
+            }
+
+            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE))) {
+                mHandler.removeCallbacks(mRunnable);
+                mHandler.post(mRunnable);
+                FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE));
+            }
+            if (Aware.DEBUG) Log.d(TAG, "Timezone service active...");
         }
 
-        if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE))) {
-            mHandler.removeCallbacks(mRunnable);
-            mHandler.post(mRunnable);
-            FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE));
-        }
-        if (Aware.DEBUG) Log.d(TAG, "Timezone service active...");
-
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override

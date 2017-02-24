@@ -239,6 +239,7 @@ public class Aware_Provider extends ContentProvider {
     public int delete(Uri uri, String selection, String[] selectionArgs) {
 
         initialiseDatabase();
+        if (database == null) return 0;
 
         database.beginTransaction();
 
@@ -307,6 +308,7 @@ public class Aware_Provider extends ContentProvider {
     public Uri insert(Uri uri, ContentValues initialValues) {
 
         initialiseDatabase();
+        if (database == null) throw new SQLException("Failed to read database: " + uri);
 
         ContentValues values = (initialValues != null) ? new ContentValues(initialValues) : new ContentValues();
 
@@ -458,6 +460,7 @@ public class Aware_Provider extends ContentProvider {
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 
         initialiseDatabase();
+        if (database == null) return null;
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         switch (sUriMatcher.match(uri)) {
@@ -501,6 +504,7 @@ public class Aware_Provider extends ContentProvider {
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 
         initialiseDatabase();
+        if (database == null) return 0;
 
         database.beginTransaction();
 

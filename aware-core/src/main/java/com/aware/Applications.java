@@ -346,6 +346,8 @@ public class Applications extends AccessibilityService {
         Intent aware = new Intent(this, Aware.class);
         startService(aware);
 
+        Aware.startAWARE(this);
+
         DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
     }
 
@@ -445,7 +447,7 @@ public class Applications extends AccessibilityService {
         Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
     }
 
-    private static boolean isAccessibilityEnabled(Context context) {
+    private synchronized static boolean isAccessibilityEnabled(Context context) {
         boolean enabled = false;
 
         AccessibilityManager accessibilityManager = (AccessibilityManager) context.getSystemService(ACCESSIBILITY_SERVICE);

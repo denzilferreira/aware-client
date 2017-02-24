@@ -30,8 +30,8 @@ public class Http {
 	/**
 	 * Logging tag (default = "AWARE")
 	 */
-	private static String TAG = "AWARE::HTML";
-    private static int timeout = 60 * 1000;
+	private String TAG = "AWARE::HTML";
+    private int timeout = 60 * 1000;
 
 	public Http() {}
 
@@ -45,7 +45,7 @@ public class Http {
      * @param url GET URL
      * @return String with the content of the reply
      */
-    public synchronized String dataGET(String url, boolean is_gzipped) {
+    public String dataGET(final String url, final boolean is_gzipped) {
         if( url.length() == 0 ) return null;
 
         try {
@@ -101,7 +101,7 @@ public class Http {
      * @param is_gzipped Gzip data or not
 	 * @return String with server response. If GZipped, use Http.undoGZIP to recover data
 	 */
-	public synchronized String dataPOST(String url, Hashtable<String, String> data, boolean is_gzipped) {
+	public String dataPOST(final String url, final Hashtable<String, String> data, final boolean is_gzipped) {
         if( url.length() == 0 ) return null;
 
 		try{
@@ -160,14 +160,12 @@ public class Http {
             return result;
 
 		}catch (UnsupportedEncodingException e) {
-            Log.e(TAG, "Sync HTTP dataPost encoding error: " + e.getMessage());
-			return null;
+//            Log.e(TAG, "Sync HTTP dataPost encoding error: " + e.getMessage());
 		} catch (IOException e) {
-            Log.e(TAG, "Sync HTTP dataPost io/null error: " + e.getMessage());
-			return null;
+//            Log.e(TAG, "Sync HTTP dataPost io/null error: " + e.getMessage());
 		} catch (IllegalStateException e ) {
-            Log.e(TAG, "Sync HTTP dataPost state error: " + e.getMessage());
-			return null;
+//            Log.e(TAG, "Sync HTTP dataPost state error: " + e.getMessage());
 		}
+        return null;
 	}
 }

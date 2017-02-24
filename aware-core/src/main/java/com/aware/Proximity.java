@@ -231,65 +231,48 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (mProximity == null) {
-            if (Aware.DEBUG) Log.w(TAG, "This device does not have a proximity sensor!");
-            Aware.setSetting(this, Aware_Preferences.STATUS_PROXIMITY, false);
-            stopSelf();
-        } else {
+        super.onStartCommand(intent, flags, startId);
 
-            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-            Aware.setSetting(this, Aware_Preferences.STATUS_PROXIMITY, true);
-            saveSensorDevice(mProximity);
+        if (PERMISSIONS_OK) {
+            if (mProximity == null) {
+                if (Aware.DEBUG) Log.w(TAG, "This device does not have a proximity sensor!");
+                Aware.setSetting(this, Aware_Preferences.STATUS_PROXIMITY, false);
+                stopSelf();
+            } else {
 
-            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY, 200000);
+                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+                Aware.setSetting(this, Aware_Preferences.STATUS_PROXIMITY, true);
+                saveSensorDevice(mProximity);
+
+                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY, 200000);
+                }
+
+                if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_PROXIMITY).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.THRESHOLD_PROXIMITY, 0.0);
+                }
+
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY))
+                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_PROXIMITY))) {
+
+                    sensorHandler.removeCallbacksAndMessages(null);
+                    mSensorManager.unregisterListener(this, mProximity);
+
+                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY));
+                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_PROXIMITY));
+                }
+
+                mSensorManager.registerListener(this, mProximity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY)), sensorHandler);
+
+                if (Aware.DEBUG) Log.d(TAG, "Proximity service active: " + FREQUENCY + "ms");
             }
-
-            if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_PROXIMITY).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.THRESHOLD_PROXIMITY, 0.0);
-            }
-
-            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY))
-                    || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_PROXIMITY))) {
-
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mProximity);
-
-                FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY));
-                THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_PROXIMITY));
-            }
-
-            mSensorManager.registerListener(this, mProximity, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROXIMITY)), sensorHandler);
-
-            if (Aware.DEBUG) Log.d(TAG, "Proximity service active: " + FREQUENCY + "ms");
         }
 
-        return super.onStartCommand(intent, flags, startId);
-    }
-
-    //Singleton instance of this service
-    private static Proximity proximitySrv = Proximity.getService();
-
-    /**
-     * Get singleton instance to service
-     *
-     * @return Proximity obj
-     */
-    public static Proximity getService() {
-        if (proximitySrv == null) proximitySrv = new Proximity();
-        return proximitySrv;
-    }
-
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        Proximity getService() {
-            return Proximity.getService();
-        }
+        return START_STICKY;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
+        return null;
     }
 }

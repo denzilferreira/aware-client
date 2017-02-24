@@ -255,66 +255,49 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (mGyroscope == null) {
-            if (Aware.DEBUG) Log.w(TAG, "This device does not have a gyroscope!");
-            Aware.setSetting(this, Aware_Preferences.STATUS_GYROSCOPE, false);
-            stopSelf();
-        } else {
+        super.onStartCommand(intent, flags, startId);
 
-            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+        if(PERMISSIONS_OK) {
+            if (mGyroscope == null) {
+                if (Aware.DEBUG) Log.w(TAG, "This device does not have a gyroscope!");
+                Aware.setSetting(this, Aware_Preferences.STATUS_GYROSCOPE, false);
+                stopSelf();
+            } else {
 
-            Aware.setSetting(this, Aware_Preferences.STATUS_GYROSCOPE, true);
-            saveGyroscopeDevice(mGyroscope);
+                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
 
-            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_GYROSCOPE).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.FREQUENCY_GYROSCOPE, 200000);
+                Aware.setSetting(this, Aware_Preferences.STATUS_GYROSCOPE, true);
+                saveGyroscopeDevice(mGyroscope);
+
+                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_GYROSCOPE).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_GYROSCOPE, 200000);
+                }
+
+                if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_GYROSCOPE).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.THRESHOLD_GYROSCOPE, 0.0);
+                }
+
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE))
+                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GYROSCOPE))) {
+
+                    sensorHandler.removeCallbacksAndMessages(null);
+                    mSensorManager.unregisterListener(this, mGyroscope);
+
+                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE));
+                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GYROSCOPE));
+                }
+
+                mSensorManager.registerListener(this, mGyroscope, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE)), sensorHandler);
             }
 
-            if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_GYROSCOPE).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.THRESHOLD_GYROSCOPE, 0.0);
-            }
-
-            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE))
-                    || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GYROSCOPE))) {
-
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mGyroscope);
-
-                FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE));
-                THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GYROSCOPE));
-            }
-
-            mSensorManager.registerListener(this, mGyroscope, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE)), sensorHandler);
+            if (Aware.DEBUG) Log.d(TAG, "Gyroscope service active: " + FREQUENCY + "ms");
         }
 
-        if (Aware.DEBUG) Log.d(TAG, "Gyroscope service active: " + FREQUENCY + "ms");
-
-        return super.onStartCommand(intent, flags, startId);
-    }
-
-    //Singleton instance of this service
-    private static Gyroscope gyroSrv = Gyroscope.getService();
-
-    /**
-     * Get singleton instance to Gyroscope service
-     *
-     * @return Gyroscope obj
-     */
-    public static Gyroscope getService() {
-        if (gyroSrv == null) gyroSrv = new Gyroscope();
-        return gyroSrv;
-    }
-
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        Gyroscope getService() {
-            return Gyroscope.getService();
-        }
+        return START_STICKY;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
+        return null;
     }
 }

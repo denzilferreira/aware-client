@@ -116,32 +116,9 @@ public class Traffic extends Aware_Sensor {
     private static long wifiRxPackets = 0;
     private static long wifiTxPackets = 0;
 
-    /**
-     * Activity-Service binder
-     */
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        Traffic getService() {
-            return Traffic.getService();
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
-    }
-
-    private static Traffic trafficSrv = Traffic.getService();
-
-    /**
-     * Singleton instance to service
-     *
-     * @return Network
-     */
-    public static Traffic getService() {
-        if (trafficSrv == null) trafficSrv = new Traffic();
-        return trafficSrv;
+        return null;
     }
 
     @Override
@@ -162,40 +139,44 @@ public class Traffic extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (startTotalRxBytes == TrafficStats.UNSUPPORTED) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_NETWORK_TRAFFIC, false);
-            if (Aware.DEBUG)
-                Log.d(TAG, "Device doesn't support traffic statistics! Disabling sensor...");
-            stopSelf();
-        } else {
-            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-            Aware.setSetting(this, Aware_Preferences.STATUS_NETWORK_TRAFFIC, true);
+        super.onStartCommand(intent, flags, startId);
 
-            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC, 60);
+        if (PERMISSIONS_OK) {
+            if (startTotalRxBytes == TrafficStats.UNSUPPORTED) {
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_NETWORK_TRAFFIC, false);
+                if (Aware.DEBUG)
+                    Log.d(TAG, "Device doesn't support traffic statistics! Disabling sensor...");
+                stopSelf();
+            } else {
+                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+                Aware.setSetting(this, Aware_Preferences.STATUS_NETWORK_TRAFFIC, true);
+
+                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC, 60);
+                }
+
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC))) {
+                    mobileRxBytes = TrafficStats.getMobileRxBytes();
+                    mobileTxBytes = TrafficStats.getMobileTxBytes();
+                    mobileRxPackets = TrafficStats.getMobileRxPackets();
+                    mobileTxPackets = TrafficStats.getMobileTxPackets();
+
+                    wifiRxBytes = startTotalRxBytes - mobileRxBytes;
+                    wifiTxBytes = startTotalTxBytes - mobileTxBytes;
+                    wifiRxPackets = startTotalRxPackets - mobileRxPackets;
+                    wifiTxPackets = startTotalTxPackets - mobileTxPackets;
+
+                    mHandler.removeCallbacks(mRunnable);
+                    mHandler.post(mRunnable);
+
+                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC));
+                }
+
+                if (Aware.DEBUG) Log.d(TAG, "Traffic service active...");
             }
-
-            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC))) {
-                mobileRxBytes = TrafficStats.getMobileRxBytes();
-                mobileTxBytes = TrafficStats.getMobileTxBytes();
-                mobileRxPackets = TrafficStats.getMobileRxPackets();
-                mobileTxPackets = TrafficStats.getMobileTxPackets();
-
-                wifiRxBytes = startTotalRxBytes - mobileRxBytes;
-                wifiTxBytes = startTotalTxBytes - mobileTxBytes;
-                wifiRxPackets = startTotalRxPackets - mobileRxPackets;
-                wifiTxPackets = startTotalTxPackets - mobileTxPackets;
-
-                mHandler.removeCallbacks(mRunnable);
-                mHandler.post(mRunnable);
-
-                FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC));
-            }
-
-            if (Aware.DEBUG) Log.d(TAG, "Traffic service active...");
         }
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override

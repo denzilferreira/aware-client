@@ -10,8 +10,10 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.PermissionChecker;
 import android.telephony.CellLocation;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
@@ -70,34 +72,9 @@ public class Telephony extends Aware_Sensor {
      */
     public static final String ACTION_AWARE_GSM_TOWER_NEIGHBOR = "ACTION_AWARE_GSM_TOWER_NEIGHBOR";
 
-    /**
-     * Get Singleton instance to Telephony module
-     *
-     * @return Telephony obj
-     */
-    public static Telephony getService() {
-        if (telephonyService == null) telephonyService = new Telephony();
-        return telephonyService;
-    }
-
-    private static Telephony telephonyService = Telephony.getService();
-
-    private final IBinder telephonyBinder = new TelephonyBinder();
-
-    /**
-     * Binder for Telephony module
-     *
-     * @author df
-     */
-    public class TelephonyBinder extends Binder {
-        Telephony getService() {
-            return Telephony.getService();
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-        return telephonyBinder;
+        return null;
     }
 
     @Override
@@ -119,30 +96,18 @@ public class Telephony extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
 
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
-            }
-        }
-
-        if (permissions_ok) {
+        if (PERMISSIONS_OK) {
             DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
             Aware.setSetting(this, Aware_Preferences.STATUS_TELEPHONY, true);
 
             telephonyManager.listen(telephonyState, PhoneStateListener.LISTEN_CELL_LOCATION | PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
 
             if (Aware.DEBUG) Log.d(TAG, "Telephony service active...");
-        } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
         }
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override

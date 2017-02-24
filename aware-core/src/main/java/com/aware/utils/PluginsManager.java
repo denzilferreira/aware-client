@@ -1,6 +1,7 @@
 
 package com.aware.utils;
 
+import android.app.ActivityManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -125,6 +126,74 @@ public class PluginsManager {
             if (pkg.packageName.equals(package_name)) return pkg;
         }
         return null;
+    }
+
+    /**
+     * Check if plugin is running or not
+     * @param context
+     * @param pkg_name
+     * @return
+     */
+    public static boolean isRunning(Context context, String pkg_name) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (service.service.getPackageName().equalsIgnoreCase(pkg_name)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if a plugin is set as enabled or not
+     * @param context
+     * @param pkg_name
+     * @return
+     */
+    public static boolean isEnabled(Context context, String pkg_name) {
+        boolean result = false;
+        Cursor enabled = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + pkg_name + "'", null, null);
+        if (enabled != null && enabled.moveToFirst()) {
+            result = (enabled.getInt(enabled.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == Aware_Plugin.STATUS_PLUGIN_ON);
+        }
+        if (enabled != null && ! enabled.isClosed()) enabled.close();
+        return result;
+    }
+
+    /**
+     * Check if a plugin is set as disabled or not
+     * @param context
+     * @param pkg_name
+     * @return
+     */
+    public static boolean isDisabled(Context context, String pkg_name) {
+        boolean result = false;
+        Cursor disabled = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + pkg_name + "'", null, null);
+        if (disabled != null && disabled.moveToFirst()) {
+            result = (disabled.getInt(disabled.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == Aware_Plugin.STATUS_PLUGIN_OFF);
+        }
+        if (disabled != null && ! disabled.isClosed()) disabled.close();
+        return result;
+    }
+
+    /**
+     * Tell AWARE that this plugin should be enabled
+     * @param context
+     * @param pkg_name
+     */
+    public static void enablePlugin(Context context, String pkg_name) {
+        ContentValues rowData = new ContentValues();
+        rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
+        context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + pkg_name + "'", null);
+    }
+
+    /**
+     * Tell AWARE that this plugin should be disabled
+     * @param context
+     * @param pkg_name
+     */
+    public static void disablePlugin(Context context, String pkg_name) {
+        ContentValues rowData = new ContentValues();
+        rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
+        context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + pkg_name + "'", null);
     }
 
     /**
