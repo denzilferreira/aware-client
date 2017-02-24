@@ -49,48 +49,32 @@ public class PermissionsHandler extends Activity {
     public static final int RC_PERMISSIONS = 112;
 
     private Intent redirect_activity, redirect_service;
-    private ArrayList<String> permissionsNeeded = new ArrayList<>();
 
-    private boolean is_visible = false; //permission window is visible
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.d("Permissions", "Permissions request for " + getPackageName());
+    }
 
     @Override
     protected void onResume() {
         super.onResume();
-
         if (getIntent() != null && getIntent().getExtras() != null && getIntent().getSerializableExtra(EXTRA_REQUIRED_PERMISSIONS) != null) {
-            if (permissionsNeeded.size() == 0) {
-                permissionsNeeded = (ArrayList<String>) getIntent().getSerializableExtra(EXTRA_REQUIRED_PERMISSIONS);
-
-                Log.d(Aware.TAG, "New set of permissions");
-
-            } else {
-
-                ArrayList<String> newPermissions = (ArrayList<String>) getIntent().getSerializableExtra(EXTRA_REQUIRED_PERMISSIONS);
-                for(String p : newPermissions) {
-                    if (!permissionsNeeded.contains(p)) permissionsNeeded.add(p);
-                }
-
-                Log.d(Aware.TAG, "Appending permissions");
-
+            ArrayList<String> permissionsNeeded = (ArrayList<String>) getIntent().getSerializableExtra(EXTRA_REQUIRED_PERMISSIONS);
+            ActivityCompat.requestPermissions(PermissionsHandler.this, permissionsNeeded.toArray(new String[permissionsNeeded.size()]), RC_PERMISSIONS);
+            if (getIntent().hasExtra(EXTRA_REDIRECT_ACTIVITY)) {
+                redirect_activity = new Intent();
+                String[] component = getIntent().getStringExtra(EXTRA_REDIRECT_ACTIVITY).split("/");
+                redirect_activity.setComponent(new ComponentName(component[0], component[1]));
+                redirect_activity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            } else if (getIntent().hasExtra(EXTRA_REDIRECT_SERVICE)){
+                redirect_service = new Intent();
+                redirect_service.setAction(ACTION_AWARE_PERMISSIONS_CHECK);
+                String[] component = getIntent().getStringExtra(EXTRA_REDIRECT_SERVICE).split("/");
+                redirect_service.setComponent(new ComponentName(component[0], component[1]));
             }
 
-            if (!is_visible) {
-                is_visible = true;
-                ActivityCompat.requestPermissions(PermissionsHandler.this, permissionsNeeded.toArray(new String[permissionsNeeded.size()]), RC_PERMISSIONS);
-                if (getIntent().hasExtra(EXTRA_REDIRECT_ACTIVITY)) {
-                    redirect_activity = new Intent();
-                    String[] component = getIntent().getStringExtra(EXTRA_REDIRECT_ACTIVITY).split("/");
-                    redirect_activity.setComponent(new ComponentName(component[0], component[1]));
-                    redirect_activity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                } else if (getIntent().hasExtra(EXTRA_REDIRECT_SERVICE)){
-                    redirect_service = new Intent();
-                    redirect_service.setAction(ACTION_AWARE_PERMISSIONS_CHECK);
-                    String[] component = getIntent().getStringExtra(EXTRA_REDIRECT_SERVICE).split("/");
-                    redirect_service.setComponent(new ComponentName(component[0], component[1]));
-                }
-            }
         } else {
-            is_visible = false;
             Intent activity = new Intent();
             setResult(Activity.RESULT_OK, activity);
             finish();
@@ -99,9 +83,6 @@ public class PermissionsHandler extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        //The user has gone through the permissions
-        is_visible = false;
-
         if (requestCode == RC_PERMISSIONS) {
             int not_granted = 0;
             for (int i = 0; i < permissions.length; i++) {
@@ -145,5 +126,11 @@ public class PermissionsHandler extends Activity {
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d("Permissions", "Handled permissions for " + getPackageName());
     }
 }
