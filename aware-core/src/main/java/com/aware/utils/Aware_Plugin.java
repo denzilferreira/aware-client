@@ -82,7 +82,7 @@ public class Aware_Plugin extends Service {
      */
     public static boolean PERMISSIONS_OK;
 
-    private Intent aware;
+    private static Intent aware;
 
     @Override
     public void onCreate() {
@@ -118,26 +118,19 @@ public class Aware_Plugin extends Service {
                 }
             }
         }
-
         if (!PERMISSIONS_OK) {
             Intent permissions = new Intent(this, PermissionsHandler.class);
             permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
             permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_SERVICE, getPackageName() + "/" + getClass().getName());
             startActivity(permissions);
-
         } else {
-
             if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                 Intent study_SSL = new Intent(this, SSLManager.class);
                 study_SSL.putExtra(SSLManager.EXTRA_SERVER, Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
                 startService(study_SSL);
             }
             Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
-
-            if (!PluginsManager.isRunning(getApplicationContext(), getPackageName())) {
-                Aware.startPlugin(getApplicationContext(), getPackageName());
-            }
         }
         return super.onStartCommand(intent, flags, startId);
     }

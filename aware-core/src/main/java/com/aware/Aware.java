@@ -218,6 +218,7 @@ public class Aware extends Service {
     }
 
     private final IBinder serviceBinder = new ServiceBinder();
+
     public class ServiceBinder extends Binder {
         public Aware getService() {
             return getService();
@@ -468,18 +469,9 @@ public class Aware extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && PermissionChecker.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            //Request missing permission
-
-//            ArrayList<String> permission = new ArrayList<>();
-//            permission.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-//
-//            Intent permissions = new Intent(this, PermissionsHandler.class);
-//            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, permission);
-//            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//            startActivity(permissions);
-
-            return super.onStartCommand(intent, flags, startId);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (PermissionChecker.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+                return super.onStartCommand(intent, flags, startId);
         }
 
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
@@ -570,24 +562,6 @@ public class Aware extends Service {
                     }
 
                     startAWARE(getApplicationContext());
-
-                    //Get the active plugins
-                    ArrayList<String> active_plugins = new ArrayList<>();
-                    Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
-                    if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
-                        do {
-                            String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-                            active_plugins.add(package_name);
-                        } while (enabled_plugins.moveToNext());
-                    }
-                    if (enabled_plugins != null && !enabled_plugins.isClosed())
-                        enabled_plugins.close();
-
-                    if (active_plugins.size() > 0) {
-                        for (String package_name : active_plugins) {
-                            startPlugin(getApplicationContext(), package_name);
-                        }
-                    }
 
                     //remind the user to charge
                     checkBatteryLeft();
@@ -717,7 +691,8 @@ public class Aware extends Service {
                 if (Aware.DEBUG) Log.d(TAG, package_name + " stopped...");
             }
 
-            if (!PluginsManager.isDisabled(context, package_name)) PluginsManager.disablePlugin(context, package_name);
+            if (!PluginsManager.isDisabled(context, package_name))
+                PluginsManager.disablePlugin(context, package_name);
 
             if (context.getPackageName().equals("com.aware.phone") || context.getResources().getBoolean(R.bool.standalone)) {
                 context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
@@ -750,7 +725,8 @@ public class Aware extends Service {
                 if (Aware.DEBUG) Log.d(TAG, package_name + " started...");
             }
 
-            if (!PluginsManager.isEnabled(context, package_name)) PluginsManager.enablePlugin(context, package_name);
+            if (!PluginsManager.isEnabled(context, package_name))
+                PluginsManager.enablePlugin(context, package_name);
 
             if (context.getPackageName().equals("com.aware.phone") || context.getResources().getBoolean(R.bool.standalone)) {
                 context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
@@ -2424,6 +2400,23 @@ public class Aware extends Service {
         if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_KEYBOARD).equals("true")) {
             startKeyboard(awareContext);
         } else stopKeyboard(awareContext);
+
+        ArrayList<String> active_plugins = new ArrayList<>();
+        Cursor enabled_plugins = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
+        if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
+            do {
+                String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+                active_plugins.add(package_name);
+            } while (enabled_plugins.moveToNext());
+        }
+        if (enabled_plugins != null && !enabled_plugins.isClosed())
+            enabled_plugins.close();
+
+        if (active_plugins.size() > 0) {
+            for (String package_name : active_plugins) {
+                startPlugin(awareContext, package_name);
+            }
+        }
     }
 
     /**
@@ -2539,6 +2532,24 @@ public class Aware extends Service {
         if (Aware.getSetting(context, Aware_Preferences.STATUS_KEYBOARD).equals("true")) {
             startKeyboard(context);
         } else stopKeyboard(context);
+
+        //Process plugins
+        ArrayList<String> active_plugins = new ArrayList<>();
+        Cursor enabled_plugins = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
+        if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
+            do {
+                String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+                active_plugins.add(package_name);
+            } while (enabled_plugins.moveToNext());
+        }
+        if (enabled_plugins != null && !enabled_plugins.isClosed())
+            enabled_plugins.close();
+
+        if (active_plugins.size() > 0) {
+            for (String package_name : active_plugins) {
+                startPlugin(context, package_name);
+            }
+        }
     }
 
     /**
