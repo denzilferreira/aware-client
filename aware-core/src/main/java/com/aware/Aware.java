@@ -202,32 +202,9 @@ public class Aware extends Service {
 
     private AsyncStudyCheck studyCheck = null;
 
-    /**
-     * Singleton instance of the framework
-     */
-    private Aware awareSrv;
-
-    /**
-     * Get the singleton instance to the AWARE framework
-     *
-     * @return {@link Aware} obj
-     */
-    public Aware getService() {
-        if (awareSrv == null) awareSrv = new Aware();
-        return awareSrv;
-    }
-
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        public Aware getService() {
-            return getService();
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
+        return null;
     }
 
     @Override
@@ -470,8 +447,19 @@ public class Aware extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (PermissionChecker.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+            if (PermissionChecker.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+
+                ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
+                REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+                Intent permissions = new Intent(this, PermissionsHandler.class);
+                permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
+                permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_SERVICE, getPackageName() + "/" + getClass().getName()); //restarts core once permissions are accepted
+                startActivity(permissions);
+
                 return super.onStartCommand(intent, flags, startId);
+            }
         }
 
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
@@ -525,6 +513,25 @@ public class Aware extends Service {
                                 .setActionClass(getPackageName() + "/" + getClass().getName());
 
                         Scheduler.saveSchedule(this, watchdog);
+
+                        startAWARE(getApplicationContext());
+
+                        ArrayList<String> active_plugins = new ArrayList<>();
+                        Cursor enabled_plugins = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
+                        if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
+                            do {
+                                String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+                                active_plugins.add(package_name);
+                            } while (enabled_plugins.moveToNext());
+                        }
+                        if (enabled_plugins != null && !enabled_plugins.isClosed())
+                            enabled_plugins.close();
+
+                        if (active_plugins.size() > 0) {
+                            for (String package_name : active_plugins) {
+                                startPlugin(awareContext, package_name);
+                            }
+                        }
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -562,6 +569,23 @@ public class Aware extends Service {
                     }
 
                     startAWARE(getApplicationContext());
+
+                    ArrayList<String> active_plugins = new ArrayList<>();
+                    Cursor enabled_plugins = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
+                    if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
+                        do {
+                            String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+                            active_plugins.add(package_name);
+                        } while (enabled_plugins.moveToNext());
+                    }
+                    if (enabled_plugins != null && !enabled_plugins.isClosed())
+                        enabled_plugins.close();
+
+                    if (active_plugins.size() > 0) {
+                        for (String package_name : active_plugins) {
+                            startPlugin(awareContext, package_name);
+                        }
+                    }
 
                     //remind the user to charge
                     checkBatteryLeft();
@@ -615,9 +639,6 @@ public class Aware extends Service {
                     }
                 }
             }
-
-            //Start core AWARE services
-            startAWARE(getApplicationContext());
 
         } else {
             ArrayList<String> active_plugins = new ArrayList<>();
@@ -2063,8 +2084,11 @@ public class Aware extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             try {
-                ContentValues rowData = new ContentValues();
 
+                Intent aware = new Intent(context, Aware.class);
+                context.startService(aware);
+
+                ContentValues rowData = new ContentValues();
                 //Force updated phone battery info
                 Intent batt = context.getApplicationContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
                 Bundle extras = batt.getExtras();
@@ -2107,6 +2131,9 @@ public class Aware extends Service {
                 if (Aware.DEBUG) Log.d(TAG, Battery.ACTION_AWARE_BATTERY_CHANGED);
                 Intent battChanged = new Intent(Battery.ACTION_AWARE_BATTERY_CHANGED);
                 context.sendBroadcast(battChanged);
+
+                Aware.startAWARE(context);
+
             } catch (RuntimeException e) {
                 //Gingerbread does not allow these intents. Disregard for 2.3.3
             }
@@ -2398,23 +2425,6 @@ public class Aware extends Service {
         if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_KEYBOARD).equals("true")) {
             startKeyboard(awareContext);
         } else stopKeyboard(awareContext);
-
-        ArrayList<String> active_plugins = new ArrayList<>();
-        Cursor enabled_plugins = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
-        if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
-            do {
-                String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-                active_plugins.add(package_name);
-            } while (enabled_plugins.moveToNext());
-        }
-        if (enabled_plugins != null && !enabled_plugins.isClosed())
-            enabled_plugins.close();
-
-        if (active_plugins.size() > 0) {
-            for (String package_name : active_plugins) {
-                startPlugin(awareContext, package_name);
-            }
-        }
     }
 
     /**
@@ -2530,24 +2540,6 @@ public class Aware extends Service {
         if (Aware.getSetting(context, Aware_Preferences.STATUS_KEYBOARD).equals("true")) {
             startKeyboard(context);
         } else stopKeyboard(context);
-
-        //Process plugins
-        ArrayList<String> active_plugins = new ArrayList<>();
-        Cursor enabled_plugins = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
-        if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
-            do {
-                String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-                active_plugins.add(package_name);
-            } while (enabled_plugins.moveToNext());
-        }
-        if (enabled_plugins != null && !enabled_plugins.isClosed())
-            enabled_plugins.close();
-
-        if (active_plugins.size() > 0) {
-            for (String package_name : active_plugins) {
-                startPlugin(context, package_name);
-            }
-        }
     }
 
     /**

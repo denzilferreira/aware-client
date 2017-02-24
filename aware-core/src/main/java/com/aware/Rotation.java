@@ -260,64 +260,47 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (mRotation == null) {
-            if (Aware.DEBUG) Log.w(TAG, "This device does not have a rotation sensor!");
-            Aware.setSetting(this, Aware_Preferences.STATUS_ROTATION, false);
-            stopSelf();
-        } else {
-            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-            Aware.setSetting(this, Aware_Preferences.STATUS_ROTATION, true);
-            saveSensorDevice(mRotation);
+        super.onStartCommand(intent, flags, startId);
 
-            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_ROTATION).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.FREQUENCY_ROTATION, 200000);
+        if (PERMISSIONS_OK) {
+            if (mRotation == null) {
+                if (Aware.DEBUG) Log.w(TAG, "This device does not have a rotation sensor!");
+                Aware.setSetting(this, Aware_Preferences.STATUS_ROTATION, false);
+                stopSelf();
+            } else {
+                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+                Aware.setSetting(this, Aware_Preferences.STATUS_ROTATION, true);
+                saveSensorDevice(mRotation);
+
+                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_ROTATION).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_ROTATION, 200000);
+                }
+
+                if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_ROTATION).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.THRESHOLD_ROTATION, 0.0);
+                }
+
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION))
+                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ROTATION))) {
+
+                    sensorHandler.removeCallbacksAndMessages(null);
+                    mSensorManager.unregisterListener(this, mRotation);
+
+                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION));
+                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ROTATION));
+                }
+
+                mSensorManager.registerListener(this, mRotation, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION)), sensorHandler);
+
+                if (Aware.DEBUG) Log.d(TAG, "Rotation service active...");
             }
-
-            if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_ROTATION).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.THRESHOLD_ROTATION, 0.0);
-            }
-
-            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION))
-                    || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ROTATION))) {
-
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mRotation);
-
-                FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION));
-                THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ROTATION));
-            }
-
-            mSensorManager.registerListener(this, mRotation, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION)), sensorHandler);
-
-            if (Aware.DEBUG) Log.d(TAG, "Rotation service active...");
         }
 
-        return super.onStartCommand(intent, flags, startId);
-    }
-
-    //Singleton instance of this service
-    private static Rotation rotationSrv = Rotation.getService();
-
-    /**
-     * Get singleton instance to Rotation service
-     *
-     * @return Rotation obj
-     */
-    public static Rotation getService() {
-        if (rotationSrv == null) rotationSrv = new Rotation();
-        return rotationSrv;
-    }
-
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        Rotation getService() {
-            return Rotation.getService();
-        }
+        return START_STICKY;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
+        return null;
     }
 }

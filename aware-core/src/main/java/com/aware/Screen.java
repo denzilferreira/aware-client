@@ -72,32 +72,9 @@ public class Screen extends Aware_Sensor {
      */
     public static final int STATUS_SCREEN_UNLOCKED = 3;
 
-    /**
-     * Activity-Service binder
-     */
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        Screen getService() {
-            return Screen.getService();
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
-    }
-
-    private static Screen screenSrv = Screen.getService();
-
-    /**
-     * Singleton instance to service
-     *
-     * @return Screen
-     */
-    public static Screen getService() {
-        if (screenSrv == null) screenSrv = new Screen();
-        return screenSrv;
+        return null;
     }
 
     @Override
@@ -128,11 +105,14 @@ public class Screen extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-        Aware.setSetting(this, Aware_Preferences.STATUS_SCREEN, true);
-        if (Aware.DEBUG) Log.d(TAG, "Screen service active...");
+        super.onStartCommand(intent, flags, startId);
+        if (PERMISSIONS_OK) {
+            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+            Aware.setSetting(this, Aware_Preferences.STATUS_SCREEN, true);
+            if (Aware.DEBUG) Log.d(TAG, "Screen service active...");
+        }
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     public static class ScreenMonitor extends BroadcastReceiver {

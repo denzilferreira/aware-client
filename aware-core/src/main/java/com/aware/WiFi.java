@@ -76,21 +76,6 @@ public class WiFi extends Aware_Sensor {
      */
     public static final String ACTION_AWARE_WIFI_REQUEST_SCAN = "ACTION_AWARE_WIFI_REQUEST_SCAN";
 
-    /**
-     * Bluetooth Service singleton object
-     */
-    private static WiFi wifiService = WiFi.getService();
-
-    /**
-     * Get an instance for the WiFi Service
-     *
-     * @return WiFi obj
-     */
-    public static WiFi getService() {
-        if (wifiService == null) wifiService = new WiFi();
-        return wifiService;
-    }
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -117,18 +102,9 @@ public class WiFi extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        boolean permissions_ok = true;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            for (String p : REQUIRED_PERMISSIONS) {
-                if (PermissionChecker.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                    permissions_ok = false;
-                    break;
-                }
-            }
-        }
+        super.onStartCommand(intent, flags, startId);
 
-        if (permissions_ok) {
-
+        if (PERMISSIONS_OK) {
             if (wifiManager == null) {
                 if (DEBUG) Log.d(TAG, "This device does not have a WiFi chip");
                 Aware.setSetting(this, Aware_Preferences.STATUS_WIFI, false);
@@ -143,17 +119,12 @@ public class WiFi extends Aware_Sensor {
 
                 alarmManager.cancel(wifiScan);
                 alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_WIFI)) * 1000, wifiScan);
+
                 if (Aware.DEBUG) Log.d(TAG, "WiFi service active...");
             }
-
-        } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
         }
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override
@@ -166,22 +137,9 @@ public class WiFi extends Aware_Sensor {
         if (Aware.DEBUG) Log.d(TAG, "WiFi service terminated...");
     }
 
-    private final IBinder wifiBinder = new WiFiBinder();
-
-    /**
-     * Binder for WiFi module
-     *
-     * @author denzil
-     */
-    public class WiFiBinder extends Binder {
-        WiFi getService() {
-            return WiFi.getService();
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-        return wifiBinder;
+        return null;
     }
 
     public static class WiFiMonitor extends BroadcastReceiver {
@@ -308,8 +266,6 @@ public class WiFi extends Aware_Sensor {
                     Intent scanStart = new Intent(ACTION_AWARE_WIFI_SCAN_STARTED);
                     sendBroadcast(scanStart);
                     wifiManager.startScan();
-
-//                    || ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2)?wifiManager.isScanAlwaysAvailable():true)
                 } else {
                     if (DEBUG) {
                         Log.d(TAG, "WiFi is off");

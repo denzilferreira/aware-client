@@ -40,8 +40,6 @@ public class Installations extends Aware_Sensor {
 
     private static String TAG = "AWARE::Installations";
 
-    private static Installations installationsSrv = Installations.getService();
-
     /**
      * Broadcasted event: new application has been installed
      * Extra: package_name, application_name
@@ -92,30 +90,9 @@ public class Installations extends Aware_Sensor {
     private static String current_context;
     private static ContextProducer sContext_producer;
 
-    /**
-     * Activity-Service binder
-     */
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        Installations getService() {
-            return Installations.getService();
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
-    }
-
-    /**
-     * Singleton instance to this service
-     *
-     * @return {@link Installations} obj
-     */
-    public static Installations getService() {
-        if (installationsSrv == null) installationsSrv = new Installations();
-        return installationsSrv;
+        return null;
     }
 
     @Override
@@ -149,11 +126,16 @@ public class Installations extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-        Aware.setSetting(this, Aware_Preferences.STATUS_INSTALLATIONS, true);
-        if (Aware.DEBUG) Log.d(TAG, "Installations service active...");
+        super.onStartCommand(intent, flags, startId);
 
-        return super.onStartCommand(intent, flags, startId);
+        if (PERMISSIONS_OK) {
+            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+            Aware.setSetting(this, Aware_Preferences.STATUS_INSTALLATIONS, true);
+
+            if (Aware.DEBUG) Log.d(TAG, "Installations service active...");
+        }
+
+        return START_STICKY;
     }
 
     @Override

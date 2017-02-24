@@ -447,7 +447,7 @@ public class Applications extends AccessibilityService {
         Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
     }
 
-    private static boolean isAccessibilityEnabled(Context context) {
+    private synchronized static boolean isAccessibilityEnabled(Context context) {
         boolean enabled = false;
 
         AccessibilityManager accessibilityManager = (AccessibilityManager) context.getSystemService(ACCESSIBILITY_SERVICE);

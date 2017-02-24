@@ -109,7 +109,6 @@ public class Bluetooth extends Aware_Sensor {
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
-
         DATABASE_TABLES = Bluetooth_Provider.DATABASE_TABLES;
         TABLES_FIELDS = Bluetooth_Provider.TABLES_FIELDS;
         CONTEXT_URIS = new Uri[]{Bluetooth_Sensor.CONTENT_URI, Bluetooth_Data.CONTENT_URI};
@@ -130,35 +129,30 @@ public class Bluetooth extends Aware_Sensor {
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_COARSE_LOCATION); //we need this permission for BT scanning to work
 
         bluetoothAdapter  = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2)? ((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter() : BluetoothAdapter.getDefaultAdapter();
-        if(bluetoothAdapter == null) return;
+        if(bluetoothAdapter == null) {
+            stopSelf();
+            return;
+        }
 
         enableBT = new Intent(this, Bluetooth.class);
         enableBT.putExtra("action", ACTION_AWARE_ENABLE_BT);
-
-        if (!bluetoothAdapter.isEnabled()) {
-            notifyMissingBluetooth(getApplicationContext(), false);
-        }
 
         if (Aware.DEBUG) Log.d(TAG, "Bluetooth service created!");
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null && intent.hasExtra("action") && intent.getStringExtra("action").equalsIgnoreCase(ACTION_AWARE_ENABLE_BT)) {
-            bluetoothAdapter.enable();
-        }
+        super.onStartCommand(intent, flags, startId);
 
-        boolean permissions_ok = true;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            for (String p : REQUIRED_PERMISSIONS) {
-                if (PermissionChecker.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                    permissions_ok = false;
-                    break;
-                }
+        if (PERMISSIONS_OK) {
+            if (intent != null && intent.hasExtra("action") && intent.getStringExtra("action").equalsIgnoreCase(ACTION_AWARE_ENABLE_BT)) {
+                bluetoothAdapter.enable();
             }
-        }
 
-        if (permissions_ok) {
+            if (!bluetoothAdapter.isEnabled()) {
+                notifyMissingBluetooth(getApplicationContext(), false);
+            }
+
             DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
             Aware.setSetting(this, Aware_Preferences.STATUS_BLUETOOTH, true);
 
@@ -184,14 +178,9 @@ public class Bluetooth extends Aware_Sensor {
 
                 if (Aware.DEBUG) Log.d(TAG, "Bluetooth service active: " + FREQUENCY + "s");
             }
-        } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
         }
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override
@@ -205,22 +194,9 @@ public class Bluetooth extends Aware_Sensor {
         if (Aware.DEBUG) Log.d(TAG, "Bluetooth service terminated...");
     }
 
-    private final IBinder bluetoothBinder = new BluetoothBinder();
-
-    /**
-     * Binder for Bluetooth module
-     *
-     * @author denzil
-     */
-    public class BluetoothBinder extends Binder {
-        Bluetooth getService() {
-            return Bluetooth.getService();
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-        return bluetoothBinder;
+        return null;
     }
 
     /**

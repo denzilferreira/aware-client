@@ -35,10 +35,15 @@ public class Keyboard extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-        Aware.setSetting(this, Aware_Preferences.STATUS_KEYBOARD, true);
-        if (Aware.DEBUG) Log.d(TAG, "Keyboard service active...");
+        super.onStartCommand(intent, flags, startId);
 
-        return super.onStartCommand(intent, flags, startId);
+        if (PERMISSIONS_OK) {
+            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+            Aware.setSetting(this, Aware_Preferences.STATUS_KEYBOARD, true);
+
+            if (Aware.DEBUG) Log.d(TAG, "Keyboard service active...");
+        }
+
+        return START_STICKY;
     }
 }

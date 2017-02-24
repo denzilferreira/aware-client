@@ -118,32 +118,9 @@ public class Processor extends Aware_Sensor {
 
     private static int FREQUENCY = -1;
 
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    /**
-     * Activity-Service binder
-     */
-    public class ServiceBinder extends Binder {
-        Processor getService() {
-            return Processor.getService();
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
-    }
-
-    private static Processor processorSrv = Processor.getService();
-
-    /**
-     * Singleton instance of this service
-     *
-     * @return {@link Processor} obj
-     */
-    public static Processor getService() {
-        if (processorSrv == null) processorSrv = new Processor();
-        return processorSrv;
+        return null;
     }
 
     @Override
@@ -159,22 +136,25 @@ public class Processor extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
 
-        DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR).length() == 0) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR, 10);
+        if (PERMISSIONS_OK) {
+            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR).length() == 0) {
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR, 10);
+            }
+
+            Aware.setSetting(this, Aware_Preferences.STATUS_PROCESSOR, true);
+            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR))) {
+                mHandler.removeCallbacks(mRunnable);
+                mHandler.post(mRunnable);
+                FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR));
+            }
+
+            if (Aware.DEBUG) Log.d(TAG, "Processor service active: " + FREQUENCY + "s");
         }
 
-        Aware.setSetting(this, Aware_Preferences.STATUS_PROCESSOR, true);
-        if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR))) {
-            mHandler.removeCallbacks(mRunnable);
-            mHandler.post(mRunnable);
-            FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR));
-        }
-
-        if (Aware.DEBUG) Log.d(TAG, "Processor service active: " + FREQUENCY + "s");
-
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override

@@ -235,66 +235,48 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (mPressure == null) {
-            if (Aware.DEBUG) Log.w(TAG, "This device does not have a barometer sensor!");
-            Aware.setSetting(this, Aware_Preferences.STATUS_BAROMETER, false);
-            stopSelf();
-        } else {
+        super.onStartCommand(intent, flags, startId);
 
-            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+        if (PERMISSIONS_OK) {
+            if (mPressure == null) {
+                if (Aware.DEBUG) Log.w(TAG, "This device does not have a barometer sensor!");
+                Aware.setSetting(this, Aware_Preferences.STATUS_BAROMETER, false);
+                stopSelf();
+            } else {
+                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
 
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_BAROMETER, true);
-            saveSensorDevice(mPressure);
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_BAROMETER, true);
+                saveSensorDevice(mPressure);
 
-            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_BAROMETER).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.FREQUENCY_BAROMETER, 200000);
+                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_BAROMETER).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_BAROMETER, 200000);
+                }
+
+                if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_BAROMETER).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.THRESHOLD_BAROMETER, 0.0);
+                }
+
+                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER))
+                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_BAROMETER))) {
+
+                    sensorHandler.removeCallbacksAndMessages(null);
+                    mSensorManager.unregisterListener(this, mPressure);
+
+                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER));
+                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_BAROMETER));
+                }
+
+                mSensorManager.registerListener(this, mPressure, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER)), sensorHandler);
+
+                if (Aware.DEBUG) Log.d(TAG, "Barometer service active: " + FREQUENCY + "ms");
             }
-
-            if (Aware.getSetting(this, Aware_Preferences.THRESHOLD_BAROMETER).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.THRESHOLD_BAROMETER, 0.0);
-            }
-
-            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER))
-                    || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_BAROMETER))) {
-
-                sensorHandler.removeCallbacksAndMessages(null);
-                mSensorManager.unregisterListener(this, mPressure);
-
-                FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER));
-                THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_BAROMETER));
-            }
-
-            mSensorManager.registerListener(this, mPressure, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER)), sensorHandler);
-
-            if (Aware.DEBUG) Log.d(TAG, "Barometer service active: " + FREQUENCY + "ms");
         }
 
-        return super.onStartCommand(intent, flags, startId);
-    }
-
-    //Singleton instance of this service
-    private static Barometer pressureSrv = Barometer.getService();
-
-    /**
-     * Get singleton instance to service
-     *
-     * @return Pressure obj
-     */
-    public static Barometer getService() {
-        if (pressureSrv == null) pressureSrv = new Barometer();
-        return pressureSrv;
-    }
-
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        Barometer getService() {
-            return Barometer.getService();
-        }
+        return START_STICKY;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
+        return null;
     }
 }

@@ -238,20 +238,23 @@ public class ESM extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
 
-        DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-        Aware.setSetting(this, Aware_Preferences.STATUS_ESM, true);
+        if (PERMISSIONS_OK) {
+            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+            Aware.setSetting(this, Aware_Preferences.STATUS_ESM, true);
 
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_ESM).equals("true")) {
-            if (isESMWaiting(getApplicationContext()) && !isESMVisible(getApplicationContext())) {
-                notifyESM(getApplicationContext(), true);
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_ESM).equals("true")) {
+                if (isESMWaiting(getApplicationContext()) && !isESMVisible(getApplicationContext())) {
+                    notifyESM(getApplicationContext(), true);
+                }
             }
+
+            if (DEBUG)
+                Log.d(TAG, "ESM service active... Queue = " + ESM_Queue.getQueueSize(getApplicationContext()));
         }
 
-        if (DEBUG)
-            Log.d(TAG, "ESM service active... Queue = " + ESM_Queue.getQueueSize(getApplicationContext()));
-
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     /**
@@ -469,30 +472,9 @@ public class ESM extends Aware_Sensor {
         }
     }
 
-    //Singleton instance of this service
-    private static ESM esmSrv = ESM.getService();
-
-    /**
-     * Get singleton instance to service
-     *
-     * @return ESM obj
-     */
-    public static ESM getService() {
-        if (esmSrv == null) esmSrv = new ESM();
-        return esmSrv;
-    }
-
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        ESM getService() {
-            return ESM.getService();
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
+        return null;
     }
 
     /**

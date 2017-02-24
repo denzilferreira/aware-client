@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.PermissionChecker;
 import android.util.Log;
 
 import com.aware.Aware;
@@ -17,6 +18,8 @@ import java.util.ArrayList;
  * Created by denzil on 22/10/15.
  */
 public class PermissionsHandler extends Activity {
+
+    private String TAG = "PermissionsHandler";
 
     /**
      * Extra ArrayList<String> with Manifest.permission that require explicit users' permission on Android API 23+
@@ -73,7 +76,6 @@ public class PermissionsHandler extends Activity {
                 String[] component = getIntent().getStringExtra(EXTRA_REDIRECT_SERVICE).split("/");
                 redirect_service.setComponent(new ComponentName(component[0], component[1]));
             }
-
         } else {
             Intent activity = new Intent();
             setResult(Activity.RESULT_OK, activity);
@@ -86,7 +88,7 @@ public class PermissionsHandler extends Activity {
         if (requestCode == RC_PERMISSIONS) {
             int not_granted = 0;
             for (int i = 0; i < permissions.length; i++) {
-                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                if (grantResults[i] != PermissionChecker.PERMISSION_GRANTED) {
                     not_granted++;
                     Log.d(Aware.TAG, permissions[i] + " was not granted");
                 } else {
@@ -114,10 +116,12 @@ public class PermissionsHandler extends Activity {
                     setResult(Activity.RESULT_OK, activity);
                 }
                 if (redirect_activity != null){
+                    Log.d(TAG, "Redirecting to Activity: " + redirect_activity.getComponent().toString());
                     setResult(Activity.RESULT_OK, redirect_activity);
                     startActivity(redirect_activity);
                 }
                 if (redirect_service != null) {
+                    Log.d(TAG, "Redirecting to Service: " + redirect_service.getComponent().toString());
                     redirect_service.putExtra(EXTRA_PERMISSIONS_STATUS, true);
                     startService(redirect_service);
                 }

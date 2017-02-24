@@ -126,8 +126,6 @@ public class Locations extends Aware_Sensor implements LocationListener {
      */
     public static final String ACTION_AWARE_NETWORK_LOCATION_DISABLED = "ACTION_AWARE_NETWORK_LOCATION_DISABLED";
 
-    private static Locations locationSrv = Locations.getService();
-
     private static int FREQUENCY_NETWORK = -1;
     private static int FREQUENCY_GPS = -1;
 
@@ -196,30 +194,9 @@ public class Locations extends Aware_Sensor implements LocationListener {
         return d;
     }
 
-    /**
-     * Singleton instance of Locations service
-     *
-     * @return Locations obj
-     */
-    public static Locations getService() {
-        if (locationSrv == null) locationSrv = new Locations();
-        return locationSrv;
-    }
-
-    /**
-     * Service binder
-     */
-    private LocationBinder locationBinder = new LocationBinder();
-
-    public class LocationBinder extends Binder {
-        public Locations getService() {
-            return Locations.getService();
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-        return locationBinder;
+        return null;
     }
 
     /**
@@ -290,7 +267,7 @@ public class Locations extends Aware_Sensor implements LocationListener {
     public void onDestroy() {
         super.onDestroy();
 
-        locationManager.removeUpdates(this);
+        if (PERMISSIONS_OK) locationManager.removeUpdates(this);
         locationManager.removeGpsStatusListener(gps_status_listener);
 
         if (Aware.DEBUG) Log.d(TAG, "Locations service terminated...");
@@ -300,17 +277,7 @@ public class Locations extends Aware_Sensor implements LocationListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
 
-        boolean permissions_ok = true;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            for (String p : REQUIRED_PERMISSIONS) {
-                if (PermissionChecker.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                    permissions_ok = false;
-                    break;
-                }
-            }
-        }
-
-        if (permissions_ok) {
+        if (PERMISSIONS_OK) {
 
             DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
 
@@ -388,14 +355,9 @@ public class Locations extends Aware_Sensor implements LocationListener {
                     if (Aware.DEBUG) Log.d(TAG, "Location tracking with Network is not available");
                 }
             }
-        } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
         }
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override

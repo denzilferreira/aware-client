@@ -18,6 +18,7 @@ import android.util.Log;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.R;
+import com.aware.ui.PermissionsHandler;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -62,6 +63,11 @@ public class Aware_Sensor extends Service {
     public ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
 
     /**
+     * Indicates if permissions were accepted OK
+     */
+    public boolean PERMISSIONS_OK;
+
+    /**
      * Interface to share context with other applications/addons<br/>
      * You MUST broadcast your contexts here!
      *
@@ -90,7 +96,23 @@ public class Aware_Sensor extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && PermissionChecker.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
+        PERMISSIONS_OK = true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && PermissionChecker.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PermissionChecker.PERMISSION_GRANTED) {
+            for (String p : REQUIRED_PERMISSIONS) {
+                if (PermissionChecker.checkSelfPermission(this, p) != PermissionChecker.PERMISSION_GRANTED) {
+                    PERMISSIONS_OK = false;
+                    break;
+                }
+            }
+        }
+
+        if (!PERMISSIONS_OK) {
+            Intent permissions = new Intent(this, PermissionsHandler.class);
+            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
+            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_SERVICE, getPackageName() + "/" + getClass().getName()); //restarts plugin once permissions are accepted
+            startActivity(permissions);
+        } else {
             if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                 Intent study_SSL = new Intent(this, SSLManager.class);
                 study_SSL.putExtra(SSLManager.EXTRA_SERVER, Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
@@ -98,13 +120,14 @@ public class Aware_Sensor extends Service {
             }
             Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
         }
+
         return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && PermissionChecker.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
+        if (PERMISSIONS_OK) {
             Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
         }
 

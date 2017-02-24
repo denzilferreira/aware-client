@@ -99,24 +99,28 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (mAccelerometer == null) {
-            if (DEBUG)
-                Log.d(TAG, "This device does not have an accelerometer sensor. Can't detect significant motion");
-            Aware.setSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION, false);
-            stopSelf();
+        super.onStartCommand(intent, flags, startId);
 
-        } else {
+        if (PERMISSIONS_OK) {
+            if (mAccelerometer == null) {
+                if (DEBUG)
+                    Log.d(TAG, "This device does not have an accelerometer sensor. Can't detect significant motion");
+                Aware.setSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION, false);
+                stopSelf();
 
-            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-            Aware.setSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION, true);
+            } else {
 
-            mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI, sensorHandler);
-            isSignificantMotionActive = true;
+                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+                Aware.setSetting(this, Aware_Preferences.STATUS_SIGNIFICANT_MOTION, true);
 
-            if (Aware.DEBUG) Log.d(TAG, "Significant motion service active...");
+                mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI, sensorHandler);
+                isSignificantMotionActive = true;
+
+                if (Aware.DEBUG) Log.d(TAG, "Significant motion service active...");
+            }
         }
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override
@@ -169,29 +173,8 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
 
-    //Singleton instance of this service
-    private static SignificantMotion significantMotionSrv = SignificantMotion.getService();
-
-    /**
-     * Get singleton instance to service
-     *
-     * @return obj
-     */
-    public static SignificantMotion getService() {
-        if (significantMotionSrv == null) significantMotionSrv = new SignificantMotion();
-        return significantMotionSrv;
-    }
-
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        SignificantMotion getService() {
-            return SignificantMotion.getService();
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
+        return null;
     }
 }
