@@ -137,7 +137,7 @@ public class PluginsManager {
     public static boolean isRunning(Context context, String pkg_name) {
         ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (service.clientPackage.equalsIgnoreCase(pkg_name)) return true;
+            if (service.service.getPackageName().equalsIgnoreCase(pkg_name)) return true;
         }
         return false;
     }
@@ -153,6 +153,22 @@ public class PluginsManager {
         Cursor enabled = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + pkg_name + "'", null, null);
         if (enabled != null && enabled.moveToFirst()) {
             result = (enabled.getInt(enabled.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == Aware_Plugin.STATUS_PLUGIN_ON);
+        }
+        if (enabled != null && ! enabled.isClosed()) enabled.close();
+        return result;
+    }
+
+    /**
+     * Check if a plugin is set as disabled or not
+     * @param context
+     * @param pkg_name
+     * @return
+     */
+    public static boolean isDisabled(Context context, String pkg_name) {
+        boolean result = false;
+        Cursor enabled = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + pkg_name + "'", null, null);
+        if (enabled != null && enabled.moveToFirst()) {
+            result = (enabled.getInt(enabled.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == Aware_Plugin.STATUS_PLUGIN_OFF);
         }
         if (enabled != null && ! enabled.isClosed()) enabled.close();
         return result;
