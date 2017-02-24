@@ -29,13 +29,28 @@ public class PermissionsHandler extends Activity {
     public static final String EXTRA_REDIRECT_ACTIVITY = "redirect_activity";
 
     /**
+     * Class name of the Service redirect, e.g., Class.getClass().getName();
+     */
+    public static final String EXTRA_REDIRECT_SERVICE = "redirect_service";
+
+    /**
+     * Used on redirect service to know when permissions have been accepted
+     */
+    public static final String ACTION_AWARE_PERMISSIONS_CHECK = "ACTION_AWARE_PERMISSIONS_CHECK";
+
+    /**
+     * Used on redirect service to report the accept/reject of permissions. boolean TRUE if all is OK.
+     */
+    public static final String EXTRA_PERMISSIONS_STATUS = "extra_permissions_status";
+
+    /**
      * The request code for the permissions
      */
     public static final int RC_PERMISSIONS = 112;
 
-    private Intent redirect;
+    private Intent redirect_activity, redirect_service;
     private ArrayList<String> permissionsNeeded = new ArrayList<>();
-    private boolean success = false; //all permissions accepted
+
     private boolean is_visible = false; //permission window is visible
 
     @Override
@@ -63,16 +78,19 @@ public class PermissionsHandler extends Activity {
                 is_visible = true;
                 ActivityCompat.requestPermissions(PermissionsHandler.this, permissionsNeeded.toArray(new String[permissionsNeeded.size()]), RC_PERMISSIONS);
                 if (getIntent().hasExtra(EXTRA_REDIRECT_ACTIVITY)) {
-                    redirect = new Intent();
+                    redirect_activity = new Intent();
                     String[] component = getIntent().getStringExtra(EXTRA_REDIRECT_ACTIVITY).split("/");
-                    redirect.setComponent(new ComponentName(component[0], component[1]));
-                    redirect.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    redirect_activity.setComponent(new ComponentName(component[0], component[1]));
+                    redirect_activity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                } else if (getIntent().hasExtra(EXTRA_REDIRECT_SERVICE)){
+                    redirect_service = new Intent();
+                    redirect_service.setAction(ACTION_AWARE_PERMISSIONS_CHECK);
+                    String[] component = getIntent().getStringExtra(EXTRA_REDIRECT_SERVICE).split("/");
+                    redirect_service.setComponent(new ComponentName(component[0], component[1]));
                 }
             }
         } else {
-            success = true;
             is_visible = false;
-
             Intent activity = new Intent();
             setResult(Activity.RESULT_OK, activity);
             finish();
@@ -96,35 +114,36 @@ public class PermissionsHandler extends Activity {
             }
 
             if (not_granted > 0) {
-                if (redirect == null) {
+                if (redirect_activity == null) {
                     Intent activity = new Intent();
                     setResult(Activity.RESULT_CANCELED, activity);
-                } else {
-                    setResult(Activity.RESULT_CANCELED, redirect);
-                    startActivity(redirect);
                 }
-                success = false;
+                if (redirect_activity != null) {
+                    setResult(Activity.RESULT_CANCELED, redirect_activity);
+                    startActivity(redirect_activity);
+                }
+                if (redirect_service != null) {
+                    redirect_service.putExtra(EXTRA_PERMISSIONS_STATUS, false);
+                    startService(redirect_service);
+                }
                 finish();
             } else {
-                if (redirect == null) {
+                if (redirect_activity == null) {
                     Intent activity = new Intent();
                     setResult(Activity.RESULT_OK, activity);
-                } else {
-                    setResult(Activity.RESULT_OK, redirect);
-                    startActivity(redirect);
                 }
-                success = true;
+                if (redirect_activity != null){
+                    setResult(Activity.RESULT_OK, redirect_activity);
+                    startActivity(redirect_activity);
+                }
+                if (redirect_service != null) {
+                    redirect_service.putExtra(EXTRA_PERMISSIONS_STATUS, true);
+                    startService(redirect_service);
+                }
                 finish();
             }
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        if (success) Aware.startAWARE(getApplicationContext());
     }
 }

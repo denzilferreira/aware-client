@@ -77,6 +77,11 @@ public class Aware_Plugin extends Service {
      */
     public static final int STATUS_PLUGIN_ON = 1;
 
+    /**
+     * Indicates if permissions were accepted OK
+     */
+    public static boolean PERMISSIONS_OK;
+
     private Intent aware;
 
     @Override
@@ -103,7 +108,26 @@ public class Aware_Plugin extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && PermissionChecker.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
+
+        PERMISSIONS_OK = true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && PermissionChecker.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            for (String p : REQUIRED_PERMISSIONS) {
+                if (PermissionChecker.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+                    PERMISSIONS_OK = false;
+                    break;
+                }
+            }
+        }
+
+        if (!PERMISSIONS_OK) {
+            Intent permissions = new Intent(this, PermissionsHandler.class);
+            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
+            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_SERVICE, getPackageName() + "/" + getClass().getName());
+            startActivity(permissions);
+
+        } else {
+
             if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                 Intent study_SSL = new Intent(this, SSLManager.class);
                 study_SSL.putExtra(SSLManager.EXTRA_SERVER, Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
@@ -111,7 +135,6 @@ public class Aware_Plugin extends Service {
             }
             Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
 
-            //Starting plugin for the first time
             if (!PluginsManager.isRunning(getApplicationContext(), getPackageName())) {
                 Aware.startPlugin(getApplicationContext(), getPackageName());
             }
