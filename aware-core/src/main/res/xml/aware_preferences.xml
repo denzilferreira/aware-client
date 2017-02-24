@@ -806,7 +806,7 @@
                 android:key="remind_to_charge"
                 android:persistent="true"
                 android:summary="Remind to charge when 15%"
-                android:title="Remind to charge" />
+                android:title="Battery reminder" />
 
         </PreferenceScreen>
     </PreferenceCategory>

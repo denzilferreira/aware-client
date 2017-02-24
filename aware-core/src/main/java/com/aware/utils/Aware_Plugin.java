@@ -93,24 +93,21 @@ public class Aware_Plugin extends Service {
 
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
-        if (!getResources().getBoolean(R.bool.standalone)) {
-            aware = new Intent(getApplicationContext(), Aware.class);
-            startService(aware);
-        }
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && PermissionChecker.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
-            if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
-                Intent study_SSL = new Intent(this, SSLManager.class);
-                study_SSL.putExtra(SSLManager.EXTRA_SERVER, Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
-                startService(study_SSL);
-            }
-            Aware.debug(this, "created: " + getClass().getName() + " package: " + getPackageName());
-        }
+        Log.d(Aware.TAG, "created: " + getClass().getName() + " package: " + getPackageName());
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && PermissionChecker.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
+            if (!getResources().getBoolean(R.bool.standalone)) {
+                aware = new Intent(getApplicationContext(), Aware.class);
+                startService(aware);
+            }
+            if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
+                Intent study_SSL = new Intent(this, SSLManager.class);
+                study_SSL.putExtra(SSLManager.EXTRA_SERVER, Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
+                startService(study_SSL);
+            }
             Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
         }
         return super.onStartCommand(intent, flags, startId);

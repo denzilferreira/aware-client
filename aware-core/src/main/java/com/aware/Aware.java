@@ -118,11 +118,6 @@ public class Aware extends Service {
     public static final String ACTION_AWARE_CLEAR_DATA = "ACTION_AWARE_CLEAR_DATA";
 
     /**
-     * Received broadcast: refresh the framework active sensors.
-     */
-//    public static final String ACTION_AWARE_REFRESH = "ACTION_AWARE_REFRESH";
-
-    /**
      * Received broadcast: this broadcast will trigger plugins that implement the CONTEXT_PRODUCER callback.
      */
     public static final String ACTION_AWARE_CURRENT_CONTEXT = "ACTION_AWARE_CURRENT_CONTEXT";
@@ -210,24 +205,22 @@ public class Aware extends Service {
     /**
      * Singleton instance of the framework
      */
-    private static Aware awareSrv = Aware.getService();
+    private Aware awareSrv;
 
     /**
      * Get the singleton instance to the AWARE framework
      *
      * @return {@link Aware} obj
      */
-    public static Aware getService() {
+    public Aware getService() {
         if (awareSrv == null) awareSrv = new Aware();
         return awareSrv;
     }
 
-
     private final IBinder serviceBinder = new ServiceBinder();
-
     public class ServiceBinder extends Binder {
         public Aware getService() {
-            return Aware.getService();
+            return getService();
         }
     }
 

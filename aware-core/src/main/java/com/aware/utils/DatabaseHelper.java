@@ -40,16 +40,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private final boolean DEBUG = true;
 
     private String TAG = "AwareDBHelper";
+
     private String databaseName;
     private String[] databaseTables;
     private String[] tableFields;
     private int newVersion;
     private CursorFactory cursorFactory;
     private SQLiteDatabase database;
+    private Context mContext;
 
     private HashMap<String, String> renamed_columns = new HashMap<>();
-
-    private Context mContext;
 
     public DatabaseHelper(Context context, String database_name, CursorFactory cursor_factory, int database_version, String[] database_tables, String[] table_fields) {
         super(context, database_name, cursor_factory, database_version);
@@ -59,7 +59,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         tableFields = table_fields;
         newVersion = database_version;
         cursorFactory = cursor_factory;
-//        database = getWritableDatabase(); //don't do this here
     }
 
     public void setRenamedColumns(HashMap<String, String> renamed) {
@@ -180,7 +179,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     return database;
                 }
             }
+
             database = getDatabaseFile();
+            if (database == null) return null;
+
             int current_version = database.getVersion();
             if (current_version != newVersion) {
                 database.beginTransaction();
@@ -195,7 +197,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     database.endTransaction();
                 }
             }
-//            onOpen(database);
             return database;
         } catch (Exception e) {
             return null;
@@ -211,7 +212,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 }
             }
             database = getDatabaseFile();
-//            onOpen(database);
             return database;
         } catch (Exception e) {
             return null;
