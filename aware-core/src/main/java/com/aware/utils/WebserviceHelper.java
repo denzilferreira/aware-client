@@ -58,34 +58,34 @@ public class WebserviceHelper extends Service {
     public static final String EXTRA_FIELDS = "fields";
     public static final String EXTRA_CONTENT_URI = "uri";
 
-    private NotificationManager notManager;
+    private static NotificationManager notManager;
 
-    private long sync_start = 0;
+    private static long sync_start = 0;
     private int notificationID = 0;
-    private int total_rows_synced = 0;
+    private static int total_rows_synced = 0;
 
     private SyncQueue mSyncFastQueue;
     private Looper mServiceLooperFastQueue;
-    private ExecutorService executorFastQueue;
+    ExecutorService executorFastQueue;
 
     private SyncQueue mSyncSlowQueueA;
     private Looper mServiceLooperSlowQueueA;
-    private ExecutorService executorSlowQueueA;
+    ExecutorService executorSlowQueueA;
 
     private SyncQueue mSyncSlowQueueB;
     private Looper mServiceLooperSlowQueueB;
-    private ExecutorService executorSlowQueueB;
+    ExecutorService executorSlowQueueB;
 
     private boolean nextSlowQueue = false;
 
     private Map<String, Boolean> SYNCED_TABLES;
-    private final ArrayList<String> highFrequencySensors = new ArrayList<>();
+    private static final ArrayList<String> highFrequencySensors = new ArrayList<>();
 
     // Handler that receives messages from the thread
     private final class SyncQueue extends Handler {
         ExecutorService executor;
 
-        SyncQueue(Looper looper, ExecutorService executor) {
+        public SyncQueue(Looper looper, ExecutorService executor) {
             super(looper);
             // One thread to sync data with the server
             this.executor = executor;
@@ -161,7 +161,7 @@ public class WebserviceHelper extends Service {
         sync_start = System.currentTimeMillis();
     }
 
-    private void notifyUser(Context mContext, String message, boolean dismiss, boolean indetermined, int id) {
+    private static void notifyUser(Context mContext, String message, boolean dismiss, boolean indetermined, int id) {
         if (!dismiss) {
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(mContext);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_sync);
@@ -345,7 +345,7 @@ public class WebserviceHelper extends Service {
     /**
      * Asynchronously process the sync of all tables
      */
-    private class SyncTable implements Callable<String> {
+    private static class SyncTable implements Callable<String> {
         private Context mContext;
         private boolean DEBUG;
         private String TABLES_FIELDS;
@@ -719,7 +719,6 @@ public class WebserviceHelper extends Service {
                 }
             }
 
-
             if (ACTION.equals(ACTION_AWARE_WEBSERVICE_CLEAR_TABLE)) {
                 if (Aware.DEBUG)
                     Log.d(Aware.TAG, "Clearing data..." + DATABASE_TABLE);
@@ -742,7 +741,7 @@ public class WebserviceHelper extends Service {
         }
     }
 
-    private boolean exists(String[] array, String find) {
+    private static boolean exists(String[] array, String find) {
         for (String a : array) {
             if (a.equals(find)) return true;
         }
@@ -766,6 +765,7 @@ public class WebserviceHelper extends Service {
         executorSlowQueueB.shutdown();
 
         long total_seconds = (System.currentTimeMillis()-sync_start)/1000;
+
         if(Aware.DEBUG) Log.d(Aware.TAG, "Syncing all databases finished. Took: " + DateUtils.formatElapsedTime(total_seconds) + "." +
                 ((total_seconds>0)?" Benchmark: " + (total_rows_synced/total_seconds)+ " rows/second":""));
     }
