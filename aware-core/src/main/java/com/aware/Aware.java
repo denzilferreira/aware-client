@@ -468,16 +468,16 @@ public class Aware extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        //Request missing permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && PermissionChecker.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            //Request missing permission
 
-            ArrayList<String> permission = new ArrayList<>();
-            permission.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, permission);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
+//            ArrayList<String> permission = new ArrayList<>();
+//            permission.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+//
+//            Intent permissions = new Intent(this, PermissionsHandler.class);
+//            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, permission);
+//            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//            startActivity(permissions);
 
             return super.onStartCommand(intent, flags, startId);
         }
@@ -717,9 +717,7 @@ public class Aware extends Service {
                 if (Aware.DEBUG) Log.d(TAG, package_name + " stopped...");
             }
 
-            ContentValues rowData = new ContentValues();
-            rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
-            context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+            PluginsManager.disablePlugin(context, package_name);
 
             if (context.getPackageName().equals("com.aware.phone") || context.getResources().getBoolean(R.bool.standalone)) {
                 context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
@@ -752,9 +750,7 @@ public class Aware extends Service {
                 if (Aware.DEBUG) Log.d(TAG, package_name + " started...");
             }
 
-            ContentValues rowData = new ContentValues();
-            rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
-            context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+            PluginsManager.enablePlugin(context, package_name);
 
             if (context.getPackageName().equals("com.aware.phone") || context.getResources().getBoolean(R.bool.standalone)) {
                 context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
