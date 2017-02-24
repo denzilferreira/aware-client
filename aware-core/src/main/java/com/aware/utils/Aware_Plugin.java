@@ -82,7 +82,7 @@ public class Aware_Plugin extends Service {
      */
     public static boolean PERMISSIONS_OK;
 
-    private static Intent aware;
+    private Intent aware;
 
     @Override
     public void onCreate() {

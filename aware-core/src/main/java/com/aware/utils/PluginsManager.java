@@ -166,11 +166,11 @@ public class PluginsManager {
      */
     public static boolean isDisabled(Context context, String pkg_name) {
         boolean result = false;
-        Cursor enabled = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + pkg_name + "'", null, null);
-        if (enabled != null && enabled.moveToFirst()) {
-            result = (enabled.getInt(enabled.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == Aware_Plugin.STATUS_PLUGIN_OFF);
+        Cursor disabled = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + pkg_name + "'", null, null);
+        if (disabled != null && disabled.moveToFirst()) {
+            result = (disabled.getInt(disabled.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == Aware_Plugin.STATUS_PLUGIN_OFF);
         }
-        if (enabled != null && ! enabled.isClosed()) enabled.close();
+        if (disabled != null && ! disabled.isClosed()) disabled.close();
         return result;
     }
 

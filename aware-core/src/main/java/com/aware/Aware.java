@@ -691,8 +691,7 @@ public class Aware extends Service {
                 if (Aware.DEBUG) Log.d(TAG, package_name + " stopped...");
             }
 
-            if (!PluginsManager.isDisabled(context, package_name))
-                PluginsManager.disablePlugin(context, package_name);
+            PluginsManager.disablePlugin(context, package_name);
 
             if (context.getPackageName().equals("com.aware.phone") || context.getResources().getBoolean(R.bool.standalone)) {
                 context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
@@ -725,8 +724,7 @@ public class Aware extends Service {
                 if (Aware.DEBUG) Log.d(TAG, package_name + " started...");
             }
 
-            if (!PluginsManager.isEnabled(context, package_name))
-                PluginsManager.enablePlugin(context, package_name);
+            PluginsManager.enablePlugin(context, package_name);
 
             if (context.getPackageName().equals("com.aware.phone") || context.getResources().getBoolean(R.bool.standalone)) {
                 context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
