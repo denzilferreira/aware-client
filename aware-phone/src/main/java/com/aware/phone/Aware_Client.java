@@ -371,7 +371,14 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                     findPreference(Aware_Preferences.STATUS_WEBSERVICE),
                     findPreference(Aware_Preferences.WEBSERVICE_SERVER),
                     findPreference(Aware_Preferences.FREQUENCY_WEBSERVICE),
-                    findPreference(Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA)
+                    findPreference(Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA),
+                    findPreference(Aware_Preferences.WEBSERVICE_CHARGING),
+                    findPreference(Aware_Preferences.WEBSERVICE_SILENT),
+                    findPreference(Aware_Preferences.WEBSERVICE_WIFI_ONLY),
+                    findPreference(Aware_Preferences.REMIND_TO_CHARGE),
+                    findPreference(Aware_Preferences.WEBSERVICE_SIMPLE),
+                    findPreference(Aware_Preferences.WEBSERVICE_REMOVE_DATA),
+                    findPreference(Aware_Preferences.DEBUG_DB_SLOW)
             );
         }
     }

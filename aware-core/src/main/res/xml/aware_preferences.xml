@@ -824,15 +824,16 @@
                 android:defaultValue="true"
                 android:key="debug_flag"
                 android:persistent="true"
-                android:title="Override logcat tag" />
+                android:title="Debugging"
+                android:summary="Show messages in logcat" />
 
             <EditTextPreference
                 android:defaultValue="AWARE"
                 android:dependency="debug_flag"
                 android:key="debug_tag"
                 android:persistent="true"
-                android:summary="ADB filter (default = AWARE)"
-                android:title="ADB logcat tag" />
+                android:summary="Change logcat tag for debug filters (default = AWARE)"
+                android:title="Logcat TAG" />
 
             <CheckBoxPreference
                 android:defaultValue="false"
