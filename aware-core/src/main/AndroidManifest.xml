@@ -46,9 +46,6 @@
         <service
             android:name="com.aware.Aware$JoinStudy"
             android:exported="true" />
-        <service
-            android:name="com.aware.utils.SSLManager"
-            android:exported="true" />
 
         <service
             android:name="com.aware.Applications"
@@ -102,9 +99,6 @@
             android:exported="true" />
         <service
             android:name="com.aware.Gyroscope"
-            android:exported="true" />
-        <service
-            android:name="com.aware.Bluetooth$BackgroundService"
             android:exported="true" />
         <service
             android:name="com.aware.WiFi"

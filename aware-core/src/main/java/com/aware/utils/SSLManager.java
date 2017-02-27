@@ -29,36 +29,10 @@ import java.util.concurrent.ExecutionException;
 
 /**
  * Created by denzil on 15/12/15.
- * <p>
  * This class will make sure we have the latest server SSL certificate to allow downloads from self-hosted servers
  * It also makes sure the client has the most up-to-date certificate and nothing breaks when certificates need to be renewed.
  */
-public class SSLManager extends IntentService {
-
-    /**
-     * The server we need certificates from
-     */
-    public static final String EXTRA_SERVER = "aware_server";
-
-    public SSLManager() {
-        super(Aware.TAG + " SSL manager");
-    }
-
-    /**
-     * An intent handles a URL by getting a certificate.  It uses the new handling
-     * techniques, but currently it defaults to updating the certificate unconditionally.
-     *
-     * @param intent Intent with extra data aware_server = URL
-     */
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        String server_url = intent.getStringExtra(EXTRA_SERVER);
-
-        //Fixed: not a valid server URL
-        if (server_url == null || server_url.length() == 0) return;
-        handleUrl(getApplicationContext(), server_url, true);
-    }
-
+public class SSLManager {
     /**
      * Handle a study URL.  Fetch data from query parameters if it is there.  Otherwise,
      * use the classic method of downloading the certificate over http.  Enforces the key
@@ -165,7 +139,7 @@ public class SSLManager extends IntentService {
      * @param crt_sha256 sha256 hash of certificate data to validate
      * @param crt_url    URL from which to fetch certificate if it is not given.
      */
-    public static void handleCrtParameters(Context context, String hostname, String crt, String crt_sha256, String crt_url) {
+    private static void handleCrtParameters(Context context, String hostname, String crt, String crt_sha256, String crt_url) {
         if (Aware.DEBUG) {
             Log.d(Aware.TAG, "handleCrtParameters");
             Log.d(Aware.TAG, "crt=" + crt);
@@ -230,7 +204,7 @@ public class SSLManager extends IntentService {
      * @param hostname hostname to check (only hostname, no protocol or anything.)
      * @return true if a certificate exists, false otherwise
      */
-    public static boolean hasCertificate(Context context, String hostname) {
+    private static boolean hasCertificate(Context context, String hostname) {
         if (hostname == null || hostname.length() == 0) return false;
 
         File root_folder;
@@ -254,7 +228,7 @@ public class SSLManager extends IntentService {
      * @param hostname  hostname to check
      * @param cert_data certificate data, as String.
      */
-    public static void setCertificate(Context context, String hostname, String cert_data) {
+    private static void setCertificate(Context context, String hostname, String cert_data) {
 
         if (hostname == null || hostname.length() == 0) return;
 
@@ -329,7 +303,7 @@ public class SSLManager extends IntentService {
      * @return Input stream of opened certificate.
      * @throws FileNotFoundException
      */
-    public static InputStream getCertificate(Context context, String server) throws FileNotFoundException {
+    static InputStream getCertificate(Context context, String server) throws FileNotFoundException {
         //Fixed: make sure we have a valid server name
         if (server == null || server.length() == 0) return null;
 
