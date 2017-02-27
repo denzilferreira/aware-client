@@ -37,7 +37,6 @@ public class SSLManager {
      * Handle a study URL.  Fetch data from query parameters if it is there.  Otherwise,
      * use the classic method of downloading the certificate over http.  Enforces the key
      * management policy.
-     *
      * @param context app context
      * @param url     full URL, including protocol and query arguments
      * @param block   if true, this method blocks, otherwise downloading is in background.
