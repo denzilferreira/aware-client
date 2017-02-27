@@ -450,13 +450,13 @@ public class ESM extends Aware_Sensor {
                     }
                     mRetries--;
                     display_timestamp = System.currentTimeMillis(); //move forward time and try again
-                    if (Aware.DEBUG) Log.d(Aware.TAG, "Retrying ESM: " + mRetries);
+                    if (Aware.DEBUG) Log.d(TAG, "Retrying ESM: " + mRetries);
                     notifyESM(mContext, false);
                 }
             }
 
             if (Aware.DEBUG)
-                Log.d(Aware.TAG, "ESM queue has expired!");
+                Log.d(TAG, "ESM queue has expired!");
 
             //Remove notification
             if (mNotificationManager == null)
