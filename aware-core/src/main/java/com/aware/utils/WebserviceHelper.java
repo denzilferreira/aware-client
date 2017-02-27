@@ -78,7 +78,7 @@ public class WebserviceHelper extends Service {
 
     private boolean nextSlowQueue = false;
 
-    private Map<String, Boolean> SYNCED_TABLES;
+    private static final Map<String, Boolean> SYNCED_TABLES = Collections.synchronizedMap(new HashMap<String, Boolean>());
     private static final ArrayList<String> highFrequencySensors = new ArrayList<>();
 
     // Handler that receives messages from the thread
@@ -125,7 +125,6 @@ public class WebserviceHelper extends Service {
         highFrequencySensors.add("proximity");
 
         notificationID = 0;
-        SYNCED_TABLES = Collections.synchronizedMap(new HashMap<String, Boolean>());
 
         HandlerThread threadFast = new HandlerThread("SyncFastQueue",
                 android.os.Process.THREAD_PRIORITY_BACKGROUND);
@@ -289,31 +288,29 @@ public class WebserviceHelper extends Service {
 
             String table = intent.getStringExtra(EXTRA_TABLE);
 
-            if (!SYNCED_TABLES.containsKey(table)) {
-                if(Aware.DEBUG)
-                    Log.d(Aware.TAG, "Tried to sync for the first time " + table);
-                SYNCED_TABLES.put(table, true);
-                if(!highFrequencySensors.contains(table)){ //Non High Frequency sensors go together
-                    Message msg = buildMessage(mSyncFastQueue, intent, DEBUG, DEVICE_ID, WEBSERVER, WEBSERVICE_SIMPLE, WEBSERVICE_REMOVE_DATA, MAX_POST_SIZE, startId, notificationID++);
-                    mSyncFastQueue.sendMessage(msg);
+            synchronized (SYNCED_TABLES) {
+
+                if (!SYNCED_TABLES.containsKey(table) || SYNCED_TABLES.get(table)) {
+                    if (Aware.DEBUG)
+                        Log.d(Aware.TAG, "Tried to sync for the first time " + table);
+                    SYNCED_TABLES.put(table, false);
+                    if (!highFrequencySensors.contains(table)) { //Non High Frequency sensors go together
+                        Message msg = buildMessage(mSyncFastQueue, intent, DEBUG, DEVICE_ID, WEBSERVER, WEBSERVICE_SIMPLE, WEBSERVICE_REMOVE_DATA, MAX_POST_SIZE, startId, notificationID++);
+                        mSyncFastQueue.sendMessage(msg);
+                    } else if (nextSlowQueue) { // High frequency sensors are split in two threads
+                        Message msg = buildMessage(mSyncSlowQueueA, intent, DEBUG, DEVICE_ID, WEBSERVER, WEBSERVICE_SIMPLE, WEBSERVICE_REMOVE_DATA, MAX_POST_SIZE, startId, notificationID++);
+                        mSyncSlowQueueA.sendMessage(msg);
+                        nextSlowQueue = !nextSlowQueue;
+                    } else {
+                        Message msg = buildMessage(mSyncSlowQueueB, intent, DEBUG, DEVICE_ID, WEBSERVER, WEBSERVICE_SIMPLE, WEBSERVICE_REMOVE_DATA, MAX_POST_SIZE, startId, notificationID++);
+                        mSyncSlowQueueB.sendMessage(msg);
+                        nextSlowQueue = !nextSlowQueue;
+                    }
+                } else {
+                    if (Aware.DEBUG)
+                        Log.d(Aware.TAG, "Tried to sync again for " + table);
                 }
-                else if(nextSlowQueue){ // High frequency sensors are split in two threads
-                    Message msg = buildMessage(mSyncSlowQueueA, intent, DEBUG, DEVICE_ID, WEBSERVER, WEBSERVICE_SIMPLE, WEBSERVICE_REMOVE_DATA, MAX_POST_SIZE, startId, notificationID++);
-                    mSyncSlowQueueA.sendMessage(msg);
-                    nextSlowQueue = !nextSlowQueue;
-                }
-                else{
-                    Message msg = buildMessage(mSyncSlowQueueB, intent, DEBUG, DEVICE_ID, WEBSERVER, WEBSERVICE_SIMPLE, WEBSERVICE_REMOVE_DATA, MAX_POST_SIZE, startId, notificationID++);
-                    mSyncSlowQueueB.sendMessage(msg);
-                    nextSlowQueue = !nextSlowQueue;
-                }
-            } else {
-                if(Aware.DEBUG)
-                    Log.d(Aware.TAG, "Tried to sync again for " + table);
             }
-
-
-
         }
 
         // If we get killed, after returning from here, restart
@@ -710,10 +707,15 @@ public class WebserviceHelper extends Service {
                             if (DEBUG)
                                 Log.d(Aware.TAG, "Nothing to sync: " + total_records + " records from " + DATABASE_TABLE);
 
+                            synchronized (SYNCED_TABLES) {
+                                SYNCED_TABLES.put(this.DATABASE_TABLE, true);
+                            }
                             return Thread.currentThread().getName(); //nothing to upload, no need to do anything now.
                         }
 
                     } catch (JSONException e) {
+                        e.printStackTrace();
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
@@ -737,6 +739,9 @@ public class WebserviceHelper extends Service {
                 }
             }
 
+            synchronized (SYNCED_TABLES) {
+                SYNCED_TABLES.put(this.DATABASE_TABLE, true);
+            }
             return Thread.currentThread().getName();
         }
     }
