@@ -258,7 +258,7 @@ public class Aware extends Service {
         protected Boolean doInBackground(Void... params) {
             // Download the certificate, and block since we are already running in background
             // and we need the certificate immediately.
-            SSLManager.downloadCertificate(getApplicationContext(), "api.awareframework.com", true);
+            SSLManager.handleUrl(getApplicationContext(), "https://api.awareframework.com/index.php", true);
 
             //Ping AWARE's server with awareContext device's information for framework's statistics log
             Hashtable<String, String> device_ping = new Hashtable<>();
@@ -1471,7 +1471,8 @@ public class Aware extends Service {
 
             String request;
             if (protocol.equals("https")) {
-                SSLManager.handleUrl(getApplicationContext(), full_url, true);
+
+                SSLManager.downloadCertificate(getApplicationContext(), study_uri.getHost(), true);
 
 //                try {
 //                    Intent installHTTPS = KeyChain.createInstallIntent();
@@ -1526,9 +1527,6 @@ public class Aware extends Service {
 
                     String answer;
                     if (protocol.equals("https")) {
-                        // Get SSL certs
-                        SSLManager.handleUrl(getApplicationContext(), full_url, true);
-
                         try {
                             answer = new Https(SSLManager.getHTTPS(getApplicationContext(), full_url)).dataPOST(full_url, data, true);
                         } catch (FileNotFoundException e) {
