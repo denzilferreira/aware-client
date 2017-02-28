@@ -645,6 +645,22 @@ public class WebserviceHelper extends Service {
             return lastSynced;
         }
 
+        public boolean isWifiNeededAndConnected(){
+            if (Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true")) {
+                ConnectivityManager connManager = (ConnectivityManager) mContext.getSystemService(CONNECTIVITY_SERVICE);
+                NetworkInfo activeNetwork = connManager.getActiveNetworkInfo();
+                if (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected()) {
+                    return true;
+                } else {
+                    if (Aware.DEBUG)
+                        Log.d(Aware.TAG, "Sync data only over Wi-Fi. Will try again later...");
+                    return false;
+                }
+            }
+            else
+                return true;
+        }
+
         @Override
         public String call() throws Exception {
 
@@ -691,7 +707,7 @@ public class WebserviceHelper extends Service {
                                     removeFrom = lastSynced;
                                 uploaded_records += MAX_POST_SIZE;
 
-                            }while (uploaded_records < total_records && lastSynced > 0);
+                            }while (uploaded_records < total_records && lastSynced > 0 && isWifiNeededAndConnected());
 
                             //Are we performing database space maintenance?
                             if(removeFrom > 0)
