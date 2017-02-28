@@ -4,6 +4,7 @@ package com.aware.phone;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -71,6 +72,8 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
 
         optionalSensors.put(Aware_Preferences.STATUS_ACCELEROMETER, Sensor.TYPE_ACCELEROMETER);
         optionalSensors.put(Aware_Preferences.STATUS_SIGNIFICANT_MOTION, Sensor.TYPE_ACCELEROMETER);
@@ -276,14 +279,17 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
             permissionsHandler.putStringArrayListExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
             permissionsHandler.putExtra(PermissionsHandler.EXTRA_REDIRECT_ACTIVITY, getPackageName() + "/" + getClass().getName());
             startActivityForResult(permissionsHandler, PermissionsHandler.RC_PERMISSIONS);
-            finish();
-            return;
-
         } else {
-            Intent startAware = new Intent(this, Aware.class);
-            startService(startAware);
 
-            prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
+            //Start service in a different thread to improve performance
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Intent startAware = new Intent(getApplicationContext(), Aware.class);
+                    startService(startAware);
+                }
+            }).start();
+
             if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
                 PreferenceManager.setDefaultValues(getApplicationContext(), "com.aware.phone", Context.MODE_PRIVATE, com.aware.R.xml.aware_preferences, true);
                 prefs.edit().commit();

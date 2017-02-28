@@ -100,7 +100,7 @@ public class WebserviceHelper extends Service {
                 if (!executor.isTerminated())
                     executor.submit(syncTable).get();
             } catch (InterruptedException | ExecutionException e) {
-                if(Aware.DEBUG)
+                if (Aware.DEBUG)
                     Log.e(Aware.TAG, e.getMessage());
             }
 
@@ -190,10 +190,10 @@ public class WebserviceHelper extends Service {
 
     private int getBatchSize() {
         double availableRam;
-        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN){
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
 
             String load;
-            try (RandomAccessFile reader = new RandomAccessFile("/proc/meminfo", "r")){
+            try (RandomAccessFile reader = new RandomAccessFile("/proc/meminfo", "r")) {
                 load = reader.readLine();
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -208,7 +208,7 @@ public class WebserviceHelper extends Service {
                 value = m.group(1);
 
             availableRam = Double.parseDouble(value) / 1048576.0;
-        }else{
+        } else {
             ActivityManager actManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
             ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
             actManager.getMemoryInfo(memInfo);
@@ -317,7 +317,7 @@ public class WebserviceHelper extends Service {
         return START_REDELIVER_INTENT;
     }
 
-    private Message buildMessage(SyncQueue queue, Intent intent, boolean DEBUG, String DEVICE_ID, String WEBSERVER, boolean WEBSERVICE_SIMPLE, boolean WEBSERVICE_REMOVE_DATA, int MAX_POST_SIZE, int startId, int notificationID){
+    private Message buildMessage(SyncQueue queue, Intent intent, boolean DEBUG, String DEVICE_ID, String WEBSERVER, boolean WEBSERVICE_SIMPLE, boolean WEBSERVICE_REMOVE_DATA, int MAX_POST_SIZE, int startId, int notificationID) {
         Message msg = queue.obtainMessage();
         Bundle bundle = new Bundle();
         bundle.putBoolean("DEBUG", DEBUG);
@@ -482,29 +482,35 @@ public class WebserviceHelper extends Service {
             } else {
                 long last;
                 if (exists(columnsStr, "double_end_timestamp")) {
-                    last = remoteData.getJSONObject(0).getLong("double_end_timestamp");
-                    Cursor counter = mContext.getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + " AND double_end_timestamp != 0" + study_condition, null, "_id ASC");
-                    if (counter != null && counter.moveToFirst()) {
-                        TOTAL_RECORDS = counter.getInt(0);
-                        counter.close();
+                    if (remoteData.getJSONObject(0).has("double_end_timestamp")) {
+                        last = remoteData.getJSONObject(0).getLong("double_end_timestamp");
+                        Cursor counter = mContext.getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + " AND double_end_timestamp != 0" + study_condition, null, "_id ASC");
+                        if (counter != null && counter.moveToFirst()) {
+                            TOTAL_RECORDS = counter.getInt(0);
+                            counter.close();
+                        }
+                        if (counter != null && !counter.isClosed()) counter.close();
                     }
-                    if (counter != null && !counter.isClosed()) counter.close();
                 } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
-                    last = remoteData.getJSONObject(0).getLong("double_esm_user_answer_timestamp");
-                    Cursor counter = mContext.getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + " AND double_esm_user_answer_timestamp != 0" + study_condition, null, "_id ASC");
-                    if (counter != null && counter.moveToFirst()) {
-                        TOTAL_RECORDS = counter.getInt(0);
-                        counter.close();
+                    if (remoteData.getJSONObject(0).has("double_esm_user_answer_timestamp")) {
+                        last = remoteData.getJSONObject(0).getLong("double_esm_user_answer_timestamp");
+                        Cursor counter = mContext.getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + " AND double_esm_user_answer_timestamp != 0" + study_condition, null, "_id ASC");
+                        if (counter != null && counter.moveToFirst()) {
+                            TOTAL_RECORDS = counter.getInt(0);
+                            counter.close();
+                        }
+                        if (counter != null && !counter.isClosed()) counter.close();
                     }
-                    if (counter != null && !counter.isClosed()) counter.close();
                 } else {
-                    last = remoteData.getJSONObject(0).getLong("timestamp");
-                    Cursor counter = mContext.getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + study_condition, null, "_id ASC");
-                    if (counter != null && counter.moveToFirst()) {
-                        TOTAL_RECORDS = counter.getInt(0);
-                        counter.close();
+                    if (remoteData.getJSONObject(0).has("timestamp")) {
+                        last = remoteData.getJSONObject(0).getLong("timestamp");
+                        Cursor counter = mContext.getContentResolver().query(CONTENT_URI, new String[]{"count(*) as entries"}, "timestamp > " + last + study_condition, null, "_id ASC");
+                        if (counter != null && counter.moveToFirst()) {
+                            TOTAL_RECORDS = counter.getInt(0);
+                            counter.close();
+                        }
+                        if (counter != null && !counter.isClosed()) counter.close();
                     }
-                    if (counter != null && !counter.isClosed()) counter.close();
                 }
             }
 
@@ -517,7 +523,7 @@ public class WebserviceHelper extends Service {
         }
 
         private Cursor getSyncData(JSONArray remoteData, Uri CONTENT_URI, String study_condition, String[] columnsStr, int uploaded_records) throws JSONException {
-            Cursor context_data;
+            Cursor context_data = null;
             if (remoteData.length() == 0) {
                 if (exists(columnsStr, "double_end_timestamp")) {
                     context_data = mContext.getContentResolver().query(CONTENT_URI, null, "double_end_timestamp != 0" + study_condition, null, "_id ASC LIMIT " + uploaded_records + ", " + MAX_POST_SIZE);
@@ -529,14 +535,20 @@ public class WebserviceHelper extends Service {
             } else {
                 long last;
                 if (exists(columnsStr, "double_end_timestamp")) {
-                    last = remoteData.getJSONObject(0).getLong("double_end_timestamp");
-                    context_data = mContext.getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + " AND double_end_timestamp != 0" + study_condition, null, "_id ASC LIMIT " + uploaded_records + ", " + MAX_POST_SIZE);
+                    if (remoteData.getJSONObject(0).has("double_end_timestamp")) {
+                        last = remoteData.getJSONObject(0).getLong("double_end_timestamp");
+                        context_data = mContext.getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + " AND double_end_timestamp != 0" + study_condition, null, "_id ASC LIMIT " + uploaded_records + ", " + MAX_POST_SIZE);
+                    }
                 } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
-                    last = remoteData.getJSONObject(0).getLong("double_esm_user_answer_timestamp");
-                    context_data = mContext.getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + " AND double_esm_user_answer_timestamp != 0" + study_condition, null, "_id ASC LIMIT " + uploaded_records + ", " + MAX_POST_SIZE);
+                    if (remoteData.getJSONObject(0).has("double_esm_user_answer_timestamp")) {
+                        last = remoteData.getJSONObject(0).getLong("double_esm_user_answer_timestamp");
+                        context_data = mContext.getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + " AND double_esm_user_answer_timestamp != 0" + study_condition, null, "_id ASC LIMIT " + uploaded_records + ", " + MAX_POST_SIZE);
+                    }
                 } else {
-                    last = remoteData.getJSONObject(0).getLong("timestamp");
-                    context_data = mContext.getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + study_condition, null, "_id ASC LIMIT " + uploaded_records + ", " + MAX_POST_SIZE);
+                    if (remoteData.getJSONObject(0).has("timestamp")) {
+                        last = remoteData.getJSONObject(0).getLong("timestamp");
+                        context_data = mContext.getContentResolver().query(CONTENT_URI, null, "timestamp > " + last + study_condition, null, "_id ASC LIMIT " + uploaded_records + ", " + MAX_POST_SIZE);
+                    }
                 }
             }
             return context_data;
@@ -544,15 +556,14 @@ public class WebserviceHelper extends Service {
 
         private void performDatabaseSpaceMaintenance(Uri CONTENT_URI, long last) {
 
-            if(WEBSERVICE_REMOVE_DATA){
+            if (WEBSERVICE_REMOVE_DATA) {
                 mContext.getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null);
-            }
-            else if(Aware.getSetting(mContext, Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0){
+            } else if (Aware.getSetting(mContext, Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA).length() > 0) {
 
                 Calendar cal = Calendar.getInstance();
                 cal.setTimeInMillis(last);
                 int rowsDeleted = 0;
-                switch (Integer.parseInt(Aware.getSetting(mContext, Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA))){
+                switch (Integer.parseInt(Aware.getSetting(mContext, Aware_Preferences.FREQUENCY_CLEAN_OLD_DATA))) {
                     case 1: //Weekly
                         cal.add(Calendar.DAY_OF_YEAR, -7);
                         if (Aware.DEBUG)
@@ -572,7 +583,7 @@ public class WebserviceHelper extends Service {
                         rowsDeleted = mContext.getContentResolver().delete(CONTENT_URI, "timestamp < " + cal.getTimeInMillis(), null);
                         break;
                     case 4: //Always (experimental)
-                        if(highFrequencySensors.contains(DATABASE_TABLE))
+                        if (highFrequencySensors.contains(DATABASE_TABLE))
                             rowsDeleted = mContext.getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null);
                         break;
                 }
@@ -623,21 +634,18 @@ public class WebserviceHelper extends Service {
                 if (protocol.equals("https")) {
                     try {
                         success = new Https(SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
-                        if (DEBUG)
-                            Log.d(Aware.TAG, "Sync " + DATABASE_TABLE + " OK");
+                        if (DEBUG) Log.d(Aware.TAG, "Sync " + DATABASE_TABLE + " OK");
                     } catch (FileNotFoundException e) {
                         success = null;
                     }
                 } else {
                     success = new Http().dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/insert", request, true);
-                    if (DEBUG)
-                        Log.d(Aware.TAG, "Sync " + DATABASE_TABLE + " OK");
+                    if (DEBUG) Log.d(Aware.TAG, "Sync " + DATABASE_TABLE + " OK");
                 }
 
                 //Something went wrong, e.g., server is down, lost internet, etc.
                 if (success == null) {
-                    if (DEBUG)
-                        Log.d(Aware.TAG, DATABASE_TABLE + " FAILED to sync. Server down?");
+                    if (DEBUG) Log.d(Aware.TAG, DATABASE_TABLE + " FAILED to sync. Server down?");
                     return 0;
                 }
             }
@@ -645,18 +653,16 @@ public class WebserviceHelper extends Service {
             return lastSynced;
         }
 
-        public boolean isWifiNeededAndConnected(){
+        public boolean isWifiNeededAndConnected() {
             if (Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true")) {
                 ConnectivityManager connManager = (ConnectivityManager) mContext.getSystemService(CONNECTIVITY_SERVICE);
                 NetworkInfo activeNetwork = connManager.getActiveNetworkInfo();
                 if (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected()) {
                     return true;
                 } else {
-//                    if (Aware.DEBUG) Log.d(Aware.TAG, "Sync data only over Wi-Fi. Will try again later...");
                     return false;
                 }
-            }
-            else
+            } else
                 return true;
         }
 
@@ -702,14 +708,15 @@ public class WebserviceHelper extends Service {
 
                                 lastSynced = syncBatch(getSyncData(remoteLatestData, CONTENT_URI, study_condition, columnsStr, uploaded_records));
 
-                                if(lastSynced > 0)
+                                if (lastSynced > 0)
                                     removeFrom = lastSynced;
                                 uploaded_records += MAX_POST_SIZE;
 
-                            }while (uploaded_records < total_records && lastSynced > 0 && isWifiNeededAndConnected());
+                            }
+                            while (uploaded_records < total_records && lastSynced > 0 && isWifiNeededAndConnected());
 
                             //Are we performing database space maintenance?
-                            if(removeFrom > 0)
+                            if (removeFrom > 0)
                                 performDatabaseSpaceMaintenance(CONTENT_URI, removeFrom);
 
                             if (DEBUG)
@@ -776,7 +783,6 @@ public class WebserviceHelper extends Service {
 
     @Override
     public void onDestroy() {
-
         mServiceLooperFastQueue.quitSafely();
         mServiceLooperSlowQueueA.quitSafely();
         mServiceLooperSlowQueueB.quitSafely();
@@ -784,10 +790,10 @@ public class WebserviceHelper extends Service {
         executorSlowQueueA.shutdown();
         executorSlowQueueB.shutdown();
 
-        long total_seconds = (System.currentTimeMillis()-sync_start)/1000;
+        long total_seconds = (System.currentTimeMillis() - sync_start) / 1000;
 
-        if(Aware.DEBUG) Log.d(Aware.TAG, "Syncing all databases finished. Took: " + DateUtils.formatElapsedTime(total_seconds) + "." +
-                ((total_seconds>0)?" Benchmark: " + (total_rows_synced/total_seconds)+ " rows/second":""));
+        if (Aware.DEBUG)
+            Log.d(Aware.TAG, "Syncing all databases finished. Total records: " + total_rows_synced + " Total time: " + DateUtils.formatElapsedTime(total_seconds));
     }
 }
 
