@@ -367,7 +367,6 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                     findPreference(Aware_Preferences.MQTT_PASSWORD),
                     findPreference(Aware_Preferences.MQTT_KEEP_ALIVE),
                     findPreference(Aware_Preferences.MQTT_QOS),
-                    findPreference(Aware_Preferences.MQTT_PROTOCOL),
                     findPreference(Aware_Preferences.STATUS_WEBSERVICE),
                     findPreference(Aware_Preferences.WEBSERVICE_SERVER),
                     findPreference(Aware_Preferences.FREQUENCY_WEBSERVICE),

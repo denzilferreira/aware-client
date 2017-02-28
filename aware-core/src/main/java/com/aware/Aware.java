@@ -932,7 +932,6 @@ public class Aware extends Service {
             global_settings.add(Aware_Preferences.MQTT_PASSWORD);
             global_settings.add(Aware_Preferences.MQTT_SERVER);
             global_settings.add(Aware_Preferences.MQTT_PORT);
-            global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
             global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
             global_settings.add(Aware_Preferences.MQTT_QOS);
         }
@@ -1007,7 +1006,6 @@ public class Aware extends Service {
             global_settings.add(Aware_Preferences.MQTT_PASSWORD);
             global_settings.add(Aware_Preferences.MQTT_SERVER);
             global_settings.add(Aware_Preferences.MQTT_PORT);
-            global_settings.add(Aware_Preferences.MQTT_PROTOCOL);
             global_settings.add(Aware_Preferences.MQTT_KEEP_ALIVE);
             global_settings.add(Aware_Preferences.MQTT_QOS);
         }
@@ -2015,6 +2013,10 @@ public class Aware extends Service {
     public static class Aware_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+
+            //Fixed: only process this broadcast if this is the client or a standalone application.
+            if (!context.getApplicationContext().getResources().getBoolean(R.bool.standalone) || !context.getPackageName().equalsIgnoreCase("com.aware.phone")) return;
+
             //We are only synching the device information, study compliance and overall framework execution logs.
             String[] DATABASE_TABLES = new String[]{Aware_Provider.DATABASE_TABLES[0], Aware_Provider.DATABASE_TABLES[3], Aware_Provider.DATABASE_TABLES[4]};
             String[] TABLES_FIELDS = new String[]{Aware_Provider.TABLES_FIELDS[0], Aware_Provider.TABLES_FIELDS[3], Aware_Provider.TABLES_FIELDS[4]};

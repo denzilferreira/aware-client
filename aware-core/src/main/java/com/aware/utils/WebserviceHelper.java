@@ -58,11 +58,11 @@ public class WebserviceHelper extends Service {
     public static final String EXTRA_FIELDS = "fields";
     public static final String EXTRA_CONTENT_URI = "uri";
 
-    private static NotificationManager notManager;
+    private NotificationManager notManager;
 
-    private static long sync_start = 0;
+    private long sync_start = 0;
     private int notificationID = 0;
-    private static int total_rows_synced = 0;
+    private int total_rows_synced = 0;
 
     private SyncQueue mSyncFastQueue;
     private Looper mServiceLooperFastQueue;
@@ -78,8 +78,8 @@ public class WebserviceHelper extends Service {
 
     private boolean nextSlowQueue = false;
 
-    private static final Map<String, Boolean> SYNCED_TABLES = Collections.synchronizedMap(new HashMap<String, Boolean>());
-    private static final ArrayList<String> highFrequencySensors = new ArrayList<>();
+    private final Map<String, Boolean> SYNCED_TABLES = Collections.synchronizedMap(new HashMap<String, Boolean>());
+    private final ArrayList<String> highFrequencySensors = new ArrayList<>();
 
     // Handler that receives messages from the thread
     private final class SyncQueue extends Handler {
@@ -160,7 +160,7 @@ public class WebserviceHelper extends Service {
         sync_start = System.currentTimeMillis();
     }
 
-    private static void notifyUser(Context mContext, String message, boolean dismiss, boolean indetermined, int id) {
+    private void notifyUser(Context mContext, String message, boolean dismiss, boolean indetermined, int id) {
         if (!dismiss) {
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(mContext);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_sync);
@@ -244,7 +244,7 @@ public class WebserviceHelper extends Service {
          * Max number of rows to place on the HTTP(s) post
          */
         int MAX_POST_SIZE = getBatchSize();
-        if(Aware.DEBUG) Log.d(Aware.TAG, "Synching in batches of " + MAX_POST_SIZE + " records.");
+//        if(Aware.DEBUG) Log.d(Aware.TAG, "Synching in batches of " + MAX_POST_SIZE + " records.");
 
         if (Aware.is_watch(getApplicationContext())) {
             MAX_POST_SIZE = 100; //default for Android Wear (we have a limit of 100KB of data packet size (Message API restrictions)
@@ -273,8 +273,8 @@ public class WebserviceHelper extends Service {
                 ConnectivityManager connManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
                 NetworkInfo activeNetwork = connManager.getActiveNetworkInfo();
                 if (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected()) {
-                    if (Aware.DEBUG)
-                        Log.d(Aware.TAG, "Sync data only over Wi-Fi and internet is available, let's sync!");
+//                    if (Aware.DEBUG)
+//                        Log.d(Aware.TAG, "Sync data only over Wi-Fi and internet is available, let's sync!");
                 } else {
                     if (Aware.DEBUG)
                         Log.d(Aware.TAG, "Sync data only over Wi-Fi. Will try again later...");
@@ -342,7 +342,7 @@ public class WebserviceHelper extends Service {
     /**
      * Asynchronously process the sync of all tables
      */
-    private static class SyncTable implements Callable<String> {
+    private class SyncTable implements Callable<String> {
         private Context mContext;
         private boolean DEBUG;
         private String TABLES_FIELDS;
@@ -652,8 +652,7 @@ public class WebserviceHelper extends Service {
                 if (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected()) {
                     return true;
                 } else {
-                    if (Aware.DEBUG)
-                        Log.d(Aware.TAG, "Sync data only over Wi-Fi. Will try again later...");
+//                    if (Aware.DEBUG) Log.d(Aware.TAG, "Sync data only over Wi-Fi. Will try again later...");
                     return false;
                 }
             }
@@ -762,7 +761,7 @@ public class WebserviceHelper extends Service {
         }
     }
 
-    private static boolean exists(String[] array, String find) {
+    private boolean exists(String[] array, String find) {
         for (String a : array) {
             if (a.equals(find)) return true;
         }
