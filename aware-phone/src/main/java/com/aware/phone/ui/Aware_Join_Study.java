@@ -257,13 +257,14 @@ public class Aware_Join_Study extends Aware_Activity {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
 
-            mQuitting.dismiss();
             finish();
 
             //Redirect the user to the main UI
             Intent mainUI = new Intent(getApplicationContext(), Aware_Client.class);
             mainUI.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(mainUI);
+
+            mQuitting.dismiss();
         }
     }
 
@@ -286,13 +287,7 @@ public class Aware_Join_Study extends Aware_Activity {
 
         @Override
         protected Void doInBackground(Void... params) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    StudyUtils.applySettings(getApplicationContext(), study_configs);
-                }
-            }).start();
-
+            StudyUtils.applySettings(getApplicationContext(), study_configs);
             return null;
         }
 

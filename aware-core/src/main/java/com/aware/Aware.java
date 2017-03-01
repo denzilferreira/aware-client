@@ -447,8 +447,7 @@ public class Aware extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (PermissionChecker.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-
+            if (PermissionChecker.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PermissionChecker.PERMISSION_GRANTED) {
                 ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
                 REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
@@ -458,7 +457,7 @@ public class Aware extends Service {
                 permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_SERVICE, getPackageName() + "/" + getClass().getName()); //restarts core once permissions are accepted
                 startActivity(permissions);
 
-                return super.onStartCommand(intent, flags, startId);
+                return START_STICKY;
             }
         }
 
@@ -513,25 +512,7 @@ public class Aware extends Service {
                                 .setActionClass(getPackageName() + "/" + getClass().getName());
 
                         Scheduler.saveSchedule(this, watchdog);
-
-                        startAWARE(getApplicationContext());
-
-                        ArrayList<String> active_plugins = new ArrayList<>();
-                        Cursor enabled_plugins = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
-                        if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
-                            do {
-                                String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-                                active_plugins.add(package_name);
-                            } while (enabled_plugins.moveToNext());
-                        }
-                        if (enabled_plugins != null && !enabled_plugins.isClosed())
-                            enabled_plugins.close();
-
-                        if (active_plugins.size() > 0) {
-                            for (String package_name : active_plugins) {
-                                startPlugin(awareContext, package_name);
-                            }
-                        }
+                        Aware.startScheduler(this);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -550,6 +531,7 @@ public class Aware extends Service {
                                 .setActionClass(getPackageName() + "/" + getClass().getName());
 
                         Scheduler.saveSchedule(this, compliance);
+                        Aware.startScheduler(this);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -601,41 +583,23 @@ public class Aware extends Service {
                     Scheduler.removeSchedule(getApplicationContext(), SCHEDULE_SYNC_DATA);
 
                 } else {
-                    Scheduler.Schedule sync = Scheduler.getSchedule(this, SCHEDULE_SYNC_DATA);
-                    if (sync == null) { //Set the sync schedule for the first time
-                        try {
+                    try {
+                        Scheduler.Schedule sync = Scheduler.getSchedule(this, SCHEDULE_SYNC_DATA);
+                        if (sync == null || sync.getInterval() != frequency_webservice) { //Set the sync schedule for the first time or if changed
                             Scheduler.Schedule schedule = new Scheduler.Schedule(SCHEDULE_SYNC_DATA)
                                     .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
                                     .setActionIntentAction(Aware.ACTION_AWARE_SYNC_DATA)
                                     .setInterval(frequency_webservice);
 
                             Scheduler.saveSchedule(getApplicationContext(), schedule);
+                            Aware.startScheduler(this);
 
                             if (DEBUG) {
                                 Log.d(TAG, "Data sync every " + schedule.getInterval() + " minute(s)");
                             }
-
-                        } catch (JSONException e) {
-                            e.printStackTrace();
                         }
-                    } else { //check the sync schedule for changes
-                        try {
-                            long interval = sync.getInterval();
-                            if (interval != frequency_webservice) {
-                                Scheduler.Schedule schedule = new Scheduler.Schedule(SCHEDULE_SYNC_DATA)
-                                        .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-                                        .setActionIntentAction(Aware.ACTION_AWARE_SYNC_DATA)
-                                        .setInterval(frequency_webservice);
-
-                                Scheduler.saveSchedule(getApplicationContext(), schedule);
-
-                                if (DEBUG) {
-                                    Log.d(TAG, "Data sync at " + schedule.getInterval() + " minute(s)");
-                                }
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
                 }
             }

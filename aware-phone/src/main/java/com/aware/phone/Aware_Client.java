@@ -60,20 +60,21 @@ import java.util.UUID;
  */
 public class Aware_Client extends Aware_Activity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
-    public static ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
-
-    private static boolean permissions_ok;
-
+    public static boolean permissions_ok;
     private static Hashtable<Integer, Boolean> listSensorType;
-    private Hashtable<String, Integer> optionalSensors = new Hashtable<>();
-
     private static SharedPreferences prefs;
+
+    private static final ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
+    private static final Hashtable<String, Integer> optionalSensors = new Hashtable<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
+
+        Intent startAware = new Intent(getApplicationContext(), Aware.class);
+        startService(startAware);
 
         optionalSensors.put(Aware_Preferences.STATUS_ACCELEROMETER, Sensor.TYPE_ACCELEROMETER);
         optionalSensors.put(Aware_Preferences.STATUS_SIGNIFICANT_MOTION, Sensor.TYPE_ACCELEROMETER);
@@ -280,15 +281,6 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
             permissionsHandler.putExtra(PermissionsHandler.EXTRA_REDIRECT_ACTIVITY, getPackageName() + "/" + getClass().getName());
             startActivityForResult(permissionsHandler, PermissionsHandler.RC_PERMISSIONS);
         } else {
-
-            //Start service in a different thread to improve performance
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Intent startAware = new Intent(getApplicationContext(), Aware.class);
-                    startService(startAware);
-                }
-            }).start();
 
             if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {
                 PreferenceManager.setDefaultValues(getApplicationContext(), "com.aware.phone", Context.MODE_PRIVATE, com.aware.R.xml.aware_preferences, true);

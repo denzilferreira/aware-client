@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.database.sqlite.SQLiteCantOpenDatabaseException;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -122,7 +123,8 @@ public abstract class Aware_Activity extends AppCompatPreferenceActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item != null && item.getTitle() != null) {}
+        if (item != null && item.getTitle() != null) {
+        }
         if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_qrcode))) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && PermissionChecker.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 ArrayList<String> permission = new ArrayList<>();
