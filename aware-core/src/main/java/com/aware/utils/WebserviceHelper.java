@@ -417,6 +417,7 @@ public class WebserviceHelper extends Service {
                     latest = new Http().dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
                 }
             }
+            if (latest == null) return "[]";
             return latest;
         }
 
@@ -440,6 +441,8 @@ public class WebserviceHelper extends Service {
         }
 
         private int getNumberOfRecordsToSync(Uri CONTENT_URI, String[] columnsStr, String latest, String study_condition) throws JSONException {
+            if (latest == null) return 0;
+
             JSONArray remoteData = new JSONArray(latest);
 
             int TOTAL_RECORDS = 0;
