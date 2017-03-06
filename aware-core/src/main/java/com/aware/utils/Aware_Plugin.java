@@ -124,6 +124,9 @@ public class Aware_Plugin extends Service {
             startActivity(permissions);
         } else {
 
+            //Set plugin as enabled
+            PluginsManager.enablePlugin(getApplicationContext(), getPackageName());
+
             //Start AWARE service inside plugin
             if (!getResources().getBoolean(R.bool.standalone)) {
                 aware = new Intent(getApplicationContext(), Aware.class);

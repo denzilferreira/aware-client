@@ -714,14 +714,11 @@ public class Aware extends Service {
                 Intent bundled = new Intent();
                 bundled.setComponent(new ComponentName(context.getPackageName(), package_name + ".Plugin"));
                 context.startService(bundled);
-
                 if (Aware.DEBUG) Log.d(TAG, "Bundled " + package_name + ".Plugin started...");
-
             } else {
                 Intent external = new Intent();
                 external.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
                 context.startService(external);
-
                 if (Aware.DEBUG) Log.d(TAG, package_name + " started...");
             }
 
