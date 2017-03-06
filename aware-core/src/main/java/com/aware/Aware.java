@@ -542,6 +542,14 @@ public class Aware extends Service {
 
                     startAWARE(getApplicationContext());
 
+                    //remind the user to charge
+                    checkBatteryLeft(false);
+                }
+            } else {
+                //Start sensors
+                startAWARE(getApplicationContext());
+
+                if (getPackageName().equalsIgnoreCase("com.aware.phone") || getResources().getBoolean(R.bool.standalone)) {
                     ArrayList<String> active_plugins = new ArrayList<>();
                     Cursor enabled_plugins = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
                     if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
@@ -558,13 +566,7 @@ public class Aware extends Service {
                             startPlugin(awareContext, package_name);
                         }
                     }
-
-                    //remind the user to charge
-                    checkBatteryLeft(false);
                 }
-            } else {
-                //Start sensors
-                startAWARE(getApplicationContext());
             }
 
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {

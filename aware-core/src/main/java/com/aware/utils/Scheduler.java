@@ -953,6 +953,7 @@ public class Scheduler extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
 
         DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
 
@@ -1074,7 +1075,7 @@ public class Scheduler extends Aware_Sensor {
         }
         if (scheduled_tasks != null && !scheduled_tasks.isClosed()) scheduled_tasks.close();
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override

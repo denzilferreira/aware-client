@@ -283,10 +283,6 @@ public class Applications extends AccessibilityService {
         filter.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
         registerReceiver(awareMonitor, filter);
 
-        //Boot-up AWARE framework
-        Intent aware = new Intent(this, Aware.class);
-        startService(aware);
-
         IntentFilter tick = new IntentFilter();
         tick.addAction(Intent.ACTION_TIME_TICK);
         registerReceiver(schedulerTicker, tick);
