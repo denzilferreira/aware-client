@@ -2038,11 +2038,7 @@ public class Aware extends Service {
     public class AwareBoot extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-
             try {
-                Intent aware = new Intent(context, Aware.class);
-                context.startService(aware);
-
                 ContentValues rowData = new ContentValues();
                 //Force updated phone battery info
                 Intent batt = context.getApplicationContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
@@ -2071,6 +2067,9 @@ public class Aware extends Service {
 
                     Aware.debug(context, "phone: on");
                     rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_BOOTED);
+
+                    Intent aware = new Intent(context, Aware.class);
+                    context.startService(aware);
                 }
                 if (intent.getAction().equalsIgnoreCase(Intent.ACTION_SHUTDOWN)) {
                     Aware.debug(context, "phone: off");
