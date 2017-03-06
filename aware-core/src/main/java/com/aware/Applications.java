@@ -283,7 +283,28 @@ public class Applications extends AccessibilityService {
         filter.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
         registerReceiver(awareMonitor, filter);
 
+        //Boot-up AWARE framework
+        Intent aware = new Intent(this, Aware.class);
+        startService(aware);
+
+        IntentFilter tick = new IntentFilter();
+        tick.addAction(Intent.ACTION_TIME_TICK);
+        registerReceiver(schedulerTicker, tick);
+
         Aware.debug(this, "created: " + getClass().getName() + " package: " + getPackageName());
+    }
+
+    private SchedulerTicker schedulerTicker = new SchedulerTicker();
+    public static class SchedulerTicker extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //Executed every 1-minute. OS will send this tickle automatically
+            if (intent.getAction().equals(Intent.ACTION_TIME_TICK)) {
+                Intent scheduler = new Intent(context, Scheduler.class);
+                scheduler.setAction(Scheduler.ACTION_AWARE_SCHEDULER_CHECK);
+                context.startService(scheduler);
+            }
+        }
     }
 
     @Override
@@ -345,8 +366,6 @@ public class Applications extends AccessibilityService {
         //Boot-up AWARE framework
         Intent aware = new Intent(this, Aware.class);
         startService(aware);
-
-        Aware.startAWARE(this);
 
         DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
     }
@@ -440,6 +459,9 @@ public class Applications extends AccessibilityService {
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
+
+        //Stop listening to time ticks
+        unregisterReceiver(schedulerTicker);
 
         Scheduler.removeSchedule(this, SCHEDULER_APPLICATIONS_BACKGROUND);
         Aware.startScheduler(this);

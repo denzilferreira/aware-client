@@ -299,7 +299,7 @@ public class StudyUtils extends IntentService {
         }
 
         //Start sensors
-        Aware.toggleSensors(context);
+        Aware.startAWARE(context);
 
         //Send data to server
         Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);

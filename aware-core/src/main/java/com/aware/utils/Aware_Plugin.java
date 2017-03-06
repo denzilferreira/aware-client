@@ -82,6 +82,9 @@ public class Aware_Plugin extends Service {
      */
     public boolean PERMISSIONS_OK;
 
+    /**
+     * Instance to AWARE framework core service
+     */
     private Intent aware;
 
     @Override
@@ -104,7 +107,7 @@ public class Aware_Plugin extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         PERMISSIONS_OK = true;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && PermissionChecker.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PermissionChecker.PERMISSION_GRANTED) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             for (String p : REQUIRED_PERMISSIONS) {
                 if (PermissionChecker.checkSelfPermission(this, p) != PermissionChecker.PERMISSION_GRANTED) {
                     PERMISSIONS_OK = false;
@@ -121,13 +124,11 @@ public class Aware_Plugin extends Service {
             startActivity(permissions);
         } else {
 
+            //Start AWARE service inside plugin
             if (!getResources().getBoolean(R.bool.standalone)) {
                 aware = new Intent(getApplicationContext(), Aware.class);
                 startService(aware);
             }
-
-            //Start AWARE
-            Aware.startAWARE(this);
 
             if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                 SSLManager.handleUrl(getApplicationContext(), Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER), true);
@@ -149,9 +150,11 @@ public class Aware_Plugin extends Service {
             unregisterReceiver(contextBroadcaster);
         }
 
-        if (aware != null) stopService(aware);
-
         Aware.stopAWARE(this);
+
+        if (!getResources().getBoolean(R.bool.standalone) && aware != null) {
+            stopService(aware);
+        }
     }
 
     /**

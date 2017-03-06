@@ -4,14 +4,12 @@ package com.aware.phone;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
@@ -30,9 +28,7 @@ import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
-import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.ListAdapter;
 import android.widget.Toast;
@@ -172,7 +168,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
             list.setSummary(list.getEntry());
         }
 
-        Aware.toggleSensors(getApplicationContext());
+        Aware.startAWARE(getApplicationContext());
     }
 
     private class SettingsSync extends AsyncTask<Preference, Preference, Void> {
