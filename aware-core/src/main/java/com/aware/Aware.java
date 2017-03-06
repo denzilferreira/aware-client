@@ -563,26 +563,8 @@ public class Aware extends Service {
                     checkBatteryLeft(false);
                 }
             } else {
-                //Check if sensors are running
+                //Start sensors
                 startAWARE(getApplicationContext());
-
-                //Check if plugins are running
-                ArrayList<String> active_plugins = new ArrayList<>();
-                Cursor enabled_plugins = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
-                if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
-                    do {
-                        String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-                        active_plugins.add(package_name);
-                    } while (enabled_plugins.moveToNext());
-                }
-                if (enabled_plugins != null && !enabled_plugins.isClosed())
-                    enabled_plugins.close();
-
-                if (active_plugins.size() > 0) {
-                    for (String package_name : active_plugins) {
-                        startPlugin(awareContext, package_name);
-                    }
-                }
             }
 
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
@@ -2040,9 +2022,7 @@ public class Aware extends Service {
                 Aware.startAWARE(context);
             }
             if (intent.getAction().equals(Intent.ACTION_MEDIA_UNMOUNTED)) {
-                if (Aware.DEBUG)
-                    Log.w(TAG, "Stopping AWARE data logging until the SDCard is available again...");
-
+                if (Aware.DEBUG) Log.w(TAG, "Stopping AWARE data logging until the SDCard is available again...");
                 Aware.stopAWARE(context);
             }
         }
