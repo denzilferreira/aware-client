@@ -82,11 +82,6 @@ public class Aware_Plugin extends Service {
      */
     public boolean PERMISSIONS_OK;
 
-    /**
-     * Instance to AWARE framework core service
-     */
-    private Intent aware;
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -127,12 +122,6 @@ public class Aware_Plugin extends Service {
             //Set plugin as enabled
             PluginsManager.enablePlugin(getApplicationContext(), getPackageName());
 
-            //Start AWARE service inside plugin
-            if (!getResources().getBoolean(R.bool.standalone)) {
-                aware = new Intent(getApplicationContext(), Aware.class);
-                startService(aware);
-            }
-
             if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                 SSLManager.handleUrl(getApplicationContext(), Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER), true);
             }
@@ -151,12 +140,6 @@ public class Aware_Plugin extends Service {
 
         if (contextBroadcaster != null) {
             unregisterReceiver(contextBroadcaster);
-        }
-
-        Aware.stopAWARE(this);
-
-        if (!getResources().getBoolean(R.bool.standalone) && aware != null) {
-            stopService(aware);
         }
     }
 
