@@ -307,12 +307,17 @@ public class Applications extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
 
+        //Boot-up AWARE framework
+        Intent aware = new Intent(this, Aware.class);
+        startService(aware);
+
+        DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+        TAG = Aware.getSetting(this, Aware_Preferences.DEBUG_TAG);
+
         if (DEBUG) Log.d(Aware.TAG, "Aware service connected to accessibility services...");
 
         //This makes sure that plugins and apps can check if the accessibility service is active
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, true);
-
-        TAG = Aware.getSetting(this, Aware_Preferences.DEBUG_TAG);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
@@ -358,12 +363,6 @@ public class Applications extends AccessibilityService {
             info.packageNames = null;
             this.setServiceInfo(info);
         }
-
-        //Boot-up AWARE framework
-        Intent aware = new Intent(this, Aware.class);
-        startService(aware);
-
-        DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
     }
 
     @Override

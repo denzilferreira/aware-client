@@ -29,6 +29,7 @@ import android.preference.PreferenceScreen;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.ListAdapter;
 import android.widget.Toast;
@@ -69,9 +70,6 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
 
         prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
 
-        Intent startAware = new Intent(getApplicationContext(), Aware.class);
-        startService(startAware);
-
         optionalSensors.put(Aware_Preferences.STATUS_ACCELEROMETER, Sensor.TYPE_ACCELEROMETER);
         optionalSensors.put(Aware_Preferences.STATUS_SIGNIFICANT_MOTION, Sensor.TYPE_ACCELEROMETER);
         optionalSensors.put(Aware_Preferences.STATUS_BAROMETER, Sensor.TYPE_PRESSURE);
@@ -102,16 +100,6 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_FINE_LOCATION);
         REQUIRED_PERMISSIONS.add(Manifest.permission.READ_PHONE_STATE);
-
-        permissions_ok = true;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            for (String p : REQUIRED_PERMISSIONS) {
-                if (PermissionChecker.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                    permissions_ok = false;
-                    break;
-                }
-            }
-        }
     }
 
     @Override
@@ -157,6 +145,9 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
 
             //update the parent to show active/inactive
             new SettingsSync().execute(pref);
+
+            //Start/Stop sensor
+            Aware.startAWARE(getApplicationContext());
         }
         if (EditTextPreference.class.isInstance(pref)) {
             EditTextPreference text = (EditTextPreference) findPreference(key);
@@ -167,8 +158,6 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
             ListPreference list = (ListPreference) findPreference(key);
             list.setSummary(list.getEntry());
         }
-
-        Aware.startAWARE(getApplicationContext());
     }
 
     private class SettingsSync extends AsyncTask<Preference, Preference, Void> {
@@ -271,11 +260,25 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     protected void onResume() {
         super.onResume();
 
+        permissions_ok = true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            for (String p : REQUIRED_PERMISSIONS) {
+                if (PermissionChecker.checkSelfPermission(this, p) != PermissionChecker.PERMISSION_GRANTED) {
+                    permissions_ok = false;
+                    break;
+                }
+            }
+        }
+
         if (!permissions_ok) {
+            Log.d(Aware.TAG, "Requesting permissions...");
+
             Intent permissionsHandler = new Intent(this, PermissionsHandler.class);
             permissionsHandler.putStringArrayListExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
             permissionsHandler.putExtra(PermissionsHandler.EXTRA_REDIRECT_ACTIVITY, getPackageName() + "/" + getClass().getName());
-            startActivityForResult(permissionsHandler, PermissionsHandler.RC_PERMISSIONS);
+            permissionsHandler.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(permissionsHandler);
+
         } else {
 
             if (prefs.getAll().isEmpty() && Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).length() == 0) {

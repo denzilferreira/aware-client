@@ -169,6 +169,7 @@
                 <action android:name="ACTION_AWARE_TTS_SPEAK" />
             </intent-filter>
         </receiver>
+
         <receiver
             android:name="com.aware.Aware$Storage_Broadcaster"
             android:exported="true">
@@ -177,6 +178,19 @@
                 <action android:name="android.intent.action.MEDIA_UNMOUNTED" />
 
                 <data android:scheme="file" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="com.aware.ESM$ESMMonitor"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="ACTION_AWARE_TRY_ESM" />
+                <action android:name="ACTION_AWARE_QUEUE_ESM" />
+                <action android:name="ACTION_AWARE_ESM_ANSWERED" />
+                <action android:name="ACTION_AWARE_ESM_DISMISSED" />
+                <action android:name="ACTION_AWARE_ESM_EXPIRED" />
+                <action android:name="ACTION_AWARE_ESM_REPLACED" />
             </intent-filter>
         </receiver>
 
