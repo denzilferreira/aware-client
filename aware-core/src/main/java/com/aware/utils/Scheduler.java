@@ -137,8 +137,14 @@ public class Scheduler extends Aware_Sensor {
                 end.set(Calendar.SECOND, 59);
                 end.set(Calendar.MILLISECOND, 999);
 
-                //too late to schedule them today, schedule for the next day
-                if (now.get(Calendar.HOUR_OF_DAY) > latest) {
+                if (now.get(Calendar.HOUR_OF_DAY) > earliest) { //earliest today is earlier today, let's assign randoms for the rest of today
+                    start.set(Calendar.HOUR_OF_DAY, now.get(Calendar.HOUR_OF_DAY));
+                    start.add(Calendar.MINUTE, 15); //schedule randomly 15 minutes from now->latest
+
+                    Log.d(TAG, "Random times set 15min from now -> latest today\n");
+                }
+
+                if (now.get(Calendar.HOUR_OF_DAY) > latest) { //too late to schedule them today, schedule for the next day
                     start.add(Calendar.DAY_OF_YEAR, 1);
                     start.set(Calendar.MINUTE, 0);
                     start.set(Calendar.SECOND, 0);
@@ -146,7 +152,7 @@ public class Scheduler extends Aware_Sensor {
 
                     end.add(Calendar.DAY_OF_YEAR, 1);
 
-                    Log.d(TAG, "RANDOM TIME is TOMORROW\n");
+                    Log.d(TAG, "Random times set for tomorrow\n");
                 }
 
                 ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
@@ -233,6 +239,13 @@ public class Scheduler extends Aware_Sensor {
                 end.set(Calendar.SECOND, 59);
                 end.set(Calendar.MILLISECOND, 999);
 
+                if (now.get(Calendar.HOUR_OF_DAY) > earliest) { //earliest today is earlier today, let's assign randoms for the rest of today
+                    start.set(Calendar.HOUR_OF_DAY, now.get(Calendar.HOUR_OF_DAY));
+                    start.add(Calendar.MINUTE, 15); //schedule randomly 15 minutes from now->latest
+
+                    Log.d(TAG, "Random times set 15min from now -> latest today\n");
+                }
+
                 //too late to schedule them today, schedule for the next day
                 if (now.get(Calendar.HOUR_OF_DAY) > latest) {
                     start.add(Calendar.DAY_OF_YEAR, 1);
@@ -242,7 +255,7 @@ public class Scheduler extends Aware_Sensor {
 
                     end.add(Calendar.DAY_OF_YEAR, 1);
 
-                    Log.d(TAG, "RANDOM TIME is TOMORROW\n");
+                    Log.d(TAG, "Random times set for tomorrow\n");
                 }
 
                 ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
