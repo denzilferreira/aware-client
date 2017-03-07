@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.aware.Aware;
+import com.aware.Aware_Preferences;
 import com.aware.ESM;
 import com.aware.providers.Scheduler_Provider;
 import com.aware.ui.ESM_Queue;
@@ -42,6 +43,7 @@ public class TestActivity extends Activity {
         button_ESMNotification = (Button) findViewById(R.id.button_ESMNotification);
         button_ESMNotification.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_ESM, true);
                 TestESM testESM = new TestESM();
                 testESM.test(getApplicationContext());
             }

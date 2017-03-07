@@ -35,8 +35,6 @@ public class TestESM implements AwareTest {
 //        testPAM(context);
 //        testOptionsOverflow(context);
 //        testNotificationRetries(context);
-
-        Aware.startESM(context);
     }
 
     /**

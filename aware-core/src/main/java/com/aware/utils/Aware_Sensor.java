@@ -97,7 +97,7 @@ public class Aware_Sensor extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         PERMISSIONS_OK = true;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && PermissionChecker.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PermissionChecker.PERMISSION_GRANTED) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             for (String p : REQUIRED_PERMISSIONS) {
                 if (PermissionChecker.checkSelfPermission(this, p) != PermissionChecker.PERMISSION_GRANTED) {
                     PERMISSIONS_OK = false;
@@ -114,9 +114,7 @@ public class Aware_Sensor extends Service {
             startActivity(permissions);
         } else {
             if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
-                Intent study_SSL = new Intent(this, SSLManager.class);
-                study_SSL.putExtra(SSLManager.EXTRA_SERVER, Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER));
-                startService(study_SSL);
+                SSLManager.handleUrl(getApplicationContext(), Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER), true);
             }
             Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
         }

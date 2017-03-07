@@ -34,7 +34,7 @@ import javax.net.ssl.TrustManagerFactory;
 public class Https {
 
     private final String TAG = "AWARE::HTTPS";
-    private static SSLSocketFactory sslSocketFactory;
+    private SSLSocketFactory sslSocketFactory;
     private int timeout = 60 * 1000;
 
     /**
@@ -47,12 +47,6 @@ public class Https {
             return;
         }
 
-        //we already have this object initialised
-        if (sslSocketFactory != null) {
-            Log.i(TAG, "SSL [OK]");
-            return;
-        }
-
         try {
             KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
             TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
@@ -62,6 +56,7 @@ public class Https {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             InputStream caInput = new BufferedInputStream(certificate);
             Certificate ca = cf.generateCertificate(caInput);
+
             keyStore.load(null, null); //initialize as empty keystore
             keyStore.setCertificateEntry("ca", ca); //add our certificate to keystore
             trustManagerFactory.init(keyStore); //add our keystore to the trusted keystores
@@ -73,8 +68,6 @@ public class Https {
 
             //Fix for known-bug on <= JellyBean (4.x)
             System.setProperty("http.keepAlive", "false");
-
-            Log.i(TAG, "SSL [init]");
 
         } catch (CertificateException e) {
             Log.e(TAG, "CertificateException " + e.getMessage());

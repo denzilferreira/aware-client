@@ -283,19 +283,41 @@ public class Applications extends AccessibilityService {
         filter.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
         registerReceiver(awareMonitor, filter);
 
+        IntentFilter tick = new IntentFilter();
+        tick.addAction(Intent.ACTION_TIME_TICK);
+        registerReceiver(schedulerTicker, tick);
+
         Aware.debug(this, "created: " + getClass().getName() + " package: " + getPackageName());
+    }
+
+    private SchedulerTicker schedulerTicker = new SchedulerTicker();
+    public static class SchedulerTicker extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //Executed every 1-minute. OS will send this tickle automatically
+            if (intent.getAction().equals(Intent.ACTION_TIME_TICK)) {
+                Intent scheduler = new Intent(context, Scheduler.class);
+                scheduler.setAction(Scheduler.ACTION_AWARE_SCHEDULER_CHECK);
+                context.startService(scheduler);
+            }
+        }
     }
 
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
 
+        //Boot-up AWARE framework
+        Intent aware = new Intent(this, Aware.class);
+        startService(aware);
+
+        DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+        TAG = Aware.getSetting(this, Aware_Preferences.DEBUG_TAG);
+
         if (DEBUG) Log.d(Aware.TAG, "Aware service connected to accessibility services...");
 
         //This makes sure that plugins and apps can check if the accessibility service is active
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, true);
-
-        TAG = Aware.getSetting(this, Aware_Preferences.DEBUG_TAG);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
@@ -341,14 +363,6 @@ public class Applications extends AccessibilityService {
             info.packageNames = null;
             this.setServiceInfo(info);
         }
-
-        //Boot-up AWARE framework
-        Intent aware = new Intent(this, Aware.class);
-        startService(aware);
-
-        Aware.startAWARE(this);
-
-        DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
     }
 
     @Override
@@ -440,6 +454,9 @@ public class Applications extends AccessibilityService {
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
+
+        //Stop listening to time ticks
+        unregisterReceiver(schedulerTicker);
 
         Scheduler.removeSchedule(this, SCHEDULER_APPLICATIONS_BACKGROUND);
         Aware.startScheduler(this);

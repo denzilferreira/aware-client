@@ -1,5 +1,6 @@
 package com.aware.phone.ui;
 
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentValues;
@@ -10,6 +11,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
@@ -27,6 +29,7 @@ import android.widget.Toast;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
+import com.aware.phone.Aware_Client;
 import com.aware.phone.R;
 import com.aware.providers.Aware_Provider;
 import com.aware.utils.Aware_Plugin;
@@ -103,8 +106,6 @@ public class Aware_Join_Study extends Aware_Activity {
             @Override
             public void onClick(View v) {
 
-                Toast.makeText(Aware_Join_Study.this, "Joining study!", Toast.LENGTH_LONG).show();
-
                 btnAction.setEnabled(false);
                 btnAction.setAlpha(0.5f);
 
@@ -116,8 +117,7 @@ public class Aware_Join_Study extends Aware_Activity {
                 }
                 if (study != null && !study.isClosed()) study.close();
 
-                StudyUtils.applySettings(getApplicationContext(), study_configs);
-                finish();
+                new JoinStudyAsync().execute();
             }
         });
 
@@ -159,8 +159,12 @@ public class Aware_Join_Study extends Aware_Activity {
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+
                                 btnQuit.setEnabled(false);
-                                btnQuit.setAlpha(0.5f);
+                                btnQuit.setAlpha(1f);
+                                btnAction.setEnabled(false);
+                                btnAction.setAlpha(1f);
 
                                 Cursor dbStudy = Aware.getStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
                                 if (dbStudy != null && dbStudy.moveToFirst()) {
@@ -190,14 +194,7 @@ public class Aware_Join_Study extends Aware_Activity {
                                 webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, Aware_Provider.Aware_Studies.CONTENT_URI.toString());
                                 startService(webserviceHelper);
 
-                                Aware.reset(getApplicationContext());
-                                dialogInterface.dismiss();
-
-                                Intent preferences = new Intent(getApplicationContext(), com.aware.phone.Aware_Client.class);
-                                preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                startActivity(preferences);
-
-                                finish();
+                                new QuitStudyAsync().execute();
                             }
                         })
                         .setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -236,11 +233,84 @@ public class Aware_Join_Study extends Aware_Activity {
         registerReceiver(pluginCompliance, pluginStatuses);
     }
 
+    private class QuitStudyAsync extends AsyncTask<Void, Void, Void> {
+        ProgressDialog mQuitting;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            mQuitting = new ProgressDialog(Aware_Join_Study.this);
+            mQuitting.setMessage("Quitting study, please wait.");
+            mQuitting.setCancelable(false);
+            mQuitting.setInverseBackgroundForced(false);
+            mQuitting.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            Aware.reset(getApplicationContext());
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            finish();
+
+            //Redirect the user to the main UI
+            Intent mainUI = new Intent(getApplicationContext(), Aware_Client.class);
+            mainUI.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(mainUI);
+
+            mQuitting.dismiss();
+        }
+    }
+
+    /**
+     * Join study asynchronously
+     */
+    private class JoinStudyAsync extends AsyncTask<Void, Void, Void> {
+        ProgressDialog mLoading;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            mLoading = new ProgressDialog(Aware_Join_Study.this);
+            mLoading.setMessage("Joining study, please wait.");
+            mLoading.setCancelable(false);
+            mLoading.setInverseBackgroundForced(false);
+            mLoading.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            StudyUtils.applySettings(getApplicationContext(), study_configs);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            finish();
+
+            //Redirect the user to the main UI
+            Intent mainUI = new Intent(getApplicationContext(), Aware_Client.class);
+            mainUI.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(mainUI);
+
+            mLoading.dismiss();
+        }
+    }
+
     private static PluginCompliance pluginCompliance = new PluginCompliance();
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        
+
     }
 
     public static class PluginCompliance extends BroadcastReceiver {

@@ -44,7 +44,6 @@ if (System.getenv("storeFile") != null && System.getenv("storePassword") != null
 
 dependencies {
     compile project(':aware-core')
-    compile "com.google.android.gms:play-services-vision:$google_libs"
     compile "com.android.support:cardview-v7:$support_libs"
     compile "com.android.support:appcompat-v7:$support_libs"
     compile "com.android.support:design:$support_libs"

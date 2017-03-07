@@ -34,8 +34,8 @@ public class TestScheduler implements AwareTest {
 //        testTimer(context);
 //        testContextual(context);
 //        testConditional(context);
-        testTime(context);
-//        testRandom(context);
+//        testTime(context);
+        testRandom(context);
 
         Aware.startScheduler(context);
     }
@@ -44,8 +44,9 @@ public class TestScheduler implements AwareTest {
         try {
 
             Scheduler.Schedule random = new Scheduler.Schedule("testRandom");
-            random.addHour(11) //11 AM
-                    .random(2, 15) //2 randoms, at least 15 minutes apart
+            random.addHour(8)
+                    .addHour(15)
+                    .random(5, 15) //5 randoms, at least 15 minutes apart
                     .setActionType(Scheduler.ACTION_TYPE_SERVICE)
                     .setActionClass(c.getPackageName() + "/" + Aware_TTS.class.getName())
                     .addActionExtra(Aware_TTS.EXTRA_TTS_TEXT, "Random triggered!")

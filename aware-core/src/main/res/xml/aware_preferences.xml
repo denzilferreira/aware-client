@@ -702,10 +702,11 @@
                 android:title="MQTT server" />
 
             <EditTextPreference
-                android:defaultValue="8883"
+                android:defaultValue="1883"
                 android:inputType="number"
                 android:key="mqtt_port"
                 android:persistent="true"
+                android:summary="Non-encrypted: 1883, encrypted: 8883"
                 android:title="MQTT port" />
 
             <EditTextPreference
@@ -736,12 +737,6 @@
                 android:persistent="true"
                 android:summary="0 - No guarantee, 1 - At least once, 2 - Exactly once (default = 2)"
                 android:title="MQTT QoS" />
-
-            <EditTextPreference
-                android:defaultValue="ssl"
-                android:key="mqtt_protocol"
-                android:persistent="true"
-                android:title="Connection protocol (tcp/ssl)" />
 
         </PreferenceScreen>
         <PreferenceScreen
@@ -824,15 +819,16 @@
                 android:defaultValue="true"
                 android:key="debug_flag"
                 android:persistent="true"
-                android:title="Override logcat tag" />
+                android:title="Debugging"
+                android:summary="Show messages in logcat" />
 
             <EditTextPreference
                 android:defaultValue="AWARE"
                 android:dependency="debug_flag"
                 android:key="debug_tag"
                 android:persistent="true"
-                android:summary="ADB filter (default = AWARE)"
-                android:title="ADB logcat tag" />
+                android:summary="Change logcat tag for debug filters (default = AWARE)"
+                android:title="Logcat TAG" />
 
             <CheckBoxPreference
                 android:defaultValue="false"

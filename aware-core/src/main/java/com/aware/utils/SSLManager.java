@@ -4,10 +4,13 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Environment;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
+import com.aware.R;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
@@ -26,46 +29,19 @@ import java.util.concurrent.ExecutionException;
 
 /**
  * Created by denzil on 15/12/15.
- *
  * This class will make sure we have the latest server SSL certificate to allow downloads from self-hosted servers
  * It also makes sure the client has the most up-to-date certificate and nothing breaks when certificates need to be renewed.
  */
-public class SSLManager extends IntentService {
-
-    /**
-     * The server we need certificates from
-     */
-    public static final String EXTRA_SERVER = "aware_server";
-
-    public SSLManager() { super(Aware.TAG + " SSL manager"); }
-
-    /**
-     * An intent handles a URL by getting a certificate.  It uses the new handling
-     * techniques, but currently it defaults to updating the certificate unconditionally.
-     * @param intent Intent with extra data aware_server = URL
-     */
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        String server_url = intent.getStringExtra(EXTRA_SERVER);
-
-        //Fixed: not a valid server URL
-        if (server_url == null || server_url.length() == 0) return;
-
-        handleUrl(getApplicationContext(), server_url, true);
-    }
-
+public class SSLManager {
     /**
      * Handle a study URL.  Fetch data from query parameters if it is there.  Otherwise,
      * use the classic method of downloading the certificate over http.  Enforces the key
      * management policy.
      * @param context app context
-     * @param url full URL, including protocol and query arguments
-     * @param block if true, this method blocks, otherwise downloading is in background.
+     * @param url     full URL, including protocol and query arguments
+     * @param block   if true, this method blocks, otherwise downloading is in background.
      */
     public static void handleUrl(Context context, String url, boolean block) {
-        if(Aware.DEBUG)
-            Log.d(Aware.TAG, "Certificates: Handling URL: "+url);
-
         // Warning: jelly_bean changes behavior of decoding "+".  Make sure that both
         // " " and "+" are %-encoded.
         Uri study_uri = Uri.parse(url);
@@ -77,21 +53,25 @@ public class SSLManager extends IntentService {
             String crt_url = study_uri.getQueryParameter("crt_url");
             String crt_sha256 = study_uri.getQueryParameter("crt_sha256");
             if (crt != null || crt_url != null || crt_sha256 != null)
-                if (Aware.DEBUG) Log.d(Aware.TAG, "Certificates: Handling URL via query parameters: " + hostname);
+                if (Aware.DEBUG)
+                    Log.d(Aware.TAG, "Certificates: Handling URL via query parameters: " + hostname);
             handleCrtParameters(context, hostname, crt, crt_sha256, crt_url);
         } else {
             if (Aware.getSetting(context, Aware_Preferences.KEY_STRATEGY).equals("once")) {
                 // With "once" management, we only retrieve if we have not gotten cert yet.
-                if (Aware.DEBUG) Log.d(Aware.TAG, "Certificates: Downloading crt if not present: " + hostname);
-                if (! hasCertificate(context, hostname)) {
+                if (Aware.DEBUG)
+                    Log.d(Aware.TAG, "Certificates: Downloading crt if not present: " + hostname);
+                if (!hasCertificate(context, hostname)) {
                     downloadCertificate(context, hostname, block);
                 } else {
-                    if (Aware.DEBUG) Log.d(Aware.TAG, "Certificates: Already present and key_management=once: " + hostname);
+                    if (Aware.DEBUG)
+                        Log.d(Aware.TAG, "Certificates: Already present and key_management=once: " + hostname);
                 }
             } else {
-                // Default management style: re-download certificate every time.
-                if (Aware.DEBUG) Log.d(Aware.TAG, "Certificates: Unconditionally downloading certificate: " + hostname);
-                downloadCertificate(context, hostname, block);
+                if (!hasCertificate(context, hostname)) {
+                    if (Aware.DEBUG) Log.d(Aware.TAG, "Certificates: Downloading certificate: " + hostname);
+                    downloadCertificate(context, hostname, block);
+                }
             }
         }
     }
@@ -100,34 +80,43 @@ public class SSLManager extends IntentService {
      * Classic method: Download certificate unconditionally.  This is the old
      * method of certificate fetching.  This method blocks if the block parameter is true,
      * otherwise is nonblocking.
-     * @param context app contexto
+     *
+     * @param context  app contexto
      * @param hostname Hostname to download.
-     * @param block If true, block until certificate retrieved, otherwise do not.
+     * @param block    If true, block until certificate retrieved, otherwise do not.
      */
     public static void downloadCertificate(Context context, String hostname, boolean block) {
         //Fixed: make sure we have a valid hostname
-        if (hostname == null || hostname.length() == 0 ) return;
-
-        File host_credentials = new File(context.getExternalFilesDir(null) + "/Documents/", "credentials/"+ hostname );
-        host_credentials.mkdirs();
+        if (hostname == null || hostname.length() == 0) return;
 
         // api.awareframework.com is an exception: we download from a different host.
         // cert_host is the host from which we actually download.
         String cert_host;
-        if( hostname.equals("api.awareframework.com") ) {
+        if (hostname.contains("api.awareframework.com")) {
             cert_host = "awareframework.com";
         } else cert_host = hostname;
 
-        Future https = Ion.with(context.getApplicationContext()).load("http://" + cert_host + "/public/server.crt").noCache()
-                .write(new File(context.getExternalFilesDir(null) + "/Documents/credentials/" + hostname + "/server.crt"))
+        File root_folder;
+        if (!context.getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+            root_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE"), "/credentials/" + hostname); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
+        } else {
+            root_folder = new File(ContextCompat.getExternalFilesDirs(context, null)[0], "/AWARE/credentials/" + hostname); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
+        }
+        root_folder.mkdirs();
+
+        Future https = Ion.with(context.getApplicationContext())
+                .load("http://" + cert_host + "/public/server.crt")
+                .noCache()
+                .write(new File(root_folder.toString() + "/server.crt"))
                 .setCallback(new FutureCallback<File>() {
                     @Override
                     public void onCompleted(Exception e, File result) {
-                        if( e != null ) {
+                        if (e != null) {
                             Log.d(Aware.TAG, "ERROR SSL certificate: " + e.getMessage());
                         }
                     }
                 });
+
         if (block) {
             try {
                 https.get();
@@ -143,13 +132,13 @@ public class SSLManager extends IntentService {
      * If crt is given, use that data.  Otherwise, if crt_url is given, download crt from
      * that URL.  In all cases, verify against crt_sha256.  Then save the certificate.
      *
-     * @param context app context
-     * @param hostname hostname to save
-     * @param crt raw String certificate data (contents of file)
+     * @param context    app context
+     * @param hostname   hostname to save
+     * @param crt        raw String certificate data (contents of file)
      * @param crt_sha256 sha256 hash of certificate data to validate
-     * @param crt_url URL from which to fetch certificate if it is not given.
+     * @param crt_url    URL from which to fetch certificate if it is not given.
      */
-    public static void handleCrtParameters(Context context, String hostname, String crt, String crt_sha256, String crt_url) {
+    private static void handleCrtParameters(Context context, String hostname, String crt, String crt_sha256, String crt_url) {
         if (Aware.DEBUG) {
             Log.d(Aware.TAG, "handleCrtParameters");
             Log.d(Aware.TAG, "crt=" + crt);
@@ -175,7 +164,7 @@ public class SSLManager extends IntentService {
                 // Someone please turn this into a proper way to get data from URL in java.
                 int nextchar;
                 while ((nextchar = br.read()) != -1) {
-                    sb.append((char)nextchar);
+                    sb.append((char) nextchar);
                 }
                 br.close();
                 // Final result that we actually need.
@@ -197,8 +186,8 @@ public class SSLManager extends IntentService {
         // Validate certificate using hash
         if (crt_sha256 != null) {
             String actual_hash = Encrypter.hashGeneric(crt, "SHA-256");
-            if ( ! actual_hash.equals(crt_sha256)) {
-                Log.e(Aware.TAG, "Invalid certificate hash: "+crt_sha256+"!="+actual_hash);
+            if (!actual_hash.equals(crt_sha256)) {
+                Log.e(Aware.TAG, "Invalid certificate hash: " + crt_sha256 + "!=" + actual_hash);
                 return;
             }
         }
@@ -209,33 +198,54 @@ public class SSLManager extends IntentService {
 
     /**
      * Do we have a certificate for this hostname?
-     * @param context context
+     *
+     * @param context  context
      * @param hostname hostname to check (only hostname, no protocol or anything.)
      * @return true if a certificate exists, false otherwise
      */
-    public static boolean hasCertificate(Context context, String hostname) {
+    private static boolean hasCertificate(Context context, String hostname) {
         if (hostname == null || hostname.length() == 0) return false;
 
-        File host_credentials = new File(context.getExternalFilesDir(null) + "/Documents/", "credentials/"+ hostname);
+        File root_folder;
+        if (!context.getResources().getBoolean(R.bool.standalone)) {
+            root_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE") + "/credentials"); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
+        } else {
+            root_folder = new File(ContextCompat.getExternalFilesDirs(context, null)[0] + "/AWARE/credentials"); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
+        }
+        if (!root_folder.exists()) {
+            root_folder.mkdirs();
+        }
+        File host_credentials = new File(root_folder.toString(), hostname);
         return host_credentials.exists();
     }
 
 
     /**
      * Write a certificate do disk, given by name.
-     * @param context app context
-     * @param hostname hostname to check
+     *
+     * @param context   app context
+     * @param hostname  hostname to check
      * @param cert_data certificate data, as String.
      */
-    public static void setCertificate(Context context, String hostname, String cert_data) {
+    private static void setCertificate(Context context, String hostname, String cert_data) {
 
         if (hostname == null || hostname.length() == 0) return;
 
+        File root_folder;
+        if (!context.getResources().getBoolean(R.bool.standalone)) {
+            root_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE") + "/credentials"); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
+        } else {
+            root_folder = new File(ContextCompat.getExternalFilesDirs(context, null)[0] + "/AWARE/credentials"); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
+        }
+        if (!root_folder.exists()) {
+            root_folder.mkdirs();
+        }
+
         //Create folder if not existent
-        File host_credentials = new File(context.getExternalFilesDir(null) + "/Documents/", "credentials/"+ hostname );
+        File host_credentials = new File(root_folder.toString(), hostname);
         host_credentials.mkdirs();
 
-        File cert_file = new File(context.getExternalFilesDir(null) + "/Documents/credentials/" + hostname + "/server.crt");
+        File cert_file = new File(host_credentials.toString(), "server.crt");
         try {
             FileOutputStream stream = new FileOutputStream(cert_file);
             OutputStreamWriter cert_f = new OutputStreamWriter(stream);
@@ -249,28 +259,35 @@ public class SSLManager extends IntentService {
     }
 
 
-
     /**
      * Load HTTPS certificate from server: server.crt
-     * @param c context
+     *
+     * @param context context
      * @param server server URL, http://{hostname}/index.php
      * @return FileInputStream of certificate
      * @throws FileNotFoundException
      */
-    public static InputStream getHTTPS(Context c, String server) throws FileNotFoundException {
+    public static InputStream getHTTPS(Context context, String server) throws FileNotFoundException {
         Uri study_uri = Uri.parse(server);
         String hostname = study_uri.getHost();
 
         if (hostname == null || hostname.length() == 0) return null;
 
-        //Makes sure we always have the latest certificate
-        downloadCertificate(c, hostname, true);
+        File root_folder;
+        if (!context.getResources().getBoolean(R.bool.standalone)) {
+            root_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE")+ "/credentials"); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
+        } else {
+            root_folder = new File(ContextCompat.getExternalFilesDirs(context, null)[0] + "/AWARE/credentials"); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
+        }
+        if (!root_folder.exists()) {
+            root_folder.mkdirs();
+        }
 
-        File host_credentials = new File( c.getExternalFilesDir(null) + "/Documents/", "credentials/"+ hostname );
-        if( host_credentials.exists() ) {
+        File host_credentials = new File(root_folder.toString(), hostname);
+        if (host_credentials.exists()) {
             File[] certs = host_credentials.listFiles();
-            for(File crt : certs ) {
-                if( crt.getName().equals("server.crt") ) return new FileInputStream(crt);
+            for (File crt : certs) {
+                if (crt.getName().equals("server.crt")) return new FileInputStream(crt);
             }
         }
         return null;
@@ -279,23 +296,31 @@ public class SSLManager extends IntentService {
     /**
      * Load certificate for MQTT server: server.crt
      * NOTE: different from getHTTPS. Here, we have the MQTT server address/IP as input parameter.
-     * @param c context
+     *
+     * @param context context
      * @param server server hostname
      * @return Input stream of opened certificate.
      * @throws FileNotFoundException
      */
-    public static InputStream getCertificate(Context c, String server) throws FileNotFoundException {
+    static InputStream getCertificate(Context context, String server) throws FileNotFoundException {
         //Fixed: make sure we have a valid server name
         if (server == null || server.length() == 0) return null;
 
-        //Makes sure we always have the latest certificate
-        downloadCertificate(c, server, true);
+        File root_folder;
+        if (!context.getResources().getBoolean(R.bool.standalone)) {
+            root_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE")+ "/credentials"); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
+        } else {
+            root_folder = new File(ContextCompat.getExternalFilesDirs(context, null)[0] + "/AWARE/credentials"); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
+        }
+        if (!root_folder.exists()) {
+            root_folder.mkdirs();
+        }
 
-        File host_credentials = new File( c.getExternalFilesDir(null) + "/Documents/", "credentials/"+ server );
-        if( host_credentials.exists() ) {
+        File host_credentials = new File(root_folder.toString(), server);
+        if (host_credentials.exists()) {
             File[] certs = host_credentials.listFiles();
-            for(File crt : certs ) {
-                if( crt.getName().equals("server.crt") ) return new FileInputStream(crt);
+            for (File crt : certs) {
+                if (crt.getName().equals("server.crt")) return new FileInputStream(crt);
             }
         }
         return null;

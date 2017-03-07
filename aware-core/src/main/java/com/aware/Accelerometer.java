@@ -286,29 +286,8 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         return START_STICKY;
     }
 
-    //Singleton instance of this service
-    private static Accelerometer accelerometerSrv = Accelerometer.getService();
-
-    /**
-     * Get singleton instance to Accelerometer service
-     *
-     * @return Accelerometer obj
-     */
-    public static Accelerometer getService() {
-        if (accelerometerSrv == null) accelerometerSrv = new Accelerometer();
-        return accelerometerSrv;
-    }
-
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        public Accelerometer getService() {
-            return Accelerometer.getService();
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
+        return null;
     }
 }

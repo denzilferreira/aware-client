@@ -196,8 +196,13 @@ public class Plugins_Manager extends Aware_Activity {
                 int status = plugin.getInt(Aware_Plugins.PLUGIN_STATUS);
                 byte[] icon = null;
 
-                if (plugin.optString(Aware_Plugins.PLUGIN_ICON, "").length() > 0)
-                    icon = Base64.decode(plugin.getString(Aware_Plugins.PLUGIN_ICON), Base64.DEFAULT);
+                if (plugin.optString(Aware_Plugins.PLUGIN_ICON, "").length() > 0) {
+                    try {
+                        icon = Base64.decode(plugin.getString(Aware_Plugins.PLUGIN_ICON), Base64.DEFAULT);
+                    } catch (IllegalArgumentException e) {
+                        icon = PluginsManager.getPluginIcon(getApplicationContext(), package_name);
+                    }
+                }
 
                 final ImageView pkg_icon = (ImageView) convertView.findViewById(R.id.pkg_icon);
                 final TextView pkg_title = (TextView) convertView.findViewById(R.id.pkg_title);

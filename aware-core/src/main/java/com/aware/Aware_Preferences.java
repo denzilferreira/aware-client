@@ -448,13 +448,6 @@ public class Aware_Preferences {
     public static final String MQTT_QOS = "mqtt_qos";
 
     /**
-     * MQTT Connection protocol (default = tcp)
-     * tcp - unsecure
-     * ssl - secure
-     */
-    public static final String MQTT_PROTOCOL = "mqtt_protocol";
-
-    /**
      * Activate/deactivate AWARE webservice (boolean)
      */
     public static final String STATUS_WEBSERVICE = "status_webservice";

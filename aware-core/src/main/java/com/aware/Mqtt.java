@@ -384,13 +384,15 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         MQTT_PASSWORD = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_PASSWORD);
         MQTT_KEEPALIVE = (Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_KEEP_ALIVE).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_KEEP_ALIVE) : "600");
         MQTT_QoS = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_QOS);
-        MQTT_PROTOCOL = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_PROTOCOL).length() > 0 ? Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_PROTOCOL) : "tcp";
+
+        if (Integer.parseInt(MQTT_PORT) == 1883) MQTT_PROTOCOL = "tcp";
+        if (Integer.parseInt(MQTT_PORT) == 8883) MQTT_PROTOCOL = "ssl";
 
         String MQTT_URL = MQTT_PROTOCOL + "://" + MQTT_SERVER + ":" + MQTT_PORT;
 
-        if (MQTT_MESSAGES_PERSISTENCE == null) {
+        if (MQTT_MESSAGES_PERSISTENCE == null)
             MQTT_MESSAGES_PERSISTENCE = new MemoryPersistence();
-        }
+
 
         MqttConnectOptions MQTT_OPTIONS = new MqttConnectOptions();
         MQTT_OPTIONS.setCleanSession(false); //resume pending messages from server

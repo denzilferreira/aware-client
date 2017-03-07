@@ -165,6 +165,8 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
     }
 
     private void saveSensorDevice(Sensor sensor) {
+        if (sensor == null) return;
+
         Cursor sensorInfo = getContentResolver().query(Barometer_Sensor.CONTENT_URI, null, null, null, null);
         if (sensorInfo == null || !sensorInfo.moveToFirst()) {
             ContentValues rowData = new ContentValues();
