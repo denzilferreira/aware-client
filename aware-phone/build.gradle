@@ -68,8 +68,15 @@ dependencies {
     compile "com.android.support:gridlayout-v7:$support_libs"
     compile "me.dm7.barcodescanner:zbar:1.8.4"
 
-    if(System.getenv("bundle_packages") != null) {
-        System.getenv("bundle_packages")
-    }
+    compile 'com.github.denzilferreira:com.aware.plugin.ambient_noise:development-SNAPSHOT'
+    compile 'com.github.denzilferreira:com.aware.plugin.contacts_list:development-SNAPSHOT'
+    compile 'com.github.denzilferreira:com.aware.plugin.cmu_esm:development-SNAPSHOT'
+    compile 'com.github.denzilferreira:com.aware.plugin.device_usage:development-SNAPSHOT'
+    compile 'com.github.denzilferreira:com.aware.plugin.google.fused_location:development-SNAPSHOT'
+    compile 'com.github.denzilferreira:com.aware.plugin.google.activity_recognition:development-SNAPSHOT'
+    compile 'com.github.denzilferreira:com.aware.plugin.google.auth:development-SNAPSHOT'
+    compile 'com.github.denzilferreira:com.aware.plugin.fitbit:development-SNAPSHOT'
+    compile 'com.github.denzilferreira:com.aware.plugin.openweather:development-SNAPSHOT'
+    compile 'com.github.denzilferreira:com.aware.plugin.studentlife.audio_final:development-SNAPSHOT'
 }
 
