@@ -1,8 +1,6 @@
 
 apply plugin: 'com.android.application'
 
-version = version_readable
-
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
@@ -19,6 +17,14 @@ android {
         release
     }
 
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'armeabi'
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -32,6 +38,14 @@ android {
     }
 }
 
+repositories {
+    maven { url "https://jitpack.io" }
+}
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
 if (System.getenv("storeFile") != null && System.getenv("storePassword") != null && System.getenv("keyAlias") != null && System.getenv("keyPassword") != null) {
     android.signingConfigs.release.storeFile = file(System.getenv("storeFile"))
     android.signingConfigs.release.storePassword = System.getenv("storePassword")
@@ -42,6 +56,10 @@ if (System.getenv("storeFile") != null && System.getenv("storePassword") != null
     android.buildTypes.release.signingConfig = null
 }
 
+if (System.getenv("aware_label") != null) {
+    android.defaultConfig.applicationId = "com.aware.phone." + System.getenv("aware_label")
+}
+
 dependencies {
     compile project(':aware-core')
     compile "com.android.support:cardview-v7:$support_libs"
@@ -49,5 +67,9 @@ dependencies {
     compile "com.android.support:design:$support_libs"
     compile "com.android.support:gridlayout-v7:$support_libs"
     compile "me.dm7.barcodescanner:zbar:1.8.4"
+
+    if(System.getenv("bundle_packages") != null) {
+        System.getenv("bundle_packages")
+    }
 }
 
