@@ -92,6 +92,8 @@ public class Aware_Sensor extends Service {
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
         Log.d(Aware.TAG, "created: " + getClass().getName() + " package: " + getPackageName());
+
+        Aware.startAWARE(getApplicationContext());
     }
 
     @Override

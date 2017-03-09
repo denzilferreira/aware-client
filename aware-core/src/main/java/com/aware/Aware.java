@@ -2158,9 +2158,14 @@ public class Aware extends Service {
     }
 
     /**
-     * Start active services
+     * Start core and active services
      */
     public static void startAWARE(Context context) {
+        if (!is_running(context, Aware.class)) {
+            Intent aware = new Intent(context, Aware.class);
+            context.startService(aware);
+        }
+
         if (!is_running(context, Scheduler.class))
             startScheduler(context);
 
@@ -2318,8 +2323,11 @@ public class Aware extends Service {
      */
     public static void stopAWARE(Context context) {
         if (context == null) return;
+
+        Intent aware = new Intent(context, Aware.class);
+        context.stopService(aware);
+
         stopSignificant(context);
-//        stopApplications(context);
         stopAccelerometer(context);
         stopBattery(context);
         stopBluetooth(context);

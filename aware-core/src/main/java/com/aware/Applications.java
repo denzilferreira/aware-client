@@ -300,11 +300,8 @@ public class Applications extends AccessibilityService {
 
         Aware.debug(this, "created: " + getClass().getName() + " package: " + getPackageName());
 
-        //Check AWARE status
-        if (!Aware.is_running(getApplicationContext(), Aware.class)) {
-            Intent aware = new Intent(this, Aware.class);
-            startService(aware);
-        }
+        //bind to AWARE
+        Aware.startAWARE(this);
 
         DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
         TAG = Aware.getSetting(this, Aware_Preferences.DEBUG_TAG);
