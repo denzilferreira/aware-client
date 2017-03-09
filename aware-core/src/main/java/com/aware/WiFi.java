@@ -81,7 +81,7 @@ public class WiFi extends Aware_Sensor {
         super.onCreate();
 
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+        wifiManager = (WifiManager) this.getApplicationContext().getSystemService(WIFI_SERVICE);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
@@ -259,7 +259,7 @@ public class WiFi extends Aware_Sensor {
 
         @Override
         protected void onHandleIntent(Intent intent) {
-            WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+            WifiManager wifiManager = (WifiManager) this.getApplicationContext().getSystemService(WIFI_SERVICE);
 
             if (intent.getAction().equals(WiFi.ACTION_AWARE_WIFI_REQUEST_SCAN)) {
                 if (wifiManager.isWifiEnabled()) {
