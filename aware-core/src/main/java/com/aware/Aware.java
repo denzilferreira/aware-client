@@ -35,6 +35,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
@@ -166,12 +167,6 @@ public class Aware extends Service {
     public static final String SCHEDULE_STUDY_COMPLIANCE = "schedule_aware_study_compliance";
     public static final String SCHEDULE_KEEP_ALIVE = "schedule_aware_keep_alive";
 
-    /**
-     * Deprecated: will be removed in next version
-     */
-    private static Context awareContext = null;
-
-    private static Intent applicationsSrv = null;
     private static Intent accelerometerSrv = null;
     private static Intent locationsSrv = null;
     private static Intent bluetoothSrv = null;
@@ -202,6 +197,8 @@ public class Aware extends Service {
 
     private AsyncStudyCheck studyCheck = null;
 
+    private static final int AWARE_BATTERY_OPTIMIZATION_ID = 567567;
+
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -210,8 +207,6 @@ public class Aware extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        awareContext = getApplicationContext();
 
         IntentFilter storage = new IntentFilter();
         storage.addAction(Intent.ACTION_MEDIA_MOUNTED);
@@ -236,20 +231,6 @@ public class Aware extends Service {
             stopSelf();
             return;
         }
-
-        //If Android M+ and client or standalone, ask to be added to the whilelist of Doze
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (getPackageName().equals("com.aware.phone") || getResources().getBoolean(R.bool.standalone))) {
-//            Intent intent = new Intent();
-//            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-//            if (pm.isIgnoringBatteryOptimizations(getPackageName())) {
-//                intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-//            } else {
-//                intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-//                intent.setData(Uri.parse("package:" + getPackageName()));
-//            }
-//            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//            startActivity(intent);
-//        }
 
         if (Aware.DEBUG) Log.d(TAG, "AWARE framework is created!");
     }
@@ -283,6 +264,47 @@ public class Aware extends Service {
             }
             return true;
         }
+    }
+
+    /**
+     * Checks if current package is not affected by Volte, Doze
+     * NOTE: this only works for Android OS native battery savings, not custom ones (e.g., Sony Stamina, etc).
+     * @param context
+     * @return
+     */
+    public static boolean isBatteryOptimizationIgnored(Context context) {
+        boolean is_ignored;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            PowerManager pm = (PowerManager) context.getApplicationContext().getSystemService(Context.POWER_SERVICE);
+            if (!pm.isIgnoringBatteryOptimizations(context.getPackageName())) {
+                is_ignored = false;
+            } else {
+                is_ignored = true;
+            }
+        } else {
+            is_ignored = true;
+        }
+
+        if (!is_ignored) {
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
+            mBuilder.setSmallIcon(R.drawable.ic_stat_aware_recharge);
+            mBuilder.setContentTitle("AWARE is battery friendly");
+            mBuilder.setContentText(context.getApplicationContext().getResources().getString(R.string.aware_activate_battery_optimize_ignore));
+            mBuilder.setAutoCancel(true);
+            mBuilder.setOnlyAlertOnce(true); //notify the user only once
+            mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
+
+            Intent batteryIntent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+            batteryIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+            PendingIntent clickIntent = PendingIntent.getActivity(context, 0, batteryIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            mBuilder.setContentIntent(clickIntent);
+            NotificationManager notManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            notManager.notify(Aware.AWARE_BATTERY_OPTIMIZATION_ID, mBuilder.build());
+        }
+
+        return is_ignored;
     }
 
     private class AsyncStudyCheck extends AsyncTask<Void, Void, Boolean> {
@@ -529,45 +551,25 @@ public class Aware extends Service {
             }
 
             if (intent != null && intent.getAction() != null) {
+
                 if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_STUDY_COMPLIANCE))
                     complianceStatus(getApplicationContext());
 
                 if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_KEEP_ALIVE)) {
-
-                    //Check if study is ongoing or any changes to the configuration
                     if (studyCheck == null && Aware.isStudy(getApplicationContext())) {
                         studyCheck = new AsyncStudyCheck();
                         studyCheck.execute();
                     }
 
                     startAWARE(getApplicationContext());
+                    startPlugins(getApplicationContext());
 
-                    //remind the user to charge
-                    checkBatteryLeft(false);
+                    checkBatteryLeft(getApplicationContext(), false);
                 }
             } else {
-
-                //Start sensors if they are not running yet.
+                //Start components if they are not running
                 startAWARE(getApplicationContext());
-
-                if (getPackageName().equalsIgnoreCase("com.aware.phone") || getResources().getBoolean(R.bool.standalone)) {
-                    ArrayList<String> active_plugins = new ArrayList<>();
-                    Cursor enabled_plugins = awareContext.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
-                    if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
-                        do {
-                            String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-                            active_plugins.add(package_name);
-                        } while (enabled_plugins.moveToNext());
-                    }
-                    if (enabled_plugins != null && !enabled_plugins.isClosed())
-                        enabled_plugins.close();
-
-                    if (active_plugins.size() > 0) {
-                        for (String package_name : active_plugins) {
-                            startPlugin(awareContext, package_name);
-                        }
-                    }
-                }
+                startPlugins(getApplicationContext());
             }
 
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
@@ -601,53 +603,38 @@ public class Aware extends Service {
             }
 
         } else { //storage is not available, stop plugins and sensors
-            ArrayList<String> active_plugins = new ArrayList<>();
-            Cursor enabled_plugins = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
-            if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
-                do {
-                    String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-                    active_plugins.add(package_name);
-                } while (enabled_plugins.moveToNext());
-            }
-            if (enabled_plugins != null && !enabled_plugins.isClosed()) enabled_plugins.close();
-
-            if (active_plugins.size() > 0) {
-                for (String package_name : active_plugins) {
-                    stopPlugin(getApplicationContext(), package_name);
-                }
-                if (Aware.DEBUG) Log.w(TAG, "AWARE plugins disabled...");
-            }
-
-            //Stop core AWARE services
             stopAWARE(getApplicationContext());
+            stopPlugins(getApplicationContext());
         }
 
         return START_STICKY;
     }
 
-    public void checkBatteryLeft(boolean dismiss) {
+    public static void checkBatteryLeft(Context context, boolean dismiss) {
         final int CHARGE_REMINDER = 5555;
-        NotificationManager notManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        NotificationManager notManager = (NotificationManager) context.getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
 
-        if (Aware.getSetting(this, Aware_Preferences.REMIND_TO_CHARGE).equals("true")) {
+        if (Aware.getSetting(context, Aware_Preferences.REMIND_TO_CHARGE).equals("true")) {
             if (dismiss) {
                 notManager.cancel(CHARGE_REMINDER);
             } else {
-                Intent batt = getApplicationContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-                Bundle extras = batt.getExtras();
-                if (extras.getInt(BatteryManager.EXTRA_LEVEL) <= 15 && extras.getInt(BatteryManager.EXTRA_STATUS) != BatteryManager.BATTERY_STATUS_CHARGING) {
-                    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
-                    mBuilder.setSmallIcon(R.drawable.ic_stat_aware_recharge);
-                    mBuilder.setContentTitle(getApplicationContext().getResources().getString(R.string.app_name));
-                    mBuilder.setContentText("Please, recharge your phone as soon as possible.");
-                    mBuilder.setAutoCancel(true);
-                    mBuilder.setOnlyAlertOnce(true); //notify the user only once
-                    mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
+                Intent batt = context.getApplicationContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+                if (batt != null && batt.getExtras() != null) {
+                    Bundle extras = batt.getExtras();
+                    if (extras.getInt(BatteryManager.EXTRA_LEVEL) <= 15 && extras.getInt(BatteryManager.EXTRA_STATUS) != BatteryManager.BATTERY_STATUS_CHARGING) {
+                        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context.getApplicationContext());
+                        mBuilder.setSmallIcon(R.drawable.ic_stat_aware_recharge);
+                        mBuilder.setContentTitle(context.getApplicationContext().getResources().getString(R.string.app_name));
+                        mBuilder.setContentText("Please, recharge your phone as soon as possible.");
+                        mBuilder.setAutoCancel(true);
+                        mBuilder.setOnlyAlertOnce(true); //notify the user only once
+                        mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
 
-                    PendingIntent clickIntent = PendingIntent.getActivity(getApplicationContext(), 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
-                    mBuilder.setContentIntent(clickIntent);
+                        PendingIntent clickIntent = PendingIntent.getActivity(context.getApplicationContext(), 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
+                        mBuilder.setContentIntent(clickIntent);
 
-                    notManager.notify(CHARGE_REMINDER, mBuilder.build());
+                        notManager.notify(CHARGE_REMINDER, mBuilder.build());
+                    }
                 }
             }
         }
@@ -666,15 +653,10 @@ public class Aware extends Service {
                 Intent bundled = new Intent();
                 bundled.setComponent(new ComponentName(context.getPackageName(), package_name + ".Plugin"));
                 context.stopService(bundled);
-
-                if (Aware.DEBUG) Log.d(TAG, "Bundled " + package_name + ".Plugin stopped...");
-
             } else {
                 Intent external = new Intent();
                 external.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
                 context.stopService(external);
-
-                if (Aware.DEBUG) Log.d(TAG, package_name + " stopped...");
             }
 
             PluginsManager.disablePlugin(context, package_name);
@@ -686,8 +668,7 @@ public class Aware extends Service {
     }
 
     /**
-     * Starts a plugin. Expects the package name of the plugin.
-     * It checks if the plugin does exist on the phone. If it doesn't, it will request the user to install it automatically.
+     * Starts a plugin using it's package name
      *
      * @param context
      * @param package_name
@@ -695,23 +676,40 @@ public class Aware extends Service {
     public synchronized static void startPlugin(final Context context, final String package_name) {
         PackageInfo packageInfo = PluginsManager.isInstalled(context, package_name);
         if (packageInfo != null) {
-
             PluginsManager.enablePlugin(context, package_name);
-
             if (context.getPackageName().equals("com.aware.phone") || context.getResources().getBoolean(R.bool.standalone)) {
                 context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
             }
 
             if (packageInfo.versionName.equals("bundled")) {
+                try {
+                    Class<?> pluginObj = Class.forName(context.getPackageName() + ".Plugin");
+                    if (is_running(context, pluginObj)) {
+                        Aware.debug(context, "active: " + pluginObj.getName() + " package: " + context.getPackageName());
+                        return;
+                    }
+                } catch (ClassNotFoundException e) {}
+
+                //Starting for the first time
                 Intent bundled = new Intent();
                 bundled.setComponent(new ComponentName(context.getPackageName(), package_name + ".Plugin"));
                 context.startService(bundled);
-                if (Aware.DEBUG) Log.d(TAG, "Bundled " + package_name + ".Plugin started...");
+
             } else {
+                try {
+                    String pluginPath = package_name + ".Plugin";
+                    Context reflectedContext = context.createPackageContext(package_name, Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
+                    Class<?> pluginObj = reflectedContext.getClassLoader().loadClass(pluginPath);
+                    if (is_running(context, pluginObj)) {
+                        Aware.debug(context, "active: " + pluginObj.getName() + " package: " + package_name);
+                        return;
+                    }
+                } catch (ClassNotFoundException | NameNotFoundException e) {}
+
+                //Starting for the first time
                 Intent external = new Intent();
                 external.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
                 context.startService(external);
-                if (Aware.DEBUG) Log.d(TAG, package_name + " started...");
             }
         }
     }
@@ -727,8 +725,8 @@ public class Aware extends Service {
         Intent pluginIntent = new Intent(context, DownloadPluginService.class);
         pluginIntent.putExtra("package_name", package_name);
         pluginIntent.putExtra("is_update", is_update);
-        if (study_custom_url != null)
-            pluginIntent.putExtra("study_url", study_custom_url);
+        if (study_custom_url != null) pluginIntent.putExtra("study_url", study_custom_url);
+
         context.startService(pluginIntent);
     }
 
@@ -1972,7 +1970,6 @@ public class Aware extends Service {
      * @author denzil
      */
     private static final Aware_Broadcaster aware_BR = new Aware_Broadcaster();
-
     public static class Aware_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -2017,7 +2014,6 @@ public class Aware extends Service {
      * Checks if we have access to the storage of the device. Turns off AWARE when we don't, turns it back on when available again.
      */
     private static final Storage_Broadcaster storage_BR = new Storage_Broadcaster();
-
     public static class Storage_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -2036,9 +2032,8 @@ public class Aware extends Service {
     /**
      * Checks if we still have the accessibility services active or not
      */
-    private final AwareBoot awareBoot = new AwareBoot();
-
-    public class AwareBoot extends BroadcastReceiver {
+    private static final AwareBoot awareBoot = new AwareBoot();
+    public static class AwareBoot extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             try {
@@ -2061,7 +2056,7 @@ public class Aware extends Service {
                 //Remove charging reminder if previously visible
                 if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BATTERY_CHANGED) && Aware.getSetting(context, Aware_Preferences.REMIND_TO_CHARGE).equalsIgnoreCase("true")) {
                     if (extras.getInt(BatteryManager.EXTRA_STATUS) == BatteryManager.BATTERY_STATUS_CHARGING) {
-                        checkBatteryLeft(true);
+                        checkBatteryLeft(context, true);
                     }
                 }
                 if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
@@ -2097,7 +2092,6 @@ public class Aware extends Service {
             } catch (RuntimeException e) {
                 //Gingerbread does not allow these intents. Disregard for 2.3.3
             }
-
         }
     }
 
@@ -2157,123 +2151,6 @@ public class Aware extends Service {
     }
 
     /**
-     * Please replace with startAWARE(Context context) to avoid memory leaks.
-     * TODO: remove in future version
-     */
-    @Deprecated
-    public static void startAWARE() {
-        startScheduler(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_SIGNIFICANT_MOTION).equals("true")) {
-            startSignificant(awareContext);
-        } else stopSignificant(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ESM).equals("true")) {
-            startESM(awareContext);
-        } else stopESM(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_APPLICATIONS).equals("true")) {
-            startApplications(awareContext);
-        } else stopApplications(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ACCELEROMETER).equals("true")) {
-            startAccelerometer(awareContext);
-        } else stopAccelerometer(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_INSTALLATIONS).equals("true")) {
-            startInstallations(awareContext);
-        } else stopInstallations(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_GPS).equals("true") || Aware.getSetting(awareContext, Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true")) {
-            startLocations(awareContext);
-        } else stopLocations(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_BLUETOOTH).equals("true")) {
-            startBluetooth(awareContext);
-        } else stopBluetooth(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_SCREEN).equals("true")) {
-            startScreen(awareContext);
-        } else stopScreen(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_BATTERY).equals("true")) {
-            startBattery(awareContext);
-        } else stopBattery(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_NETWORK_EVENTS).equals("true")) {
-            startNetwork(awareContext);
-        } else stopNetwork(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_NETWORK_TRAFFIC).equals("true")) {
-            startTraffic(awareContext);
-        } else stopTraffic(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_COMMUNICATION_EVENTS).equals("true") || Aware.getSetting(awareContext, Aware_Preferences.STATUS_CALLS).equals("true") || Aware.getSetting(awareContext, Aware_Preferences.STATUS_MESSAGES).equals("true")) {
-            startCommunication(awareContext);
-        } else stopCommunication(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_PROCESSOR).equals("true")) {
-            startProcessor(awareContext);
-        } else stopProcessor(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_TIMEZONE).equals("true")) {
-            startTimeZone(awareContext);
-        } else stopTimeZone(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_MQTT).equals("true")) {
-            startMQTT(awareContext);
-        } else stopMQTT(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_GYROSCOPE).equals("true")) {
-            startGyroscope(awareContext);
-        } else stopGyroscope(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_WIFI).equals("true")) {
-            startWiFi(awareContext);
-        } else stopWiFi(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_TELEPHONY).equals("true")) {
-            startTelephony(awareContext);
-        } else stopTelephony(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_ROTATION).equals("true")) {
-            startRotation(awareContext);
-        } else stopRotation(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_LIGHT).equals("true")) {
-            startLight(awareContext);
-        } else stopLight(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_PROXIMITY).equals("true")) {
-            startProximity(awareContext);
-        } else stopProximity(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_MAGNETOMETER).equals("true")) {
-            startMagnetometer(awareContext);
-        } else stopMagnetometer(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_BAROMETER).equals("true")) {
-            startBarometer(awareContext);
-        } else stopBarometer(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_GRAVITY).equals("true")) {
-            startGravity(awareContext);
-        } else stopGravity(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_LINEAR_ACCELEROMETER).equals("true")) {
-            startLinearAccelerometer(awareContext);
-        } else stopLinearAccelerometer(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_TEMPERATURE).equals("true")) {
-            startTemperature(awareContext);
-        } else stopTemperature(awareContext);
-
-        if (Aware.getSetting(awareContext, Aware_Preferences.STATUS_KEYBOARD).equals("true")) {
-            startKeyboard(awareContext);
-        } else stopKeyboard(awareContext);
-    }
-
-    /**
      * Start active services
      */
     public static void startAWARE(Context context) {
@@ -2287,10 +2164,6 @@ public class Aware extends Service {
         if (Aware.getSetting(context, Aware_Preferences.STATUS_ESM).equals("true")) {
             if (!is_running(context, ESM.class)) startESM(context);
         } else stopESM(context);
-
-        if (Aware.getSetting(context, Aware_Preferences.STATUS_APPLICATIONS).equals("true")) {
-            if (!is_running(context, Applications.class)) startApplications(context);
-        } else stopApplications(context);
 
         if (Aware.getSetting(context, Aware_Preferences.STATUS_ACCELEROMETER).equals("true")) {
             if (!is_running(context, Accelerometer.class)) startAccelerometer(context);
@@ -2389,40 +2262,46 @@ public class Aware extends Service {
         } else stopKeyboard(context);
     }
 
-    /**
-     * Stop all services
-     * Please replace with stopAWARE(Context context) to avoid memory leaks.
-     */
-    @Deprecated
-    public static void stopAWARE() {
-        stopSignificant(awareContext);
-        stopApplications(awareContext);
-        stopAccelerometer(awareContext);
-        stopBattery(awareContext);
-        stopBluetooth(awareContext);
-        stopCommunication(awareContext);
-        stopLocations(awareContext);
-        stopNetwork(awareContext);
-        stopTraffic(awareContext);
-        stopScreen(awareContext);
-        stopProcessor(awareContext);
-        stopMQTT(awareContext);
-        stopGyroscope(awareContext);
-        stopWiFi(awareContext);
-        stopTelephony(awareContext);
-        stopTimeZone(awareContext);
-        stopRotation(awareContext);
-        stopLight(awareContext);
-        stopProximity(awareContext);
-        stopMagnetometer(awareContext);
-        stopBarometer(awareContext);
-        stopGravity(awareContext);
-        stopLinearAccelerometer(awareContext);
-        stopTemperature(awareContext);
-        stopESM(awareContext);
-        stopInstallations(awareContext);
-        stopKeyboard(awareContext);
-        stopScheduler(awareContext);
+    public static void startPlugins(Context context) {
+        if (context.getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || context.getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+            ArrayList<String> active_plugins = new ArrayList<>();
+            Cursor enabled_plugins = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
+            if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
+                do {
+                    String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+                    active_plugins.add(package_name);
+                } while (enabled_plugins.moveToNext());
+            }
+            if (enabled_plugins != null && !enabled_plugins.isClosed())
+                enabled_plugins.close();
+
+            if (active_plugins.size() > 0) {
+                for (String package_name : active_plugins) {
+                    startPlugin(context, package_name);
+                }
+            }
+        }
+    }
+
+    public static void stopPlugins(Context context) {
+        if (context.getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || context.getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+            ArrayList<String> active_plugins = new ArrayList<>();
+            Cursor enabled_plugins = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
+            if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
+                do {
+                    String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+                    active_plugins.add(package_name);
+                } while (enabled_plugins.moveToNext());
+            }
+            if (enabled_plugins != null && !enabled_plugins.isClosed())
+                enabled_plugins.close();
+
+            if (active_plugins.size() > 0) {
+                for (String package_name : active_plugins) {
+                    stopPlugin(context, package_name);
+                }
+            }
+        }
     }
 
     /**
@@ -2433,7 +2312,7 @@ public class Aware extends Service {
     public static void stopAWARE(Context context) {
         if (context == null) return;
         stopSignificant(context);
-        stopApplications(context);
+//        stopApplications(context);
         stopAccelerometer(context);
         stopBattery(context);
         stopBluetooth(context);
@@ -2528,33 +2407,6 @@ public class Aware extends Service {
     public static void stopKeyboard(Context context) {
         if (context == null) return;
         if (keyboard != null) context.stopService(keyboard);
-    }
-
-    /**
-     * Start Applications module
-     */
-    public static void startApplications(Context context) {
-        if (context == null) return;
-        if (applicationsSrv == null) applicationsSrv = new Intent(context, Applications.class);
-        try {
-            context.startService(applicationsSrv);
-        } catch (RuntimeException e) {
-            //Gingerbread and Jelly Bean complain when we start the service explicitly. In these, it is handled by the OS
-        }
-    }
-
-    /**
-     * Stop Applications module
-     */
-    public static void stopApplications(Context context) {
-        if (context == null) return;
-        if (applicationsSrv != null) {
-            try {
-                context.stopService(applicationsSrv);
-            } catch (RuntimeException e) {
-                //Gingerbread and Jelly Bean complain when we stop the serive explicitly. In these, it is handled by the OS
-            }
-        }
     }
 
     /**

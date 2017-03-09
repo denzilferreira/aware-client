@@ -11,6 +11,7 @@
     <string name="aware_esm_questions_title">Questionnaire waiting</string>
     <string name="aware_esm_questions">Tap to answer</string>
     <string name="aware_activate_accessibility">Click here and activate AWARE in Accessibility Services.</string>
+    <string name="aware_activate_battery_optimize_ignore">Click here and add AWARE to the ignored list.</string>
     <string name="aware_team">Team</string>
     <string name="aware_qrcode">QRCode</string>
     <string name="aware_sync">Sync</string>

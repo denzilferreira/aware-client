@@ -11,6 +11,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
+import android.hardware.Camera;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -34,6 +35,8 @@ import java.io.FileNotFoundException;
 import java.util.Hashtable;
 import java.util.List;
 
+import me.dm7.barcodescanner.core.CameraHandlerThread;
+import me.dm7.barcodescanner.core.CameraUtils;
 import me.dm7.barcodescanner.zbar.Result;
 import me.dm7.barcodescanner.zbar.ZBarScannerView;
 
@@ -71,13 +74,14 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
         super.onResume();
 
         mScannerView.setResultHandler(this);
-        mScannerView.startCamera(-1);
+        mScannerView.startCamera();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mScannerView.stopCamera();
+        mScannerView.stopCameraPreview();
     }
 
     @Override
