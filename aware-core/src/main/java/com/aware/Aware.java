@@ -552,19 +552,19 @@ public class Aware extends Service {
 
             if (intent != null && intent.getAction() != null) {
 
-                if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_STUDY_COMPLIANCE))
+                if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_STUDY_COMPLIANCE)) {
                     complianceStatus(getApplicationContext());
+                    checkBatteryLeft(getApplicationContext(), false);
 
-                if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_KEEP_ALIVE)) {
                     if (studyCheck == null && Aware.isStudy(getApplicationContext())) {
                         studyCheck = new AsyncStudyCheck();
                         studyCheck.execute();
                     }
+                }
 
+                if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_KEEP_ALIVE)) {
                     startAWARE(getApplicationContext());
                     startPlugins(getApplicationContext());
-
-                    checkBatteryLeft(getApplicationContext(), false);
                 }
             } else {
                 //Start components if they are not running
