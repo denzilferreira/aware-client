@@ -649,6 +649,13 @@ public class Aware extends Service {
     public synchronized static void stopPlugin(final Context context, final String package_name) {
         PackageInfo packageInfo = PluginsManager.isInstalled(context, package_name);
         if (packageInfo != null) {
+
+            PluginsManager.disablePlugin(context, package_name);
+
+            if (context.getPackageName().equals("com.aware.phone") || context.getResources().getBoolean(R.bool.standalone)) {
+                context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
+            }
+
             if (packageInfo.versionName.equals("bundled")) {
                 Intent bundled = new Intent();
                 bundled.setComponent(new ComponentName(context.getPackageName(), package_name + ".Plugin"));
@@ -657,12 +664,6 @@ public class Aware extends Service {
                 Intent external = new Intent();
                 external.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
                 context.stopService(external);
-            }
-
-            PluginsManager.disablePlugin(context, package_name);
-
-            if (context.getPackageName().equals("com.aware.phone") || context.getResources().getBoolean(R.bool.standalone)) {
-                context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
             }
         }
     }
@@ -676,7 +677,9 @@ public class Aware extends Service {
     public synchronized static void startPlugin(final Context context, final String package_name) {
         PackageInfo packageInfo = PluginsManager.isInstalled(context, package_name);
         if (packageInfo != null) {
+
             PluginsManager.enablePlugin(context, package_name);
+
             if (context.getPackageName().equals("com.aware.phone") || context.getResources().getBoolean(R.bool.standalone)) {
                 context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
             }
@@ -687,6 +690,8 @@ public class Aware extends Service {
                     if (is_running(context, pluginObj)) {
                         Aware.debug(context, "active: " + pluginObj.getName() + " package: " + context.getPackageName());
                         return;
+                    } else {
+                        Log.d(Aware.TAG, "Creating bundled: " + pluginObj.getName() + " package: " + context.getPackageName());
                     }
                 } catch (ClassNotFoundException e) {}
 
@@ -703,6 +708,8 @@ public class Aware extends Service {
                     if (is_running(context, pluginObj)) {
                         Aware.debug(context, "active: " + pluginObj.getName() + " package: " + package_name);
                         return;
+                    } else {
+                        Log.d(Aware.TAG, "Creating: " + pluginObj.getName() + " package: " + context.getPackageName());
                     }
                 } catch (ClassNotFoundException | NameNotFoundException e) {}
 

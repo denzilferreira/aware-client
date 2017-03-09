@@ -118,10 +118,6 @@ public class Aware_Plugin extends Service {
             permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_SERVICE, getPackageName() + "/" + getClass().getName()); //restarts plugin once permissions are accepted
             startActivity(permissions);
         } else {
-
-            //Set plugin as enabled
-            PluginsManager.enablePlugin(getApplicationContext(), getPackageName());
-
             if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                 SSLManager.handleUrl(getApplicationContext(), Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER), true);
             }
