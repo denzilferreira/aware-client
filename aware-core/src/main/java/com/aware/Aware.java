@@ -611,10 +611,12 @@ public class Aware extends Service {
     }
 
     public static void checkBatteryLeft(Context context, boolean dismiss) {
-        final int CHARGE_REMINDER = 5555;
-        NotificationManager notManager = (NotificationManager) context.getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
 
         if (Aware.getSetting(context, Aware_Preferences.REMIND_TO_CHARGE).equals("true")) {
+
+            final int CHARGE_REMINDER = 5555;
+            NotificationManager notManager = (NotificationManager) context.getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
+
             if (dismiss) {
                 notManager.cancel(CHARGE_REMINDER);
             } else {
@@ -625,7 +627,7 @@ public class Aware extends Service {
                         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context.getApplicationContext());
                         mBuilder.setSmallIcon(R.drawable.ic_stat_aware_recharge);
                         mBuilder.setContentTitle(context.getApplicationContext().getResources().getString(R.string.app_name));
-                        mBuilder.setContentText("Please, recharge your phone as soon as possible.");
+                        mBuilder.setContentText(context.getApplicationContext().getText(R.string.aware_battery_recharge));
                         mBuilder.setAutoCancel(true);
                         mBuilder.setOnlyAlertOnce(true); //notify the user only once
                         mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
@@ -688,6 +690,7 @@ public class Aware extends Service {
                 try {
                     Class<?> pluginObj = Class.forName(context.getPackageName() + ".Plugin");
                     if (is_running(context, pluginObj)) {
+                        Log.d(Aware.TAG, "Active: " + pluginObj.getName() + " package: " + context.getPackageName());
                         Aware.debug(context, "active: " + pluginObj.getName() + " package: " + context.getPackageName());
                         return;
                     } else {
@@ -696,6 +699,7 @@ public class Aware extends Service {
                 } catch (ClassNotFoundException e) {}
 
                 //Starting for the first time
+                Log.d(Aware.TAG, "Initializing plugin: " + context.getPackageName());
                 Intent bundled = new Intent();
                 bundled.setComponent(new ComponentName(context.getPackageName(), package_name + ".Plugin"));
                 context.startService(bundled);
@@ -706,6 +710,7 @@ public class Aware extends Service {
                     Context reflectedContext = context.createPackageContext(package_name, Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
                     Class<?> pluginObj = reflectedContext.getClassLoader().loadClass(pluginPath);
                     if (is_running(context, pluginObj)) {
+                        Log.d(Aware.TAG, "Active: " + pluginObj.getName() + " package: " + package_name);
                         Aware.debug(context, "active: " + pluginObj.getName() + " package: " + package_name);
                         return;
                     } else {
@@ -714,6 +719,7 @@ public class Aware extends Service {
                 } catch (ClassNotFoundException | NameNotFoundException e) {}
 
                 //Starting for the first time
+                Log.d(Aware.TAG, "Initializing plugin: " + package_name);
                 Intent external = new Intent();
                 external.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
                 context.startService(external);
@@ -2357,7 +2363,7 @@ public class Aware extends Service {
     }
 
     public static boolean is_running(Context context, Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) context.getSystemService(ACTIVITY_SERVICE);
+        ActivityManager manager = (ActivityManager) context.getApplicationContext().getSystemService(ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
             if (serviceClass.getName().equals(service.service.getClassName()))
                 return true;

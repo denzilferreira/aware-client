@@ -40,32 +40,32 @@ public class Aware_Sensor extends Service {
      */
     public static boolean DEBUG = false;
 
-    public ContextProducer CONTEXT_PRODUCER = null;
+    public static ContextProducer CONTEXT_PRODUCER = null;
 
     /**
      * Sensor database tables
      */
-    public String[] DATABASE_TABLES = null;
+    public static String[] DATABASE_TABLES = null;
 
     /**
      * Sensor table fields
      */
-    public String[] TABLES_FIELDS = null;
+    public static String[] TABLES_FIELDS = null;
 
     /**
      * Context Providers URIs
      */
-    public Uri[] CONTEXT_URIS = null;
+    public static Uri[] CONTEXT_URIS = null;
 
     /**
      * Permissions needed for this plugin to run
      */
-    public ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
+    public static ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
 
     /**
      * Indicates if permissions were accepted OK
      */
-    public boolean PERMISSIONS_OK;
+    public static boolean PERMISSIONS_OK;
 
     /**
      * Interface to share context with other applications/addons<br/>
@@ -92,8 +92,6 @@ public class Aware_Sensor extends Service {
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
         Log.d(Aware.TAG, "created: " + getClass().getName() + " package: " + getPackageName());
-
-        Aware.startAWARE(getApplicationContext());
     }
 
     @Override
@@ -115,6 +113,9 @@ public class Aware_Sensor extends Service {
             permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_SERVICE, getPackageName() + "/" + getClass().getName()); //restarts plugin once permissions are accepted
             startActivity(permissions);
         } else {
+
+            Aware.startAWARE(getApplicationContext());
+
             if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                 SSLManager.handleUrl(getApplicationContext(), Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER), true);
             }
@@ -147,7 +148,7 @@ public class Aware_Sensor extends Service {
      *
      * @author denzil
      */
-    public class ContextBroadcaster extends BroadcastReceiver {
+    public static class ContextBroadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(Aware.ACTION_AWARE_CURRENT_CONTEXT)) {
@@ -186,13 +187,18 @@ public class Aware_Sensor extends Service {
             }
             if (intent.getAction().equals(Aware.ACTION_AWARE_STOP_SENSORS)) {
                 if (Aware.DEBUG) Log.d(TAG, TAG + " stopped");
-                stopSelf();
+                try {
+                    Intent self = new Intent(context, Class.forName(context.getApplicationContext().getClass().getName()));
+                    context.stopService(self);
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
             }
 
         }
     }
 
-    private ContextBroadcaster contextBroadcaster = new ContextBroadcaster();
+    private static ContextBroadcaster contextBroadcaster = new ContextBroadcaster();
 
     @Override
     public IBinder onBind(Intent intent) {

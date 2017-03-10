@@ -45,27 +45,27 @@ public class Aware_Plugin extends Service {
     /**
      * Context producer for this plugin
      */
-    public ContextProducer CONTEXT_PRODUCER = null;
+    public static ContextProducer CONTEXT_PRODUCER = null;
 
     /**
      * Context ContentProvider tables
      */
-    public String[] DATABASE_TABLES = null;
+    public static String[] DATABASE_TABLES = null;
 
     /**
      * Context ContentProvider fields
      */
-    public String[] TABLES_FIELDS = null;
+    public static String[] TABLES_FIELDS = null;
 
     /**
      * Context ContentProvider Uris
      */
-    public Uri[] CONTEXT_URIS = null;
+    public static Uri[] CONTEXT_URIS = null;
 
     /**
      * Permissions needed for this plugin to run
      */
-    public ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
+    public static ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
 
     /**
      * Plugin is inactive
@@ -80,7 +80,7 @@ public class Aware_Plugin extends Service {
     /**
      * Indicates if permissions were accepted OK
      */
-    public boolean PERMISSIONS_OK;
+    public static boolean PERMISSIONS_OK;
 
     @Override
     public void onCreate() {
@@ -97,8 +97,6 @@ public class Aware_Plugin extends Service {
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
         Log.d(Aware.TAG, "created: " + getClass().getName() + " package: " + getPackageName());
-
-        Aware.startAWARE(getApplicationContext());
     }
 
     @Override
@@ -117,12 +115,16 @@ public class Aware_Plugin extends Service {
             Intent permissions = new Intent(this, PermissionsHandler.class);
             permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
             permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_SERVICE, getPackageName() + "/" + getClass().getName()); //restarts plugin once permissions are accepted
+            permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_SERVICE, getApplicationContext().getPackageName() + "/" + getClass().getName()); //restarts plugin once permissions are accepted
             startActivity(permissions);
         } else {
+
+            Aware.startAWARE(getApplicationContext());
+
             if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                 SSLManager.handleUrl(getApplicationContext(), Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER), true);
             }
+
             Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
         }
         return super.onStartCommand(intent, flags, startId);
@@ -161,7 +163,7 @@ public class Aware_Plugin extends Service {
      *
      * @author denzil
      */
-    public class ContextBroadcaster extends BroadcastReceiver {
+    public static class ContextBroadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(Aware.ACTION_AWARE_CURRENT_CONTEXT)) {
@@ -169,7 +171,7 @@ public class Aware_Plugin extends Service {
                     CONTEXT_PRODUCER.onContext();
                 }
             }
-            if (intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA) && Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
+            if (intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA) && Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                 if (DATABASE_TABLES != null && TABLES_FIELDS != null && CONTEXT_URIS != null) {
                     for (int i = 0; i < DATABASE_TABLES.length; i++) {
                         Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
@@ -200,12 +202,17 @@ public class Aware_Plugin extends Service {
             }
             if (intent.getAction().equals(Aware.ACTION_AWARE_STOP_PLUGINS)) {
                 if (Aware.DEBUG) Log.d(TAG, TAG + " stopped");
-                stopSelf();
+                try {
+                    Intent self = new Intent(context, Class.forName(context.getApplicationContext().getClass().getName()));
+                    context.stopService(self);
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
 
-    private ContextBroadcaster contextBroadcaster = new ContextBroadcaster();
+    private static ContextBroadcaster contextBroadcaster = new ContextBroadcaster();
 
     @Override
     public IBinder onBind(Intent arg0) {

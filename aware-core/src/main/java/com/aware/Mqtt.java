@@ -152,22 +152,12 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
     @Override
     public void connectionLost(Throwable throwable) {
-        if (Aware.DEBUG)
-            Log.d(TAG, "MQTT: Connection lost to server... reconnecting...");
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    MQTT_CLIENT.reconnect();
-                } catch (MqttException e) {
-                    try {
-                        this.wait(15*1000); //try again in 15 seconds
-                    } catch (InterruptedException e1) {
-                    }
-                }
-            }
-        }).start();
+        if (Aware.DEBUG) Log.d(TAG, "MQTT: Connection lost to server... reconnecting...");
+        try {
+            MQTT_CLIENT.reconnect();
+        } catch (MqttException e) {
+            if (Aware.DEBUG) Log.d(TAG, "MQTT: Connection failed... new attempt in 5 minutes...");
+        }
     }
 
     @Override
