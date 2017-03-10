@@ -82,8 +82,6 @@ public class Aware_Plugin extends Service {
      */
     public static boolean PERMISSIONS_OK = true;
 
-    private static Intent aware_framework;
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -99,9 +97,6 @@ public class Aware_Plugin extends Service {
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
         Log.d(Aware.TAG, "created: " + getClass().getName() + " package: " + getPackageName());
-
-        aware_framework = new Intent(this, Aware.class);
-        startService(aware_framework);
     }
 
     @Override
@@ -146,8 +141,6 @@ public class Aware_Plugin extends Service {
         }
 
         if (contextBroadcaster != null) unregisterReceiver(contextBroadcaster);
-
-        stopService(aware_framework);
     }
 
     /**
