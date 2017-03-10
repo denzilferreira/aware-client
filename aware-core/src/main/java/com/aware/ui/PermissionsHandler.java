@@ -121,6 +121,7 @@ public class PermissionsHandler extends Activity {
         super.onDestroy();
         if (redirect_service != null) {
             Log.d(TAG, "Redirecting to Service: " + redirect_service.getComponent().toString());
+            redirect_service.setAction(ACTION_AWARE_PERMISSIONS_CHECK);
             startService(redirect_service);
         }
         if (redirect_activity != null){
