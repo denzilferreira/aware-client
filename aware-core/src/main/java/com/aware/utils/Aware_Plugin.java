@@ -80,7 +80,7 @@ public class Aware_Plugin extends Service {
     /**
      * Indicates if permissions were accepted OK
      */
-    public static boolean PERMISSIONS_OK;
+    public static boolean PERMISSIONS_OK = true;
 
     private static Intent aware_framework;
 
@@ -123,6 +123,8 @@ public class Aware_Plugin extends Service {
             permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_SERVICE, getApplicationContext().getPackageName() + "/" + getClass().getName()); //restarts plugin once permissions are accepted
             startActivity(permissions);
         } else {
+
+            PERMISSIONS_OK = true;
 
             Aware.startAWARE(getApplicationContext());
 

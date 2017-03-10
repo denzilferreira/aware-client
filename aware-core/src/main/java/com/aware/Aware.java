@@ -2172,8 +2172,7 @@ public class Aware extends Service {
             context.startService(aware);
         }
 
-        if (!is_running(context, Scheduler.class))
-            startScheduler(context);
+        startScheduler(context);
 
         if (Aware.getSetting(context, Aware_Preferences.STATUS_SIGNIFICANT_MOTION).equals("true")) {
             if (!is_running(context, SignificantMotion.class)) startSignificant(context);
