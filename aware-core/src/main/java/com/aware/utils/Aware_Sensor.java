@@ -67,6 +67,8 @@ public class Aware_Sensor extends Service {
      */
     public static boolean PERMISSIONS_OK;
 
+    private static Intent aware_framework;
+
     /**
      * Interface to share context with other applications/addons<br/>
      * You MUST broadcast your contexts here!
@@ -133,9 +135,7 @@ public class Aware_Sensor extends Service {
         }
 
         //Unregister Context Broadcaster
-        if (contextBroadcaster != null) {
-            unregisterReceiver(contextBroadcaster);
-        }
+        if (contextBroadcaster != null) unregisterReceiver(contextBroadcaster);
     }
 
     /**
