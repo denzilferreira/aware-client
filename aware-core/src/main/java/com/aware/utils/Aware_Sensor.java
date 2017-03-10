@@ -67,8 +67,6 @@ public class Aware_Sensor extends Service {
      */
     public static boolean PERMISSIONS_OK;
 
-    private static Intent aware_framework;
-
     /**
      * Interface to share context with other applications/addons<br/>
      * You MUST broadcast your contexts here!
@@ -115,9 +113,6 @@ public class Aware_Sensor extends Service {
             permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_SERVICE, getPackageName() + "/" + getClass().getName()); //restarts plugin once permissions are accepted
             startActivity(permissions);
         } else {
-
-            Aware.startAWARE(getApplicationContext());
-
             if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                 SSLManager.handleUrl(getApplicationContext(), Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER), true);
             }
