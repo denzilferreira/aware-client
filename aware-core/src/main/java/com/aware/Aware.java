@@ -682,41 +682,32 @@ public class Aware extends Service {
 
             if (packageInfo.versionName.equals("bundled")) {
                 try {
-                    Class<?> pluginObj = Class.forName(context.getPackageName() + ".Plugin");
+                    Class<?> pluginObj = Class.forName(package_name + ".Plugin");
                     if (is_running(context, pluginObj)) {
-                        Log.d(Aware.TAG, "Active: " + pluginObj.getName() + " package: " + context.getPackageName());
+                        if (Aware.DEBUG) Log.d(Aware.TAG, "Active: " + pluginObj.getName() + " package: " + context.getPackageName());
                         Aware.debug(context, "active: " + pluginObj.getName() + " package: " + context.getPackageName());
-                        return;
                     } else {
-                        Log.d(Aware.TAG, "Creating bundled: " + pluginObj.getName() + " package: " + context.getPackageName());
+                        if (Aware.DEBUG) Log.d(Aware.TAG, "Initializing bundled plugin: " + package_name + " of " + context.getPackageName());
+                        Intent bundled = new Intent();
+                        bundled.setComponent(new ComponentName(context.getPackageName(), package_name + ".Plugin"));
+                        context.startService(bundled);
                     }
                 } catch (ClassNotFoundException e) {}
-
-                //Starting for the first time
-                Log.d(Aware.TAG, "Initializing plugin: " + context.getPackageName());
-                Intent bundled = new Intent();
-                bundled.setComponent(new ComponentName(context.getPackageName(), package_name + ".Plugin"));
-                context.startService(bundled);
-
             } else {
                 try {
                     String pluginPath = package_name + ".Plugin";
                     Context reflectedContext = context.createPackageContext(package_name, Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
                     Class<?> pluginObj = reflectedContext.getClassLoader().loadClass(pluginPath);
                     if (is_running(context, pluginObj)) {
-                        Log.d(Aware.TAG, "Active: " + pluginObj.getName() + " package: " + package_name);
+                        if (Aware.DEBUG) Log.d(Aware.TAG, "Active: " + pluginObj.getName() + " package: " + package_name);
                         Aware.debug(context, "active: " + pluginObj.getName() + " package: " + package_name);
-                        return;
                     } else {
-                        Log.d(Aware.TAG, "Creating: " + pluginObj.getName() + " package: " + context.getPackageName());
+                        if (Aware.DEBUG) Log.d(Aware.TAG, "Initializing plugin: " + package_name);
+                        Intent external = new Intent();
+                        external.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
+                        context.startService(external);
                     }
                 } catch (ClassNotFoundException | NameNotFoundException e) {}
-
-                //Starting for the first time
-                Log.d(Aware.TAG, "Initializing plugin: " + package_name);
-                Intent external = new Intent();
-                external.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
-                context.startService(external);
             }
         }
     }
