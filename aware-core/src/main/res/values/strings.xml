@@ -10,7 +10,9 @@
     <string name="aware_plugins">AWARE Plugins</string>
     <string name="aware_esm_questions_title">Questionnaire waiting</string>
     <string name="aware_esm_questions">Tap to answer</string>
-    <string name="aware_activate_accessibility">Click here and activate AWARE in Accessibility Services.</string>
+    <string name="aware_activate_accessibility">Tap here to activate accessibility service.</string>
+    <string name="aware_activate_battery_optimize_ignore">Tap and add to the ignore battery optimizations\' list.</string>
+    <string name="aware_battery_recharge">Please, recharge your phone as soon as possible.</string>
     <string name="aware_team">Team</string>
     <string name="aware_qrcode">QRCode</string>
     <string name="aware_sync">Sync</string>

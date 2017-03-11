@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- Permissions to safeguard data collection -->
+    <!-- Permissions to safeguard data collection quality -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
@@ -160,7 +160,7 @@
             android:name="com.aware.SignificantMotion"
             android:exported="true" />
 
-        <!-- BroadcastReceivers -->
+        <!-- Shared BroadcastReceivers -->
 
         <receiver
             android:name="com.aware.utils.Aware_TTS$Aware_TTS_Receiver"
@@ -191,6 +191,14 @@
                 <action android:name="ACTION_AWARE_ESM_DISMISSED" />
                 <action android:name="ACTION_AWARE_ESM_EXPIRED" />
                 <action android:name="ACTION_AWARE_ESM_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="com.aware.Aware$AwareBoot"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 

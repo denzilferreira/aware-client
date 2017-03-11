@@ -93,8 +93,6 @@ public class PluginsManager {
         try {
             ServiceInfo serviceInfo = pkgManager.getServiceInfo(cpn, PackageManager.GET_META_DATA); //throws NameNotFoundException if non-existing
 
-            if (Aware.DEBUG) Log.d(Aware.TAG, "Bundled " + package_name + ".Plugin found...");
-
             Cursor cached = context.getContentResolver().query(Aware_Provider.Aware_Plugins.CONTENT_URI, null, Aware_Provider.Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
             if (cached == null || !cached.moveToFirst()) {
                 //Fixed: add a bundled plugin to the list of installed plugins on the self-contained apps
@@ -106,8 +104,7 @@ public class PluginsManager {
                 rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
                 rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_VERSION, 1);
                 context.getContentResolver().insert(Aware_Provider.Aware_Plugins.CONTENT_URI, rowData);
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Added bundled plugin: " + package_name + " to " + context.getPackageName());
+                if (Aware.DEBUG) Log.d(Aware.TAG, "Added bundled plugin: " + package_name + " to " + context.getPackageName());
             }
             if (cached != null && !cached.isClosed()) cached.close();
 
@@ -116,7 +113,6 @@ public class PluginsManager {
             pkgInfo.versionName = "bundled";
 
             return pkgInfo;
-
         } catch (NameNotFoundException e) {
             //Service not found, it's ok. We'll check externally installed packages
         }

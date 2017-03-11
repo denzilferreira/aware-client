@@ -11,6 +11,7 @@ import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -27,6 +28,7 @@ import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
+import android.support.annotation.IntDef;
 import android.support.v4.accessibilityservice.AccessibilityServiceInfoCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.accessibility.AccessibilityEventCompat;
@@ -122,13 +124,16 @@ public class Applications extends AccessibilityService {
      */
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-
         if (event.getPackageName() == null) return;
 
+        //Check AWARE status
+        if (!Aware.is_running(getApplicationContext(), Aware.class)) {
+            Intent aware = new Intent(this, Aware.class);
+            startService(aware);
+        }
+
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_NOTIFICATIONS).equals("true") && event.getEventType() == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED) {
-
             Notification notificationDetails = (Notification) event.getParcelableData();
-
             if (notificationDetails != null) {
                 ContentValues rowData = new ContentValues();
                 rowData.put(Applications_Notifications.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
@@ -151,7 +156,6 @@ public class Applications extends AccessibilityService {
         }
 
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-
             PackageManager packageManager = getPackageManager();
 
             //Fixed: Window State Changed from the same application (showing keyboard within an app) should be ignored
@@ -256,7 +260,6 @@ public class Applications extends AccessibilityService {
         }
 
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_KEYBOARD).equals("true") && event.getEventType() == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED) {
-
             ContentValues keyboard = new ContentValues();
             keyboard.put(Keyboard_Provider.Keyboard_Data.TIMESTAMP, System.currentTimeMillis());
             keyboard.put(Keyboard_Provider.Keyboard_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
@@ -274,23 +277,7 @@ public class Applications extends AccessibilityService {
         }
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
-        filter.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
-        registerReceiver(awareMonitor, filter);
-
-        IntentFilter tick = new IntentFilter();
-        tick.addAction(Intent.ACTION_TIME_TICK);
-        registerReceiver(schedulerTicker, tick);
-
-        Aware.debug(this, "created: " + getClass().getName() + " package: " + getPackageName());
-    }
-
-    private SchedulerTicker schedulerTicker = new SchedulerTicker();
+    private static SchedulerTicker schedulerTicker = new SchedulerTicker();
     public static class SchedulerTicker extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -307,9 +294,14 @@ public class Applications extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
 
-        //Boot-up AWARE framework
-        Intent aware = new Intent(this, Aware.class);
-        startService(aware);
+        IntentFilter tick = new IntentFilter();
+        tick.addAction(Intent.ACTION_TIME_TICK);
+        registerReceiver(schedulerTicker, tick);
+
+        Aware.debug(this, "created: " + getClass().getName() + " package: " + getPackageName());
+
+        //bind to AWARE
+        Aware.startAWARE(this);
 
         DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
         TAG = Aware.getSetting(this, Aware_Preferences.DEBUG_TAG);
@@ -352,13 +344,18 @@ public class Applications extends AccessibilityService {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+        } else {
+            Scheduler.removeSchedule(getApplicationContext(), SCHEDULER_APPLICATIONS_BACKGROUND);
+            Aware.startScheduler(this);
         }
+
+        Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
 
         //Retro-compatibility with Gingerbread
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN) {
             AccessibilityServiceInfo info = new AccessibilityServiceInfo();
-            info.eventTypes = AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED | AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED | AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED;
-            info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
+            info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
+            info.feedbackType = AccessibilityServiceInfo.FEEDBACK_ALL_MASK;
             info.notificationTimeout = 50;
             info.packageNames = null;
             this.setServiceInfo(info);
@@ -396,70 +393,26 @@ public class Applications extends AccessibilityService {
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, false);
 
         Scheduler.removeSchedule(this, SCHEDULER_APPLICATIONS_BACKGROUND);
-        Aware.startScheduler(this);
 
         Log.d(TAG, "Accessibility Service has been unbound...");
+
+        //Stop listening to time ticks
+        unregisterReceiver(schedulerTicker);
+
+        //notify the user
+        Applications.isAccessibilityServiceActive(getApplicationContext());
+
         return super.onUnbind(intent);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS).length() == 0) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS, 1);
-        }
-
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true")) {
-            try {
-                Scheduler.Schedule backgroundApps = Scheduler.getSchedule(getApplicationContext(), SCHEDULER_APPLICATIONS_BACKGROUND);
-                if (backgroundApps == null) {
-                    backgroundApps = new Scheduler.Schedule(SCHEDULER_APPLICATIONS_BACKGROUND)
-                            .setInterval(Long.parseLong(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS)))
-                            .setActionIntentAction(ACTION_AWARE_APPLICATIONS_HISTORY)
-                            .setActionType(Scheduler.ACTION_TYPE_SERVICE)
-                            .setActionClass(getPackageName() + "/" + BackgroundService.class.getName());
-
-                    Scheduler.saveSchedule(this, backgroundApps);
-                } else {
-                    if (backgroundApps.getInterval() != Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_APPLICATIONS))) {
-                        backgroundApps.setInterval(Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_APPLICATIONS)));
-                        Scheduler.saveSchedule(this, backgroundApps);
-                    }
-                }
-
-                if (DEBUG)
-                    Log.d(TAG, "Checking background apps every " + backgroundApps.getInterval() + " minutes");
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        } else {
-            Scheduler.removeSchedule(getApplicationContext(), SCHEDULER_APPLICATIONS_BACKGROUND);
-            Aware.startScheduler(this);
-        }
-
-        Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
-
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        try {
-            if (awareMonitor != null) {
-                unregisterReceiver(awareMonitor);
-            }
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        }
-
-        //Stop listening to time ticks
-        unregisterReceiver(schedulerTicker);
-
-        Scheduler.removeSchedule(this, SCHEDULER_APPLICATIONS_BACKGROUND);
-        Aware.startScheduler(this);
 
         Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
     }
@@ -523,7 +476,7 @@ public class Applications extends AccessibilityService {
      *
      * @return boolean isActive
      */
-    public static boolean isAccessibilityServiceActive(Context c) {
+    public synchronized static boolean isAccessibilityServiceActive(Context c) {
         if (!isAccessibilityEnabled(c)) {
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_accessibility);
@@ -552,7 +505,8 @@ public class Applications extends AccessibilityService {
      *
      * @author df
      */
-    public class Applications_Broadcaster extends BroadcastReceiver {
+    private static final Applications_Broadcaster awareMonitor = new Applications_Broadcaster();
+    public static class Applications_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
 
@@ -578,7 +532,7 @@ public class Applications extends AccessibilityService {
                     if (DEBUG) Log.d(TAG, "Cleared " + CONTEXT_URIS[i].toString());
 
                     //Clear remotely
-                    if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
+                    if (Aware.getSetting(context.getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                         Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
                         webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_CLEAR_TABLE);
                         webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
@@ -588,8 +542,6 @@ public class Applications extends AccessibilityService {
             }
         }
     }
-
-    private final Applications_Broadcaster awareMonitor = new Applications_Broadcaster();
 
     /**
      * Applications background service

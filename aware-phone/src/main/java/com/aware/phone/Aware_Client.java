@@ -19,6 +19,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
@@ -26,6 +27,7 @@ import android.preference.Preference;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.provider.Settings;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v7.widget.Toolbar;
@@ -100,6 +102,22 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_FINE_LOCATION);
         REQUIRED_PERMISSIONS.add(Manifest.permission.READ_PHONE_STATE);
+
+        boolean PERMISSIONS_OK = true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            for (String p : REQUIRED_PERMISSIONS) {
+                if (PermissionChecker.checkSelfPermission(this, p) != PermissionChecker.PERMISSION_GRANTED) {
+                    PERMISSIONS_OK = false;
+                    break;
+                }
+            }
+        }
+        if (PERMISSIONS_OK) {
+            if (!Aware.is_running(getApplicationContext(), Aware.class)) {
+                Intent aware = new Intent(getApplicationContext(), Aware.class);
+                startService(aware);
+            }
+        }
     }
 
     @Override
@@ -376,6 +394,9 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                     findPreference(Aware_Preferences.WEBSERVICE_REMOVE_DATA),
                     findPreference(Aware_Preferences.DEBUG_DB_SLOW)
             );
+
+            //Ask the user to add AWARE to the battery optimization ignored settings
+            Aware.isBatteryOptimizationIgnored(getApplicationContext());
         }
     }
 

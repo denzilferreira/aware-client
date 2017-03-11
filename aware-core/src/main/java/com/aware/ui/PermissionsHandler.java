@@ -42,11 +42,6 @@ public class PermissionsHandler extends Activity {
     public static final String ACTION_AWARE_PERMISSIONS_CHECK = "ACTION_AWARE_PERMISSIONS_CHECK";
 
     /**
-     * Used on redirect service to report the accept/reject of permissions. boolean TRUE if all is OK.
-     */
-    public static final String EXTRA_PERMISSIONS_STATUS = "extra_permissions_status";
-
-    /**
      * The request code for the permissions
      */
     public static final int RC_PERMISSIONS = 112;
@@ -106,7 +101,6 @@ public class PermissionsHandler extends Activity {
                     startActivity(redirect_activity);
                 }
                 if (redirect_service != null) {
-                    redirect_service.putExtra(EXTRA_PERMISSIONS_STATUS, false);
                     startService(redirect_service);
                 }
                 finish();
@@ -114,16 +108,6 @@ public class PermissionsHandler extends Activity {
                 if (redirect_activity == null) {
                     Intent activity = new Intent();
                     setResult(Activity.RESULT_OK, activity);
-                }
-                if (redirect_activity != null){
-                    Log.d(TAG, "Redirecting to Activity: " + redirect_activity.getComponent().toString());
-                    setResult(Activity.RESULT_OK, redirect_activity);
-                    startActivity(redirect_activity);
-                }
-                if (redirect_service != null) {
-                    Log.d(TAG, "Redirecting to Service: " + redirect_service.getComponent().toString());
-                    redirect_service.putExtra(EXTRA_PERMISSIONS_STATUS, true);
-                    startService(redirect_service);
                 }
                 finish();
             }
@@ -135,6 +119,16 @@ public class PermissionsHandler extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (redirect_service != null) {
+            Log.d(TAG, "Redirecting to Service: " + redirect_service.getComponent().toString());
+            redirect_service.setAction(ACTION_AWARE_PERMISSIONS_CHECK);
+            startService(redirect_service);
+        }
+        if (redirect_activity != null){
+            Log.d(TAG, "Redirecting to Activity: " + redirect_activity.getComponent().toString());
+            setResult(Activity.RESULT_OK, redirect_activity);
+            startActivity(redirect_activity);
+        }
         Log.d("Permissions", "Handled permissions for " + getPackageName());
     }
 }

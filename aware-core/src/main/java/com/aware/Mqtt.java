@@ -23,10 +23,13 @@ import com.aware.providers.Mqtt_Provider.Mqtt_Messages;
 import com.aware.providers.Mqtt_Provider.Mqtt_Subscriptions;
 import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
+import com.aware.utils.DatabaseHelper;
 import com.aware.utils.SSLUtils;
 import com.aware.utils.Scheduler;
+import com.koushikdutta.async.DataEmitterBase;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -35,6 +38,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -144,12 +148,16 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
      */
     public static final String EXTRA_MESSAGE = "message";
 
-    private static MqttClient MQTT_CLIENT = null;
+    private static MqttAsyncClient MQTT_CLIENT = null;
 
     @Override
     public void connectionLost(Throwable throwable) {
-        if (Aware.DEBUG)
-            Log.d(TAG, "MQTT: Connection lost to server... reconnecting in 5 minutes...");
+        if (Aware.DEBUG) Log.d(TAG, "MQTT: Connection lost to server... reconnecting...");
+        try {
+            MQTT_CLIENT.reconnect();
+        } catch (MqttException e) {
+            if (Aware.DEBUG) Log.d(TAG, "MQTT: Connection failed... new attempt in 5 minutes...");
+        }
     }
 
     @Override
@@ -320,13 +328,11 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         filter.addAction(Mqtt.ACTION_AWARE_MQTT_TOPIC_UNSUBSCRIBE);
         filter.addAction(Mqtt.ACTION_AWARE_MQTT_MSG_PUBLISH);
         registerReceiver(mqttReceiver, filter);
-
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
-
         if (PERMISSIONS_OK) {
             DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
 
@@ -336,9 +342,9 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                 stopSelf();
             } else {
                 Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, true);
+
                 if (MQTT_CLIENT != null && MQTT_CLIENT.isConnected()) {
-                    if (DEBUG)
-                        Log.d(TAG, "Connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
+                    if (DEBUG) Log.d(TAG, "Connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
                 } else if (MQTT_CLIENT == null) {
                     initializeMQTT();
                 }
@@ -369,7 +375,6 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
     }
 
     private void initializeMQTT() {
-
         String server = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_SERVER);
         if (server == null || server.length() == 0) return;
 
@@ -392,7 +397,6 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
         if (MQTT_MESSAGES_PERSISTENCE == null)
             MQTT_MESSAGES_PERSISTENCE = new MemoryPersistence();
-
 
         MqttConnectOptions MQTT_OPTIONS = new MqttConnectOptions();
         MQTT_OPTIONS.setCleanSession(false); //resume pending messages from server
@@ -417,7 +421,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         }
 
         try {
-            MQTT_CLIENT = new MqttClient(
+            MQTT_CLIENT = new MqttAsyncClient(
                     MQTT_URL,
                     String.valueOf(Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).hashCode()),
                     MQTT_MESSAGES_PERSISTENCE);
@@ -425,7 +429,6 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
             MQTT_CLIENT.setCallback(this);
 
             new MQTTAsync().execute(MQTT_OPTIONS);
-            if (Aware.DEBUG) Log.d(TAG, "MQTT service connecting: " + MQTT_URL);
 
         } catch (MqttException | IllegalArgumentException e) {
             if (Aware.DEBUG) Log.e(TAG, "Failed: " + e.getMessage());
@@ -439,6 +442,13 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
      */
     private class MQTTAsync extends AsyncTask<MqttConnectOptions, Void, Boolean> {
         private MqttConnectOptions options;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            if (Aware.DEBUG) Log.d(TAG, "MQTT service connecting...");
+        }
 
         @Override
         protected Boolean doInBackground(MqttConnectOptions... params) {
@@ -509,6 +519,10 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                 selfSubscribe = new Intent(ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);
                 selfSubscribe.putExtra(EXTRA_TOPIC, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID) + "/#");
                 sendBroadcast(selfSubscribe);
+
+                if (MQTT_CLIENT != null && MQTT_CLIENT.isConnected()) {
+                    Log.d(TAG, "Connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
+                }
 
             } else {
                 if (Aware.DEBUG)
