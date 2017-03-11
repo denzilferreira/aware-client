@@ -11,6 +11,7 @@ android {
         versionName version_readable
         targetSdkVersion 25
         minSdkVersion 10 //Android 2.3.3
+        multiDexEnabled true
     }
 
     signingConfigs {
@@ -67,6 +68,7 @@ dependencies {
     compile "com.android.support:design:$support_libs"
     compile "com.android.support:gridlayout-v7:$support_libs"
     compile "me.dm7.barcodescanner:zbar:1.8.4"
+    compile 'com.android.support:multidex:1.0.1'
 
     compile "com.github.denzilferreira:com.aware.plugin.ambient_noise:$aware_libs"
     compile "com.github.denzilferreira:com.aware.plugin.contacts_list:$aware_libs"
