@@ -143,7 +143,7 @@ public class Aware_Sensor extends Service {
      *
      * @author denzil
      */
-    public static class ContextBroadcaster extends BroadcastReceiver {
+    public class ContextBroadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(Aware.ACTION_AWARE_CURRENT_CONTEXT)) {
@@ -193,7 +193,7 @@ public class Aware_Sensor extends Service {
         }
     }
 
-    private static ContextBroadcaster contextBroadcaster = new ContextBroadcaster();
+    private ContextBroadcaster contextBroadcaster = new ContextBroadcaster();
 
     @Override
     public IBinder onBind(Intent intent) {

@@ -121,8 +121,6 @@ public class Aware_Plugin extends Service {
 
             PERMISSIONS_OK = true;
 
-            Aware.startAWARE(getApplicationContext());
-
             if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                 SSLManager.handleUrl(getApplicationContext(), Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER), true);
             }
@@ -163,7 +161,7 @@ public class Aware_Plugin extends Service {
      *
      * @author denzil
      */
-    public static class ContextBroadcaster extends BroadcastReceiver {
+    public class ContextBroadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(Aware.ACTION_AWARE_CURRENT_CONTEXT)) {
@@ -212,7 +210,7 @@ public class Aware_Plugin extends Service {
         }
     }
 
-    private static ContextBroadcaster contextBroadcaster = new ContextBroadcaster();
+    private ContextBroadcaster contextBroadcaster = new ContextBroadcaster();
 
     @Override
     public IBinder onBind(Intent arg0) {
