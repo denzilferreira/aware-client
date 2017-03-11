@@ -38,28 +38,28 @@ if (System.getenv("storeFile") != null && System.getenv("storePassword") != null
     android.buildTypes.release.signingConfig = null
 }
 
-task generateSourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier 'sources'
-}
-
-task generateJavadocs(type: Javadoc) {
-    failOnError false
-    source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-}
-
-task generateJavadocsJar(type: Jar) {
-    from generateJavadocs.destinationDir
-    classifier 'javadoc'
-}
-
-generateJavadocsJar.dependsOn generateJavadocs
-
-artifacts {
-    archives generateJavadocsJar
-    archives generateSourcesJar
-}
+//task generateSourcesJar(type: Jar) {
+//    from android.sourceSets.main.java.srcDirs
+//    classifier 'sources'
+//}
+//
+//task generateJavadocs(type: Javadoc) {
+//    failOnError false
+//    source = android.sourceSets.main.java.srcDirs
+//    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+//}
+//
+//task generateJavadocsJar(type: Jar) {
+//    from generateJavadocs.destinationDir
+//    classifier 'javadoc'
+//}
+//
+//generateJavadocsJar.dependsOn generateJavadocs
+//
+//artifacts {
+//    archives generateJavadocsJar
+//    archives generateSourcesJar
+//}
 
 dependencies {
     compile "org.eclipse.paho:org.eclipse.paho.client.mqttv3:$mqtt_libs"
