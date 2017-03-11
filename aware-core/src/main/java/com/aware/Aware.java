@@ -2049,61 +2049,71 @@ public class Aware extends Service {
     public static class AwareBoot extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            try {
-                ContentValues rowData = new ContentValues();
-                //Force updated phone battery info
-                Intent batt = context.getApplicationContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-                Bundle extras = batt.getExtras();
-                if (extras != null) {
-                    rowData.put(Battery_Provider.Battery_Data.TIMESTAMP, System.currentTimeMillis());
-                    rowData.put(Battery_Provider.Battery_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                    rowData.put(Battery_Provider.Battery_Data.LEVEL, extras.getInt(BatteryManager.EXTRA_LEVEL));
-                    rowData.put(Battery_Provider.Battery_Data.SCALE, extras.getInt(BatteryManager.EXTRA_SCALE));
-                    rowData.put(Battery_Provider.Battery_Data.VOLTAGE, extras.getInt(BatteryManager.EXTRA_VOLTAGE));
-                    rowData.put(Battery_Provider.Battery_Data.TEMPERATURE, extras.getInt(BatteryManager.EXTRA_TEMPERATURE) / 10);
-                    rowData.put(Battery_Provider.Battery_Data.PLUG_ADAPTOR, extras.getInt(BatteryManager.EXTRA_PLUGGED));
-                    rowData.put(Battery_Provider.Battery_Data.HEALTH, extras.getInt(BatteryManager.EXTRA_HEALTH));
-                    rowData.put(Battery_Provider.Battery_Data.TECHNOLOGY, extras.getString(BatteryManager.EXTRA_TECHNOLOGY));
-                }
+            boolean logging = false;
+            if ( (context.getPackageName().equalsIgnoreCase("com.aware.phone") || context.getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+                logging = true;
+            }
 
-                //Remove charging reminder if previously visible
-                if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BATTERY_CHANGED) && Aware.getSetting(context, Aware_Preferences.REMIND_TO_CHARGE).equalsIgnoreCase("true")) {
-                    if (extras.getInt(BatteryManager.EXTRA_STATUS) == BatteryManager.BATTERY_STATUS_CHARGING) {
-                        checkBatteryLeft(context, true);
+            if (logging) {
+                try {
+                    //Retrieve phone battery info
+                    ContentValues rowData = new ContentValues();
+                    Intent batt = context.getApplicationContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+                    Bundle extras = batt.getExtras();
+                    if (extras != null) {
+                        rowData.put(Battery_Provider.Battery_Data.TIMESTAMP, System.currentTimeMillis());
+                        rowData.put(Battery_Provider.Battery_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
+                        rowData.put(Battery_Provider.Battery_Data.LEVEL, extras.getInt(BatteryManager.EXTRA_LEVEL));
+                        rowData.put(Battery_Provider.Battery_Data.SCALE, extras.getInt(BatteryManager.EXTRA_SCALE));
+                        rowData.put(Battery_Provider.Battery_Data.VOLTAGE, extras.getInt(BatteryManager.EXTRA_VOLTAGE));
+                        rowData.put(Battery_Provider.Battery_Data.TEMPERATURE, extras.getInt(BatteryManager.EXTRA_TEMPERATURE) / 10);
+                        rowData.put(Battery_Provider.Battery_Data.PLUG_ADAPTOR, extras.getInt(BatteryManager.EXTRA_PLUGGED));
+                        rowData.put(Battery_Provider.Battery_Data.HEALTH, extras.getInt(BatteryManager.EXTRA_HEALTH));
+                        rowData.put(Battery_Provider.Battery_Data.TECHNOLOGY, extras.getString(BatteryManager.EXTRA_TECHNOLOGY));
                     }
-                }
-                if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
 
-                    Applications.isAccessibilityServiceActive(context); //Check if accessibility service is still active
-
-                    Aware.debug(context, "phone: on");
-                    rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_BOOTED);
-
-                    Intent aware = new Intent(context, Aware.class);
-                    context.startService(aware);
-                }
-                if (intent.getAction().equalsIgnoreCase(Intent.ACTION_SHUTDOWN)) {
-                    Aware.debug(context, "phone: off");
-                    rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_SHUTDOWN);
-                }
-                if (intent.getAction().equalsIgnoreCase(Intent.ACTION_REBOOT)) {
-                    Aware.debug(context, "phone: reboot");
-                    rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_REBOOT);
-                }
-                if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)
-                        || intent.getAction().equalsIgnoreCase(Intent.ACTION_SHUTDOWN)
-                        || intent.getAction().equalsIgnoreCase(Intent.ACTION_REBOOT)) {
-                    try {
-                        if (Aware.DEBUG) Log.d(TAG, "Battery: " + rowData.toString());
-                        context.getContentResolver().insert(Battery_Provider.Battery_Data.CONTENT_URI, rowData);
-                    } catch (SQLiteException e) {
-                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-                    } catch (SQLException e) {
-                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                    //Remove charging reminder if previously visible
+                    if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BATTERY_CHANGED) && Aware.getSetting(context, Aware_Preferences.REMIND_TO_CHARGE).equalsIgnoreCase("true")) {
+                        if (extras.getInt(BatteryManager.EXTRA_STATUS) == BatteryManager.BATTERY_STATUS_CHARGING) {
+                            checkBatteryLeft(context, true);
+                        }
                     }
+                    if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
+                        Aware.debug(context, "phone: on");
+                        rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_BOOTED);
+
+                        Intent aware = new Intent(context, Aware.class);
+                        context.startService(aware);
+                    }
+                    if (intent.getAction().equalsIgnoreCase(Intent.ACTION_SHUTDOWN)) {
+                        Aware.debug(context, "phone: off");
+                        rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_SHUTDOWN);
+                    }
+                    if (intent.getAction().equalsIgnoreCase(Intent.ACTION_REBOOT)) {
+                        Aware.debug(context, "phone: reboot");
+                        rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_REBOOT);
+                    }
+                    if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)
+                            || intent.getAction().equalsIgnoreCase(Intent.ACTION_SHUTDOWN)
+                            || intent.getAction().equalsIgnoreCase(Intent.ACTION_REBOOT)) {
+                        try {
+                            if (Aware.DEBUG) Log.d(TAG, "Battery: " + rowData.toString());
+                            context.getContentResolver().insert(Battery_Provider.Battery_Data.CONTENT_URI, rowData);
+                        } catch (SQLiteException e) {
+                            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                        } catch (SQLException e) {
+                            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                        }
+                    }
+                } catch (RuntimeException e) {
+                    //Gingerbread does not allow these intents. Disregard for 2.3.3
                 }
-            } catch (RuntimeException e) {
-                //Gingerbread does not allow these intents. Disregard for 2.3.3
+            }
+
+            //Guarantees that all plugins also come back up again on reboot
+            if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
+                Intent aware = new Intent(context, Aware.class);
+                context.startService(aware);
             }
         }
     }
