@@ -273,17 +273,10 @@ public class Aware extends Service {
      * @return
      */
     public static boolean isBatteryOptimizationIgnored(Context context) {
-        boolean is_ignored;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+        boolean is_ignored = true;
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
             PowerManager pm = (PowerManager) context.getApplicationContext().getSystemService(Context.POWER_SERVICE);
-            if (!pm.isIgnoringBatteryOptimizations(context.getPackageName())) {
-                is_ignored = false;
-            } else {
-                is_ignored = true;
-            }
-        } else {
-            is_ignored = true;
+            is_ignored = (!pm.isIgnoringBatteryOptimizations(context.getPackageName()));
         }
 
         if (!is_ignored) {
@@ -300,6 +293,7 @@ public class Aware extends Service {
 
             PendingIntent clickIntent = PendingIntent.getActivity(context, 0, batteryIntent, PendingIntent.FLAG_UPDATE_CURRENT);
             mBuilder.setContentIntent(clickIntent);
+
             NotificationManager notManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             notManager.notify(Aware.AWARE_BATTERY_OPTIMIZATION_ID, mBuilder.build());
         }
