@@ -396,7 +396,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
             );
 
             //Ask the user to add AWARE to the battery optimization ignored settings
-            Aware.isBatteryOptimizationIgnored(getApplicationContext());
+            Aware.isBatteryOptimizationIgnored(getApplicationContext(), getPackageName());
         }
     }
 

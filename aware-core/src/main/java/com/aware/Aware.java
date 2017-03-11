@@ -272,11 +272,11 @@ public class Aware extends Service {
      * @param context
      * @return
      */
-    public static boolean isBatteryOptimizationIgnored(Context context) {
+    public static boolean isBatteryOptimizationIgnored(Context context, String package_name) {
         boolean is_ignored = true;
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
             PowerManager pm = (PowerManager) context.getApplicationContext().getSystemService(Context.POWER_SERVICE);
-            is_ignored = (!pm.isIgnoringBatteryOptimizations(context.getPackageName()));
+            is_ignored = (!pm.isIgnoringBatteryOptimizations(package_name));
         }
 
         if (!is_ignored) {
@@ -2176,8 +2176,10 @@ public class Aware extends Service {
             context.startService(aware);
         }
 
-        //Always start scheduler
-        startScheduler(context);
+        if (context.getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+            if (!is_running(context, Scheduler.class)) startScheduler(context);
+        } else
+            startScheduler(context);
 
         if (Aware.getSetting(context, Aware_Preferences.STATUS_SIGNIFICANT_MOTION).equals("true")) {
             if (!is_running(context, SignificantMotion.class)) startSignificant(context);
