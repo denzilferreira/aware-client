@@ -81,12 +81,12 @@ public class Plugins_Manager extends Aware_Activity {
 
         PackageManager pkgManager = getApplicationContext().getPackageManager();
         try {
-            PackageInfo bundle = pkgManager.getPackageInfo(getPackageName(), PackageManager.GET_META_DATA);
+            PackageInfo bundle = pkgManager.getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA);
+            if (bundle.services == null) return;
+
             for(ServiceInfo serviceInfo : bundle.services) {
                 if (serviceInfo.name.contains(".Plugin")) {
-
                     String package_name = serviceInfo.name.subSequence(0, serviceInfo.name.indexOf(".Plugin")).toString();
-
                     Cursor cached = getContentResolver().query(Aware_Provider.Aware_Plugins.CONTENT_URI, null, Aware_Provider.Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
                     if (cached == null || !cached.moveToFirst()) {
                         ContentValues rowData = new ContentValues();
