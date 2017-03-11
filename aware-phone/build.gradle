@@ -45,7 +45,8 @@ repositories {
 
 configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-//    exclude group: "com.awareframework", module: "aware-core"
+    exclude group: "com.awareframework", module: "aware-core"
+    exclude group: "com.awareframework", module: "aware-phone"
 }
 
 if (System.getenv("storeFile") != null && System.getenv("storePassword") != null && System.getenv("keyAlias") != null && System.getenv("keyPassword") != null) {
