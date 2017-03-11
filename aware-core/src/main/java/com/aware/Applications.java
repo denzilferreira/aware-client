@@ -354,7 +354,7 @@ public class Applications extends AccessibilityService {
         //Retro-compatibility with Gingerbread
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN) {
             AccessibilityServiceInfo info = new AccessibilityServiceInfo();
-            info.eventTypes = AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED | AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED | AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED;
+            info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
             info.feedbackType = AccessibilityServiceInfo.FEEDBACK_ALL_MASK;
             info.notificationTimeout = 50;
             info.packageNames = null;
