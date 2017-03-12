@@ -657,14 +657,20 @@ public class Aware extends Service {
                 context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
             }
 
+            ComponentName componentName;
             if (packageInfo.versionName.equals("bundled")) {
-                Intent bundled = new Intent();
-                bundled.setComponent(new ComponentName(context.getPackageName(), package_name + ".Plugin"));
-                context.stopService(bundled);
+                componentName = new ComponentName(context.getPackageName(), package_name + ".Plugin");
+                if (Aware.DEBUG) Log.d(Aware.TAG, "Stopping bundled: " + componentName.toString());
             } else {
-                Intent external = new Intent();
-                external.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
-                context.stopService(external);
+                componentName = new ComponentName(package_name, package_name + ".Plugin");
+                if (Aware.DEBUG) Log.d(Aware.TAG, "Stopping external: " + componentName.toString());
+            }
+
+            if (activePlugins.containsKey(package_name)) {
+                Intent pluginIntent = new Intent();
+                pluginIntent.setComponent(componentName);
+                context.stopService(pluginIntent);
+                activePlugins.remove(package_name);
             }
         }
     }
@@ -700,42 +706,8 @@ public class Aware extends Service {
                 context.startService(pluginIntent);
 
                 activePlugins.put(package_name, pluginIntent);
-
-            } else {
-                Aware.debug(context, "active: " + componentName.toString() + " package: " + context.getPackageName());
             }
         }
-
-
-//            if (packageInfo.versionName.equals("bundled")) {
-//                try {
-//                    Class<?> pluginObj = Class.forName(package_name + ".Plugin");
-//                    if (is_running(context, pluginObj)) {
-//                        if (Aware.DEBUG) Log.d(Aware.TAG, "Active: " + pluginObj.getName() + " package: " + context.getPackageName());
-//                        Aware.debug(context, "active: " + pluginObj.getName() + " package: " + context.getPackageName());
-//                    } else {
-//                        if (Aware.DEBUG) Log.d(Aware.TAG, "Initializing bundled plugin: " + package_name + " of " + context.getPackageName());
-//                        Intent bundled = new Intent();
-//                        bundled.setComponent(new ComponentName(context.getPackageName(), package_name + ".Plugin"));
-//                        context.startService(bundled);
-//                    }
-//                } catch (ClassNotFoundException e) {}
-//            } else {
-//                try {
-//                    String pluginPath = package_name + ".Plugin";
-//                    Context reflectedContext = context.createPackageContext(package_name, Context.CONTEXT_INCLUDE_CODE + Context.CONTEXT_IGNORE_SECURITY);
-//                    Class<?> pluginObj = reflectedContext.getClassLoader().loadClass(pluginPath);
-//                    if (is_running(context, pluginObj)) {
-//                        if (Aware.DEBUG) Log.d(Aware.TAG, "Active: " + pluginObj.getName() + " package: " + package_name);
-//                        Aware.debug(context, "active: " + pluginObj.getName() + " package: " + package_name);
-//                    } else {
-//                        if (Aware.DEBUG) Log.d(Aware.TAG, "Initializing plugin: " + package_name);
-//                        Intent external = new Intent();
-//                        external.setComponent(new ComponentName(package_name, package_name + ".Plugin"));
-//                        context.startService(external);
-//                    }
-//                } catch (ClassNotFoundException | NameNotFoundException e) {}
-//            }
     }
 
 
