@@ -215,36 +215,20 @@ public class Telephony_Provider extends ContentProvider {
                     + CDMA_Data.EVDO_ECIO + " integer default -1,"
                     + CDMA_Data.EVDO_SNR + " integer default -1"};
 
-    private static UriMatcher sUriMatcher = null;
-    private static HashMap<String, String> telephonyMap = null;
-    private static HashMap<String, String> gsmMap = null;
-    private static HashMap<String, String> gsmNeighborsMap = null;
-    private static HashMap<String, String> cdmaMap = null;
-    private static DatabaseHelper databaseHelper = null;
-    private static SQLiteDatabase database = null;
+    private UriMatcher sUriMatcher = null;
+    private HashMap<String, String> telephonyMap = null;
+    private HashMap<String, String> gsmMap = null;
+    private HashMap<String, String> gsmNeighborsMap = null;
+    private HashMap<String, String> cdmaMap = null;
 
-    private boolean initializeDB() {
-        if (databaseHelper == null) {
-            databaseHelper = new DatabaseHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
-        }
-        if (databaseHelper != null && (database == null || !database.isOpen())) {
-            database = databaseHelper.getWritableDatabase();
-        }
-        return (database != null && databaseHelper != null);
-    }
+    private DatabaseHelper dbHelper;
+    private static SQLiteDatabase database;
 
-    /**
-     * Recreates the ContentProvider
-     */
-    public static void resetDB(Context c) {
-        Log.d("AWARE", "Resetting " + DATABASE_NAME + "...");
-
-        File db = new File(DATABASE_NAME);
-        db.delete();
-        databaseHelper = new DatabaseHelper(c, DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
-        if (databaseHelper != null) {
-            database = databaseHelper.getWritableDatabase();
-        }
+    private void initialiseDatabase() {
+        if (dbHelper == null)
+            dbHelper = new DatabaseHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
+        if (database == null)
+            database = dbHelper.getWritableDatabase();
     }
 
     /**
@@ -252,45 +236,36 @@ public class Telephony_Provider extends ContentProvider {
      */
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        if (!initializeDB()) {
-            Log.w(AUTHORITY, "Database unavailable...");
-            return 0;
-        }
+
+        initialiseDatabase();
+
+        database.beginTransaction();
 
         int count = 0;
         switch (sUriMatcher.match(uri)) {
             case TELEPHONY:
-                database.beginTransaction();
                 count = database.delete(DATABASE_TABLES[0], selection,
                         selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
                 break;
             case GSM:
-                database.beginTransaction();
                 count = database.delete(DATABASE_TABLES[1], selection,
                         selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
                 break;
             case NEIGHBOR:
-                database.beginTransaction();
                 count = database.delete(DATABASE_TABLES[2], selection,
                         selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
                 break;
             case CDMA:
-                database.beginTransaction();
                 count = database.delete(DATABASE_TABLES[3], selection,
                         selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
                 break;
             default:
-
+                database.endTransaction();
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
+
+        database.setTransactionSuccessful();
+        database.endTransaction();
 
         getContext().getContentResolver().notifyChange(uri, null);
         return count;
@@ -325,17 +300,15 @@ public class Telephony_Provider extends ContentProvider {
      */
     @Override
     public Uri insert(Uri uri, ContentValues initialValues) {
-        if (!initializeDB()) {
-            Log.w(AUTHORITY, "Database unavailable...");
-            return null;
-        }
 
-        ContentValues values = (initialValues != null) ? new ContentValues(
-                initialValues) : new ContentValues();
+        initialiseDatabase();
+
+        ContentValues values = (initialValues != null) ? new ContentValues(initialValues) : new ContentValues();
+
+        database.beginTransaction();
 
         switch (sUriMatcher.match(uri)) {
             case TELEPHONY:
-                database.beginTransaction();
                 long tele_id = database.insertWithOnConflict(DATABASE_TABLES[0],
                         Telephony_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
                 database.setTransactionSuccessful();
@@ -346,9 +319,9 @@ public class Telephony_Provider extends ContentProvider {
                     getContext().getContentResolver().notifyChange(tele_uri, null);
                     return tele_uri;
                 }
+                database.endTransaction();
                 throw new SQLException("Failed to insert row into " + uri);
             case GSM:
-                database.beginTransaction();
                 long gsm_id = database.insertWithOnConflict(DATABASE_TABLES[1],
                         GSM_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
                 database.setTransactionSuccessful();
@@ -359,9 +332,9 @@ public class Telephony_Provider extends ContentProvider {
                     getContext().getContentResolver().notifyChange(gsm_uri, null);
                     return gsm_uri;
                 }
+                database.endTransaction();
                 throw new SQLException("Failed to insert row into " + uri);
             case NEIGHBOR:
-                database.beginTransaction();
                 long neighbor_id = database.insertWithOnConflict(DATABASE_TABLES[2],
                         GSM_Neighbors_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
                 database.setTransactionSuccessful();
@@ -373,9 +346,9 @@ public class Telephony_Provider extends ContentProvider {
                             null);
                     return neighbor_uri;
                 }
+                database.endTransaction();
                 throw new SQLException("Failed to insert row into " + uri);
             case CDMA:
-                database.beginTransaction();
                 long cdma_id = database.insertWithOnConflict(DATABASE_TABLES[3],
                         CDMA_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
                 database.setTransactionSuccessful();
@@ -386,9 +359,10 @@ public class Telephony_Provider extends ContentProvider {
                     getContext().getContentResolver().notifyChange(cdma_uri, null);
                     return cdma_uri;
                 }
+                database.endTransaction();
                 throw new SQLException("Failed to insert row into " + uri);
             default:
-
+                database.endTransaction();
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
     }
@@ -496,10 +470,8 @@ public class Telephony_Provider extends ContentProvider {
     @Override
     public Cursor query(Uri uri, String[] projection, String selection,
                         String[] selectionArgs, String sortOrder) {
-        if (!initializeDB()) {
-            Log.w(AUTHORITY, "Database unavailable...");
-            return null;
-        }
+
+        initialiseDatabase();
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         switch (sUriMatcher.match(uri)) {
@@ -542,44 +514,36 @@ public class Telephony_Provider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection,
                       String[] selectionArgs) {
-        if (!initializeDB()) {
-            Log.w(AUTHORITY, "Database unavailable...");
-            return 0;
-        }
+
+        initialiseDatabase();
+
+        database.beginTransaction();
+
         int count = 0;
         switch (sUriMatcher.match(uri)) {
             case TELEPHONY:
-                database.beginTransaction();
                 count = database.update(DATABASE_TABLES[0], values, selection,
                         selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
                 break;
             case GSM:
-                database.beginTransaction();
                 count = database.update(DATABASE_TABLES[1], values, selection,
                         selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
                 break;
             case NEIGHBOR:
-                database.beginTransaction();
                 count = database.update(DATABASE_TABLES[2], values, selection,
                         selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
                 break;
             case CDMA:
-                database.beginTransaction();
                 count = database.update(DATABASE_TABLES[3], values, selection,
                         selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
                 break;
             default:
-
+                database.endTransaction();
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
+
+        database.setTransactionSuccessful();
+        database.endTransaction();
 
         getContext().getContentResolver().notifyChange(uri, null);
         return count;

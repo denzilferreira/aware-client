@@ -8,10 +8,10 @@
         android:id="@+id/button_ESMNotification"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Start ESM queue" />
+        android:text="ESM TESTS" />
 
     <Button
-        android:text="Test timer"
+        android:text="Scheduler tests"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/btn_test_timer" />

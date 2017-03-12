@@ -39,6 +39,7 @@ public class ESM_Question extends DialogFragment {
     public static final String esm_expiration_threshold = "esm_expiration_threshold";
     public static final String esm_notification_timeout = "esm_notification_timeout";
     public static final String esm_notification_retry = "esm_notification_retry";
+    public static final String esm_replace_queue = "esm_replace_queue";
     public static final String esm_trigger = "esm_trigger";
     public static final String esm_flows = "esm_flows";
     public static final String flow_user_answer = "user_answer";
@@ -140,15 +141,11 @@ public class ESM_Question extends DialogFragment {
         return this.esm.getInt(esm_notification_retry);
     }
 
-    /**
-     * How many times we retry the notification once it expires
-     * @param notification_retry
-     * @return
-     * @throws JSONException
-     */
-    public ESM_Question setNotificationRetry(int notification_retry) throws JSONException {
-        this.esm.put(esm_notification_retry, notification_retry);
-        return this;
+    public boolean getReplaceQueue() throws JSONException {
+        if (!this.esm.has(esm_replace_queue)) {
+            this.esm.put(esm_replace_queue, false);
+        }
+        return this.esm.getBoolean(esm_replace_queue);
     }
 
     /**
@@ -172,6 +169,28 @@ public class ESM_Question extends DialogFragment {
      */
     public ESM_Question setNotificationTimeout(int notification_timeout) throws JSONException {
         this.esm.put(esm_notification_timeout, notification_timeout);
+        return this;
+    }
+
+    /**
+     * How many times we retry the notification once it expires
+     * @param notification_retry
+     * @return
+     * @throws JSONException
+     */
+    public ESM_Question setNotificationRetry(int notification_retry) throws JSONException {
+        this.esm.put(esm_notification_retry, notification_retry);
+        return this;
+    }
+
+    /**
+     * Replace a queue that is currently ongoing?
+     * @param replace_queue
+     * @return
+     * @throws JSONException
+     */
+    public ESM_Question setReplaceQueue(boolean replace_queue) throws JSONException {
+        this.esm.put(esm_replace_queue, replace_queue);
         return this;
     }
 
@@ -294,8 +313,8 @@ public class ESM_Question extends DialogFragment {
     /**
      * COMMON CODE TO HANDLE ESM INTERACTIONS
      */
-    public Dialog esm_dialog = null;
-    public ESMExpireMonitor expire_monitor = null;
+    public Dialog esm_dialog;
+    public ESMExpireMonitor expire_monitor;
 
     /**
      * Extended on sub-classes

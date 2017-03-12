@@ -52,12 +52,14 @@ public class Light extends Aware_Sensor implements SensorEventListener {
 
     private static SensorManager mSensorManager;
     private static Sensor mLight;
+
     private static HandlerThread sensorThread = null;
     private static Handler sensorHandler = null;
-    private static PowerManager powerManager = null;
+
     private static PowerManager.WakeLock wakeLock = null;
-//    private static int FIFO_SIZE = 0;
-    private static float LAST_VALUE_0 = 0;
+
+    private static Float LAST_VALUE = null;
+
     private static int FREQUENCY = -1;
     private static double THRESHOLD = 0;
 
@@ -98,13 +100,12 @@ public class Light extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        // Apply threshold.  If change of values is not enough, do nothing.
-        if (Math.abs(event.values[0] - LAST_VALUE_0 ) < THRESHOLD) {
+        if (LAST_VALUE != null && THRESHOLD > 0 && Math.abs(event.values[0] - LAST_VALUE) < THRESHOLD) {
             return;
         }
-        // Update last values with new values for the next round.
-        LAST_VALUE_0 = event.values[0];
-        // Proceed with saving as usual.
+
+        LAST_VALUE = event.values[0];
+
         ContentValues rowData = new ContentValues();
         rowData.put(Light_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
         rowData.put(Light_Data.TIMESTAMP, System.currentTimeMillis());
@@ -190,7 +191,6 @@ public class Light extends Aware_Sensor implements SensorEventListener {
 
             if (Aware.DEBUG) Log.d(TAG, "Light sensor info: " + rowData.toString());
         }
-
         if (sensorInfo != null && !sensorInfo.isClosed()) sensorInfo.close();
     }
 
@@ -199,14 +199,12 @@ public class Light extends Aware_Sensor implements SensorEventListener {
         super.onCreate();
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-
         mLight = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
-//        FIFO_SIZE = mLight.getFifoReservedEventCount();
 
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
 
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
         wakeLock.acquire();
 
@@ -241,17 +239,9 @@ public class Light extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
 
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
-            }
-        }
-
-        if (permissions_ok) {
-
+        if (PERMISSIONS_OK) {
             if (mLight == null) {
                 if (Aware.DEBUG) Log.w(TAG, "This device does not have a light sensor!");
                 Aware.setSetting(this, Aware_Preferences.STATUS_LIGHT, false);
@@ -271,50 +261,25 @@ public class Light extends Aware_Sensor implements SensorEventListener {
 
                 if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT))
                         || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_LIGHT))) {
+
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mLight);
-//                    mSensorManager.registerListener(this, mLight, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT)), FIFO_SIZE, sensorHandler);
-                    mSensorManager.registerListener(this, mLight, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT)), sensorHandler);
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT));
                     THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_LIGHT));
                 }
 
+                mSensorManager.registerListener(this, mLight, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT)), sensorHandler);
+
                 if (Aware.DEBUG) Log.d(TAG, "Light service active: " + FREQUENCY + "ms");
             }
-        } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
         }
 
-        return super.onStartCommand(intent, flags, startId);
-    }
-
-    //Singleton instance of this service
-    private static Light lightSrv = Light.getService();
-
-    /**
-     * Get singleton instance to service
-     *
-     * @return Light obj
-     */
-    public static Light getService() {
-        if (lightSrv == null) lightSrv = new Light();
-        return lightSrv;
-    }
-
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        Light getService() {
-            return Light.getService();
-        }
+        return START_STICKY;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
+        return null;
     }
 }

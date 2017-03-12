@@ -7,6 +7,7 @@ import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteCantOpenDatabaseException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
@@ -26,7 +27,7 @@ import java.util.HashMap;
  */
 public class Aware_Provider extends ContentProvider {
 
-    public static final int DATABASE_VERSION = 17;
+    public static final int DATABASE_VERSION = 18;
 
     /**
      * AWARE framework content authority
@@ -34,16 +35,16 @@ public class Aware_Provider extends ContentProvider {
      */
     public static String AUTHORITY = "com.aware.provider.aware";
 
-    private static final int DEVICE_INFO = 1;
-    private static final int DEVICE_INFO_ID = 2;
-    private static final int SETTING = 3;
-    private static final int SETTING_ID = 4;
-    private static final int PLUGIN = 5;
-    private static final int PLUGIN_ID = 6;
-    private static final int STUDY = 7;
-    private static final int STUDY_ID = 8;
-    private static final int LOG = 9;
-    private static final int LOG_ID = 10;
+    private final int DEVICE_INFO = 1;
+    private final int DEVICE_INFO_ID = 2;
+    private final int SETTING = 3;
+    private final int SETTING_ID = 4;
+    private final int PLUGIN = 5;
+    private final int PLUGIN_ID = 6;
+    private final int STUDY = 7;
+    private final int STUDY_ID = 8;
+    private final int LOG = 9;
+    private final int LOG_ID = 10;
 
     /**
      * Information about the device in which the framework is installed.
@@ -192,6 +193,7 @@ public class Aware_Provider extends ContentProvider {
                     + Aware_Plugins.PLUGIN_AUTHOR + " text default '',"
                     + Aware_Plugins.PLUGIN_ICON + " blob default null,"
                     + Aware_Plugins.PLUGIN_DESCRIPTION + " text default ''",
+
             // Studies
             Aware_Studies.STUDY_ID + " integer primary key autoincrement," +
                     Aware_Studies.STUDY_TIMESTAMP + " real default 0," +
@@ -213,24 +215,21 @@ public class Aware_Provider extends ContentProvider {
                     Aware_Log.LOG_MESSAGE + " text default ''"
     };
 
-    private static UriMatcher sUriMatcher = null;
-    private static HashMap<String, String> deviceMap = null;
-    private static HashMap<String, String> settingsMap = null;
-    private static HashMap<String, String> pluginsMap = null;
-    private static HashMap<String, String> studiesMap = null;
-    private static HashMap<String, String> logMap = null;
+    private UriMatcher sUriMatcher;
+    private HashMap<String, String> deviceMap;
+    private HashMap<String, String> settingsMap;
+    private HashMap<String, String> pluginsMap;
+    private HashMap<String, String> studiesMap;
+    private HashMap<String, String> logMap;
 
-    private static DatabaseHelper databaseHelper = null;
-    private static SQLiteDatabase database = null;
+    private DatabaseHelper dbHelper;
+    private static SQLiteDatabase database;
 
-    private boolean initializeDB() {
-        if (databaseHelper == null) {
-            databaseHelper = new DatabaseHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
-        }
-        if (databaseHelper != null && (database == null || !database.isOpen())) {
-            database = databaseHelper.getWritableDatabase();
-        }
-        return (database != null && databaseHelper != null);
+    private void initialiseDatabase() {
+        if (dbHelper == null)
+            dbHelper = new DatabaseHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
+        if (database == null)
+            database = dbHelper.getWritableDatabase();
     }
 
     /**
@@ -239,52 +238,38 @@ public class Aware_Provider extends ContentProvider {
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
 
-        if (!initializeDB()) {
-            Log.w(Aware.TAG, "Database unavailable...");
-            return 0;
-        }
+        initialiseDatabase();
+        if (database == null) return 0;
 
-        int count = 0;
+        database.beginTransaction();
+
+        int count;
         switch (sUriMatcher.match(uri)) {
             case DEVICE_INFO:
-                database.beginTransaction();
-                count = database.delete(DATABASE_TABLES[0], selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.delete(DATABASE_TABLES[0], selection, selectionArgs);
                 break;
             case SETTING:
-                database.beginTransaction();
-                count = database.delete(DATABASE_TABLES[1], selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.delete(DATABASE_TABLES[1], selection, selectionArgs);
                 break;
             case PLUGIN:
-                database.beginTransaction();
-                count = database.delete(DATABASE_TABLES[2], selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.delete(DATABASE_TABLES[2], selection, selectionArgs);
                 break;
             case STUDY:
-                database.beginTransaction();
-                count = database.delete(DATABASE_TABLES[3], selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.delete(DATABASE_TABLES[3], selection, selectionArgs);
                 break;
             case LOG:
-                database.beginTransaction();
-                count = database.delete(DATABASE_TABLES[4], selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.delete(DATABASE_TABLES[4], selection, selectionArgs);
                 break;
             default:
+                database.endTransaction();
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
+
+        database.setTransactionSuccessful();
+        database.endTransaction();
+
         getContext().getContentResolver().notifyChange(uri, null);
+
         return count;
     }
 
@@ -322,82 +307,73 @@ public class Aware_Provider extends ContentProvider {
     @Override
     public Uri insert(Uri uri, ContentValues initialValues) {
 
-        if (!initializeDB()) {
-            Log.w(Aware.TAG, "Database unavailable...");
-            return null;
-        }
+        initialiseDatabase();
+        if (database == null) throw new SQLException("Failed to read database: " + uri);
 
-        ContentValues values = (initialValues != null) ? new ContentValues(
-                initialValues) : new ContentValues();
+        ContentValues values = (initialValues != null) ? new ContentValues(initialValues) : new ContentValues();
+
+        database.beginTransaction();
 
         switch (sUriMatcher.match(uri)) {
             case DEVICE_INFO:
-                database.beginTransaction();
-                long dev_id = database.insertWithOnConflict(DATABASE_TABLES[0],
-                        Aware_Device.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                long dev_id = database.insertWithOnConflict(DATABASE_TABLES[0], Aware_Device.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
                 if (dev_id > 0) {
                     Uri devUri = ContentUris.withAppendedId(
                             Aware_Device.CONTENT_URI, dev_id);
                     getContext().getContentResolver().notifyChange(devUri, null);
+                    database.setTransactionSuccessful();
+                    database.endTransaction();
                     return devUri;
                 }
+                database.endTransaction();
                 throw new SQLException("Failed to insert row into " + uri);
             case SETTING:
-                database.beginTransaction();
-                long sett_id = database.insertWithOnConflict(DATABASE_TABLES[1],
-                        Aware_Settings.SETTING_KEY, values, SQLiteDatabase.CONFLICT_IGNORE);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                long sett_id = database.insertWithOnConflict(DATABASE_TABLES[1], Aware_Settings.SETTING_KEY, values, SQLiteDatabase.CONFLICT_IGNORE);
                 if (sett_id > 0) {
                     Uri settUri = ContentUris.withAppendedId(
                             Aware_Settings.CONTENT_URI, sett_id);
                     getContext().getContentResolver().notifyChange(settUri, null);
+                    database.setTransactionSuccessful();
+                    database.endTransaction();
                     return settUri;
                 }
+                database.endTransaction();
                 throw new SQLException("Failed to insert row into " + uri);
             case PLUGIN:
-                database.beginTransaction();
-                long plug_id = database.insertWithOnConflict(DATABASE_TABLES[2],
-                        Aware_Plugins.PLUGIN_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                long plug_id = database.insertWithOnConflict(DATABASE_TABLES[2], Aware_Plugins.PLUGIN_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
                 if (plug_id > 0) {
-                    Uri settUri = ContentUris.withAppendedId(
-                            Aware_Plugins.CONTENT_URI, plug_id);
+                    Uri settUri = ContentUris.withAppendedId(Aware_Plugins.CONTENT_URI, plug_id);
                     getContext().getContentResolver().notifyChange(settUri, null);
+                    database.setTransactionSuccessful();
+                    database.endTransaction();
                     return settUri;
                 }
+                database.endTransaction();
                 throw new SQLException("Failed to insert row into " + uri);
             case STUDY:
-                database.beginTransaction();
-                long study_id = database.insertWithOnConflict(DATABASE_TABLES[3],
-                        Aware_Studies.STUDY_DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                long study_id = database.insertWithOnConflict(DATABASE_TABLES[3], Aware_Studies.STUDY_DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
                 if (study_id > 0) {
-                    Uri settUri = ContentUris.withAppendedId(
-                            Aware_Studies.CONTENT_URI, study_id);
+                    Uri settUri = ContentUris.withAppendedId(Aware_Studies.CONTENT_URI, study_id);
                     getContext().getContentResolver().notifyChange(settUri, null);
+                    database.setTransactionSuccessful();
+                    database.endTransaction();
                     return settUri;
                 }
-                throw new SQLException("Failed to insert row into " + uri);
-
-            case LOG:
-                database.beginTransaction();
-                long log_id = database.insertWithOnConflict(DATABASE_TABLES[4],
-                        Aware_Log.LOG_DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
-                database.setTransactionSuccessful();
                 database.endTransaction();
+                throw new SQLException("Failed to insert row into " + uri);
+            case LOG:
+                long log_id = database.insertWithOnConflict(DATABASE_TABLES[4], Aware_Log.LOG_DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
                 if (log_id > 0) {
-                    Uri settUri = ContentUris.withAppendedId(
-                            Aware_Log.CONTENT_URI, log_id);
+                    Uri settUri = ContentUris.withAppendedId(Aware_Log.CONTENT_URI, log_id);
                     getContext().getContentResolver().notifyChange(settUri, null);
+                    database.setTransactionSuccessful();
+                    database.endTransaction();
                     return settUri;
                 }
+                database.endTransaction();
                 throw new SQLException("Failed to insert row into " + uri);
             default:
+                database.endTransaction();
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
     }
@@ -481,13 +457,10 @@ public class Aware_Provider extends ContentProvider {
      * Query entries from the database
      */
     @Override
-    public Cursor query(Uri uri, String[] projection, String selection,
-                        String[] selectionArgs, String sortOrder) {
+    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 
-        if (!initializeDB()) {
-            Log.w(Aware.TAG, "Database unavailable...");
-            return null;
-        }
+        initialiseDatabase();
+        if (database == null) return null;
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         switch (sUriMatcher.match(uri)) {
@@ -515,13 +488,11 @@ public class Aware_Provider extends ContentProvider {
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
         try {
-            Cursor c = qb.query(database, projection, selection, selectionArgs,
-                    null, null, sortOrder);
+            Cursor c = qb.query(database, projection, selection, selectionArgs, null, null, sortOrder);
             c.setNotificationUri(getContext().getContentResolver(), uri);
             return c;
         } catch (IllegalStateException e) {
-            if (Aware.DEBUG)
-                Log.e(Aware.TAG, e.getMessage());
+            if (Aware.DEBUG) Log.e(Aware.TAG, e.getMessage());
             return null;
         }
     }
@@ -530,55 +501,40 @@ public class Aware_Provider extends ContentProvider {
      * Update application on the database
      */
     @Override
-    public int update(Uri uri, ContentValues values, String selection,
-                      String[] selectionArgs) {
+    public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 
-        if (!initializeDB()) {
-            Log.w(Aware.TAG, "Database unavailable...");
-            return 0;
-        }
+        initialiseDatabase();
+        if (database == null) return 0;
 
-        int count = 0;
+        database.beginTransaction();
+
+        int count;
         switch (sUriMatcher.match(uri)) {
             case DEVICE_INFO:
-                database.beginTransaction();
-                count = database.update(DATABASE_TABLES[0], values, selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.update(DATABASE_TABLES[0], values, selection, selectionArgs);
                 break;
             case SETTING:
-                database.beginTransaction();
-                count = database.update(DATABASE_TABLES[1], values, selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.update(DATABASE_TABLES[1], values, selection, selectionArgs);
                 break;
             case PLUGIN:
-                database.beginTransaction();
-                count = database.update(DATABASE_TABLES[2], values, selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.update(DATABASE_TABLES[2], values, selection, selectionArgs);
                 break;
             case STUDY:
-                database.beginTransaction();
-                count = database.update(DATABASE_TABLES[3], values, selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.update(DATABASE_TABLES[3], values, selection, selectionArgs);
                 break;
             case LOG:
-                database.beginTransaction();
-                count = database.update(DATABASE_TABLES[4], values, selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.update(DATABASE_TABLES[4], values, selection, selectionArgs);
                 break;
             default:
+                database.endTransaction();
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
+
+        database.setTransactionSuccessful();
+        database.endTransaction();
+
         getContext().getContentResolver().notifyChange(uri, null);
+
         return count;
     }
 }

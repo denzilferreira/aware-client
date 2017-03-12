@@ -1,30 +1,20 @@
 
 apply plugin: 'com.android.application'
-apply plugin: 'com.jfrog.bintray'
-
-version = version_readable
-group = "com.awareframework"
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion "24.0.3"
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
 
     defaultConfig {
         applicationId "com.aware.phone"
         versionCode version_code
         versionName version_readable
-        targetSdkVersion 24
+        targetSdkVersion 25
         minSdkVersion 10 //Android 2.3.3
     }
 
     signingConfigs {
-        release {
-            //set values in ~/.gradle/gradle.properties to sign with your own keystore and certificate
-            storeFile file(project.hasProperty("KEYSTORE_FILE") ? KEYSTORE_FILE : "/")
-            storePassword project.hasProperty("KEYSTORE_PASSWORD") ? KEYSTORE_PASSWORD : ""
-            keyAlias project.hasProperty("KEY") ? KEY : ""
-            keyPassword project.hasProperty("KEY_PASSWORD") ? KEY_PASSWORD : ""
-        }
+        release
     }
 
     buildTypes {
@@ -40,44 +30,22 @@ android {
     }
 }
 
-bintray {
-    user = project.hasProperty("bintrayUsername") ? bintrayUsername : ""
-    key = project.hasProperty("bintrayKey") ? bintrayKey : ""
-
-    configurations = ['archives']
-
-    publish = true
-
-    pkg {
-        repo = 'com.awareframework'
-        name = 'com.aware.phone'
-        licenses = ['Apache-2.0']
-        websiteUrl = 'http://www.awareframework.com'
-        issueTrackerUrl = 'https://github.com/denzilferreira/aware-client/issues'
-        labels = ['aar','android','framework','aware']
-        publicDownloadNumbers = true
-        vcsUrl = 'https://github.com/denzilferreira/aware-client.git'
-        desc = "AWARE Framework Phone Client"
-        userOrg = user
-
-        githubRepo = "denzilferreira/aware-client"
-        githubReleaseNotesFile = "README.md"
-
-        version {
-            name = "$version_readable"
-            desc = bintray.pkg.desc
-            released = new Date()
-            vcsTag = "$version_readable"
-        }
-    }
+if (System.getenv("storeFile") != null && System.getenv("storePassword") != null && System.getenv("keyAlias") != null && System.getenv("keyPassword") != null) {
+    android.signingConfigs.release.storeFile = file(System.getenv("storeFile"))
+    android.signingConfigs.release.storePassword = System.getenv("storePassword")
+    android.signingConfigs.release.keyAlias = System.getenv("keyAlias")
+    android.signingConfigs.release.keyPassword = System.getenv("keyPassword")
+} else {
+    println("No keystore defined. Unsigned!")
+    android.buildTypes.release.signingConfig = null
 }
 
 dependencies {
     compile project(':aware-core')
-    compile "com.google.android.gms:play-services-vision:$google_libs"
     compile "com.android.support:cardview-v7:$support_libs"
     compile "com.android.support:appcompat-v7:$support_libs"
     compile "com.android.support:design:$support_libs"
+    compile "com.android.support:gridlayout-v7:$support_libs"
     compile "me.dm7.barcodescanner:zbar:1.8.4"
 }
 

@@ -100,6 +100,11 @@ public class Battery extends Aware_Sensor {
     public static final int STATUS_PHONE_REBOOT = -2;
 
     /**
+     * {@link Battery_Data#STATUS} Phone finished booting
+     */
+    public static final int STATUS_PHONE_BOOTED = -3;
+
+    /**
      * BroadcastReceiver for Battery module
      * - ACTION_BATTERY_CHANGED: battery values changed
      * - ACTION_BATTERY_PLUGGED_AC: user is charging via AC
@@ -110,7 +115,6 @@ public class Battery extends Aware_Sensor {
      * - ACTION_BATTERY_LOW: battery is running low (15% by Android OS)
      * - ACTION_SHUTDOWN: phone is about to shut down
      * - ACTION_REBOOT: phone is about to reboot
-     * - ACTION_AWARE_WEBSERVICE: request for webservice remote backup
      *
      * @author df
      */
@@ -135,7 +139,7 @@ public class Battery extends Aware_Sensor {
                 rowData.put(Battery_Data.TECHNOLOGY, extras.getString(BatteryManager.EXTRA_TECHNOLOGY));
 
                 try {
-                    if (Aware.DEBUG) Log.d(TAG, "Battery:" + rowData.toString());
+                    if (Aware.DEBUG) Log.d(TAG, "Battery: " + rowData.toString());
                     context.getContentResolver().insert(Battery_Data.CONTENT_URI, rowData);
                 } catch (SQLiteException e) {
                     if (Aware.DEBUG) Log.d(TAG, e.getMessage());
@@ -353,27 +357,15 @@ public class Battery extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
 
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
-            }
-        }
-
-        if (permissions_ok) {
+        if (PERMISSIONS_OK) {
             DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
             Aware.setSetting(this, Aware_Preferences.STATUS_BATTERY, true);
-        } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
+
+            if (Aware.DEBUG) Log.d(TAG, "Battery service active...");
         }
 
-        if (Aware.DEBUG) Log.d(TAG, "Battery service active...");
-
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 }

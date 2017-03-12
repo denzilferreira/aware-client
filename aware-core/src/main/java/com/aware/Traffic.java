@@ -116,32 +116,9 @@ public class Traffic extends Aware_Sensor {
     private static long wifiRxPackets = 0;
     private static long wifiTxPackets = 0;
 
-    /**
-     * Activity-Service binder
-     */
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        Traffic getService() {
-            return Traffic.getService();
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
-    }
-
-    private static Traffic trafficSrv = Traffic.getService();
-
-    /**
-     * Singleton instance to service
-     *
-     * @return Network
-     */
-    public static Traffic getService() {
-        if (trafficSrv == null) trafficSrv = new Traffic();
-        return trafficSrv;
+        return null;
     }
 
     @Override
@@ -162,19 +139,13 @@ public class Traffic extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
 
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
-            }
-        }
-
-        if (permissions_ok) {
+        if (PERMISSIONS_OK) {
             if (startTotalRxBytes == TrafficStats.UNSUPPORTED) {
                 Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_NETWORK_TRAFFIC, false);
-                if (Aware.DEBUG) Log.d(TAG, "Device doesn't support traffic statistics! Disabling sensor...");
+                if (Aware.DEBUG)
+                    Log.d(TAG, "Device doesn't support traffic statistics! Disabling sensor...");
                 stopSelf();
             } else {
                 DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
@@ -203,14 +174,9 @@ public class Traffic extends Aware_Sensor {
 
                 if (Aware.DEBUG) Log.d(TAG, "Traffic service active...");
             }
-        } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
         }
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override

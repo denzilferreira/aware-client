@@ -9,28 +9,27 @@
             android:key="device_id"
             android:persistent="true"
             android:selectable="false"
-            android:summary="UUID:"
-            android:title="@string/aware_device_id" />
+            android:summary="%s"
+            android:title="AWARE Device ID" />
         <EditTextPreference
+            android:defaultValue=""
             android:key="device_label"
             android:persistent="true"
-            android:summary=""
-            android:defaultValue=""
-            android:title="@string/aware_device_label" />
+            android:summary="%s"
+            android:title="Device label" />
         <EditTextPreference
             android:defaultValue=""
-            android:selectable="false"
             android:key="aware_version"
             android:persistent="true"
-            android:summary="@string/aware_auto_update_version"
-            android:title="@string/aware_version" />
+            android:selectable="false"
+            android:summary="%s"
+            android:title="AWARE version" />
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="aware_donate_usage"
             android:persistent="true"
-            android:title="Ping AWARE server"
             android:summary="Used for diagnostics and analytics (e.g., server demand)"
-            />
+            android:title="Ping AWARE server" />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="sensors"
@@ -38,10 +37,10 @@
         android:title="Sensors">
 
         <PreferenceScreen
+            android:icon="@drawable/ic_action_accelerometer"
             android:key="accelerometer"
-            android:summary="Acceleration, including the force of gravity (m/s^2) *"
-            android:title="Accelerometer"
-            android:icon="@drawable/ic_action_accelerometer">
+            android:summary="Acceleration, including the force of gravity (m/s^2)"
+            android:title="Accelerometer">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -50,12 +49,13 @@
                 android:title="Activate" />
 
             <ListPreference
-                android:dependency="status_accelerometer"
                 android:defaultValue="200000"
+                android:dependency="status_accelerometer"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_accelerometer"
                 android:persistent="true"
+                android:summary="%s"
                 android:title="Sampling rate" />
 
             <EditTextPreference
@@ -64,13 +64,14 @@
                 android:inputType="numberDecimal"
                 android:key="threshold_accelerometer"
                 android:persistent="true"
-                android:title="Threshold for recording changes" />
+                android:summary="e.g., log only if [x,y,z] >= 0.01"
+                android:title="Sensitivity (0 = disabled)" />
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_applications"
             android:key="applications"
             android:summary="Application usage"
-            android:title="Applications"
-            android:icon="@drawable/ic_action_applications">
+            android:title="Applications">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -80,13 +81,13 @@
                 android:title="Application usage" />
 
             <EditTextPreference
-                android:defaultValue="30"
+                android:defaultValue="1"
                 android:dependency="status_applications"
                 android:inputType="number"
                 android:key="frequency_applications"
                 android:persistent="true"
-                android:summary="30 seconds"
-                android:title="Update frequency of background applications" />
+                android:summary="X minute(s)"
+                android:title="Background applications" />
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -94,13 +95,15 @@
                 android:persistent="true"
                 android:summary="Application installs, uninstalls and updates"
                 android:title="Application installations" />
+
             <CheckBoxPreference
                 android:defaultValue="false"
-                android:key="status_keyboard"
                 android:dependency="status_applications"
+                android:key="status_keyboard"
                 android:persistent="true"
                 android:summary="Logs keyboard input (no passwords)"
                 android:title="Keyboard" />
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:dependency="status_applications"
@@ -108,19 +111,20 @@
                 android:persistent="true"
                 android:summary="Notifications sent by any application, without text content"
                 android:title="Application notifications" />
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:dependency="status_applications"
                 android:key="status_crashes"
                 android:persistent="true"
-                android:summary="Captures application crashes (error and ANR), together with a log trace"
+                android:summary="Log crashes (error and ANR), with ADB trace"
                 android:title="Application crashes" />
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_barometer"
             android:key="barometer"
-            android:summary="Atmospheric air pressure (mbar/hPa) *"
-            android:title="Barometer"
-            android:icon="@drawable/ic_action_barometer">
+            android:summary="Atmospheric air pressure (mbar/hPa)"
+            android:title="Barometer">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -129,12 +133,13 @@
                 android:title="Activate" />
 
             <ListPreference
-                android:dependency="status_barometer"
                 android:defaultValue="200000"
+                android:dependency="status_barometer"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_barometer"
                 android:persistent="true"
+                android:summary="%s"
                 android:title="Sampling rate" />
 
             <EditTextPreference
@@ -143,25 +148,27 @@
                 android:inputType="numberDecimal"
                 android:key="threshold_barometer"
                 android:persistent="true"
-                android:title="Threshold for recording changes" />
+                android:summary="e.g., log only if [x,y,z] >= 0.01"
+                android:title="Sensitivity (0 = disabled)" />
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_battery"
             android:key="battery"
             android:summary="Battery and power events"
-            android:title="Battery"
-            android:icon="@drawable/ic_action_battery">
+            android:title="Battery">
 
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_battery"
                 android:persistent="true"
                 android:title="Activate" />
+
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_bluetooth"
             android:key="bluetooth"
             android:summary="Bluetooth sensing"
-            android:title="Bluetooth"
-            android:icon="@drawable/ic_action_bluetooth">
+            android:title="Bluetooth">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -175,14 +182,14 @@
                 android:inputType="number"
                 android:key="frequency_bluetooth"
                 android:persistent="true"
-                android:summary="60 seconds"
+                android:summary="X seconds"
                 android:title="Scanning update frequency" />
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_communication"
             android:key="communication"
             android:summary="Communication usage (calls/messages)"
-            android:title="Communication"
-            android:icon="@drawable/ic_action_communication">
+            android:title="Communication">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -204,10 +211,10 @@
                 android:title="Message events" />
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_esm"
             android:key="esm"
             android:summary="Mobile questionnaires"
-            android:title="Mobile ESM/EMA"
-            android:icon="@drawable/ic_action_esm">
+            android:title="Mobile ESM/EMA">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -218,10 +225,10 @@
 
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_gravity"
             android:key="gravity"
-            android:summary="Force of gravity as a 3D vector with direction and magnitude of gravity (m/s^2) *"
-            android:title="Gravity"
-            android:icon="@drawable/ic_action_gravity">
+            android:summary="Force of gravity as a 3D vector with direction and magnitude of gravity (m/s^2)"
+            android:title="Gravity">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -230,12 +237,13 @@
                 android:title="Active" />
 
             <ListPreference
-                android:dependency="status_gravity"
                 android:defaultValue="200000"
+                android:dependency="status_gravity"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_gravity"
                 android:persistent="true"
+                android:summary="%s"
                 android:title="Sampling rate" />
 
             <EditTextPreference
@@ -244,14 +252,15 @@
                 android:inputType="numberDecimal"
                 android:key="threshold_gravity"
                 android:persistent="true"
-                android:title="Threshold for recording changes" />
+                android:summary="e.g., log only if [x,y,z] >= 0.01"
+                android:title="Sensitivity (0 = disabled)" />
 
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_gyroscope"
             android:key="gyroscope"
-            android:summary="Rate of rotation of device (rad/s) *"
-            android:title="Gyroscope"
-            android:icon="@drawable/ic_action_gyroscope">
+            android:summary="Rate of rotation of device (rad/s)"
+            android:title="Gyroscope">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -260,12 +269,13 @@
                 android:title="Active" />
 
             <ListPreference
-                android:dependency="status_gyroscope"
                 android:defaultValue="200000"
+                android:dependency="status_gyroscope"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_gyroscope"
                 android:persistent="true"
+                android:summary="%s"
                 android:title="Sampling rate" />
 
             <EditTextPreference
@@ -274,14 +284,15 @@
                 android:inputType="numberDecimal"
                 android:key="threshold_gyroscope"
                 android:persistent="true"
-                android:title="Threshold for recording changes" />
+                android:summary="e.g., log only if [x,y,z] >= 0.01"
+                android:title="Sensitivity (0 = disabled)" />
 
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_locations"
             android:key="locations"
             android:summary="User&apos;s estimated location by GPS and network triangulation"
-            android:title="Locations"
-            android:icon="@drawable/ic_action_locations">
+            android:title="Locations">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -293,57 +304,60 @@
             <EditTextPreference
                 android:defaultValue="180"
                 android:dependency="status_location_gps"
+                android:inputType="number"
                 android:key="frequency_location_gps"
                 android:persistent="true"
-                android:inputType="number"
-                android:summary="X in seconds (default = 180). 0 is always on."
+                android:summary="X seconds. (0 = always on)"
                 android:title="GPS update frequency" />
+
             <EditTextPreference
                 android:defaultValue="150"
                 android:dependency="status_location_gps"
                 android:inputType="number"
                 android:key="min_location_gps_accuracy"
                 android:persistent="true"
-                android:summary="Desired GPS accuracy in meters (default = 150). 0 keeps GPS always on."
-                android:title="GPS accuracy" />
+                android:summary="X meters. (0 = always on)"
+                android:title="Desired GPS accuracy" />
 
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_location_network"
                 android:persistent="true"
-                android:summary="Network triangulation location tracking"
-                android:title="Network triangulation (cell tower and Wi-Fi)" />
+                android:summary="Triangulation location tracking"
+                android:title="Triangulation (cell tower and Wi-Fi)" />
 
             <EditTextPreference
                 android:defaultValue="300"
                 android:dependency="status_location_network"
+                android:inputType="number"
                 android:key="frequency_location_network"
                 android:persistent="true"
-                android:inputType="number"
-                android:summary="X in seconds (default = 300). 0 will keep network triangulation always on."
-                android:title="Network update frequency" />
+                android:summary="X seconds. (0 = always on)"
+                android:title="Triangulation update frequency" />
+
             <EditTextPreference
                 android:defaultValue="1500"
                 android:dependency="status_location_network"
+                android:inputType="number"
                 android:key="min_location_network_accuracy"
                 android:persistent="true"
-                android:inputType="number"
-                android:summary="Desired network accuracy in meters (default = 1500). 0 keeps network triangulation always on."
-                android:title="Network accuracy" />
+                android:summary="X meters. (0 = always on)"
+                android:title="Desired triangulation accuracy" />
+
             <EditTextPreference
                 android:defaultValue="300"
                 android:dependency="status_location_gps"
                 android:inputType="number"
                 android:key="location_expiration_time"
                 android:persistent="true"
-                android:summary="300 seconds"
-                android:title="Location expires after..." />
+                android:summary="Expire after X seconds"
+                android:title="Location fix lifetime" />
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_light"
             android:key="light"
-            android:summary="Ambient light (lux) *"
-            android:title="Light"
-            android:icon="@drawable/ic_action_light">
+            android:summary="Ambient light (lux)"
+            android:title="Light">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -352,12 +366,13 @@
                 android:title="Active" />
 
             <ListPreference
-                android:dependency="status_light"
                 android:defaultValue="200000"
+                android:dependency="status_light"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_light"
                 android:persistent="true"
+                android:summary="%s"
                 android:title="Sampling rate" />
 
             <EditTextPreference
@@ -366,14 +381,15 @@
                 android:inputType="numberDecimal"
                 android:key="threshold_light"
                 android:persistent="true"
-                android:title="Threshold for recording changes" />
+                android:summary="e.g., log only if [x,y,z] >= 0.01"
+                android:title="Sensitivity (0 = disabled)" />
 
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_linear_acceleration"
             android:key="linear_accelerometer"
-            android:summary="Acceleration, excluding the force of gravity (m/s^2) *"
-            android:title="Linear accelerometer"
-            android:icon="@drawable/ic_action_linear_acceleration">
+            android:summary="Acceleration, w/o gravity (m/s^2)"
+            android:title="Linear accelerometer">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -382,12 +398,13 @@
                 android:title="Active" />
 
             <ListPreference
-                android:dependency="status_linear_accelerometer"
                 android:defaultValue="200000"
+                android:dependency="status_linear_accelerometer"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_linear_accelerometer"
                 android:persistent="true"
+                android:summary="%s"
                 android:title="Sampling rate" />
 
             <EditTextPreference
@@ -396,14 +413,15 @@
                 android:inputType="numberDecimal"
                 android:key="threshold_linear_accelerometer"
                 android:persistent="true"
-                android:title="Threshold for recording changes" />
+                android:summary="e.g., log only if [x,y,z] >= 0.01"
+                android:title="Sensitivity (0 = disabled)" />
 
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_network"
             android:key="network"
             android:summary="Network usage and traffic"
-            android:title="Network"
-            android:icon="@drawable/ic_action_network">
+            android:title="Network">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -411,6 +429,7 @@
                 android:persistent="true"
                 android:summary="Network usage states"
                 android:title="Network events" />
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_network_traffic"
@@ -423,14 +442,15 @@
                 android:inputType="number"
                 android:key="frequency_network_traffic"
                 android:persistent="true"
-                android:summary="60 seconds"
-                android:title="Network traffic update frequency" />
+                android:summary="Every X seconds"
+                android:title="Traffic update frequency" />
+
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_magnetometer"
             android:key="magnetometer"
-            android:summary="Geomagnetic field strength around the device (µT) *"
-            android:title="Magnetometer"
-            android:icon="@drawable/ic_action_magnetometer">
+            android:summary="Geomagnetic field strength around the device (µT)"
+            android:title="Magnetometer">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -439,12 +459,13 @@
                 android:title="Active" />
 
             <ListPreference
-                android:dependency="status_magnetometer"
                 android:defaultValue="200000"
+                android:dependency="status_magnetometer"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_magnetometer"
                 android:persistent="true"
+                android:summary="%s"
                 android:title="Sampling rate" />
 
             <EditTextPreference
@@ -453,14 +474,15 @@
                 android:inputType="numberDecimal"
                 android:key="threshold_magnetometer"
                 android:persistent="true"
-                android:title="Threshold for recording changes" />
+                android:summary="e.g., log only if [x,y,z] >= 0.01"
+                android:title="Sensitivity (0 = disabled)" />
 
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_processor"
             android:key="processor"
             android:summary="CPU workload for user, system and idle (%)"
-            android:title="Processor workload"
-            android:icon="@drawable/ic_action_processor">
+            android:title="Processor workload">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -474,14 +496,14 @@
                 android:inputType="number"
                 android:key="frequency_processor"
                 android:persistent="true"
-                android:summary="10 seconds"
+                android:summary="Every X seconds"
                 android:title="Update frequency" />
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_timezone"
             android:key="timezone"
             android:summary="Tracks user&apos;s current timezone"
-            android:title="Timezone"
-            android:icon="@drawable/ic_action_timezone">
+            android:title="Timezone">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -495,14 +517,14 @@
                 android:inputType="number"
                 android:key="frequency_timezone"
                 android:persistent="true"
-                android:summary="3600 seconds"
+                android:summary="Every X seconds"
                 android:title="Update frequency" />
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_proximity"
             android:key="proximity"
-            android:summary="Proximity sensor distance (cm or device-dependent metric for far and near) *"
-            android:title="Proximity"
-            android:icon="@drawable/ic_action_proximity">
+            android:summary="Proximity sensor distance (HW-dependent value for far and near)"
+            android:title="Proximity">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -511,12 +533,13 @@
                 android:title="Active" />
 
             <ListPreference
-                android:dependency="status_proximity"
                 android:defaultValue="200000"
+                android:dependency="status_proximity"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_proximity"
                 android:persistent="true"
+                android:summary="%s"
                 android:title="Sampling rate" />
 
             <EditTextPreference
@@ -525,14 +548,15 @@
                 android:inputType="numberDecimal"
                 android:key="threshold_proximity"
                 android:persistent="true"
-                android:title="Threshold for recording changes" />
+                android:summary="e.g., log only if [x,y,z] >= 0.01"
+                android:title="Sensitivity (0 = disabled)" />
 
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_rotation"
             android:key="rotation"
-            android:summary="Orientation of the device in all axis *"
-            android:title="Rotation"
-            android:icon="@drawable/ic_action_rotation">
+            android:summary="Orientation of the device in all axis"
+            android:title="Rotation">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -541,12 +565,13 @@
                 android:title="Active" />
 
             <ListPreference
-                android:dependency="status_rotation"
                 android:defaultValue="200000"
+                android:dependency="status_rotation"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_rotation"
                 android:persistent="true"
+                android:summary="%s"
                 android:title="Sampling rate" />
 
             <EditTextPreference
@@ -555,28 +580,43 @@
                 android:inputType="numberDecimal"
                 android:key="threshold_rotation"
                 android:persistent="true"
-                android:title="Threshold for recording changes" />
+                android:summary="e.g., log only if [x,y,z] >= 0.01"
+                android:title="Sensitivity (0 = disabled)" />
 
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_screen"
             android:key="screen"
-            android:summary="Screen events (on/off, locked/unlocked)"
-            android:title="Screen usage"
-            android:icon="@drawable/ic_action_screen">
+            android:summary="Screen events (on, off, locked, unlocked)"
+            android:title="Screen usage">
 
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_screen"
                 android:persistent="true"
-                android:summary="Capture screen on/off and other screen related events"
-                android:summaryOff="Screen is inactive"
+                android:summary="Capture screen events (on, off, locked, unlocked)"
                 android:title="Active" />
+
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_significant_motion"
+            android:key="significant_motion"
+            android:summary="Significant motion"
+            android:title="Significant motion">
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_significant_motion"
+                android:persistent="true"
+                android:summary="Log motion events. Saves battery life, stops motion sensors logs if idle!"
+                android:title="Active" />
+
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:icon="@drawable/ic_action_temperature"
             android:key="temperature"
-            android:summary="Ambient air temperature (Celsius) *"
-            android:title="Temperature"
-            android:icon="@drawable/ic_action_temperature">
+            android:summary="Ambient air temperature (Celsius)"
+            android:title="Temperature">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -585,12 +625,13 @@
                 android:title="Active" />
 
             <ListPreference
-                android:dependency="status_temperature"
                 android:defaultValue="200000"
+                android:dependency="status_temperature"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_temperature"
                 android:persistent="true"
+                android:summary="%s"
                 android:title="Sampling rate" />
 
             <EditTextPreference
@@ -599,26 +640,29 @@
                 android:inputType="numberDecimal"
                 android:key="threshold_temperature"
                 android:persistent="true"
-                android:title="Threshold for recording changes" />
+                android:summary="e.g., log only if [x,y,z] >= 0.01"
+                android:title="Sensitivity (0 = disabled)" />
 
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_telephony"
             android:key="telephony"
-            android:summary="Mobile operator and specifications, cell tower and neighbor scanning"
-            android:title="Telephony"
-            android:icon="@drawable/ic_action_telephony">
+            android:summary="Cell operator, current cell tower and neighbor towers"
+            android:title="Telephony">
 
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_telephony"
                 android:persistent="true"
+                android:summary="Cell operator, current cell tower and neighbor towers"
                 android:title="Active" />
+
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_wifi"
             android:key="wifi"
             android:summary="Wi-Fi sensing"
-            android:title="Wi-Fi"
-            android:icon="@drawable/ic_action_wifi">
+            android:title="Wi-Fi">
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_wifi"
@@ -631,7 +675,7 @@
                 android:inputType="number"
                 android:key="frequency_wifi"
                 android:persistent="true"
-                android:summary="60 seconds"
+                android:summary="Every X seconds. Default 60 seconds (recommended)"
                 android:title="Wi-Fi scanning update frequency" />
         </PreferenceScreen>
     </PreferenceCategory>
@@ -640,10 +684,10 @@
         android:summary="Webservices, MQTT"
         android:title="Context exchange protocols">
         <PreferenceScreen
+            android:icon="@drawable/ic_action_mqtt"
             android:key="mqtt"
             android:summary="Allows remove questionnaires, P2P context exchange"
-            android:title="MQTT Server"
-            android:icon="@drawable/ic_action_mqtt">
+            android:title="MQTT Server">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -656,31 +700,36 @@
                 android:persistent="true"
                 android:summary="URL/IP address"
                 android:title="MQTT server" />
+
             <EditTextPreference
-                android:defaultValue="8883"
+                android:defaultValue="1883"
                 android:inputType="number"
                 android:key="mqtt_port"
                 android:persistent="true"
-                android:summary="8883"
+                android:summary="Non-encrypted: 1883, encrypted: 8883"
                 android:title="MQTT port" />
+
             <EditTextPreference
                 android:key="mqtt_username"
                 android:persistent="true"
                 android:summary="User credentials username"
                 android:title="MQTT username" />
+
             <EditTextPreference
                 android:inputType="textPassword"
                 android:key="mqtt_password"
                 android:persistent="true"
                 android:summary="User credentials password"
                 android:title="MQTT password" />
+
             <EditTextPreference
                 android:defaultValue="600"
                 android:inputType="number"
                 android:key="mqtt_keep_alive"
                 android:persistent="true"
-                android:summary="600 seconds"
+                android:summary="Every X seconds"
                 android:title="MQTT keep alive" />
+
             <EditTextPreference
                 android:defaultValue="2"
                 android:inputType="number"
@@ -688,18 +737,13 @@
                 android:persistent="true"
                 android:summary="0 - No guarantee, 1 - At least once, 2 - Exactly once (default = 2)"
                 android:title="MQTT QoS" />
-            <EditTextPreference
-                android:defaultValue="ssl"
-                android:key="mqtt_protocol"
-                android:persistent="true"
-                android:summary="ssl"
-                android:title="Connection protocol (tcp/ssl)" />
+
         </PreferenceScreen>
         <PreferenceScreen
+            android:icon="@drawable/ic_action_webservice"
             android:key="webservice"
             android:summary="Study and sync settings"
-            android:title="AWARE Study"
-            android:icon="@drawable/ic_action_study">
+            android:title="AWARE Study">
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -708,24 +752,24 @@
                 android:title="Active" />
 
             <EditTextPreference
+                android:defaultValue="https://api.awareframework.com/index.php"
                 android:key="webservice_server"
                 android:persistent="true"
                 android:summary="URL"
-                android:title="Study URL"
-                android:defaultValue="https://api.awareframework.com/index.php"/>
+                android:title="Study URL" />
 
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="webservice_wifi_only"
                 android:persistent="true"
-                android:summary="Sync only on Wi-Fi"
+                android:summary="Sync only over Wi-Fi"
                 android:title="Wi-Fi only" />
 
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="webservice_charging"
                 android:persistent="true"
-                android:summary="Sync only while charging"
+                android:summary="Sync only if charging"
                 android:title="Charging only" />
 
             <EditTextPreference
@@ -733,8 +777,8 @@
                 android:inputType="number"
                 android:key="frequency_webservice"
                 android:persistent="true"
-                android:summary="30 minutes"
-                android:title="Sync interval (in minutes, 0 to disable)." />
+                android:summary="Every X minutes"
+                android:title="Sync interval (0 to disable)" />
 
             <ListPreference
                 android:defaultValue="0"
@@ -742,8 +786,23 @@
                 android:entryValues="@array/clean_old_data_values"
                 android:key="frequency_clean_old_data"
                 android:persistent="true"
-                android:summary="Never"
+                android:summary="%s"
                 android:title="Clean-up old data?" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="webservice_silent"
+                android:persistent="true"
+                android:summary="Disable data sync notifications"
+                android:title="Quiet sync" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="remind_to_charge"
+                android:persistent="true"
+                android:summary="Remind to charge when 15%"
+                android:title="Battery reminder" />
+
         </PreferenceScreen>
     </PreferenceCategory>
 
@@ -760,44 +819,38 @@
                 android:defaultValue="true"
                 android:key="debug_flag"
                 android:persistent="true"
-                android:summary="@string/aware_debug_summary"
-                android:title="@string/aware_debug_title" />
+                android:title="Debugging"
+                android:summary="Show messages in logcat" />
 
             <EditTextPreference
                 android:defaultValue="AWARE"
                 android:dependency="debug_flag"
                 android:key="debug_tag"
                 android:persistent="true"
-                android:summary="@string/aware_debug_tag_summary"
-                android:title="@string/aware_debug_tag" />
+                android:summary="Change logcat tag for debug filters (default = AWARE)"
+                android:title="Logcat TAG" />
 
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="debug_db_slow"
                 android:persistent="true"
-                android:summary="No database storage with high-performance sensors (e.g., accelerometer, gyroscope, etc.)"
-                android:title="Lightweight I/O" />
+                android:summary="Disable database logs for high-frequency sensors"
+                android:title="Lightweight sampling" />
 
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="webservice_simple"
                 android:persistent="true"
-                android:summary="Don't sync table metadata"
+                android:summary="Disable database metadata sync to server"
                 android:title="Simple webservice" />
 
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="webservice_remove_data"
                 android:persistent="true"
-                android:summary="This may cause problems with some sensors or plugins."
-                android:title="Remove all data once uploaded" />
+                android:summary="WARNING: This may cause problems with some sensors or plugins if they rely on history data (e.g., battery charges, discharges, ...)"
+                android:title="Wipe data on upload" />
 
-            <CheckBoxPreference
-                android:defaultValue="false"
-                android:key="webservice_silent"
-                android:persistent="true"
-                android:summary="Don't show a notification every time data uploaded"
-                android:title="Quiet webservice" />
         </PreferenceScreen>
 
     </PreferenceCategory>

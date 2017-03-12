@@ -54,21 +54,26 @@ public class DownloadPluginService extends IntentService {
         String package_name = intent.getStringExtra("package_name");
         boolean is_update = intent.getBooleanExtra("is_update", false);
 
-        if( Aware.DEBUG ) Log.d(Aware.TAG, "Trying to download: " + package_name);
-
         String study_url = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
+        if (intent.hasExtra("study_url"))
+            study_url = intent.getStringExtra("study_url");
+
+
+        if( Aware.DEBUG ) Log.d(Aware.TAG, "Trying to download: " + package_name +" using server: " +study_url);
+
+
         String study_host = study_url.substring(0, study_url.indexOf("/index.php"));
         String protocol = study_url.substring(0, study_url.indexOf(":"));
 
         String response;
         if( protocol.equals("https") ) {
             try {
-                response = new Https(getApplicationContext(), SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET( study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/plugins/get_plugin/" + package_name, true);
+                response = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET( study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/plugins/get_plugin/" + package_name, true);
             } catch (FileNotFoundException e ) {
                 response = null;
             }
         } else {
-            response = new Http(getApplicationContext()).dataGET( study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/plugins/get_plugin/" + package_name, true);
+            response = new Http().dataGET( study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/plugins/get_plugin/" + package_name, true);
         }
 
         if( response != null ) {

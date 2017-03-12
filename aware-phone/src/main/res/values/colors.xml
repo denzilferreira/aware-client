@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="accent_material_light">#33b5e5</color>
-    <color name="navBarColor">#33b5e5</color>
-    <color name="card_shadow">#AFAFAF</color>
-    <color name="grey_background">#E5E5E5</color>
-    <color name="color_red">#F44336</color>
-</resources>

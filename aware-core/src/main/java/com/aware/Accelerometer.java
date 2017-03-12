@@ -6,7 +6,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
@@ -17,24 +16,19 @@ import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
-import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.aware.providers.Accelerometer_Provider;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Data;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Sensor;
-import com.aware.providers.Barometer_Provider;
-import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.lang.Math;
 
 /**
  * AWARE Accelerometer module
@@ -49,15 +43,13 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
     private static SensorManager mSensorManager;
     private static Sensor mAccelerometer;
+
     private static HandlerThread sensorThread = null;
     private static Handler sensorHandler = null;
-    private static PowerManager powerManager;
     private static PowerManager.WakeLock wakeLock = null;
     private static String LABEL = "";
-//    private static int FIFO_SIZE = 0;
-    private static float LAST_VALUE_0 = 0;
-    private static float LAST_VALUE_1 = 0;
-    private static float LAST_VALUE_2 = 0;
+
+    private static Float[] LAST_VALUES = null;
 
     private static int FREQUENCY = -1;
     private static double THRESHOLD = 0;
@@ -74,7 +66,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     public static final String ACTION_AWARE_ACCELEROMETER_LABEL = "ACTION_AWARE_ACCELEROMETER_LABEL";
     public static final String EXTRA_LABEL = "label";
 
-    private List<ContentValues> data_values = new ArrayList<ContentValues>();
+    private List<ContentValues> data_values = new ArrayList<>();
 
     private static DataLabel dataLabeler = new DataLabel();
 
@@ -94,22 +86,35 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        // Apply threshold.  This applies to each axis independently.  We could
-        // alternatively use Euclidian distance.  If change of values is not
-        // enough, do nothing.
-        if (Math.abs(event.values[0] - LAST_VALUE_0 ) < THRESHOLD
-            && Math.abs(event.values[1] - LAST_VALUE_1) < THRESHOLD
-            && Math.abs(event.values[2] - LAST_VALUE_2) < THRESHOLD) {
+        if (SignificantMotion.isSignificantMotionActive && !SignificantMotion.CURRENT_SIGMOTION_STATE) {
+            if (data_values.size() > 0) {
+                ContentValues[] data_buffer = new ContentValues[data_values.size()];
+                data_values.toArray(data_buffer);
+                try {
+                    if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true")) {
+                        new AsyncStore().execute(data_buffer);
+                    }
+                } catch (SQLiteException e) {
+                    if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                } catch (SQLException e) {
+                    if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                }
+                data_values.clear();
+            }
             return;
         }
-        // Update last values with new values for the next round.
-        LAST_VALUE_0 = event.values[0];
-        LAST_VALUE_1 = event.values[1];
-        LAST_VALUE_2 = event.values[2];
-        // Proceed with saving as usual.
+
+        if (LAST_VALUES != null && THRESHOLD > 0 && Math.abs(event.values[0] - LAST_VALUES[0]) < THRESHOLD
+                && Math.abs(event.values[1] - LAST_VALUES[1]) < THRESHOLD
+                && Math.abs(event.values[2] - LAST_VALUES[2]) < THRESHOLD) {
+            return;
+        }
+
+        LAST_VALUES = new Float[]{event.values[0], event.values[1], event.values[2]};
+
         ContentValues rowData = new ContentValues();
         rowData.put(Accelerometer_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-        rowData.put(Accelerometer_Data.TIMESTAMP, System.currentTimeMillis()); //convert from nano to milliseconds
+        rowData.put(Accelerometer_Data.TIMESTAMP, System.currentTimeMillis());
         rowData.put(Accelerometer_Data.VALUES_0, event.values[0]);
         rowData.put(Accelerometer_Data.VALUES_1, event.values[1]);
         rowData.put(Accelerometer_Data.VALUES_2, event.values[2]);
@@ -204,13 +209,12 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         super.onCreate();
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-//        FIFO_SIZE = mAccelerometer.getFifoReservedEventCount();
 
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();
 
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
         wakeLock.acquire();
 
@@ -243,16 +247,9 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
 
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
-            }
-        }
-
-        if (permissions_ok) {
+        if (PERMISSIONS_OK) {
             if (mAccelerometer == null) {
                 if (Aware.DEBUG) Log.w(TAG, "This device does not have an accelerometer!");
                 Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, false);
@@ -272,51 +269,25 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
                 if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER))
                         || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ACCELEROMETER))) {
+
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mAccelerometer);
-//                    mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), FIFO_SIZE, sensorHandler);
-                    mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), sensorHandler);
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER));
                     THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ACCELEROMETER));
                 }
 
+                mSensorManager.registerListener(this, mAccelerometer, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER)), sensorHandler);
+
                 if (Aware.DEBUG) Log.d(TAG, "Accelerometer service active: " + FREQUENCY + "ms");
             }
-
-        } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
         }
 
-        return super.onStartCommand(intent, flags, startId);
-    }
-
-    //Singleton instance of this service
-    private static Accelerometer accelerometerSrv = Accelerometer.getService();
-
-    /**
-     * Get singleton instance to Accelerometer service
-     *
-     * @return Accelerometer obj
-     */
-    public static Accelerometer getService() {
-        if (accelerometerSrv == null) accelerometerSrv = new Accelerometer();
-        return accelerometerSrv;
-    }
-
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        Accelerometer getService() {
-            return Accelerometer.getService();
-        }
+        return START_STICKY;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
+        return null;
     }
 }

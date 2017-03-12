@@ -15,8 +15,6 @@
         android:label="Write to AWARE&apos;s Context data"
         android:protectionLevel="normal" />
 
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
@@ -53,22 +51,12 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <!--<uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE" />-->
-
     <application
         android:icon="@drawable/ic_launcher_aware"
         android:label="@string/app_name"
         android:theme="@style/Theme.Aware">
 
-        <meta-data
-            android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
-        <meta-data
-            android:name="com.google.android.gms.vision.DEPENDENCIES"
-            android:value="barcode" />
-
         <!-- Activities -->
-
         <activity
             android:name="com.aware.phone.Aware_Client"
             android:configChanges="keyboardHidden|orientation|screenSize"
@@ -92,12 +80,7 @@
             android:label="@string/aware_stream"
             android:launchMode="singleTop"
             android:noHistory="true"
-            android:theme="@style/Theme.Aware">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:theme="@style/Theme.Aware"/>
         <activity
             android:name="com.aware.phone.ui.Aware_QRCode"
             android:configChanges="keyboardHidden|orientation|screenSize"

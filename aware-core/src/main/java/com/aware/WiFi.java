@@ -1,8 +1,6 @@
 
 package com.aware;
 
-import java.util.List;
-
 import android.Manifest;
 import android.app.AlarmManager;
 import android.app.IntentService;
@@ -13,7 +11,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
@@ -21,8 +18,10 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.PermissionChecker;
 import android.util.Log;
 
 import com.aware.providers.WiFi_Provider;
@@ -30,6 +29,12 @@ import com.aware.providers.WiFi_Provider.WiFi_Data;
 import com.aware.providers.WiFi_Provider.WiFi_Sensor;
 import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
+
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * WiFi Module. Scans and returns surrounding WiFi AccessPoints devices information and RSSI dB values.
@@ -71,27 +76,12 @@ public class WiFi extends Aware_Sensor {
      */
     public static final String ACTION_AWARE_WIFI_REQUEST_SCAN = "ACTION_AWARE_WIFI_REQUEST_SCAN";
 
-    /**
-     * Bluetooth Service singleton object
-     */
-    private static WiFi wifiService = WiFi.getService();
-
-    /**
-     * Get an instance for the WiFi Service
-     *
-     * @return WiFi obj
-     */
-    public static WiFi getService() {
-        if (wifiService == null) wifiService = new WiFi();
-        return wifiService;
-    }
-
     @Override
     public void onCreate() {
         super.onCreate();
 
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+        wifiManager = (WifiManager) this.getApplicationContext().getSystemService(WIFI_SERVICE);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
@@ -112,16 +102,9 @@ public class WiFi extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
-            }
-        }
+        super.onStartCommand(intent, flags, startId);
 
-        if (permissions_ok) {
-
+        if (PERMISSIONS_OK) {
             if (wifiManager == null) {
                 if (DEBUG) Log.d(TAG, "This device does not have a WiFi chip");
                 Aware.setSetting(this, Aware_Preferences.STATUS_WIFI, false);
@@ -136,17 +119,12 @@ public class WiFi extends Aware_Sensor {
 
                 alarmManager.cancel(wifiScan);
                 alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_WIFI)) * 1000, wifiScan);
+
                 if (Aware.DEBUG) Log.d(TAG, "WiFi service active...");
             }
-
-        } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
         }
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override
@@ -159,22 +137,9 @@ public class WiFi extends Aware_Sensor {
         if (Aware.DEBUG) Log.d(TAG, "WiFi service terminated...");
     }
 
-    private final IBinder wifiBinder = new WiFiBinder();
-
-    /**
-     * Binder for WiFi module
-     *
-     * @author denzil
-     */
-    public class WiFiBinder extends Binder {
-        WiFi getService() {
-            return WiFi.getService();
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-        return wifiBinder;
+        return null;
     }
 
     public static class WiFiMonitor extends BroadcastReceiver {
@@ -187,37 +152,95 @@ public class WiFi extends Aware_Sensor {
             }
         }
     }
-
     private static final WiFiMonitor wifiMonitor = new WiFiMonitor();
 
     /**
-     * Save this device's wifi information
-     *
-     * @param wifi
+     * Asynchronously get the AP we are currently connected to.
      */
-    private static void save_wifi_device(Context c, WifiInfo wifi) {
-        if (wifi == null) return;
+    private static class WifiInfoFetch implements Callable<String> {
+        private Context mContext;
+        private WifiInfo mWifi;
 
-        ContentValues rowData = new ContentValues();
-        rowData.put(WiFi_Sensor.DEVICE_ID, Aware.getSetting(c, Aware_Preferences.DEVICE_ID));
-        rowData.put(WiFi_Sensor.TIMESTAMP, System.currentTimeMillis());
-        rowData.put(WiFi_Sensor.MAC_ADDRESS, wifi.getMacAddress());
-        rowData.put(WiFi_Sensor.BSSID, ((wifi.getBSSID() != null) ? wifi.getBSSID() : ""));
-        rowData.put(WiFi_Sensor.SSID, ((wifi.getSSID() != null) ? wifi.getSSID() : ""));
+        WifiInfoFetch(Context c, WifiInfo w) {
+            mContext = c;
+            mWifi = w;
+        }
 
-        try {
-            c.getContentResolver().insert(WiFi_Sensor.CONTENT_URI, rowData);
+        @Override
+        public String call() throws Exception {
+            ContentValues rowData = new ContentValues();
+            rowData.put(WiFi_Sensor.DEVICE_ID, Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID));
+            rowData.put(WiFi_Sensor.TIMESTAMP, System.currentTimeMillis());
+            rowData.put(WiFi_Sensor.MAC_ADDRESS, mWifi.getMacAddress());
+            rowData.put(WiFi_Sensor.BSSID, ((mWifi.getBSSID() != null) ? mWifi.getBSSID() : ""));
+            rowData.put(WiFi_Sensor.SSID, ((mWifi.getSSID() != null) ? mWifi.getSSID() : ""));
 
-            Intent currentAp = new Intent(ACTION_AWARE_WIFI_CURRENT_AP);
-            currentAp.putExtra(EXTRA_DATA, rowData);
-            c.sendBroadcast(currentAp);
+            try {
+                mContext.getContentResolver().insert(WiFi_Sensor.CONTENT_URI, rowData);
 
-            if (Aware.DEBUG) Log.d(TAG, "WiFi local sensor information: " + rowData.toString());
+                Intent currentAp = new Intent(ACTION_AWARE_WIFI_CURRENT_AP);
+                currentAp.putExtra(EXTRA_DATA, rowData);
+                mContext.sendBroadcast(currentAp);
 
-        } catch (SQLiteException e) {
-            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-        } catch (SQLException e) {
-            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                if (Aware.DEBUG) Log.d(TAG, "WiFi local sensor information: " + rowData.toString());
+
+            } catch (SQLiteException e) {
+                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+            } catch (SQLException e) {
+                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+            }
+
+            return Thread.currentThread().getName();
+        }
+    }
+
+    /**
+     * Asynchronously process the APs we can see around us
+     */
+    private static class WifiApResults implements Callable<String> {
+        private Context mContext;
+        private List<ScanResult> mAPS;
+
+        WifiApResults(Context c, List<ScanResult> aps) {
+            mContext = c;
+            mAPS = aps;
+        }
+
+        @Override
+        public String call() throws Exception {
+            if (Aware.DEBUG) Log.d(TAG, "Found " + mAPS.size() + " access points");
+            long currentScan = System.currentTimeMillis();
+
+            for (ScanResult ap : mAPS) {
+                ContentValues rowData = new ContentValues();
+                rowData.put(WiFi_Data.DEVICE_ID, Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID));
+                rowData.put(WiFi_Data.TIMESTAMP, currentScan);
+                rowData.put(WiFi_Data.BSSID, ap.BSSID);
+                rowData.put(WiFi_Data.SSID, ap.SSID);
+                rowData.put(WiFi_Data.SECURITY, ap.capabilities);
+                rowData.put(WiFi_Data.FREQUENCY, ap.frequency);
+                rowData.put(WiFi_Data.RSSI, ap.level);
+
+                try {
+                    mContext.getContentResolver().insert(WiFi_Data.CONTENT_URI, rowData);
+                } catch (SQLiteException e) {
+                    if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                } catch (SQLException e) {
+                    if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                }
+
+                if (Aware.DEBUG)
+                    Log.d(TAG, ACTION_AWARE_WIFI_NEW_DEVICE + ": " + rowData.toString());
+
+                Intent detectedAP = new Intent(ACTION_AWARE_WIFI_NEW_DEVICE);
+                detectedAP.putExtra(EXTRA_DATA, rowData);
+                mContext.sendBroadcast(detectedAP);
+            }
+
+            Intent scanEnd = new Intent(ACTION_AWARE_WIFI_SCAN_ENDED);
+            mContext.sendBroadcast(scanEnd);
+
+            return Thread.currentThread().getName();
         }
     }
 
@@ -236,16 +259,16 @@ public class WiFi extends Aware_Sensor {
 
         @Override
         protected void onHandleIntent(Intent intent) {
-            WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+            WifiManager wifiManager = (WifiManager) this.getApplicationContext().getSystemService(WIFI_SERVICE);
 
             if (intent.getAction().equals(WiFi.ACTION_AWARE_WIFI_REQUEST_SCAN)) {
-                if (wifiManager.isWifiEnabled() || wifiManager.isScanAlwaysAvailable()) {
+                if (wifiManager.isWifiEnabled()) {
                     Intent scanStart = new Intent(ACTION_AWARE_WIFI_SCAN_STARTED);
                     sendBroadcast(scanStart);
                     wifiManager.startScan();
                 } else {
-                    if (DEBUG) {
-                        Log.d(TAG, "WiFi is off");
+                    if (Aware.DEBUG) {
+                        Log.d(WiFi.TAG, "WiFi is off");
                     }
 
                     ContentValues rowData = new ContentValues();
@@ -259,43 +282,16 @@ public class WiFi extends Aware_Sensor {
 
             if (intent.getAction().equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
                 WifiInfo wifi = wifiManager.getConnectionInfo();
-                if (wifi != null) {
-                    save_wifi_device(getApplicationContext(), wifi);
-                }
+                if (wifi == null) return;
 
-                List<ScanResult> aps = wifiManager.getScanResults();
-                if (Aware.DEBUG) Log.d(TAG, "Found " + aps.size() + " access points");
+                WifiInfoFetch wifiInfo = new WifiInfoFetch(getApplicationContext(), wifi);
+                WifiApResults scanResults = new WifiApResults(getApplicationContext(), wifiManager.getScanResults());
 
-                long currentScan = System.currentTimeMillis();
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(wifiInfo);
+                executor.submit(scanResults);
+                executor.shutdown();
 
-                for (ScanResult ap : aps) {
-                    ContentValues rowData = new ContentValues();
-                    rowData.put(WiFi_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-                    rowData.put(WiFi_Data.TIMESTAMP, currentScan);
-                    rowData.put(WiFi_Data.BSSID, ap.BSSID);
-                    rowData.put(WiFi_Data.SSID, ap.SSID);
-                    rowData.put(WiFi_Data.SECURITY, ap.capabilities);
-                    rowData.put(WiFi_Data.FREQUENCY, ap.frequency);
-                    rowData.put(WiFi_Data.RSSI, ap.level);
-
-                    try {
-                        getContentResolver().insert(WiFi_Data.CONTENT_URI, rowData);
-                    } catch (SQLiteException e) {
-                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-                    } catch (SQLException e) {
-                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-                    }
-
-                    if (Aware.DEBUG)
-                        Log.d(TAG, ACTION_AWARE_WIFI_NEW_DEVICE + ": " + rowData.toString());
-
-                    Intent detectedAP = new Intent(ACTION_AWARE_WIFI_NEW_DEVICE);
-                    detectedAP.putExtra(EXTRA_DATA, rowData);
-                    sendBroadcast(detectedAP);
-                }
-
-                Intent scanEnd = new Intent(ACTION_AWARE_WIFI_SCAN_ENDED);
-                sendBroadcast(scanEnd);
             }
         }
     }

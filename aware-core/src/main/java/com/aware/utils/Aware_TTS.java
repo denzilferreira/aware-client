@@ -41,8 +41,6 @@ public class Aware_TTS extends Service implements OnInitListener {
             }
             //stop service
             stopSelf();
-        } else {
-            Log.d(TAG, TAG +" not ready yet!");
         }
     }
 

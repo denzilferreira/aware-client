@@ -455,32 +455,9 @@ public class Network extends Aware_Sensor {
 
     private static final NetworkMonitor networkMonitor = new NetworkMonitor();
 
-    /**
-     * Activity-Service binder
-     */
-    private final IBinder serviceBinder = new ServiceBinder();
-
-    public class ServiceBinder extends Binder {
-        Network getService() {
-            return Network.getService();
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBinder;
-    }
-
-    private static Network networkSrv = Network.getService();
-
-    /**
-     * Singleton instance to service
-     *
-     * @return Network
-     */
-    public static Network getService() {
-        if (networkSrv == null) networkSrv = new Network();
-        return networkSrv;
+        return null;
     }
 
     @Override
@@ -520,27 +497,15 @@ public class Network extends Aware_Sensor {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
 
-        boolean permissions_ok = true;
-        for (String p : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissions_ok = false;
-                break;
-            }
-        }
-
-        if (permissions_ok) {
+        if (PERMISSIONS_OK) {
             DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
             Aware.setSetting(this, Aware_Preferences.STATUS_NETWORK_EVENTS, true);
 
             if (Aware.DEBUG) Log.d(TAG, "Network service active...");
-        } else {
-            Intent permissions = new Intent(this, PermissionsHandler.class);
-            permissions.putExtra(PermissionsHandler.EXTRA_REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS);
-            permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permissions);
         }
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 }

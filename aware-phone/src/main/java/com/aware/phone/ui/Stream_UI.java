@@ -4,21 +4,34 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SimpleCursorAdapter;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.CursorAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 
 import com.aware.Aware;
 
 import com.aware.phone.R;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.utils.Aware_Plugin;
+import com.aware.utils.DatabaseHelper;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 
 public class Stream_UI extends Aware_Activity {
 	
@@ -36,20 +49,16 @@ public class Stream_UI extends Aware_Activity {
      * Broadcast to let cards know that the stream is not visible to the user
      */
     public static final String ACTION_AWARE_STREAM_CLOSED = "ACTION_AWARE_STREAM_CLOSED";
-	
-	private static ListView stream_container;
 
 //  private static MatrixCursor core_cards;
-    private static CardAdapter card_adapter;
-    private static Cursor cards;
+
+    private StreamAdapter streamAdapter;
 
 	@Override
 	protected void onCreate(Bundle arg0) {
         super.onCreate(arg0);
 
         setContentView(R.layout.stream_ui);
-
-        stream_container = (ListView) findViewById(R.id.stream_container);
 
         ImageButton add_to_stream = (ImageButton) findViewById(R.id.change_stream);
         add_to_stream.setOnClickListener(new View.OnClickListener() {
@@ -63,27 +72,6 @@ public class Stream_UI extends Aware_Activity {
 		IntentFilter filter = new IntentFilter(Stream_UI.ACTION_AWARE_UPDATE_STREAM);
 		registerReceiver(stream_updater, filter);
 	}
-
-    public class CardAdapter extends CursorAdapter {
-        public CardAdapter( Context context, Cursor c, int flags ) {
-            super(context, c, flags);
-        }
-
-        @Override
-        public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            String package_name = cursor.getString( cursor.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME) );
-            View card;
-            card = Aware.getContextCard(getApplicationContext(), package_name);
-            if( card == null ) card = new View(context);
-            return card;
-        }
-
-        @Override
-        public void bindView(View card, Context context, Cursor cursor) {
-            String package_name = cursor.getString( cursor.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-            card = Aware.getContextCard(getApplicationContext(), package_name);
-        }
-    }
 
 //    private void updateCore() {
 //        core_cards = new MatrixCursor(new String[]{
@@ -113,25 +101,86 @@ public class Stream_UI extends Aware_Activity {
 //            cards = new MergeCursor(new Cursor[]{ core_cards, cards });
 //        }
 //    }
-
-    private void updateCards() {
-        cards = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, Aware_Plugins.PLUGIN_NAME + " ASC");
-
-        if (Aware.DEBUG)
-            Log.d(Aware.TAG, "ContextCards: " + DatabaseUtils.dumpCursorToString(cards));
-
-//        updateCore();
-        card_adapter = new CardAdapter(this, cards, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
-        stream_container.setAdapter(card_adapter);
-    }
 	
 	@Override
 	protected void onResume() {
 		super.onResume();
         Intent is_visible = new Intent(ACTION_AWARE_STREAM_OPEN);
         sendBroadcast(is_visible);
-        updateCards();
+
+        ListView stream_container = (ListView) findViewById(R.id.stream_container);
+
+        streamAdapter = new StreamAdapter(getApplicationContext());
+        stream_container.setAdapter(streamAdapter);
 	}
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+
+    }
+
+    private class StreamAdapter extends BaseAdapter {
+        private Context mContext;
+        private JSONArray cards = new JSONArray();
+
+        StreamAdapter(Context context) {
+            mContext = context;
+            Cursor mCursor = mContext.getContentResolver().query( Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, Aware_Plugins.PLUGIN_NAME + " ASC");
+            try {
+                cards = new JSONArray(DatabaseHelper.cursorToString(mCursor));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            if (mCursor != null && ! mCursor.isClosed()) mCursor.close();
+        }
+
+        @Override
+        public int getCount() {
+            return cards.length();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            try {
+                return cards.getJSONObject(position);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        public long getItemId(int position) {
+            try {
+                return cards.getJSONObject(position).getInt("_id");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return 0;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            try {
+                return Aware.getContextCard(getApplicationContext(), cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        public void notifyDataSetChanged() {
+            super.notifyDataSetChanged();
+            Cursor mCursor = mContext.getContentResolver().query( Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, Aware_Plugins.PLUGIN_NAME + " ASC");
+            try {
+                cards = new JSONArray(DatabaseHelper.cursorToString(mCursor));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            if (mCursor != null && ! mCursor.isClosed()) mCursor.close();
+        }
+    }
 
     @Override
     protected void onPause() {
@@ -139,27 +188,19 @@ public class Stream_UI extends Aware_Activity {
 
         Intent not_visible = new Intent(ACTION_AWARE_STREAM_CLOSED);
         sendBroadcast(not_visible);
-
-        //Fixed: leak on stream cursor
-        if( cards != null && ! cards.isClosed()) cards.close();
-        card_adapter.changeCursor(null);
     }
 
     @Override
 	protected void onDestroy() {
 		super.onDestroy();
 		unregisterReceiver(stream_updater);
-
-        //Fixed: leak on stream cursor
-        if( cards != null && ! cards.isClosed()) cards.close();
-        card_adapter.changeCursor(null);
 	}
 	
 	private StreamUpdater stream_updater = new StreamUpdater();
-	public class StreamUpdater extends BroadcastReceiver {
+    public class StreamUpdater extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			updateCards();
+			streamAdapter.notifyDataSetChanged();
 		}
 	}
 }

@@ -39,14 +39,14 @@ public class Applications_Provider extends ContentProvider {
     public static String AUTHORITY = "com.aware.provider.applications";
 
     // ContentProvider query paths
-    private static final int FOREGROUND = 1;
-    private static final int FOREGROUND_ID = 2;
-    private static final int APPLICATIONS = 3;
-    private static final int APPLICATIONS_ID = 4;
-    private static final int NOTIFICATIONS = 5;
-    private static final int NOTIFICATIONS_ID = 6;
-    private static final int ERROR = 7;
-    private static final int ERROR_ID = 8;
+    private final int FOREGROUND = 1;
+    private final int FOREGROUND_ID = 2;
+    private final int APPLICATIONS = 3;
+    private final int APPLICATIONS_ID = 4;
+    private final int NOTIFICATIONS = 5;
+    private final int NOTIFICATIONS_ID = 6;
+    private final int ERROR = 7;
+    private final int ERROR_ID = 8;
 
     /**
      * Applications running on the foreground
@@ -57,10 +57,7 @@ public class Applications_Provider extends ContentProvider {
         private Applications_Foreground() {
         }
 
-        ;
-
-        public static final Uri CONTENT_URI = Uri.parse("content://"
-                + Applications_Provider.AUTHORITY + "/applications_foreground");
+        public static final Uri CONTENT_URI = Uri.parse("content://" + Applications_Provider.AUTHORITY + "/applications_foreground");
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.aware.applications.foreground";
         public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.aware.applications.foreground";
 
@@ -81,8 +78,6 @@ public class Applications_Provider extends ContentProvider {
     public static final class Applications_History implements BaseColumns {
         private Applications_History() {
         }
-
-        ;
 
         public static final Uri CONTENT_URI = Uri.parse("content://"
                 + Applications_Provider.AUTHORITY + "/applications_history");
@@ -196,36 +191,20 @@ public class Applications_Provider extends ContentProvider {
                     + Applications_Crashes.ERROR_CONDITION + " integer default 0,"
                     + Applications_Crashes.IS_SYSTEM_APP + " integer default 0"};
 
-    private static UriMatcher sUriMatcher = null;
-    private static HashMap<String, String> foregroundMap = null;
-    private static HashMap<String, String> applicationsMap = null;
-    private static HashMap<String, String> notificationMap = null;
-    private static HashMap<String, String> crashesMap = null;
-    private static DatabaseHelper databaseHelper = null;
-    private static SQLiteDatabase database = null;
+    private UriMatcher sUriMatcher = null;
+    private HashMap<String, String> foregroundMap = null;
+    private HashMap<String, String> applicationsMap = null;
+    private HashMap<String, String> notificationMap = null;
+    private HashMap<String, String> crashesMap = null;
 
-    private boolean initializeDB() {
-        if (databaseHelper == null) {
-            databaseHelper = new DatabaseHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
-        }
-        if (databaseHelper != null && (database == null || !database.isOpen())) {
-            database = databaseHelper.getWritableDatabase();
-        }
-        return (database != null && databaseHelper != null);
-    }
+    private DatabaseHelper dbHelper;
+    private static SQLiteDatabase database;
 
-    /**
-     * Recreates the ContentProvider
-     */
-    public static void resetDB(Context c) {
-        Log.d("AWARE", "Resetting " + DATABASE_NAME + "...");
-
-        File db = new File(DATABASE_NAME);
-        db.delete();
-        databaseHelper = new DatabaseHelper(c, DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
-        if (databaseHelper != null) {
-            database = databaseHelper.getWritableDatabase();
-        }
+    private void initialiseDatabase() {
+        if (dbHelper == null)
+            dbHelper = new DatabaseHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
+        if (database == null)
+            database = dbHelper.getWritableDatabase();
     }
 
     /**
@@ -234,45 +213,35 @@ public class Applications_Provider extends ContentProvider {
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
 
-        if (!initializeDB()) {
-            Log.w(AUTHORITY, "Database unavailable...");
-            return 0;
-        }
+        initialiseDatabase();
 
-        int count = 0;
+        //lock database for transaction
+        database.beginTransaction();
+
+        int count;
         switch (sUriMatcher.match(uri)) {
             case FOREGROUND:
-                database.beginTransaction();
-                count = database.delete(DATABASE_TABLES[0], selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.delete(DATABASE_TABLES[0], selection, selectionArgs);
                 break;
             case APPLICATIONS:
-                database.beginTransaction();
-                count = database.delete(DATABASE_TABLES[1], selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.delete(DATABASE_TABLES[1], selection, selectionArgs);
                 break;
             case NOTIFICATIONS:
-                database.beginTransaction();
-                count = database.delete(DATABASE_TABLES[2], selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.delete(DATABASE_TABLES[2], selection, selectionArgs);
                 break;
             case ERROR:
-                database.beginTransaction();
-                count = database.delete(DATABASE_TABLES[3], selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.delete(DATABASE_TABLES[3], selection, selectionArgs);
                 break;
             default:
+                database.endTransaction();
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
+
+        database.setTransactionSuccessful();
+        database.endTransaction();
+
         getContext().getContentResolver().notifyChange(uri, null);
+
         return count;
     }
 
@@ -306,69 +275,55 @@ public class Applications_Provider extends ContentProvider {
     @Override
     public Uri insert(Uri uri, ContentValues initialValues) {
 
-        if (!initializeDB()) {
-            Log.w(AUTHORITY, "Database unavailable...");
-            return null;
-        }
+        initialiseDatabase();
 
-        ContentValues values = (initialValues != null) ? new ContentValues(
-                initialValues) : new ContentValues();
+        ContentValues values = (initialValues != null) ? new ContentValues(initialValues) : new ContentValues();
+
+        database.beginTransaction();
+
         switch (sUriMatcher.match(uri)) {
             case FOREGROUND:
-                database.beginTransaction();
-                long foreground_id = database.insertWithOnConflict(DATABASE_TABLES[0],
-                        Applications_Foreground.APPLICATION_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                long foreground_id = database.insertWithOnConflict(DATABASE_TABLES[0], Applications_Foreground.APPLICATION_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
                 if (foreground_id > 0) {
-                    Uri foregroundUri = ContentUris.withAppendedId(
-                            Applications_Foreground.CONTENT_URI, foreground_id);
-                    getContext().getContentResolver().notifyChange(foregroundUri,
-                            null);
+                    Uri foregroundUri = ContentUris.withAppendedId(Applications_Foreground.CONTENT_URI, foreground_id);
+                    getContext().getContentResolver().notifyChange(foregroundUri, null);
+                    database.setTransactionSuccessful();
+                    database.endTransaction();
                     return foregroundUri;
                 }
+                database.endTransaction();
                 throw new SQLException("Failed to insert row into " + uri);
             case APPLICATIONS:
-                database.beginTransaction();
-                long applications_id = database.insertWithOnConflict(DATABASE_TABLES[1],
-                        Applications_History.PACKAGE_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                long applications_id = database.insertWithOnConflict(DATABASE_TABLES[1], Applications_History.PACKAGE_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
                 if (applications_id > 0) {
-                    Uri applicationsUri = ContentUris.withAppendedId(
-                            Applications_History.CONTENT_URI, applications_id);
-                    getContext().getContentResolver().notifyChange(applicationsUri,
-                            null);
+                    Uri applicationsUri = ContentUris.withAppendedId(Applications_History.CONTENT_URI, applications_id);
+                    getContext().getContentResolver().notifyChange(applicationsUri, null);
+                    database.setTransactionSuccessful();
+                    database.endTransaction();
                     return applicationsUri;
                 }
                 throw new SQLException("Failed to insert row into " + uri);
             case NOTIFICATIONS:
-                database.beginTransaction();
-                long notifications_id = database.insertWithOnConflict(DATABASE_TABLES[2],
-                        Applications_Notifications.PACKAGE_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                long notifications_id = database.insertWithOnConflict(DATABASE_TABLES[2], Applications_Notifications.PACKAGE_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
                 if (notifications_id > 0) {
-                    Uri notificationsUri = ContentUris.withAppendedId(
-                            Applications_Notifications.CONTENT_URI,
-                            notifications_id);
-                    getContext().getContentResolver().notifyChange(
-                            notificationsUri, null);
+                    Uri notificationsUri = ContentUris.withAppendedId(Applications_Notifications.CONTENT_URI, notifications_id);
+                    getContext().getContentResolver().notifyChange(notificationsUri, null);
+                    database.setTransactionSuccessful();
+                    database.endTransaction();
                     return notificationsUri;
                 }
+                database.endTransaction();
                 throw new SQLException("Failed to insert row into " + uri);
             case ERROR:
-                database.beginTransaction();
-                long error_id = database.insertWithOnConflict(DATABASE_TABLES[3],
-                        Applications_Crashes.PACKAGE_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                long error_id = database.insertWithOnConflict(DATABASE_TABLES[3], Applications_Crashes.PACKAGE_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
                 if (error_id > 0) {
-                    Uri errorsUri = ContentUris.withAppendedId(
-                            Applications_Crashes.CONTENT_URI, error_id);
+                    Uri errorsUri = ContentUris.withAppendedId(Applications_Crashes.CONTENT_URI, error_id);
                     getContext().getContentResolver().notifyChange(errorsUri, null);
+                    database.setTransactionSuccessful();
+                    database.endTransaction();
                     return errorsUri;
                 }
+                database.endTransaction();
                 throw new SQLException("Failed to insert row into " + uri);
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);
@@ -483,10 +438,7 @@ public class Applications_Provider extends ContentProvider {
     public Cursor query(Uri uri, String[] projection, String selection,
                         String[] selectionArgs, String sortOrder) {
 
-        if (!initializeDB()) {
-            Log.w(AUTHORITY, "Database unavailable...");
-            return null;
-        }
+        initialiseDatabase();
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         switch (sUriMatcher.match(uri)) {
@@ -510,8 +462,7 @@ public class Applications_Provider extends ContentProvider {
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
         try {
-            Cursor c = qb.query(database, projection, selection, selectionArgs,
-                    null, null, sortOrder);
+            Cursor c = qb.query(database, projection, selection, selectionArgs, null, null, sortOrder);
             c.setNotificationUri(getContext().getContentResolver(), uri);
             return c;
         } catch (IllegalStateException e) {
@@ -525,47 +476,33 @@ public class Applications_Provider extends ContentProvider {
      * Update application on the database
      */
     @Override
-    public int update(Uri uri, ContentValues values, String selection,
-                      String[] selectionArgs) {
+    public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 
-        if (!initializeDB()) {
-            Log.w(AUTHORITY, "Database unavailable...");
-            return 0;
-        }
+        initialiseDatabase();
 
-        int count = 0;
+        database.beginTransaction();
+
+        int count;
         switch (sUriMatcher.match(uri)) {
             case FOREGROUND:
-                database.beginTransaction();
-                count = database.update(DATABASE_TABLES[0], values, selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.update(DATABASE_TABLES[0], values, selection, selectionArgs);
                 break;
             case APPLICATIONS:
-                database.beginTransaction();
-                count = database.update(DATABASE_TABLES[1], values, selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.update(DATABASE_TABLES[1], values, selection, selectionArgs);
                 break;
             case NOTIFICATIONS:
-                database.beginTransaction();
-                count = database.update(DATABASE_TABLES[2], values, selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.update(DATABASE_TABLES[2], values, selection, selectionArgs);
                 break;
             case ERROR:
-                database.beginTransaction();
-                count = database.update(DATABASE_TABLES[3], values, selection,
-                        selectionArgs);
-                database.setTransactionSuccessful();
-                database.endTransaction();
+                count = database.update(DATABASE_TABLES[3], values, selection, selectionArgs);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
+
+        database.setTransactionSuccessful();
+        database.endTransaction();
+
         getContext().getContentResolver().notifyChange(uri, null);
         return count;
     }

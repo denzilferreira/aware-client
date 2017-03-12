@@ -1,5 +1,6 @@
 package com.aware.phone.ui;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -18,5 +19,10 @@ public class About extends Aware_Activity {
         WebSettings settings = about_us.getSettings();
         settings.setJavaScriptEnabled(true);
         about_us.loadUrl("http://www.awareframework.com/team/");
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+
     }
 }

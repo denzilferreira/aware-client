@@ -126,34 +126,18 @@ public class Gravity_Provider extends ContentProvider {
 					+ Gravity_Data.ACCURACY + " integer default 0,"
 					+ Gravity_Data.LABEL + " text default ''" };
 
-	private static UriMatcher sUriMatcher = null;
-	private static HashMap<String, String> sensorDeviceMap = null;
-	private static HashMap<String, String> sensorDataMap = null;
-	private static DatabaseHelper databaseHelper = null;
-	private static SQLiteDatabase database = null;
+	private UriMatcher sUriMatcher = null;
+	private HashMap<String, String> sensorDeviceMap = null;
+	private HashMap<String, String> sensorDataMap = null;
 
-	private boolean initializeDB() {
-        if (databaseHelper == null) {
-            databaseHelper = new DatabaseHelper( getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS );
-        }
-        if( databaseHelper != null && ( database == null || ! database.isOpen() )) {
-            database = databaseHelper.getWritableDatabase();
-        }
-        return( database != null && databaseHelper != null);
-    }
+	private DatabaseHelper dbHelper;
+	private static SQLiteDatabase database;
 
-	/**
-	 * Recreates the ContentProvider
-	 */
-	public static void resetDB( Context c ) {
-		Log.d("AWARE", "Resetting " + DATABASE_NAME + "...");
-
-		File db = new File(DATABASE_NAME);
-		db.delete();
-		databaseHelper = new DatabaseHelper( c, DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
-		if( databaseHelper != null ) {
-			database = databaseHelper.getWritableDatabase();
-		}
+	private void initialiseDatabase() {
+		if (dbHelper == null)
+			dbHelper = new DatabaseHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION, DATABASE_TABLES, TABLES_FIELDS);
+		if (database == null)
+			database = dbHelper.getWritableDatabase();
 	}
 	
 	/**
@@ -161,31 +145,28 @@ public class Gravity_Provider extends ContentProvider {
 	 */
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
-	    if( ! initializeDB() ) {
-            Log.w(AUTHORITY,"Database unavailable...");
-            return 0;
-        }
+		initialiseDatabase();
 
-		int count = 0;
+		//lock database for transaction
+		database.beginTransaction();
+
+		int count;
 		switch (sUriMatcher.match(uri)) {
 		case SENSOR_DEV:
-            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[0], selection,
 					selectionArgs);
-            database.setTransactionSuccessful();
-            database.endTransaction();
 			break;
 		case SENSOR_DATA:
-            database.beginTransaction();
 			count = database.delete(DATABASE_TABLES[1], selection,
 					selectionArgs);
-            database.setTransactionSuccessful();
-            database.endTransaction();
 			break;
 		default:
-
+			database.endTransaction();
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
+
+		database.setTransactionSuccessful();
+		database.endTransaction();
 
 		getContext().getContentResolver().notifyChange(uri, null);
 		return count;
@@ -212,17 +193,14 @@ public class Gravity_Provider extends ContentProvider {
 	 */
 	@Override
 	public Uri insert(Uri uri, ContentValues initialValues) {
-	    if( ! initializeDB() ) {
-            Log.w(AUTHORITY,"Database unavailable...");
-            return null;
-        }
+		initialiseDatabase();
 
-		ContentValues values = (initialValues != null) ? new ContentValues(
-				initialValues) : new ContentValues();
+		ContentValues values = (initialValues != null) ? new ContentValues(initialValues) : new ContentValues();
+
+		database.beginTransaction();
 
 		switch (sUriMatcher.match(uri)) {
 		case SENSOR_DEV:
-            database.beginTransaction();
 			long accel_id = database.insertWithOnConflict(DATABASE_TABLES[0],
 					Gravity_Sensor.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
             database.setTransactionSuccessful();
@@ -233,9 +211,9 @@ public class Gravity_Provider extends ContentProvider {
 				getContext().getContentResolver().notifyChange(accelUri, null);
 				return accelUri;
 			}
+			database.endTransaction();
 			throw new SQLException("Failed to insert row into " + uri);
 		case SENSOR_DATA:
-            database.beginTransaction();
 			long accelData_id = database.insertWithOnConflict(DATABASE_TABLES[1],
 					Gravity_Data.DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
             database.setTransactionSuccessful();
@@ -247,9 +225,10 @@ public class Gravity_Provider extends ContentProvider {
 						null);
 				return accelDataUri;
 			}
+			database.endTransaction();
 			throw new SQLException("Failed to insert row into " + uri);
 		default:
-
+			database.endTransaction();
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
 	}
@@ -262,15 +241,13 @@ public class Gravity_Provider extends ContentProvider {
      */
     @Override
     public int bulkInsert(Uri uri, ContentValues[] values) {
-        if( ! initializeDB() ) {
-            Log.w(AUTHORITY,"Database unavailable...");
-            return 0;
-        }
+		initialiseDatabase();
+
+		database.beginTransaction();
 
         int count = 0;
         switch ( sUriMatcher.match(uri) ) {
             case SENSOR_DEV:
-                database.beginTransaction();
                 for (ContentValues v : values) {
                     long id;
                     try {
@@ -284,12 +261,8 @@ public class Gravity_Provider extends ContentProvider {
                         count++;
                     }
                 }
-                database.setTransactionSuccessful();
-                database.endTransaction();
-                getContext().getContentResolver().notifyChange(uri, null);
-                return count;
+                break;
             case SENSOR_DATA:
-                database.beginTransaction();
                 for (ContentValues v : values) {
                     long id;
                     try {
@@ -303,13 +276,18 @@ public class Gravity_Provider extends ContentProvider {
                         count++;
                     }
                 }
-                database.setTransactionSuccessful();
-                database.endTransaction();
-                getContext().getContentResolver().notifyChange(uri, null);
-                return count;
+                break;
             default:
+				database.endTransaction();
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
+
+		database.setTransactionSuccessful();
+		database.endTransaction();
+
+		getContext().getContentResolver().notifyChange(uri, null);
+
+		return count;
     }
 
 	@Override
@@ -361,11 +339,8 @@ public class Gravity_Provider extends ContentProvider {
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection,
 			String[] selectionArgs, String sortOrder) {
-	    
-	    if( ! initializeDB() ) {
-            Log.w(AUTHORITY,"Database unavailable...");
-            return null;
-        }
+
+		initialiseDatabase();
 
 		SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
 		switch (sUriMatcher.match(uri)) {
@@ -400,30 +375,27 @@ public class Gravity_Provider extends ContentProvider {
 	public int update(Uri uri, ContentValues values, String selection,
 			String[] selectionArgs) {
 
-	    if( ! initializeDB() ) {
-            Log.w(AUTHORITY,"Database unavailable...");
-            return 0;
-        }
+		initialiseDatabase();
 
-		int count = 0;
+		database.beginTransaction();
+
+		int count;
 		switch (sUriMatcher.match(uri)) {
 		case SENSOR_DEV:
-            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[0], values, selection,
 					selectionArgs);
-            database.setTransactionSuccessful();
-            database.endTransaction();
 			break;
 		case SENSOR_DATA:
-            database.beginTransaction();
 			count = database.update(DATABASE_TABLES[1], values, selection,
 					selectionArgs);
-            database.setTransactionSuccessful();
-            database.endTransaction();
 			break;
 		default:
+			database.endTransaction();
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
+
+		database.setTransactionSuccessful();
+		database.endTransaction();
 
 		getContext().getContentResolver().notifyChange(uri, null);
 		return count;

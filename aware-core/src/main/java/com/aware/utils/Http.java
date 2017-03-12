@@ -1,19 +1,13 @@
 
 package com.aware.utils;
 
-import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
 import com.aware.Aware;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -22,12 +16,10 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.zip.GZIPInputStream;
 
-import javax.net.ssl.HttpsURLConnection;
 
 /**
  * HTML POST/GET client wrapper
@@ -38,28 +30,30 @@ public class Http {
 	/**
 	 * Logging tag (default = "AWARE")
 	 */
-	private static String TAG = "AWARE::HTML";
+	private String TAG = "AWARE::HTML";
+    private int timeout = 60 * 1000;
 
-	private static Context sContext;
+	public Http() {}
 
-	public Http(Context c) {
-		sContext = c;
-	}
+    public Http setTimeout(int connection_timeout) {
+        timeout = connection_timeout;
+        return this;
+    }
 
     /**
      * Request a GET from an URL.
-     * @param url
+     * @param url GET URL
      * @return String with the content of the reply
      */
-    public synchronized String dataGET(String url, boolean is_gzipped) {
+    public String dataGET(final String url, final boolean is_gzipped) {
         if( url.length() == 0 ) return null;
 
         try {
 
             URL path = new URL(url);
             HttpURLConnection path_connection = (HttpURLConnection) path.openConnection();
-            path_connection.setReadTimeout(10000);
-            path_connection.setConnectTimeout(10000);
+            path_connection.setReadTimeout(timeout);
+            path_connection.setConnectTimeout(timeout);
             path_connection.setRequestMethod("GET");
             path_connection.setDoInput(true);
 
@@ -81,43 +75,41 @@ public class Http {
                 stream = new GZIPInputStream(stream);
             }
 
-            BufferedReader br = new BufferedReader(new InputStreamReader(stream));
-
-            String page_content = "";
-            String line;
-            while( (line = br.readLine()) != null ) {
-                page_content+=line;
+            String result;
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(stream))) {
+                StringBuilder page_content = new StringBuilder("");
+                String line;
+                while ((line = br.readLine()) != null) {
+                    page_content.append(line);
+                }
+                result = page_content.toString();
+                br.close();
             }
+            stream.close();
 
-            if (Aware.DEBUG) {
-//                Log.i(TAG,"Request: GET, URL: " + url);
-//                Log.i(TAG,"Answer:" + page_content );
-            }
-
-            return page_content;
-
+            return result;
         } catch (IOException e) {
-            if(Aware.DEBUG) Log.e(TAG,e.getMessage());
+            Log.e(TAG, "Sync HTTP dataGet io/null error: " + e.getMessage());
             return null;
         }
     }
 
 	/**
 	 * Make a POST to the URL, with the Hashtable<String, String> data, using gzip compression
-	 * @param url
-	 * @param data
-     * @param is_gzipped
+	 * @param url POST URL
+	 * @param data Data to send
+     * @param is_gzipped Gzip data or not
 	 * @return String with server response. If GZipped, use Http.undoGZIP to recover data
 	 */
-	public synchronized String dataPOST(String url, Hashtable<String, String> data, boolean is_gzipped) {
+	public String dataPOST(final String url, final Hashtable<String, String> data, final boolean is_gzipped) {
         if( url.length() == 0 ) return null;
 
 		try{
 
             URL path = new URL(url);
             HttpURLConnection path_connection = (HttpURLConnection) path.openConnection();
-            path_connection.setReadTimeout(10000);
-            path_connection.setConnectTimeout(10000);
+            path_connection.setReadTimeout(timeout);
+            path_connection.setConnectTimeout(timeout);
             path_connection.setRequestMethod("POST");
             path_connection.setDoOutput(true);
 
@@ -153,29 +145,27 @@ public class Http {
                 stream = new GZIPInputStream(stream);
             }
 
-            BufferedReader br = new BufferedReader(new InputStreamReader(stream));
-
-            String page_content = "";
-            String line;
-            while( (line = br.readLine()) != null ) {
-                page_content+=line;
+            String result;
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(stream))) {
+                StringBuilder page_content = new StringBuilder("");
+                String line;
+                while ((line = br.readLine()) != null) {
+                    page_content.append(line);
+                }
+                result = page_content.toString();
+                br.close();
             }
+            stream.close();
 
-            if (Aware.DEBUG) {
-//                Log.d(TAG, "Request: POST, URL: " + url + "\nData:" + builder.build().getEncodedQuery());
-//                Log.i(TAG,"Answer:" + page_content );
-            }
+            return result;
 
-            return page_content;
 		}catch (UnsupportedEncodingException e) {
-			Log.e(TAG,e.getMessage());
-			return null;
+//            Log.e(TAG, "Sync HTTP dataPost encoding error: " + e.getMessage());
 		} catch (IOException e) {
-			Log.e(TAG,e.getMessage());
-			return null;
+//            Log.e(TAG, "Sync HTTP dataPost io/null error: " + e.getMessage());
 		} catch (IllegalStateException e ) {
-			Log.e(TAG,e.getMessage());
-			return null;
+//            Log.e(TAG, "Sync HTTP dataPost state error: " + e.getMessage());
 		}
+        return null;
 	}
 }

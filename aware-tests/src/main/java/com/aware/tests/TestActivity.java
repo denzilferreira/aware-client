@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.aware.Aware;
+import com.aware.Aware_Preferences;
 import com.aware.ESM;
 import com.aware.providers.Scheduler_Provider;
 import com.aware.ui.ESM_Queue;
@@ -24,9 +25,6 @@ import com.aware.utils.Scheduler;
 
 import org.json.JSONException;
 
-/**
- * Created by denzilferreira on 02/03/16.
- */
 public class TestActivity extends Activity {
 
     int REQUEST_STORAGE = 1;
@@ -45,6 +43,7 @@ public class TestActivity extends Activity {
         button_ESMNotification = (Button) findViewById(R.id.button_ESMNotification);
         button_ESMNotification.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_ESM, true);
                 TestESM testESM = new TestESM();
                 testESM.test(getApplicationContext());
             }
@@ -61,7 +60,7 @@ public class TestActivity extends Activity {
         button_delete_schedules = (Button) findViewById(R.id.btn_clear_schedulers);
         button_delete_schedules.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null);
+                Scheduler.clearSchedules(getApplicationContext());
                 Toast.makeText(getApplicationContext(), "Cleared!", Toast.LENGTH_SHORT).show();
             }
         });
