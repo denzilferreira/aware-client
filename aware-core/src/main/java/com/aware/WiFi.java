@@ -267,8 +267,8 @@ public class WiFi extends Aware_Sensor {
                     sendBroadcast(scanStart);
                     wifiManager.startScan();
                 } else {
-                    if (DEBUG) {
-                        Log.d(TAG, "WiFi is off");
+                    if (Aware.DEBUG) {
+                        Log.d(WiFi.TAG, "WiFi is off");
                     }
 
                     ContentValues rowData = new ContentValues();

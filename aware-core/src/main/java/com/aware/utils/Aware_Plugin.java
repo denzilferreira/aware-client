@@ -35,37 +35,37 @@ public class Aware_Plugin extends Service {
     /**
      * Debug tag for this plugin
      */
-    public static String TAG = "AWARE Plugin";
+    public String TAG = "AWARE Plugin";
 
     /**
      * Debug flag for this plugin
      */
-    public static boolean DEBUG = false;
+    public boolean DEBUG = false;
 
     /**
      * Context producer for this plugin
      */
-    public static ContextProducer CONTEXT_PRODUCER = null;
+    public ContextProducer CONTEXT_PRODUCER = null;
 
     /**
      * Context ContentProvider tables
      */
-    public static String[] DATABASE_TABLES = null;
+    public String[] DATABASE_TABLES = null;
 
     /**
      * Context ContentProvider fields
      */
-    public static String[] TABLES_FIELDS = null;
+    public String[] TABLES_FIELDS = null;
 
     /**
      * Context ContentProvider Uris
      */
-    public static Uri[] CONTEXT_URIS = null;
+    public Uri[] CONTEXT_URIS = null;
 
     /**
      * Permissions needed for this plugin to run
      */
-    public static ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
+    public ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
 
     /**
      * Plugin is inactive
@@ -80,7 +80,7 @@ public class Aware_Plugin extends Service {
     /**
      * Indicates if permissions were accepted OK
      */
-    public static boolean PERMISSIONS_OK = true;
+    public boolean PERMISSIONS_OK = true;
 
     @Override
     public void onCreate() {

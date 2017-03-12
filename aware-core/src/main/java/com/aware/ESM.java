@@ -491,9 +491,7 @@ public class ESM extends Aware_Sensor {
                 if (context.getResources().getBoolean(R.bool.standalone)) Log.d(ESM.TAG, context.getPackageName() + " will handle ESM");
 
                 //Check if ESM service is actually running...
-                if (!Aware.is_running(context, ESM.class)) {
-                    Aware.startESM(context);
-                }
+                Aware.startESM(context);
 
                 if (intent.getAction().equals(ESM.ACTION_AWARE_TRY_ESM)) {
                     queueESM(context, intent.getStringExtra(ESM.EXTRA_ESM), true);
@@ -557,7 +555,7 @@ public class ESM extends Aware_Sensor {
     }
 
     private static void processFlow(Context context, String current_answer) {
-        if (ESM.DEBUG) {
+        if (Aware.DEBUG) {
             Log.d(ESM.TAG, "Current answer: " + current_answer);
         }
 
@@ -577,7 +575,7 @@ public class ESM extends Aware_Sensor {
                     JSONObject nextESM = flow.getJSONObject(ESM_Question.flow_next_esm).getJSONObject(EXTRA_ESM);
 
                     if (flowAnswer.equals(current_answer)) {
-                        if (ESM.DEBUG) Log.d(ESM.TAG, "Following next question: " + nextESM);
+                        if (Aware.DEBUG) Log.d(ESM.TAG, "Following next question: " + nextESM);
 
                         //Queued ESM
                         ContentValues rowData = new ContentValues();
@@ -591,7 +589,7 @@ public class ESM extends Aware_Sensor {
 
                         context.getContentResolver().insert(ESM_Data.CONTENT_URI, rowData);
                     } else {
-                        if (ESM.DEBUG)
+                        if (Aware.DEBUG)
                             Log.d(ESM.TAG, "Branched split: " + flowAnswer + " Skipping: " + nextESM);
 
                         //Branched ESM
