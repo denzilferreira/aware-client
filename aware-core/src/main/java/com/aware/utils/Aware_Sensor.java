@@ -33,39 +33,39 @@ public class Aware_Sensor extends Service {
     /**
      * Debug tag for this sensor
      */
-    public static String TAG = "AWARE Sensor";
+    public String TAG = "AWARE Sensor";
 
     /**
      * Debug flag for this sensor
      */
-    public static boolean DEBUG = false;
+    public boolean DEBUG = false;
 
-    public static ContextProducer CONTEXT_PRODUCER = null;
+    public ContextProducer CONTEXT_PRODUCER = null;
 
     /**
      * Sensor database tables
      */
-    public static String[] DATABASE_TABLES = null;
+    public String[] DATABASE_TABLES = null;
 
     /**
      * Sensor table fields
      */
-    public static String[] TABLES_FIELDS = null;
+    public String[] TABLES_FIELDS = null;
 
     /**
      * Context Providers URIs
      */
-    public static Uri[] CONTEXT_URIS = null;
+    public Uri[] CONTEXT_URIS = null;
 
     /**
      * Permissions needed for this plugin to run
      */
-    public static ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
+    public ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
 
     /**
      * Indicates if permissions were accepted OK
      */
-    public static boolean PERMISSIONS_OK;
+    public boolean PERMISSIONS_OK = true;
 
     /**
      * Interface to share context with other applications/addons<br/>
@@ -113,6 +113,9 @@ public class Aware_Sensor extends Service {
             permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_SERVICE, getPackageName() + "/" + getClass().getName()); //restarts plugin once permissions are accepted
             startActivity(permissions);
         } else {
+
+            PERMISSIONS_OK = true;
+
             if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                 SSLManager.handleUrl(getApplicationContext(), Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER), true);
             }

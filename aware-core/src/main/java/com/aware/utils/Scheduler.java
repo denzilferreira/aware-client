@@ -483,7 +483,7 @@ public class Scheduler extends Aware_Sensor {
                 saveSchedule(c, s, schedule.getString("package"));
             } catch (JSONException e) {
                 e.printStackTrace();
-                if (DEBUG) Log.d(Scheduler.TAG, "Error in JSON: " + e.getMessage());
+                if (Aware.DEBUG) Log.d(Scheduler.TAG, "Error in JSON: " + e.getMessage());
             }
         }
 

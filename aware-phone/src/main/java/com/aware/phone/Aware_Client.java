@@ -113,10 +113,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
             }
         }
         if (PERMISSIONS_OK) {
-            if (!Aware.is_running(getApplicationContext(), Aware.class)) {
-                Intent aware = new Intent(getApplicationContext(), Aware.class);
-                startService(aware);
-            }
+            Aware.startAWARE(this);
         }
     }
 
