@@ -209,6 +209,14 @@ public class Aware_Preferences {
     public static final String LOCATION_GEOFENCE = "location_geofence";
 
     /**
+     * Save all locations.  All locations given to the location service will be saved,
+     * without applying any logic to find the currently most accurate locations.
+     * This makes for a slightly more complicated analysis later on, but more data
+     * to work with.
+     */
+    public static final String LOCATION_SAVE_ALL = "location_save_all";
+
+    /**
      * Activate/deactivate light sensor log (boolean)
      */
     public static final String STATUS_LIGHT = "status_light";
