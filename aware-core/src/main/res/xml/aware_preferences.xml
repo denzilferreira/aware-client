@@ -308,7 +308,7 @@
                 android:key="frequency_location_gps"
                 android:persistent="true"
                 android:summary="X seconds. (0 = always on)"
-                android:title="GPS update frequency" />
+                android:title="Minimum GPS update frequency" />
 
             <EditTextPreference
                 android:defaultValue="150"
@@ -317,7 +317,7 @@
                 android:key="min_location_gps_accuracy"
                 android:persistent="true"
                 android:summary="X meters. (0 = always on)"
-                android:title="Desired GPS accuracy" />
+                android:title="Movement threshold for GPS updates" />
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -333,7 +333,7 @@
                 android:key="frequency_location_network"
                 android:persistent="true"
                 android:summary="X seconds. (0 = always on)"
-                android:title="Triangulation update frequency" />
+                android:title="Minimum triangulation update frequency" />
 
             <EditTextPreference
                 android:defaultValue="1500"
@@ -342,7 +342,7 @@
                 android:key="min_location_network_accuracy"
                 android:persistent="true"
                 android:summary="X meters. (0 = always on)"
-                android:title="Desired triangulation accuracy" />
+                android:title="Movement threshold for triangulation updates" />
 
             <EditTextPreference
                 android:defaultValue="300"
