@@ -55,6 +55,7 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
 
     private static Float LAST_VALUE = null;
     private static long LAST_TS = 0;
+    private static long LAST_SAVE = 0;
 
     private static int FREQUENCY = -1;
     private static double THRESHOLD = 0;
@@ -115,16 +116,16 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
         rowData.put(Barometer_Data.ACCURACY, event.accuracy);
         rowData.put(Barometer_Data.LABEL, LABEL);
 
-        if (data_values.size() < 250) {
-            data_values.add(rowData);
-            LAST_TS = TS;
+        data_values.add(rowData);
+        LAST_TS = TS;
 
-            Intent pressureData = new Intent(ACTION_AWARE_BAROMETER);
-            pressureData.putExtra(EXTRA_DATA, rowData);
-            sendBroadcast(pressureData);
+        Intent pressureData = new Intent(ACTION_AWARE_BAROMETER);
+        pressureData.putExtra(EXTRA_DATA, rowData);
+        sendBroadcast(pressureData);
 
-            if (Aware.DEBUG) Log.d(TAG, "Barometer:" + rowData.toString());
+        if (Aware.DEBUG) Log.d(TAG, "Barometer:" + rowData.toString());
 
+        if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;
         }
 
@@ -141,6 +142,7 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
             if (Aware.DEBUG) Log.d(TAG, e.getMessage());
         }
         data_values.clear();
+        LAST_SAVE = TS;
     }
 
     /**
@@ -282,6 +284,7 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
                 }
 
                 mSensorManager.registerListener(this, mPressure, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BAROMETER)), sensorHandler);
+                LAST_SAVE = System.currentTimeMillis();
 
                 if (Aware.DEBUG) Log.d(TAG, "Barometer service active: " + FREQUENCY + "ms");
             }

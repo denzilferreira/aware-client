@@ -54,6 +54,7 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
 
     private static Float[] LAST_VALUES = null;
     private static long LAST_TS = 0;
+    private static long LAST_SAVE = 0;
 
     private static int FREQUENCY = -1;
     private static double THRESHOLD = 0;
@@ -138,16 +139,16 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
         rowData.put(Rotation_Data.ACCURACY, event.accuracy);
         rowData.put(Rotation_Data.LABEL, LABEL);
 
-        if (data_values.size() < 250) {
-            data_values.add(rowData);
-            LAST_TS = TS;
+        data_values.add(rowData);
+        LAST_TS = TS;
 
-            Intent rotData = new Intent(ACTION_AWARE_ROTATION);
-            rotData.putExtra(EXTRA_DATA, rowData);
-            sendBroadcast(rotData);
+        Intent rotData = new Intent(ACTION_AWARE_ROTATION);
+        rotData.putExtra(EXTRA_DATA, rowData);
+        sendBroadcast(rotData);
 
-            if (Aware.DEBUG) Log.d(TAG, "Rotation:" + rowData.toString());
+        if (Aware.DEBUG) Log.d(TAG, "Rotation:" + rowData.toString());
 
+        if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;
         }
 
@@ -165,6 +166,7 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
         }
 
         data_values.clear();
+        LAST_SAVE = TS;
     }
 
     /**
@@ -303,6 +305,7 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
                 }
 
                 mSensorManager.registerListener(this, mRotation, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ROTATION)), sensorHandler);
+                LAST_SAVE = System.currentTimeMillis();
 
                 if (Aware.DEBUG) Log.d(TAG, "Rotation service active...");
             }

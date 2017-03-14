@@ -60,6 +60,7 @@ public class Light extends Aware_Sensor implements SensorEventListener {
 
     private static Float LAST_VALUE = null;
     private static long LAST_TS = 0;
+    private static long LAST_SAVE = 0;
 
     private static int FREQUENCY = -1;
     private static double THRESHOLD = 0;
@@ -120,16 +121,16 @@ public class Light extends Aware_Sensor implements SensorEventListener {
         rowData.put(Light_Data.ACCURACY, event.accuracy);
         rowData.put(Light_Data.LABEL, LABEL);
 
-        if (data_values.size() < 250) {
-            data_values.add(rowData);
-            LAST_TS = TS;
+        data_values.add(rowData);
+        LAST_TS = TS;
 
-            Intent lightData = new Intent(ACTION_AWARE_LIGHT);
-            lightData.putExtra(EXTRA_DATA, rowData);
-            sendBroadcast(lightData);
+        Intent lightData = new Intent(ACTION_AWARE_LIGHT);
+        lightData.putExtra(EXTRA_DATA, rowData);
+        sendBroadcast(lightData);
 
-            if (Aware.DEBUG) Log.d(TAG, "Light:" + rowData.toString());
+        if (Aware.DEBUG) Log.d(TAG, "Light:" + rowData.toString());
 
+        if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;
         }
 
@@ -146,6 +147,7 @@ public class Light extends Aware_Sensor implements SensorEventListener {
             if (Aware.DEBUG) Log.d(TAG, e.getMessage());
         }
         data_values.clear();
+        LAST_SAVE = TS;
     }
 
     /**
