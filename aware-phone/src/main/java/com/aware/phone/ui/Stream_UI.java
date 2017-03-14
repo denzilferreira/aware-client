@@ -145,6 +145,7 @@ public class Stream_UI extends Aware_Activity {
 
         @Override
         public int getViewTypeCount() {
+            if (getCount() == 0) return 1;
             return getCount();
         }
 
