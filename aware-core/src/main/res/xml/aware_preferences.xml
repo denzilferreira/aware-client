@@ -352,6 +352,14 @@
                 android:persistent="true"
                 android:summary="Expire after X seconds"
                 android:title="Location fix lifetime" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:dependency="status_location_gps"
+                android:key="location_save_all"
+                android:persistent="true"
+                android:summary="Don't use heurestics to only record best locations"
+                android:title="Save all locations" />
         </PreferenceScreen>
         <PreferenceScreen
             android:icon="@drawable/ic_action_light"
