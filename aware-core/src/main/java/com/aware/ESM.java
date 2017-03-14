@@ -222,8 +222,6 @@ public class ESM extends Aware_Sensor {
     public void onDestroy() {
         super.onDestroy();
 
-//        unregisterReceiver(esmMonitor);
-
         if (Aware.DEBUG) Log.d(TAG, "ESM service terminated...");
     }
 
