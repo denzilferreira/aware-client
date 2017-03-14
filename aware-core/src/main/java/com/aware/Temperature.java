@@ -59,9 +59,12 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
     private static PowerManager.WakeLock wakeLock = null;
 
     private static Float LAST_VALUE = null;
+    private static long LAST_TS = 0;
 
     private static int FREQUENCY = -1;
     private static double THRESHOLD = 0;
+    // Reject any data points that come in more often than frequency
+    private static boolean ENFORCE_FREQUENCY = false;
 
     /**
      * Broadcasted event: new sensor values
@@ -100,6 +103,9 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        long TS = System.currentTimeMillis();
+        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY/1000 )
+            return;
         if (LAST_VALUE != null && THRESHOLD > 0 && Math.abs(event.values[0] - LAST_VALUE) < THRESHOLD) {
             return;
         }
@@ -108,13 +114,14 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
 
         ContentValues rowData = new ContentValues();
         rowData.put(Temperature_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-        rowData.put(Temperature_Data.TIMESTAMP, System.currentTimeMillis());
+        rowData.put(Temperature_Data.TIMESTAMP, TS);
         rowData.put(Temperature_Data.TEMPERATURE_CELSIUS, event.values[0]);
         rowData.put(Temperature_Data.ACCURACY, event.accuracy);
         rowData.put(Temperature_Data.LABEL, LABEL);
 
         if (data_values.size() < 250) {
             data_values.add(rowData);
+            LAST_TS = TS;
 
             Intent temperatureData = new Intent(ACTION_AWARE_TEMPERATURE);
             temperatureData.putExtra(EXTRA_DATA, rowData);
@@ -263,14 +270,20 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
                     Aware.setSetting(this, Aware_Preferences.THRESHOLD_TEMPERATURE, 0.0);
                 }
 
-                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE))
-                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_TEMPERATURE))) {
+                int new_frequency = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE));
+                double new_threshold = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_TEMPERATURE));
+                boolean new_enforce_frequency = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE_ENFORCE).equals("true");
+
+                if (FREQUENCY != new_frequency
+                        || THRESHOLD != new_threshold
+                        || ENFORCE_FREQUENCY != new_enforce_frequency) {
 
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mTemperature);
 
-                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE));
-                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_TEMPERATURE));
+                    FREQUENCY = new_frequency;
+                    THRESHOLD = new_threshold;
+                    ENFORCE_FREQUENCY = new_enforce_frequency;
                 }
 
                 mSensorManager.registerListener(this, mTemperature, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TEMPERATURE)), sensorHandler);

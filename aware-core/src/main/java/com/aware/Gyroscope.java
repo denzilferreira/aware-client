@@ -50,9 +50,12 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
     private static PowerManager.WakeLock wakeLock = null;
 
     private static Float[] LAST_VALUES = null;
+    private static long LAST_TS = 0;
 
     private static int FREQUENCY = -1;
     private static double THRESHOLD = 0;
+    // Reject any data points that come in more often than frequency
+    private static boolean ENFORCE_FREQUENCY = false;
 
     /**
      * Broadcasted event: new gyroscope values
@@ -110,6 +113,9 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
             return;
         }
 
+        long TS = System.currentTimeMillis();
+        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY/1000 )
+            return;
         if (LAST_VALUES != null && THRESHOLD > 0 && Math.abs(event.values[0] - LAST_VALUES[0]) < THRESHOLD
                 && Math.abs(event.values[1] - LAST_VALUES[1]) < THRESHOLD
                 && Math.abs(event.values[2] - LAST_VALUES[2]) < THRESHOLD) {
@@ -121,7 +127,7 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
         // Proceed with saving as usual.
         ContentValues rowData = new ContentValues();
         rowData.put(Gyroscope_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-        rowData.put(Gyroscope_Data.TIMESTAMP, System.currentTimeMillis());
+        rowData.put(Gyroscope_Data.TIMESTAMP, TS);
         rowData.put(Gyroscope_Data.VALUES_0, event.values[0]);
         rowData.put(Gyroscope_Data.VALUES_1, event.values[1]);
         rowData.put(Gyroscope_Data.VALUES_2, event.values[2]);
@@ -130,6 +136,7 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
 
         if (data_values.size() < 250) {
             data_values.add(rowData);
+            LAST_TS = TS;
 
             Intent gyroData = new Intent(ACTION_AWARE_GYROSCOPE);
             gyroData.putExtra(EXTRA_DATA, rowData);
@@ -277,14 +284,20 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
                     Aware.setSetting(this, Aware_Preferences.THRESHOLD_GYROSCOPE, 0.0);
                 }
 
-                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE))
-                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GYROSCOPE))) {
+                int new_frequency = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE));
+                double new_threshold = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GYROSCOPE));
+                boolean new_enforce_frequency = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE_ENFORCE).equals("true");
+
+                if (FREQUENCY != new_frequency
+                        || THRESHOLD != new_threshold
+                        || ENFORCE_FREQUENCY != new_enforce_frequency) {
 
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mGyroscope);
 
-                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE));
-                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_GYROSCOPE));
+                    FREQUENCY = new_frequency;
+                    THRESHOLD = new_threshold;
+                    ENFORCE_FREQUENCY = new_enforce_frequency;
                 }
 
                 mSensorManager.registerListener(this, mGyroscope, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_GYROSCOPE)), sensorHandler);

@@ -66,6 +66,14 @@
                 android:persistent="true"
                 android:summary="e.g., log only if [x,y,z] >= 0.01"
                 android:title="Sensitivity (0 = disabled)" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:dependency="status_accelerometer"
+                android:key="frequency_accelerometer_enforce"
+                android:persistent="true"
+                android:summary="If Android gives points more often than frequency, ignore them."
+                android:title="Enforce the frequency" />
         </PreferenceScreen>
         <PreferenceScreen
             android:icon="@drawable/ic_action_applications"
@@ -150,6 +158,14 @@
                 android:persistent="true"
                 android:summary="e.g., log only if [x,y,z] >= 0.01"
                 android:title="Sensitivity (0 = disabled)" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:dependency="status_barometer"
+                android:key="frequency_barometer_enforce"
+                android:persistent="true"
+                android:summary="If Android gives points more often than frequency, ignore them."
+                android:title="Enforce the frequency" />
         </PreferenceScreen>
         <PreferenceScreen
             android:icon="@drawable/ic_action_battery"
@@ -255,6 +271,14 @@
                 android:summary="e.g., log only if [x,y,z] >= 0.01"
                 android:title="Sensitivity (0 = disabled)" />
 
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:dependency="status_gravity"
+                android:key="frequency_gravity_enforce"
+                android:persistent="true"
+                android:summary="If Android gives points more often than frequency, ignore them."
+                android:title="Enforce the frequency" />
+
         </PreferenceScreen>
         <PreferenceScreen
             android:icon="@drawable/ic_action_gyroscope"
@@ -286,6 +310,14 @@
                 android:persistent="true"
                 android:summary="e.g., log only if [x,y,z] >= 0.01"
                 android:title="Sensitivity (0 = disabled)" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:dependency="status_gyroscope"
+                android:key="frequency_gyroscope_enforce"
+                android:persistent="true"
+                android:summary="If Android gives points more often than frequency, ignore them."
+                android:title="Enforce the frequency" />
 
         </PreferenceScreen>
         <PreferenceScreen
@@ -397,6 +429,14 @@
                 android:summary="e.g., log only if [x,y,z] >= 0.01"
                 android:title="Sensitivity (0 = disabled)" />
 
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:dependency="status_light"
+                android:key="frequency_light_enforce"
+                android:persistent="true"
+                android:summary="If Android gives points more often than frequency, ignore them."
+                android:title="Enforce the frequency" />
+
         </PreferenceScreen>
         <PreferenceScreen
             android:icon="@drawable/ic_action_linear_acceleration"
@@ -428,6 +468,14 @@
                 android:persistent="true"
                 android:summary="e.g., log only if [x,y,z] >= 0.01"
                 android:title="Sensitivity (0 = disabled)" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:dependency="status_linear_accelerometer"
+                android:key="frequency_linear_accelerometer_enforce"
+                android:persistent="true"
+                android:summary="If Android gives points more often than frequency, ignore them."
+                android:title="Enforce the frequency" />
 
         </PreferenceScreen>
         <PreferenceScreen
@@ -489,6 +537,14 @@
                 android:persistent="true"
                 android:summary="e.g., log only if [x,y,z] >= 0.01"
                 android:title="Sensitivity (0 = disabled)" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:dependency="status_magnetometer"
+                android:key="frequency_magnetometer_enforce"
+                android:persistent="true"
+                android:summary="If Android gives points more often than frequency, ignore them."
+                android:title="Enforce the frequency" />
 
         </PreferenceScreen>
         <PreferenceScreen
@@ -564,6 +620,14 @@
                 android:summary="e.g., log only if [x,y,z] >= 0.01"
                 android:title="Sensitivity (0 = disabled)" />
 
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:dependency="status_proximity"
+                android:key="frequency_proximity_enforce"
+                android:persistent="true"
+                android:summary="If Android gives points more often than frequency, ignore them."
+                android:title="Enforce the frequency" />
+
         </PreferenceScreen>
         <PreferenceScreen
             android:icon="@drawable/ic_action_rotation"
@@ -595,6 +659,14 @@
                 android:persistent="true"
                 android:summary="e.g., log only if [x,y,z] >= 0.01"
                 android:title="Sensitivity (0 = disabled)" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:dependency="status_rotation"
+                android:key="frequency_rotation_enforce"
+                android:persistent="true"
+                android:summary="If Android gives points more often than frequency, ignore them."
+                android:title="Enforce the frequency" />
 
         </PreferenceScreen>
         <PreferenceScreen
@@ -655,6 +727,14 @@
                 android:persistent="true"
                 android:summary="e.g., log only if [x,y,z] >= 0.01"
                 android:title="Sensitivity (0 = disabled)" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:dependency="status_temperature"
+                android:key="frequency_temperature_enforce"
+                android:persistent="true"
+                android:summary="If Android gives points more often than frequency, ignore them."
+                android:title="Enforce the frequency" />
 
         </PreferenceScreen>
         <PreferenceScreen

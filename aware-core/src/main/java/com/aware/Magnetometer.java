@@ -56,9 +56,12 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
     private static PowerManager.WakeLock wakeLock = null;
 
     private static Float[] LAST_VALUES = null;
+    private static long LAST_TS = 0;
 
     private static int FREQUENCY = -1;
     private static double THRESHOLD = 0;
+    // Reject any data points that come in more often than frequency
+    private static boolean ENFORCE_FREQUENCY = false;
 
     /**
      * Broadcasted event: new sensor values
@@ -97,6 +100,9 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        long TS = System.currentTimeMillis();
+        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY/1000 )
+            return;
         if (LAST_VALUES != null && THRESHOLD > 0 &&
                 Math.abs(event.values[0] - LAST_VALUES[0]) < THRESHOLD &&
                 Math.abs(event.values[0] - LAST_VALUES[1]) < THRESHOLD &&
@@ -108,7 +114,7 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
 
         ContentValues rowData = new ContentValues();
         rowData.put(Magnetometer_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-        rowData.put(Magnetometer_Data.TIMESTAMP, System.currentTimeMillis());
+        rowData.put(Magnetometer_Data.TIMESTAMP, TS);
         rowData.put(Magnetometer_Data.VALUES_0, event.values[0]);
         rowData.put(Magnetometer_Data.VALUES_1, event.values[1]);
         rowData.put(Magnetometer_Data.VALUES_2, event.values[2]);
@@ -117,6 +123,7 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
 
         if (data_values.size() < 250) {
             data_values.add(rowData);
+            LAST_TS = TS;
 
             Intent magnetoData = new Intent(ACTION_AWARE_MAGNETOMETER);
             magnetoData.putExtra(EXTRA_DATA, rowData);
@@ -260,14 +267,20 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
                     Aware.setSetting(this, Aware_Preferences.THRESHOLD_MAGNETOMETER, 0.0);
                 }
 
-                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER))
-                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_MAGNETOMETER))) {
+                int new_frequency = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER));
+                double new_threshold = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_MAGNETOMETER));
+                boolean new_enforce_frequency = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_MAGNETOMETER_ENFORCE).equals("true");
+
+                if (FREQUENCY != new_frequency
+                        || THRESHOLD != new_threshold
+                        || ENFORCE_FREQUENCY != new_enforce_frequency) {
 
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mMagnetometer);
 
-                    FREQUENCY = Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER));
-                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_MAGNETOMETER));
+                    FREQUENCY = new_frequency;
+                    THRESHOLD = new_threshold;
+                    ENFORCE_FREQUENCY = new_enforce_frequency;
                 }
 
                 mSensorManager.registerListener(this, mMagnetometer, Integer.parseInt(Aware.getSetting(this, Aware_Preferences.FREQUENCY_MAGNETOMETER)), sensorHandler);
