@@ -168,7 +168,6 @@ public class Aware extends Service {
     public static final String SCHEDULE_STUDY_COMPLIANCE = "schedule_aware_study_compliance";
     public static final String SCHEDULE_KEEP_ALIVE = "schedule_aware_keep_alive";
 
-    private static Intent awareSrv = null;
     private static Intent accelerometerSrv = null;
     private static Intent locationsSrv = null;
     private static Intent bluetoothSrv = null;
@@ -550,7 +549,6 @@ public class Aware extends Service {
             }
 
             if (intent != null && intent.getAction() != null) {
-
                 if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_STUDY_COMPLIANCE)) {
                     complianceStatus(getApplicationContext());
                     checkBatteryLeft(getApplicationContext(), false);
@@ -560,13 +558,11 @@ public class Aware extends Service {
                         studyCheck.execute();
                     }
                 }
-
                 if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_KEEP_ALIVE)) {
                     startAWARE(getApplicationContext());
                     startPlugins(getApplicationContext());
                 }
             } else {
-                //Start components if they are not running
                 startAWARE(getApplicationContext());
                 startPlugins(getApplicationContext());
             }
@@ -740,18 +736,6 @@ public class Aware extends Service {
         PackageInfo pkg = PluginsManager.isInstalled(context, package_name);
         if (pkg != null && pkg.versionName.equals("bundled")) {
             is_bundled = true;
-        }
-
-        if (is_bundled) {
-            if (!isClassAvailable(context, context.getPackageName(), "ContextCard")) {
-                Log.d(Aware.TAG, "No ContextCard detected for " + context.getPackageName());
-                return new View(context);
-            }
-        } else {
-            if (!isClassAvailable(context, package_name, "ContextCard")) {
-                Log.d(Aware.TAG, "No ContextCard detected for " + package_name);
-                return new View(context);
-            }
         }
 
         try {
@@ -1286,7 +1270,8 @@ public class Aware extends Service {
             if (schedulers.length() > 0)
                 Scheduler.setSchedules(c, schedulers);
 
-            Aware.startAWARE(c);
+            Intent aware = new Intent(c, Aware.class);
+            c.startService(aware);
         }
     }
 
@@ -1628,7 +1613,8 @@ public static class JoinStudy extends StudyUtils {
                 }
 
                 //Start engine
-                Aware.startAWARE(getApplicationContext());
+                Intent aware = new Intent(getApplicationContext(), Aware.class);
+                startService(aware);
 
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -1707,7 +1693,8 @@ public static class JoinStudy extends StudyUtils {
             if (Aware.DEBUG) Log.w(TAG, "AWARE plugins disabled...");
         }
 
-        Aware.startAWARE(context);
+        Intent aware = new Intent(context, Aware.class);
+        context.startService(aware);
     }
 
 /**
@@ -2018,7 +2005,8 @@ public static class Storage_Broadcaster extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         if (intent.getAction().equals(Intent.ACTION_MEDIA_MOUNTED)) {
             if (Aware.DEBUG) Log.d(TAG, "Resuming AWARE data logging...");
-            Aware.startAWARE(context);
+            Intent aware = new Intent(context, Aware.class);
+            context.startService(aware);
         }
         if (intent.getAction().equals(Intent.ACTION_MEDIA_UNMOUNTED)) {
             if (Aware.DEBUG)
@@ -2099,7 +2087,8 @@ public static class AwareBoot extends BroadcastReceiver {
 
         //Guarantees that all plugins also come back up again on reboot
         if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
-            Aware.startAWARE(context);
+            Intent aware = new Intent(context, Aware.class);
+            context.startService(aware);
         }
     }
 
@@ -2164,10 +2153,6 @@ public static class AwareBoot extends BroadcastReceiver {
      * Start core and active services
      */
     public static void startAWARE(Context context) {
-        if (awareSrv == null) {
-            awareSrv = new Intent(context, Aware.class);
-            context.startService(awareSrv);
-        }
 
         startScheduler(context);
 
@@ -2357,21 +2342,6 @@ public static class AwareBoot extends BroadcastReceiver {
         stopKeyboard(context);
         stopScheduler(context);
     }
-
-    /**
-     * Check if a specific Service class (plugin, sensor) is running. This checks the services from all actively running applications.
-     * @param context
-     * @param serviceClass
-     * @return
-     */
-//    public static boolean is_running(Context context, Class<?> serviceClass) {
-//        ActivityManager manager = (ActivityManager) context.getApplicationContext().getSystemService(ACTIVITY_SERVICE);
-//        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-//            if (serviceClass.getName().equals(service.service.getClassName()))
-//                return true;
-//        }
-//        return false;
-//    }
 
     /**
      * Start the significant motion service

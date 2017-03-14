@@ -298,8 +298,8 @@ public class StudyUtils extends IntentService {
             }
         }
 
-        //Start sensors
-        Aware.startAWARE(context);
+        Intent aware = new Intent(context, Aware.class);
+        context.startService(aware);
 
         //Send data to server
         Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
