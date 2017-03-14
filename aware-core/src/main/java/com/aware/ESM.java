@@ -490,9 +490,6 @@ public class ESM extends Aware_Sensor {
                 if (context.getPackageName().equalsIgnoreCase("com.aware.phone")) Log.d(ESM.TAG, "AWARE client will handle ESM");
                 if (context.getResources().getBoolean(R.bool.standalone)) Log.d(ESM.TAG, context.getPackageName() + " will handle ESM");
 
-                //Check if ESM service is actually running...
-                Aware.startESM(context);
-
                 if (intent.getAction().equals(ESM.ACTION_AWARE_TRY_ESM)) {
                     queueESM(context, intent.getStringExtra(ESM.EXTRA_ESM), true);
                 }
