@@ -15,28 +15,34 @@
         <item >Always</item>
     </string-array>
     <string-array name="frequency_values">
+        <item>1000000</item>
         <item>200000</item>
         <item>60000</item>
         <item>20000</item>
         <item>0</item>
     </string-array>
     <string-array name="frequency_readable">
+        <item>Very slow (1000ms)</item>
         <item>Slow (200ms)</item>
         <item>Normal (60ms)</item>
         <item>Fast (20ms)</item>
         <item>Fastest (0ms)</item>
     </string-array>
     <string-array name="low_frequency_values">
-        <item>3600000000</item>
+        <item>900000000</item>
         <item>60000000</item>
         <item>1000000</item>
+        <item>200000</item>
+        <item>60000</item>
         <item>20000</item>
         <item>0</item>
     </string-array>
     <string-array name="low_frequency_readable">
-        <item>Slow (1hour)</item>
-        <item>Normal (1min)</item>
-        <item>Faster (1s)</item>
+        <item>15 minutes (900s)</item>
+        <item>1 minute (60s)</item>
+        <item>Very slow (1s)</item>
+        <item>Slow (200ms)</item>
+        <item>Normal (60ms)</item>
         <item>Fast (20ms)</item>
         <item>Fastest (0ms)</item>
     </string-array>

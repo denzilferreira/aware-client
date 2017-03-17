@@ -627,8 +627,8 @@
             <ListPreference
                 android:defaultValue="200000"
                 android:dependency="status_temperature"
-                android:entries="@array/frequency_readable"
-                android:entryValues="@array/frequency_values"
+                android:entries="@array/low_frequency_readable"
+                android:entryValues="@array/low_frequency_values"
                 android:key="frequency_temperature"
                 android:persistent="true"
                 android:summary="%s"
