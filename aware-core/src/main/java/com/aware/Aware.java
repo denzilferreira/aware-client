@@ -24,6 +24,8 @@ import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -82,6 +84,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import dalvik.system.DexFile;
@@ -1146,7 +1149,7 @@ public class Aware extends Service {
             }
 
             try {
-                ArrayList<JSONArray> sensorSync = sensorDiff(sensors, localSensors); //check sensors first
+                ArrayList<JSONArray> sensorSync = sensorDiff(c, sensors, localSensors); //check sensors first
                 if (sensorSync.get(0).length() > 0 || sensorSync.get(1).length() > 0) {
                     JSONArray enabled = sensorSync.get(0);
                     for (int i = 0; i < enabled.length(); i++) {
@@ -1339,7 +1342,30 @@ public class Aware extends Service {
      * @return
      * @throws JSONException
      */
-    private static ArrayList<JSONArray> sensorDiff(JSONArray server, JSONArray local) throws JSONException {
+    private static ArrayList<JSONArray> sensorDiff(Context context, JSONArray server, JSONArray local) throws JSONException {
+
+        SensorManager manager = (SensorManager) context.getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
+        List<Sensor> sensors = manager.getSensorList(Sensor.TYPE_ALL);
+        Hashtable<Integer, Boolean> listSensorType = new Hashtable<>();
+        for (int i = 0; i < sensors.size(); i++) {
+            listSensorType.put(sensors.get(i).getType(), true);
+        }
+
+        Hashtable<String, Integer> optionalSensors = new Hashtable<>();
+        optionalSensors.put(Aware_Preferences.STATUS_ACCELEROMETER, Sensor.TYPE_ACCELEROMETER);
+        optionalSensors.put(Aware_Preferences.STATUS_SIGNIFICANT_MOTION, Sensor.TYPE_ACCELEROMETER);
+        optionalSensors.put(Aware_Preferences.STATUS_BAROMETER, Sensor.TYPE_PRESSURE);
+        optionalSensors.put(Aware_Preferences.STATUS_GRAVITY, Sensor.TYPE_GRAVITY);
+        optionalSensors.put(Aware_Preferences.STATUS_GYROSCOPE, Sensor.TYPE_GYROSCOPE);
+        optionalSensors.put(Aware_Preferences.STATUS_LIGHT, Sensor.TYPE_LIGHT);
+        optionalSensors.put(Aware_Preferences.STATUS_LINEAR_ACCELEROMETER, Sensor.TYPE_LINEAR_ACCELERATION);
+        optionalSensors.put(Aware_Preferences.STATUS_MAGNETOMETER, Sensor.TYPE_MAGNETIC_FIELD);
+        optionalSensors.put(Aware_Preferences.STATUS_PROXIMITY, Sensor.TYPE_PROXIMITY);
+        optionalSensors.put(Aware_Preferences.STATUS_ROTATION, Sensor.TYPE_ROTATION_VECTOR);
+        optionalSensors.put(Aware_Preferences.STATUS_TEMPERATURE, Sensor.TYPE_AMBIENT_TEMPERATURE);
+
+        Set<String> keys = optionalSensors.keySet();
+
         JSONArray to_enable = new JSONArray();
         JSONArray to_disable = new JSONArray();
 
@@ -1360,12 +1386,19 @@ public class Aware extends Service {
         //enable new sensors from the server
         for (int i = 0; i < server.length(); i++) {
             JSONObject server_sensor = server.getJSONObject(i);
+
+            for(String optionalSensor : keys) {
+                if(server_sensor.getString("setting").equalsIgnoreCase(optionalSensor) && !listSensorType.containsKey(optionalSensors.get(optionalSensor)))
+                    continue;
+            }
+
             boolean is_present = false;
             for (int j = 0; j < local.length(); j++) {
                 JSONObject local_sensor = local.getJSONObject(j);
                 if (immutable_settings.contains(local_sensor.getString("setting"))) {
                     continue; //don't do anything
                 }
+
                 if (local_sensor.getString("setting").equalsIgnoreCase(server_sensor.getString("setting"))) {
                     is_present = true;
                     break;
@@ -1379,6 +1412,11 @@ public class Aware extends Service {
             JSONObject local_sensor = local.getJSONObject(j);
             if (immutable_settings.contains(local_sensor.getString("setting"))) {
                 continue; //don't do anything
+            }
+
+            for(String optionalSensor : keys) {
+                if(local_sensor.getString("setting").equalsIgnoreCase(optionalSensor) && !listSensorType.containsKey(optionalSensors.get(optionalSensor)))
+                    continue;
             }
 
             boolean remove = true;

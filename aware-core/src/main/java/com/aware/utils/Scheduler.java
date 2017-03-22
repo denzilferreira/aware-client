@@ -96,10 +96,10 @@ public class Scheduler extends Aware_Sensor {
     public static final String ACTION_EXTRA_VALUE = "extra_value";
 
     //String is the scheduler ID, and hashtable contains list of IntentFilters and BroadcastReceivers
-    private static Hashtable<String, Hashtable<IntentFilter, BroadcastReceiver>> schedulerListeners = new Hashtable<>();
+    private static final Hashtable<String, Hashtable<IntentFilter, BroadcastReceiver>> schedulerListeners = new Hashtable<>();
 
     //String is the scheduler ID, and hashtable contains list of Uri and ContentObservers
-    private static Hashtable<String, Hashtable<Uri, ContentObserver>> schedulerDataObservers = new Hashtable<>();
+    private static final Hashtable<String, Hashtable<Uri, ContentObserver>> schedulerDataObservers = new Hashtable<>();
 
     /**
      * Save the defined scheduled task
@@ -142,18 +142,19 @@ public class Scheduler extends Aware_Sensor {
                     start.set(Calendar.HOUR_OF_DAY, now.get(Calendar.HOUR_OF_DAY));
                     start.add(Calendar.MINUTE, 15); //schedule randomly 15 minutes from now->latest
 
-                    Log.d(TAG, "Random times set 15min from now -> latest today\n");
+                    Log.d(TAG, "Random times set for today between " + start.getTime().toString() + " and " + end.getTime().toString());
                 }
 
-                if (now.get(Calendar.HOUR_OF_DAY) > latest) { //too late to schedule them today, schedule for the next day
+                if (now.get(Calendar.HOUR_OF_DAY) > latest) { //too late to schedule them today, schedule for the next day starting at the earliest hour onwards
                     start.add(Calendar.DAY_OF_YEAR, 1);
+                    start.set(Calendar.HOUR_OF_DAY, earliest);
                     start.set(Calendar.MINUTE, 0);
                     start.set(Calendar.SECOND, 0);
                     start.set(Calendar.MILLISECOND, 0);
 
                     end.add(Calendar.DAY_OF_YEAR, 1);
 
-                    Log.d(TAG, "Random times set for tomorrow\n");
+                    Log.d(TAG, "Random times set for tomorrow between " + start.getTime().toString() + " and " + end.getTime().toString());
                 }
 
                 ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
@@ -244,19 +245,20 @@ public class Scheduler extends Aware_Sensor {
                     start.set(Calendar.HOUR_OF_DAY, now.get(Calendar.HOUR_OF_DAY));
                     start.add(Calendar.MINUTE, 15); //schedule randomly 15 minutes from now->latest
 
-                    Log.d(TAG, "Random times set 15min from now -> latest today\n");
+                    Log.d(TAG, "Random times set for today between " + start.getTime().toString() + " and " + end.getTime().toString());
                 }
 
                 //too late to schedule them today, schedule for the next day
                 if (now.get(Calendar.HOUR_OF_DAY) > latest) {
                     start.add(Calendar.DAY_OF_YEAR, 1);
+                    start.set(Calendar.HOUR_OF_DAY, earliest);
                     start.set(Calendar.MINUTE, 0);
                     start.set(Calendar.SECOND, 0);
                     start.set(Calendar.MILLISECOND, 0);
 
                     end.add(Calendar.DAY_OF_YEAR, 1);
 
-                    Log.d(TAG, "Random times set for tomorrow\n");
+                    Log.d(TAG, "Random times set for tomorrow between " + start.getTime().toString() + " and " + end.getTime().toString());
                 }
 
                 ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
@@ -345,7 +347,7 @@ public class Scheduler extends Aware_Sensor {
             start.add(Calendar.DAY_OF_YEAR, 1);
             end.add(Calendar.DAY_OF_YEAR, 1);
 
-            Log.d(TAG, "RANDOM TIME is TOMORROW\n");
+            Log.d(TAG, "Random times set for tomorrow between " + start.getTime().toString() + " and " + end.getTime().toString());
 
             ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
             String original_id = schedule.getScheduleID();
@@ -412,6 +414,7 @@ public class Scheduler extends Aware_Sensor {
      */
     public static void removeSchedule(Context context, String schedule_id, String package_name) {
         context.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule_id + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + package_name + "'", null);
+
         clearReceivers(context, schedule_id);
         clearContentObservers(context, schedule_id);
     }
@@ -516,10 +519,11 @@ public class Scheduler extends Aware_Sensor {
         Hashtable<IntentFilter, BroadcastReceiver> scheduled = schedulerListeners.get(schedule_id);
         for (IntentFilter filter : scheduled.keySet()) {
             try {
-                c.unregisterReceiver((BroadcastReceiver) scheduled.get(filter));
+                c.unregisterReceiver(scheduled.get(filter));
             } catch (IllegalArgumentException | NullPointerException e) {
             }
         }
+        schedulerListeners.remove(schedule_id);
     }
 
     private static void clearContentObservers(Context c, String schedule_id) {
@@ -527,10 +531,11 @@ public class Scheduler extends Aware_Sensor {
         Hashtable<Uri, ContentObserver> scheduled = schedulerDataObservers.get(schedule_id);
         for (Uri data : scheduled.keySet()) {
             try {
-                c.getContentResolver().unregisterContentObserver((DBObserver) scheduled.get(data));
+                c.getContentResolver().unregisterContentObserver(scheduled.get(data));
             } catch (IllegalArgumentException | NullPointerException e) {
             }
         }
+        schedulerDataObservers.remove(schedule_id);
     }
 
     /**
@@ -930,7 +935,7 @@ public class Scheduler extends Aware_Sensor {
     /**
      * Scheduler's ContentObservers
      */
-    public class DBObserver extends ContentObserver {
+    private class DBObserver extends ContentObserver {
         private Uri data;
         private String condition;
         private Schedule schedule;
@@ -958,7 +963,7 @@ public class Scheduler extends Aware_Sensor {
         public void onChange(boolean selfChange) {
             super.onChange(selfChange);
 
-            Log.d(Aware.TAG, "Checking condition : " + data.toString() + " where: " + condition);
+            if (DEBUG) Log.d(Aware.TAG, "Checking condition : " + data.toString() + " where: " + condition);
 
             if (this.data != null && this.condition.length() > 0) {
 
@@ -973,7 +978,7 @@ public class Scheduler extends Aware_Sensor {
                 if (condition_met) {
                     if (is_trigger(schedule)) {
                         performAction(schedule);
-                        Log.d(Aware.TAG, "Condition triggered: " + data.toString() + " where: " + condition);
+                        if (DEBUG) Log.d(Aware.TAG, "Condition triggered: " + data.toString() + " where: " + condition);
                     }
                 }
             }
@@ -1007,6 +1012,7 @@ public class Scheduler extends Aware_Sensor {
                     if (schedule == null) {
                         if (DEBUG)
                             Log.e(TAG, "Failed to load schedule... something is wrong with the database.");
+
                         continue;
                     }
 
@@ -1027,8 +1033,8 @@ public class Scheduler extends Aware_Sensor {
                                 @Override
                                 public void onReceive(Context context, Intent intent) {
                                     if (is_trigger(schedule)) {
-                                        if (DEBUG)
-                                            Log.d(TAG, "Triggered contextual trigger: " + contexts.toString());
+                                        if (DEBUG) Log.d(TAG, "Triggered contextual trigger: " + contexts.toString());
+
                                         performAction(schedule);
                                     }
                                 }
@@ -1036,15 +1042,17 @@ public class Scheduler extends Aware_Sensor {
 
                             Hashtable<IntentFilter, BroadcastReceiver> scheduler_listener = new Hashtable<>();
                             scheduler_listener.put(filter, listener);
+
                             schedulerListeners.put(schedule.getScheduleID(), scheduler_listener);
 
                             registerReceiver(listener, filter);
 
-                            if (DEBUG)
-                                Log.d(TAG, "Registered a contextual trigger for " + contexts.toString());
+                            if (DEBUG) Log.d(TAG, "Registered a contextual trigger for " + contexts.toString());
+
                         } else {
-                            if (DEBUG)
-                                Log.d(TAG, "Contextual triggers are active: " + schedule.getContexts().toString());
+
+                            if (DEBUG) Log.d(TAG, "Contextual triggers are active: " + schedule.getContexts().toString());
+
                         }
 
                         continue;
@@ -1091,8 +1099,7 @@ public class Scheduler extends Aware_Sensor {
 
                     //Not contextual or conditional scheduler, it is time-based
                     if (is_trigger(schedule)) {
-                        if (DEBUG)
-                            Log.d(TAG, "Triggering scheduled task: " + schedule.getScheduleID() + " in package: " + getPackageName());
+                        if (DEBUG) Log.d(TAG, "Triggering scheduled task: " + schedule.getScheduleID() + " in package: " + getPackageName());
                         performAction(schedule);
                     }
                 } catch (JSONException e) {
@@ -1212,11 +1219,8 @@ public class Scheduler extends Aware_Sensor {
                 if (previous != null && is_interval_elapsed(now, previous, schedule.getIntervalDelayed())) {
                     // Run schedule if interval is elapsed since last run time
                     execute_interval = true;
-                } else if (is_interval_elapsed(now, creation_time, schedule.getIntervalDelayed())) {
-                    // Otherwise, only execute if interval elapsed since
-                    execute_interval = true;
-                } else {
-                    execute_interval = false;
+                } else { // Otherwise, only execute if interval elapsed since
+                    execute_interval = (is_interval_elapsed(now, creation_time, schedule.getIntervalDelayed()));
                 }
                 if (DEBUG) Log.d(Scheduler.TAG, "Trigger interval (delayed): " + execute_interval);
             }
