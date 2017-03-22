@@ -701,7 +701,7 @@ public class Aware extends Service {
                 if (Aware.DEBUG) Log.d(Aware.TAG, "Initializing external: " + componentName.toString());
             }
 
-            if (!activePlugins.containsKey(package_name) || !is_running(context, package_name)) {
+            if (!activePlugins.containsKey(package_name)) {
                 Intent pluginIntent = new Intent();
                 pluginIntent.setComponent(componentName);
                 context.startService(pluginIntent);
