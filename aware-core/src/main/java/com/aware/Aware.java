@@ -699,7 +699,7 @@ public class Aware extends Service {
                 if (Aware.DEBUG) Log.d(Aware.TAG, "Initializing external: " + componentName.toString());
             }
 
-            if (!activePlugins.containsKey(package_name)) {
+            if (!activePlugins.containsKey(package_name) || !is_running(context, package_name)) {
                 Intent pluginIntent = new Intent();
                 pluginIntent.setComponent(componentName);
                 context.startService(pluginIntent);
@@ -709,6 +709,14 @@ public class Aware extends Service {
         }
     }
 
+    private static boolean is_running(Context context, String package_name) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (package_name.equals(service.service.getPackageName()))
+                return true;
+        }
+        return false;
+    }
 
     /**
      * Requests the download of a plugin given the package name from AWARE webservices or the Play Store otherwise
