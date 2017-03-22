@@ -80,6 +80,7 @@ public class WebserviceHelper extends Service {
 
     private static final Map<String, Boolean> SYNCED_TABLES = Collections.synchronizedMap(new HashMap<String, Boolean>());
     private static ArrayList<String> highFrequencySensors = new ArrayList<>();
+    private static final ArrayList<String> dontClearSensors = new ArrayList<>();
 
     // Handler that receives messages from the thread
     private final class SyncQueue extends Handler {
@@ -123,6 +124,8 @@ public class WebserviceHelper extends Service {
         highFrequencySensors.add("rotation");
         highFrequencySensors.add("temperature");
         highFrequencySensors.add("proximity");
+
+        dontClearSensors.add("aware_studies");
 
         notificationID = 0;
 
@@ -613,6 +616,14 @@ public class WebserviceHelper extends Service {
                 context_data.close(); //clear phone's memory immediately
 
                 lastSynced = rows.getJSONObject(rows.length() - 1).getLong("timestamp"); //last record to be synced
+                // For some tables, we must not clear everything.  Leave one row of these tables.
+                if (dontClearSensors.contains(DATABASE_TABLE)) {
+                    if (rows.length() >= 2) {
+                        lastSynced = rows.getJSONObject(rows.length() - 2).getLong("timestamp"); //last record to be synced
+                    } else {
+                        lastSynced = 0;
+                    }
+                }
 
                 Hashtable<String, String> request = new Hashtable<>();
                 request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);

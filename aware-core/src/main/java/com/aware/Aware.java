@@ -24,6 +24,8 @@ import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -82,6 +84,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import dalvik.system.DexFile;
@@ -168,7 +171,6 @@ public class Aware extends Service {
     public static final String SCHEDULE_STUDY_COMPLIANCE = "schedule_aware_study_compliance";
     public static final String SCHEDULE_KEEP_ALIVE = "schedule_aware_keep_alive";
 
-    private static Intent awareSrv = null;
     private static Intent accelerometerSrv = null;
     private static Intent locationsSrv = null;
     private static Intent bluetoothSrv = null;
@@ -281,7 +283,7 @@ public class Aware extends Service {
         boolean is_ignored = true;
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
             PowerManager pm = (PowerManager) context.getApplicationContext().getSystemService(Context.POWER_SERVICE);
-            is_ignored = (!pm.isIgnoringBatteryOptimizations(package_name));
+            is_ignored = pm.isIgnoringBatteryOptimizations(package_name);
         }
 
         if (!is_ignored) {
@@ -302,6 +304,8 @@ public class Aware extends Service {
             NotificationManager notManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             notManager.notify(Aware.AWARE_BATTERY_OPTIMIZATION_ID, mBuilder.build());
         }
+
+        Log.d(Aware.TAG, "Battery Optimizations: " + is_ignored);
 
         return is_ignored;
     }
@@ -550,7 +554,6 @@ public class Aware extends Service {
             }
 
             if (intent != null && intent.getAction() != null) {
-
                 if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_STUDY_COMPLIANCE)) {
                     complianceStatus(getApplicationContext());
                     checkBatteryLeft(getApplicationContext(), false);
@@ -560,13 +563,11 @@ public class Aware extends Service {
                         studyCheck.execute();
                     }
                 }
-
                 if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_KEEP_ALIVE)) {
                     startAWARE(getApplicationContext());
                     startPlugins(getApplicationContext());
                 }
             } else {
-                //Start components if they are not running
                 startAWARE(getApplicationContext());
                 startPlugins(getApplicationContext());
             }
@@ -710,6 +711,14 @@ public class Aware extends Service {
         }
     }
 
+    private static boolean is_running(Context context, String package_name) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (package_name.equals(service.service.getPackageName()))
+                return true;
+        }
+        return false;
+    }
 
     /**
      * Requests the download of a plugin given the package name from AWARE webservices or the Play Store otherwise
@@ -740,18 +749,6 @@ public class Aware extends Service {
         PackageInfo pkg = PluginsManager.isInstalled(context, package_name);
         if (pkg != null && pkg.versionName.equals("bundled")) {
             is_bundled = true;
-        }
-
-        if (is_bundled) {
-            if (!isClassAvailable(context, context.getPackageName(), "ContextCard")) {
-                Log.d(Aware.TAG, "No ContextCard detected for " + context.getPackageName());
-                return new View(context);
-            }
-        } else {
-            if (!isClassAvailable(context, package_name, "ContextCard")) {
-                Log.d(Aware.TAG, "No ContextCard detected for " + package_name);
-                return new View(context);
-            }
         }
 
         try {
@@ -1154,7 +1151,7 @@ public class Aware extends Service {
             }
 
             try {
-                ArrayList<JSONArray> sensorSync = sensorDiff(sensors, localSensors); //check sensors first
+                ArrayList<JSONArray> sensorSync = sensorDiff(c, sensors, localSensors); //check sensors first
                 if (sensorSync.get(0).length() > 0 || sensorSync.get(1).length() > 0) {
                     JSONArray enabled = sensorSync.get(0);
                     for (int i = 0; i < enabled.length(); i++) {
@@ -1286,7 +1283,8 @@ public class Aware extends Service {
             if (schedulers.length() > 0)
                 Scheduler.setSchedules(c, schedulers);
 
-            Aware.startAWARE(c);
+            Intent aware = new Intent(c, Aware.class);
+            c.startService(aware);
         }
     }
 
@@ -1346,7 +1344,30 @@ public class Aware extends Service {
      * @return
      * @throws JSONException
      */
-    private static ArrayList<JSONArray> sensorDiff(JSONArray server, JSONArray local) throws JSONException {
+    private static ArrayList<JSONArray> sensorDiff(Context context, JSONArray server, JSONArray local) throws JSONException {
+
+        SensorManager manager = (SensorManager) context.getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
+        List<Sensor> sensors = manager.getSensorList(Sensor.TYPE_ALL);
+        Hashtable<Integer, Boolean> listSensorType = new Hashtable<>();
+        for (int i = 0; i < sensors.size(); i++) {
+            listSensorType.put(sensors.get(i).getType(), true);
+        }
+
+        Hashtable<String, Integer> optionalSensors = new Hashtable<>();
+        optionalSensors.put(Aware_Preferences.STATUS_ACCELEROMETER, Sensor.TYPE_ACCELEROMETER);
+        optionalSensors.put(Aware_Preferences.STATUS_SIGNIFICANT_MOTION, Sensor.TYPE_ACCELEROMETER);
+        optionalSensors.put(Aware_Preferences.STATUS_BAROMETER, Sensor.TYPE_PRESSURE);
+        optionalSensors.put(Aware_Preferences.STATUS_GRAVITY, Sensor.TYPE_GRAVITY);
+        optionalSensors.put(Aware_Preferences.STATUS_GYROSCOPE, Sensor.TYPE_GYROSCOPE);
+        optionalSensors.put(Aware_Preferences.STATUS_LIGHT, Sensor.TYPE_LIGHT);
+        optionalSensors.put(Aware_Preferences.STATUS_LINEAR_ACCELEROMETER, Sensor.TYPE_LINEAR_ACCELERATION);
+        optionalSensors.put(Aware_Preferences.STATUS_MAGNETOMETER, Sensor.TYPE_MAGNETIC_FIELD);
+        optionalSensors.put(Aware_Preferences.STATUS_PROXIMITY, Sensor.TYPE_PROXIMITY);
+        optionalSensors.put(Aware_Preferences.STATUS_ROTATION, Sensor.TYPE_ROTATION_VECTOR);
+        optionalSensors.put(Aware_Preferences.STATUS_TEMPERATURE, Sensor.TYPE_AMBIENT_TEMPERATURE);
+
+        Set<String> keys = optionalSensors.keySet();
+
         JSONArray to_enable = new JSONArray();
         JSONArray to_disable = new JSONArray();
 
@@ -1367,12 +1388,19 @@ public class Aware extends Service {
         //enable new sensors from the server
         for (int i = 0; i < server.length(); i++) {
             JSONObject server_sensor = server.getJSONObject(i);
+
+            for(String optionalSensor : keys) {
+                if(server_sensor.getString("setting").equalsIgnoreCase(optionalSensor) && !listSensorType.containsKey(optionalSensors.get(optionalSensor)))
+                    continue;
+            }
+
             boolean is_present = false;
             for (int j = 0; j < local.length(); j++) {
                 JSONObject local_sensor = local.getJSONObject(j);
                 if (immutable_settings.contains(local_sensor.getString("setting"))) {
                     continue; //don't do anything
                 }
+
                 if (local_sensor.getString("setting").equalsIgnoreCase(server_sensor.getString("setting"))) {
                     is_present = true;
                     break;
@@ -1386,6 +1414,11 @@ public class Aware extends Service {
             JSONObject local_sensor = local.getJSONObject(j);
             if (immutable_settings.contains(local_sensor.getString("setting"))) {
                 continue; //don't do anything
+            }
+
+            for(String optionalSensor : keys) {
+                if(local_sensor.getString("setting").equalsIgnoreCase(optionalSensor) && !listSensorType.containsKey(optionalSensors.get(optionalSensor)))
+                    continue;
             }
 
             boolean remove = true;
@@ -1628,7 +1661,8 @@ public static class JoinStudy extends StudyUtils {
                 }
 
                 //Start engine
-                Aware.startAWARE(getApplicationContext());
+                Intent aware = new Intent(getApplicationContext(), Aware.class);
+                startService(aware);
 
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -1707,7 +1741,8 @@ public static class JoinStudy extends StudyUtils {
             if (Aware.DEBUG) Log.w(TAG, "AWARE plugins disabled...");
         }
 
-        Aware.startAWARE(context);
+        Intent aware = new Intent(context, Aware.class);
+        context.startService(aware);
     }
 
 /**
@@ -2018,7 +2053,8 @@ public static class Storage_Broadcaster extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         if (intent.getAction().equals(Intent.ACTION_MEDIA_MOUNTED)) {
             if (Aware.DEBUG) Log.d(TAG, "Resuming AWARE data logging...");
-            Aware.startAWARE(context);
+            Intent aware = new Intent(context, Aware.class);
+            context.startService(aware);
         }
         if (intent.getAction().equals(Intent.ACTION_MEDIA_UNMOUNTED)) {
             if (Aware.DEBUG)
@@ -2099,7 +2135,8 @@ public static class AwareBoot extends BroadcastReceiver {
 
         //Guarantees that all plugins also come back up again on reboot
         if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
-            Aware.startAWARE(context);
+            Intent aware = new Intent(context, Aware.class);
+            context.startService(aware);
         }
     }
 
@@ -2164,10 +2201,6 @@ public static class AwareBoot extends BroadcastReceiver {
      * Start core and active services
      */
     public static void startAWARE(Context context) {
-        if (awareSrv == null) {
-            awareSrv = new Intent(context, Aware.class);
-            context.startService(awareSrv);
-        }
 
         startScheduler(context);
 
@@ -2357,21 +2390,6 @@ public static class AwareBoot extends BroadcastReceiver {
         stopKeyboard(context);
         stopScheduler(context);
     }
-
-    /**
-     * Check if a specific Service class (plugin, sensor) is running. This checks the services from all actively running applications.
-     * @param context
-     * @param serviceClass
-     * @return
-     */
-//    public static boolean is_running(Context context, Class<?> serviceClass) {
-//        ActivityManager manager = (ActivityManager) context.getApplicationContext().getSystemService(ACTIVITY_SERVICE);
-//        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-//            if (serviceClass.getName().equals(service.service.getClassName()))
-//                return true;
-//        }
-//        return false;
-//    }
 
     /**
      * Start the significant motion service

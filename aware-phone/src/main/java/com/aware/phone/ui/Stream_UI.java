@@ -33,6 +33,8 @@ import com.aware.utils.DatabaseHelper;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.util.ArrayList;
+
 public class Stream_UI extends Aware_Activity {
 	
 	/**
@@ -105,11 +107,11 @@ public class Stream_UI extends Aware_Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+
         Intent is_visible = new Intent(ACTION_AWARE_STREAM_OPEN);
         sendBroadcast(is_visible);
 
         ListView stream_container = (ListView) findViewById(R.id.stream_container);
-
         streamAdapter = new StreamAdapter(getApplicationContext());
         stream_container.setAdapter(streamAdapter);
 	}
@@ -119,19 +121,37 @@ public class Stream_UI extends Aware_Activity {
 
     }
 
+    static class ViewHolder {
+        View card;
+    }
+
     private class StreamAdapter extends BaseAdapter {
-        private Context mContext;
-        private JSONArray cards = new JSONArray();
+        Context mContext;
+        JSONArray cards;
 
         StreamAdapter(Context context) {
             mContext = context;
             Cursor mCursor = mContext.getContentResolver().query( Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, Aware_Plugins.PLUGIN_NAME + " ASC");
             try {
                 cards = new JSONArray(DatabaseHelper.cursorToString(mCursor));
+
+                Log.d(Aware.TAG, cards.toString(5));
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
             if (mCursor != null && ! mCursor.isClosed()) mCursor.close();
+        }
+
+        @Override
+        public int getViewTypeCount() {
+            if (getCount() == 0) return 1;
+            return getCount();
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            return position;
         }
 
         @Override
@@ -161,12 +181,26 @@ public class Stream_UI extends Aware_Activity {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            try {
-                return Aware.getContextCard(getApplicationContext(), cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-            } catch (JSONException e) {
-                e.printStackTrace();
+            final ViewHolder cardHolder;
+            if (convertView == null) {
+                try {
+
+                    convertView = Aware.getContextCard(mContext, cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+
+                    cardHolder = new ViewHolder();
+                    cardHolder.card = convertView;
+
+                    convertView.setTag(cardHolder);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                cardHolder = (ViewHolder) convertView.getTag();
+                convertView = cardHolder.card;
             }
-            return null;
+
+            return convertView;
         }
 
         @Override
