@@ -149,7 +149,9 @@ public class SSLManager {
         } else cert_host = hostname;
 
         File root_folder;
-        if (!context.getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+        if (context.getApplicationContext().getResources().getBoolean(R.bool.internalstorage)) {
+            root_folder = new File(context.getFilesDir(), "/credentials/" + hostname);
+        } else if (!context.getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
             root_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE"), "/credentials/" + hostname); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
         } else {
             root_folder = new File(ContextCompat.getExternalFilesDirs(context, null)[0], "/AWARE/credentials/" + hostname); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
@@ -259,7 +261,9 @@ public class SSLManager {
         if (hostname == null || hostname.length() == 0) return false;
 
         File root_folder;
-        if (!context.getResources().getBoolean(R.bool.standalone)) {
+        if (context.getResources().getBoolean(R.bool.internalstorage)) {
+            root_folder = new File(context.getFilesDir() + "/credentials");
+        } else if (!context.getResources().getBoolean(R.bool.standalone)) {
             root_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE") + "/credentials"); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
         } else {
             root_folder = new File(ContextCompat.getExternalFilesDirs(context, null)[0] + "/AWARE/credentials"); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
@@ -284,7 +288,9 @@ public class SSLManager {
         if (hostname == null || hostname.length() == 0) return;
 
         File root_folder;
-        if (!context.getResources().getBoolean(R.bool.standalone)) {
+        if (context.getResources().getBoolean(R.bool.internalstorage)) {
+            root_folder = new File(context.getFilesDir() + "/credentials");
+        } else if (!context.getResources().getBoolean(R.bool.standalone)) {
             root_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE") + "/credentials"); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
         } else {
             root_folder = new File(ContextCompat.getExternalFilesDirs(context, null)[0] + "/AWARE/credentials"); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
@@ -326,7 +332,9 @@ public class SSLManager {
         if (hostname == null || hostname.length() == 0) return null;
 
         File root_folder;
-        if (!context.getResources().getBoolean(R.bool.standalone)) {
+        if (context.getResources().getBoolean(R.bool.internalstorage)) {
+            root_folder = new File(context.getFilesDir() + "/credentials");
+        } else if (!context.getResources().getBoolean(R.bool.standalone)) {
             root_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE") + "/credentials"); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
         } else {
             root_folder = new File(ContextCompat.getExternalFilesDirs(context, null)[0] + "/AWARE/credentials"); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
@@ -359,7 +367,9 @@ public class SSLManager {
         if (server == null || server.length() == 0) return null;
 
         File root_folder;
-        if (!context.getResources().getBoolean(R.bool.standalone)) {
+        if (context.getResources().getBoolean(R.bool.internalstorage)) {
+            root_folder = new File(context.getFilesDir() + "/credentials");
+        } else if (!context.getResources().getBoolean(R.bool.standalone)) {
             root_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE") + "/credentials"); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
         } else {
             root_folder = new File(ContextCompat.getExternalFilesDirs(context, null)[0] + "/AWARE/credentials"); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
