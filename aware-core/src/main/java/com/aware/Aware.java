@@ -199,9 +199,7 @@ public class Aware extends Service {
     private static Intent scheduler = null;
     private static Intent significantSrv = null;
 
-    private static final HashMap<String, Intent> activePlugins = new HashMap<>();
-
-    private AsyncStudyCheck studyCheck = null;
+    private static AsyncStudyCheck studyCheck = null;
 
     private static final int AWARE_BATTERY_OPTIMIZATION_ID = 567567;
 
@@ -289,7 +287,7 @@ public class Aware extends Service {
         if (!is_ignored) {
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_recharge);
-            mBuilder.setContentTitle("Battery");
+            mBuilder.setContentTitle("Doze");
             mBuilder.setContentText(context.getApplicationContext().getResources().getString(R.string.aware_activate_battery_optimize_ignore));
             mBuilder.setAutoCancel(true);
             mBuilder.setOnlyAlertOnce(true); //notify the user only once
@@ -320,8 +318,15 @@ public class Aware extends Service {
             studyCheck.put("study_check", "1");
 
             try {
-                String study_status = new Https(SSLManager.getHTTPS(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER)))
-                        .dataPOST(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER), studyCheck, true);
+                String webserver = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
+                String protocol = webserver.substring(0, webserver.indexOf(":"));
+
+                String study_status;
+                if (protocol.equalsIgnoreCase("https")) {
+                    study_status = new Https(SSLManager.getHTTPS(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER))).dataPOST(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER), studyCheck, true);
+                } else {
+                    study_status = new Http().dataPOST(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER), studyCheck, true);
+                }
 
                 if (study_status == null)
                     return true; //unable to connect to server, timeout, etc. We do nothing.
@@ -563,13 +568,11 @@ public class Aware extends Service {
                         studyCheck.execute();
                     }
                 }
+
                 if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_KEEP_ALIVE)) {
                     startAWARE(getApplicationContext());
                     startPlugins(getApplicationContext());
                 }
-            } else {
-                startAWARE(getApplicationContext());
-                startPlugins(getApplicationContext());
             }
 
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
@@ -667,12 +670,9 @@ public class Aware extends Service {
                 if (Aware.DEBUG) Log.d(Aware.TAG, "Stopping external: " + componentName.toString());
             }
 
-            if (activePlugins.containsKey(package_name)) {
-                Intent pluginIntent = new Intent();
-                pluginIntent.setComponent(componentName);
-                context.stopService(pluginIntent);
-                activePlugins.remove(package_name);
-            }
+            Intent pluginIntent = new Intent();
+            pluginIntent.setComponent(componentName);
+            context.stopService(pluginIntent);
         }
     }
 
@@ -695,19 +695,17 @@ public class Aware extends Service {
             ComponentName componentName;
             if (packageInfo.versionName.equals("bundled")) {
                 componentName = new ComponentName(context.getPackageName(), package_name + ".Plugin");
-                if (Aware.DEBUG) Log.d(Aware.TAG, "Initializing bundled: " + componentName.toString());
+                if (Aware.DEBUG)
+                    Log.d(Aware.TAG, "Initializing bundled: " + componentName.toString());
             } else {
                 componentName = new ComponentName(package_name, package_name + ".Plugin");
-                if (Aware.DEBUG) Log.d(Aware.TAG, "Initializing external: " + componentName.toString());
+                if (Aware.DEBUG)
+                    Log.d(Aware.TAG, "Initializing external: " + componentName.toString());
             }
 
-            if (!activePlugins.containsKey(package_name)) {
-                Intent pluginIntent = new Intent();
-                pluginIntent.setComponent(componentName);
-                context.startService(pluginIntent);
-
-                activePlugins.put(package_name, pluginIntent);
-            }
+            Intent pluginIntent = new Intent();
+            pluginIntent.setComponent(componentName);
+            context.startService(pluginIntent);
         }
     }
 
@@ -1389,8 +1387,8 @@ public class Aware extends Service {
         for (int i = 0; i < server.length(); i++) {
             JSONObject server_sensor = server.getJSONObject(i);
 
-            for(String optionalSensor : keys) {
-                if(server_sensor.getString("setting").equalsIgnoreCase(optionalSensor) && !listSensorType.containsKey(optionalSensors.get(optionalSensor)))
+            for (String optionalSensor : keys) {
+                if (server_sensor.getString("setting").equalsIgnoreCase(optionalSensor) && !listSensorType.containsKey(optionalSensors.get(optionalSensor)))
                     continue;
             }
 
@@ -1416,8 +1414,8 @@ public class Aware extends Service {
                 continue; //don't do anything
             }
 
-            for(String optionalSensor : keys) {
-                if(local_sensor.getString("setting").equalsIgnoreCase(optionalSensor) && !listSensorType.containsKey(optionalSensors.get(optionalSensor)))
+            for (String optionalSensor : keys) {
+                if (local_sensor.getString("setting").equalsIgnoreCase(optionalSensor) && !listSensorType.containsKey(optionalSensors.get(optionalSensor)))
                     continue;
             }
 
@@ -1439,29 +1437,29 @@ public class Aware extends Service {
         return output;
     }
 
-/**
- * Used by self-contained apps to join a study
- */
-public static class JoinStudy extends StudyUtils {
+    /**
+     * Used by self-contained apps to join a study
+     */
+    public static class JoinStudy extends StudyUtils {
 
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        String full_url = intent.getStringExtra(EXTRA_JOIN_STUDY);
+        @Override
+        protected void onHandleIntent(Intent intent) {
+            String full_url = intent.getStringExtra(EXTRA_JOIN_STUDY);
 
-        if (Aware.DEBUG) Log.d(Aware.TAG, "Joining: " + full_url);
+            if (Aware.DEBUG) Log.d(Aware.TAG, "Joining: " + full_url);
 
-        Uri study_uri = Uri.parse(full_url);
-        // New study URL, chopping off query parameters.
-        String protocol = study_uri.getScheme();
-        List<String> path_segments = study_uri.getPathSegments();
+            Uri study_uri = Uri.parse(full_url);
+            // New study URL, chopping off query parameters.
+            String protocol = study_uri.getScheme();
+            List<String> path_segments = study_uri.getPathSegments();
 
-        String study_api_key = path_segments.get(path_segments.size() - 1);
-        String study_id = path_segments.get(path_segments.size() - 2);
+            String study_api_key = path_segments.get(path_segments.size() - 1);
+            String study_id = path_segments.get(path_segments.size() - 2);
 
-        String request;
-        if (protocol.equals("https")) {
+            String request;
+            if (protocol.equals("https")) {
 
-            SSLManager.downloadCertificate(getApplicationContext(), study_uri.getHost(), true);
+                SSLManager.downloadCertificate(getApplicationContext(), study_uri.getHost(), true);
 
 //                try {
 //                    Intent installHTTPS = KeyChain.createInstallIntent();
@@ -1481,195 +1479,195 @@ public static class JoinStudy extends StudyUtils {
 //                    e.printStackTrace();
 //                }
 
-            try {
-                request = new Https(SSLManager.getHTTPS(getApplicationContext(), full_url)).dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
-            } catch (FileNotFoundException e) {
-                request = null;
-            }
-        } else {
-            request = new Http().dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
-        }
-
-        if (request != null) {
-
-            if (request.equals("[]")) return;
-
-            try {
-                JSONObject studyInfo = new JSONObject(request);
-
-                if (DEBUG)
-                    Log.d(TAG, "Study info: " + studyInfo.toString(5));
-
-                //Request study settings
-                Hashtable<String, String> data = new Hashtable<>();
-                data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-                data.put("platform", "android");
                 try {
-                    PackageInfo package_info = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), 0);
-                    data.put("package_name", package_info.packageName);
-                    data.put("package_version_code", String.valueOf(package_info.versionCode));
-                    data.put("package_version_name", String.valueOf(package_info.versionName));
-                } catch (PackageManager.NameNotFoundException e) {
-                    Log.d(Aware.TAG, "Failed to put package info: " + e);
+                    request = new Https(SSLManager.getHTTPS(getApplicationContext(), full_url)).dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                } catch (FileNotFoundException e) {
+                    request = null;
+                }
+            } else {
+                request = new Http().dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+            }
+
+            if (request != null) {
+
+                if (request.equals("[]")) return;
+
+                try {
+                    JSONObject studyInfo = new JSONObject(request);
+
+                    if (DEBUG)
+                        Log.d(TAG, "Study info: " + studyInfo.toString(5));
+
+                    //Request study settings
+                    Hashtable<String, String> data = new Hashtable<>();
+                    data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                    data.put("platform", "android");
+                    try {
+                        PackageInfo package_info = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), 0);
+                        data.put("package_name", package_info.packageName);
+                        data.put("package_version_code", String.valueOf(package_info.versionCode));
+                        data.put("package_version_name", String.valueOf(package_info.versionName));
+                    } catch (PackageManager.NameNotFoundException e) {
+                        Log.d(Aware.TAG, "Failed to put package info: " + e);
+                        e.printStackTrace();
+                    }
+
+                    String answer;
+                    if (protocol.equals("https")) {
+                        try {
+                            answer = new Https(SSLManager.getHTTPS(getApplicationContext(), full_url)).dataPOST(full_url, data, true);
+                        } catch (FileNotFoundException e) {
+                            answer = null;
+                        }
+                    } else {
+                        answer = new Http().dataPOST(full_url, data, true);
+                    }
+
+                    if (answer == null) {
+                        Toast.makeText(getApplicationContext(), "Failed to connect to server, try again.", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+
+                    JSONArray study_config = new JSONArray(answer);
+
+                    if (DEBUG)
+                        Log.d(TAG, "Study config: " + study_config.toString(5));
+
+                    if (study_config.getJSONObject(0).has("message")) {
+                        Toast.makeText(getApplicationContext(), study_config.getJSONObject(0).getString("message"), Toast.LENGTH_LONG).show();
+                        return;
+                    }
+
+                    Cursor dbStudy = Aware.getStudy(getApplicationContext(), full_url);
+                    if (Aware.DEBUG)
+                        Log.d(Aware.TAG, DatabaseUtils.dumpCursorToString(dbStudy));
+
+                    if (dbStudy == null || !dbStudy.moveToFirst()) {
+                        ContentValues studyData = new ContentValues();
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_JOINED, System.currentTimeMillis());
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_KEY, study_id);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_API, study_api_key);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_URL, full_url);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_PI, studyInfo.getString("researcher_first") + " " + studyInfo.getString("researcher_last") + "\nContact: " + studyInfo.getString("researcher_contact"));
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, study_config.toString());
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString("study_name"));
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString("study_description"));
+
+                        getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, studyData);
+
+                        if (Aware.DEBUG) {
+                            Log.d(Aware.TAG, "New study data: " + studyData.toString());
+                        }
+                    } else {
+                        //User rejoined a study he was already part of. Mark as abandoned.
+                        ContentValues complianceEntry = new ContentValues();
+                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
+                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_KEY, dbStudy.getInt(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
+                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_API, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_API)));
+                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_URL, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_URL)));
+                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
+                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, dbStudy.getLong(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
+                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_EXIT, System.currentTimeMillis());
+                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
+                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
+                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "rejoined study. abandoning previous");
+
+                        //Update the information to the latest
+                        ContentValues studyData = new ContentValues();
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_JOINED, System.currentTimeMillis());
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_KEY, study_id);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_API, study_api_key);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_URL, full_url);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_PI, studyInfo.getString("researcher_first") + " " + studyInfo.getString("researcher_last") + "\nContact: " + studyInfo.getString("researcher_contact"));
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, study_config.toString());
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString("study_name"));
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString("study_description"));
+
+                        getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, studyData);
+
+                        if (Aware.DEBUG) {
+                            Log.d(Aware.TAG, "Rejoined study data: " + studyData.toString());
+                        }
+                    }
+
+                    if (dbStudy != null && !dbStudy.isClosed()) dbStudy.close();
+
+                    //Apply study settings
+                    JSONArray plugins = new JSONArray();
+                    JSONArray sensors = new JSONArray();
+                    JSONArray schedulers = new JSONArray();
+
+                    for (int i = 0; i < study_config.length(); i++) {
+                        try {
+                            JSONObject element = study_config.getJSONObject(i);
+                            if (element.has("plugins")) {
+                                plugins = element.getJSONArray("plugins");
+                            }
+                            if (element.has("sensors")) {
+                                sensors = element.getJSONArray("sensors");
+                            }
+                            if (element.has("schedulers")) {
+                                schedulers = element.getJSONArray("schedulers");
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    //Set the sensors' settings first
+                    for (int i = 0; i < sensors.length(); i++) {
+                        try {
+                            JSONObject sensor_config = sensors.getJSONObject(i);
+                            Aware.setSetting(getApplicationContext(), sensor_config.getString("setting"), sensor_config.get("value"), "com.aware.phone");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    //Set the plugins' settings now
+                    ArrayList<String> active_plugins = new ArrayList<>();
+                    for (int i = 0; i < plugins.length(); i++) {
+                        try {
+                            JSONObject plugin_config = plugins.getJSONObject(i);
+
+                            String package_name = plugin_config.getString("plugin");
+                            active_plugins.add(package_name);
+
+                            JSONArray plugin_settings = plugin_config.getJSONArray("settings");
+                            for (int j = 0; j < plugin_settings.length(); j++) {
+                                JSONObject plugin_setting = plugin_settings.getJSONObject(j);
+                                Aware.setSetting(getApplicationContext(), plugin_setting.getString("setting"), plugin_setting.get("value"), package_name);
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    //Set schedulers
+                    if (schedulers.length() > 0)
+                        Scheduler.setSchedules(getApplicationContext(), schedulers);
+
+                    //Start plugins
+                    for (String p : active_plugins) {
+                        Aware.startPlugin(getApplicationContext(), p);
+                    }
+
+                    //Start engine
+                    Intent aware = new Intent(getApplicationContext(), Aware.class);
+                    startService(aware);
+
+                } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
-                String answer;
-                if (protocol.equals("https")) {
-                    try {
-                        answer = new Https(SSLManager.getHTTPS(getApplicationContext(), full_url)).dataPOST(full_url, data, true);
-                    } catch (FileNotFoundException e) {
-                        answer = null;
-                    }
-                } else {
-                    answer = new Http().dataPOST(full_url, data, true);
-                }
-
-                if (answer == null) {
-                    Toast.makeText(getApplicationContext(), "Failed to connect to server, try again.", Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-                JSONArray study_config = new JSONArray(answer);
-
-                if (DEBUG)
-                    Log.d(TAG, "Study config: " + study_config.toString(5));
-
-                if (study_config.getJSONObject(0).has("message")) {
-                    Toast.makeText(getApplicationContext(), study_config.getJSONObject(0).getString("message"), Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-                Cursor dbStudy = Aware.getStudy(getApplicationContext(), full_url);
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, DatabaseUtils.dumpCursorToString(dbStudy));
-
-                if (dbStudy == null || !dbStudy.moveToFirst()) {
-                    ContentValues studyData = new ContentValues();
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_JOINED, System.currentTimeMillis());
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_KEY, study_id);
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_API, study_api_key);
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_URL, full_url);
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_PI, studyInfo.getString("researcher_first") + " " + studyInfo.getString("researcher_last") + "\nContact: " + studyInfo.getString("researcher_contact"));
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, study_config.toString());
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString("study_name"));
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString("study_description"));
-
-                    getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, studyData);
-
-                    if (Aware.DEBUG) {
-                        Log.d(Aware.TAG, "New study data: " + studyData.toString());
-                    }
-                } else {
-                    //User rejoined a study he was already part of. Mark as abandoned.
-                    ContentValues complianceEntry = new ContentValues();
-                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
-                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_KEY, dbStudy.getInt(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
-                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_API, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_API)));
-                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_URL, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_URL)));
-                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
-                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
-                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, dbStudy.getLong(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
-                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_EXIT, System.currentTimeMillis());
-                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
-                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
-                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "rejoined study. abandoning previous");
-
-                    //Update the information to the latest
-                    ContentValues studyData = new ContentValues();
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_JOINED, System.currentTimeMillis());
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_KEY, study_id);
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_API, study_api_key);
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_URL, full_url);
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_PI, studyInfo.getString("researcher_first") + " " + studyInfo.getString("researcher_last") + "\nContact: " + studyInfo.getString("researcher_contact"));
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, study_config.toString());
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString("study_name"));
-                    studyData.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString("study_description"));
-
-                    getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, studyData);
-
-                    if (Aware.DEBUG) {
-                        Log.d(Aware.TAG, "Rejoined study data: " + studyData.toString());
-                    }
-                }
-
-                if (dbStudy != null && !dbStudy.isClosed()) dbStudy.close();
-
-                //Apply study settings
-                JSONArray plugins = new JSONArray();
-                JSONArray sensors = new JSONArray();
-                JSONArray schedulers = new JSONArray();
-
-                for (int i = 0; i < study_config.length(); i++) {
-                    try {
-                        JSONObject element = study_config.getJSONObject(i);
-                        if (element.has("plugins")) {
-                            plugins = element.getJSONArray("plugins");
-                        }
-                        if (element.has("sensors")) {
-                            sensors = element.getJSONArray("sensors");
-                        }
-                        if (element.has("schedulers")) {
-                            schedulers = element.getJSONArray("schedulers");
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                //Set the sensors' settings first
-                for (int i = 0; i < sensors.length(); i++) {
-                    try {
-                        JSONObject sensor_config = sensors.getJSONObject(i);
-                        Aware.setSetting(getApplicationContext(), sensor_config.getString("setting"), sensor_config.get("value"), "com.aware.phone");
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                //Set the plugins' settings now
-                ArrayList<String> active_plugins = new ArrayList<>();
-                for (int i = 0; i < plugins.length(); i++) {
-                    try {
-                        JSONObject plugin_config = plugins.getJSONObject(i);
-
-                        String package_name = plugin_config.getString("plugin");
-                        active_plugins.add(package_name);
-
-                        JSONArray plugin_settings = plugin_config.getJSONArray("settings");
-                        for (int j = 0; j < plugin_settings.length(); j++) {
-                            JSONObject plugin_setting = plugin_settings.getJSONObject(j);
-                            Aware.setSetting(getApplicationContext(), plugin_setting.getString("setting"), plugin_setting.get("value"), package_name);
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                //Set schedulers
-                if (schedulers.length() > 0)
-                    Scheduler.setSchedules(getApplicationContext(), schedulers);
-
-                //Start plugins
-                for (String p : active_plugins) {
-                    Aware.startPlugin(getApplicationContext(), p);
-                }
-
-                //Start engine
-                Intent aware = new Intent(getApplicationContext(), Aware.class);
-                startService(aware);
-
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
         }
     }
-}
 
     @Override
     public void onDestroy() {
@@ -1745,254 +1743,254 @@ public static class JoinStudy extends StudyUtils {
         context.startService(aware);
     }
 
-/**
- * AWARE Android Package Monitor
- * 1) Checks if a package is a plugin or not
- * 2) Installs a plugin that was just downloaded
- *
- * @author denzilferreira
- */
-public static class AndroidPackageMonitor extends BroadcastReceiver {
-    private static PackageManager mPkgManager;
+    /**
+     * AWARE Android Package Monitor
+     * 1) Checks if a package is a plugin or not
+     * 2) Installs a plugin that was just downloaded
+     *
+     * @author denzilferreira
+     */
+    public static class AndroidPackageMonitor extends BroadcastReceiver {
+        private static PackageManager mPkgManager;
 
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        mPkgManager = context.getPackageManager();
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            mPkgManager = context.getPackageManager();
 
-        Bundle extras = intent.getExtras();
-        Uri packageUri = intent.getData();
-        if (packageUri == null) return;
-        String packageName = packageUri.getSchemeSpecificPart();
-        if (packageName == null) return;
+            Bundle extras = intent.getExtras();
+            Uri packageUri = intent.getData();
+            if (packageUri == null) return;
+            String packageName = packageUri.getSchemeSpecificPart();
+            if (packageName == null) return;
 
-        if (!packageName.matches("com.aware.plugin.*")) return;
+            if (!packageName.matches("com.aware.plugin.*")) return;
 
-        if (intent.getAction().equals(Intent.ACTION_PACKAGE_ADDED)) {
+            if (intent.getAction().equals(Intent.ACTION_PACKAGE_ADDED)) {
 
-            Intent installed = new Intent(ACTION_AWARE_PLUGIN_INSTALLED);
-            installed.putExtra(EXTRA_PLUGIN, packageName);
-            context.sendBroadcast(installed);
+                Intent installed = new Intent(ACTION_AWARE_PLUGIN_INSTALLED);
+                installed.putExtra(EXTRA_PLUGIN, packageName);
+                context.sendBroadcast(installed);
 
-            //Updating a package
-            if (extras.getBoolean(Intent.EXTRA_REPLACING)) {
-                if (Aware.DEBUG) Log.d(TAG, packageName + " is updating!");
+                //Updating a package
+                if (extras.getBoolean(Intent.EXTRA_REPLACING)) {
+                    if (Aware.DEBUG) Log.d(TAG, packageName + " is updating!");
 
-                //Check study compliance
-                if (Aware.isStudy(context)) {
-                    Cursor studyInfo = Aware.getStudy(context, Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SERVER));
-                    if (studyInfo != null && studyInfo.moveToFirst()) {
-                        try {
-                            JSONArray studyConfig = new JSONArray(studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
-                            JSONArray plugins = new JSONArray();
-                            for (int i = 0; i < studyConfig.length(); i++) {
-                                try {
-                                    JSONObject element = studyConfig.getJSONObject(i);
-                                    if (element.has("plugins")) {
-                                        plugins = element.getJSONArray("plugins");
-                                    }
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                            for (int j = 0; j < plugins.length(); j++) {
-                                JSONObject plugin_config = plugins.getJSONObject(j);
-                                String package_name = plugin_config.getString("plugin");
-
-                                //Log the updated plugin
-                                if (package_name.equalsIgnoreCase(packageName)) {
-                                    ContentValues complianceEntry = new ContentValues();
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_KEY, studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_API, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_API)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_URL, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_URL)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, studyInfo.getLong(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "updated plugin: " + package_name);
-
-                                    context.getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
-
-                                    if (Aware.DEBUG)
-                                        Log.d(Aware.TAG, "Study compliance check: " + complianceEntry.toString());
-                                }
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    if (studyInfo != null && !studyInfo.isClosed()) studyInfo.close();
-                }
-
-                ContentValues rowData = new ContentValues();
-                rowData.put(Aware_Plugins.PLUGIN_VERSION, PluginsManager.getPluginVersion(context, packageName));
-                rowData.put(Aware_Plugins.PLUGIN_ICON, PluginsManager.getPluginIcon(context, packageName));
-                rowData.put(Aware_Plugins.PLUGIN_NAME, PluginsManager.getPluginName(context, packageName));
-
-                Cursor current_status = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, new String[]{Aware_Plugins.PLUGIN_STATUS}, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null, null);
-                if (current_status != null && current_status.moveToFirst()) {
-                    if (current_status.getInt(current_status.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == PluginsManager.PLUGIN_UPDATED) { //was updated, set to active now
-                        rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
-                    }
-                }
-                if (current_status != null && !current_status.isClosed())
-                    current_status.close();
-
-                context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
-
-                //Start plugin
-                Aware.startPlugin(context, packageName);
-                return;
-            }
-
-            //Installing new
-            try {
-                ApplicationInfo app = mPkgManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
-
-                ContentValues rowData = new ContentValues();
-                rowData.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, app.packageName);
-                rowData.put(Aware_Plugins.PLUGIN_NAME, app.loadLabel(context.getPackageManager()).toString());
-                rowData.put(Aware_Plugins.PLUGIN_VERSION, PluginsManager.getPluginVersion(context, app.packageName));
-                rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
-                rowData.put(Aware_Plugins.PLUGIN_ICON, PluginsManager.getPluginIcon(context, app.packageName));
-
-                if (PluginsManager.isLocal(context, app.packageName)) {
-                    context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + app.packageName + "'", null);
-                } else {
-                    context.getContentResolver().insert(Aware_Plugins.CONTENT_URI, rowData);
-                }
-
-                if (Aware.DEBUG)
-                    Log.d(TAG, "AWARE plugin added and activated:" + app.packageName);
-
-                //Check study compliance
-                if (Aware.isStudy(context)) {
-                    Cursor studyInfo = Aware.getStudy(context, Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SERVER));
-                    if (studyInfo != null && studyInfo.moveToFirst()) {
-                        try {
-                            JSONArray studyConfig = new JSONArray(studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
-                            JSONArray plugins = new JSONArray();
-                            for (int i = 0; i < studyConfig.length(); i++) {
-                                try {
-                                    JSONObject element = studyConfig.getJSONObject(i);
-                                    if (element.has("plugins")) {
-                                        plugins = element.getJSONArray("plugins");
-                                    }
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                            for (int j = 0; j < plugins.length(); j++) {
-                                JSONObject plugin_config = plugins.getJSONObject(j);
-                                String package_name = plugin_config.getString("plugin");
-
-                                //Participant installed necessary plugin
-                                if (package_name.equalsIgnoreCase(packageName)) {
-                                    ContentValues complianceEntry = new ContentValues();
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_KEY, studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_API, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_API)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_URL, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_URL)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, studyInfo.getLong(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "installed plugin: " + package_name);
-
-                                    context.getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
-
-                                    if (Aware.DEBUG)
-                                        Log.d(Aware.TAG, "Study compliance check: " + complianceEntry.toString());
-                                }
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    if (studyInfo != null && !studyInfo.isClosed()) studyInfo.close();
-                }
-
-                Aware.startPlugin(context, app.packageName);
-
-            } catch (final NameNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (intent.getAction().equals(Intent.ACTION_PACKAGE_REMOVED)) {
-            //Updating
-            if (extras.getBoolean(Intent.EXTRA_REPLACING)) {
-                //this is an update, bail out.
-                return;
-            }
-
-            Intent installed = new Intent(ACTION_AWARE_PLUGIN_UNINSTALLED);
-            installed.putExtra(EXTRA_PLUGIN, packageName);
-            context.sendBroadcast(installed);
-
-            //Check study compliance
-            if (Aware.isStudy(context)) {
-                Cursor studyInfo = Aware.getStudy(context, Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SERVER));
-                if (studyInfo != null && studyInfo.moveToFirst()) {
-                    try {
-                        JSONArray studyConfig = new JSONArray(studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
-                        JSONArray plugins = new JSONArray();
-                        for (int i = 0; i < studyConfig.length(); i++) {
+                    //Check study compliance
+                    if (Aware.isStudy(context)) {
+                        Cursor studyInfo = Aware.getStudy(context, Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SERVER));
+                        if (studyInfo != null && studyInfo.moveToFirst()) {
                             try {
-                                JSONObject element = studyConfig.getJSONObject(i);
-                                if (element.has("plugins")) {
-                                    plugins = element.getJSONArray("plugins");
+                                JSONArray studyConfig = new JSONArray(studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                                JSONArray plugins = new JSONArray();
+                                for (int i = 0; i < studyConfig.length(); i++) {
+                                    try {
+                                        JSONObject element = studyConfig.getJSONObject(i);
+                                        if (element.has("plugins")) {
+                                            plugins = element.getJSONArray("plugins");
+                                        }
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                for (int j = 0; j < plugins.length(); j++) {
+                                    JSONObject plugin_config = plugins.getJSONObject(j);
+                                    String package_name = plugin_config.getString("plugin");
+
+                                    //Log the updated plugin
+                                    if (package_name.equalsIgnoreCase(packageName)) {
+                                        ContentValues complianceEntry = new ContentValues();
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_KEY, studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_API, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_API)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_URL, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_URL)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, studyInfo.getLong(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "updated plugin: " + package_name);
+
+                                        context.getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
+
+                                        if (Aware.DEBUG)
+                                            Log.d(Aware.TAG, "Study compliance check: " + complianceEntry.toString());
+                                    }
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
                         }
-                        for (int j = 0; j < plugins.length(); j++) {
-                            JSONObject plugin_config = plugins.getJSONObject(j);
-                            String package_name = plugin_config.getString("plugin");
+                        if (studyInfo != null && !studyInfo.isClosed()) studyInfo.close();
+                    }
 
-                            //Participant is breaking compliance, just uninstalled a plugin we have as needed for the study!
-                            if (package_name.equalsIgnoreCase(packageName)) {
-                                ContentValues complianceEntry = new ContentValues();
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_KEY, studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_API, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_API)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_URL, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_URL)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, studyInfo.getLong(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
-                                complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "uninstalled plugin: " + package_name);
+                    ContentValues rowData = new ContentValues();
+                    rowData.put(Aware_Plugins.PLUGIN_VERSION, PluginsManager.getPluginVersion(context, packageName));
+                    rowData.put(Aware_Plugins.PLUGIN_ICON, PluginsManager.getPluginIcon(context, packageName));
+                    rowData.put(Aware_Plugins.PLUGIN_NAME, PluginsManager.getPluginName(context, packageName));
 
-                                context.getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
+                    Cursor current_status = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, new String[]{Aware_Plugins.PLUGIN_STATUS}, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null, null);
+                    if (current_status != null && current_status.moveToFirst()) {
+                        if (current_status.getInt(current_status.getColumnIndex(Aware_Plugins.PLUGIN_STATUS)) == PluginsManager.PLUGIN_UPDATED) { //was updated, set to active now
+                            rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
+                        }
+                    }
+                    if (current_status != null && !current_status.isClosed())
+                        current_status.close();
 
-                                if (Aware.DEBUG)
-                                    Log.d(Aware.TAG, "Study compliance check: " + complianceEntry.toString());
+                    context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
+
+                    //Start plugin
+                    Aware.startPlugin(context, packageName);
+                    return;
+                }
+
+                //Installing new
+                try {
+                    ApplicationInfo app = mPkgManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
+
+                    ContentValues rowData = new ContentValues();
+                    rowData.put(Aware_Plugins.PLUGIN_PACKAGE_NAME, app.packageName);
+                    rowData.put(Aware_Plugins.PLUGIN_NAME, app.loadLabel(context.getPackageManager()).toString());
+                    rowData.put(Aware_Plugins.PLUGIN_VERSION, PluginsManager.getPluginVersion(context, app.packageName));
+                    rowData.put(Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_ON);
+                    rowData.put(Aware_Plugins.PLUGIN_ICON, PluginsManager.getPluginIcon(context, app.packageName));
+
+                    if (PluginsManager.isLocal(context, app.packageName)) {
+                        context.getContentResolver().update(Aware_Plugins.CONTENT_URI, rowData, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + app.packageName + "'", null);
+                    } else {
+                        context.getContentResolver().insert(Aware_Plugins.CONTENT_URI, rowData);
+                    }
+
+                    if (Aware.DEBUG)
+                        Log.d(TAG, "AWARE plugin added and activated:" + app.packageName);
+
+                    //Check study compliance
+                    if (Aware.isStudy(context)) {
+                        Cursor studyInfo = Aware.getStudy(context, Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SERVER));
+                        if (studyInfo != null && studyInfo.moveToFirst()) {
+                            try {
+                                JSONArray studyConfig = new JSONArray(studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                                JSONArray plugins = new JSONArray();
+                                for (int i = 0; i < studyConfig.length(); i++) {
+                                    try {
+                                        JSONObject element = studyConfig.getJSONObject(i);
+                                        if (element.has("plugins")) {
+                                            plugins = element.getJSONArray("plugins");
+                                        }
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                for (int j = 0; j < plugins.length(); j++) {
+                                    JSONObject plugin_config = plugins.getJSONObject(j);
+                                    String package_name = plugin_config.getString("plugin");
+
+                                    //Participant installed necessary plugin
+                                    if (package_name.equalsIgnoreCase(packageName)) {
+                                        ContentValues complianceEntry = new ContentValues();
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_KEY, studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_API, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_API)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_URL, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_URL)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, studyInfo.getLong(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
+                                        complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "installed plugin: " + package_name);
+
+                                        context.getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
+
+                                        if (Aware.DEBUG)
+                                            Log.d(Aware.TAG, "Study compliance check: " + complianceEntry.toString());
+                                    }
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
                             }
                         }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                        if (studyInfo != null && !studyInfo.isClosed()) studyInfo.close();
                     }
+
+                    Aware.startPlugin(context, app.packageName);
+
+                } catch (final NameNotFoundException e) {
+                    e.printStackTrace();
                 }
-                if (studyInfo != null && !studyInfo.isClosed()) studyInfo.close();
             }
 
-            //clean-up settings & schedules
-            context.getContentResolver().delete(Aware_Settings.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
-            context.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
+            if (intent.getAction().equals(Intent.ACTION_PACKAGE_REMOVED)) {
+                //Updating
+                if (extras.getBoolean(Intent.EXTRA_REPLACING)) {
+                    //this is an update, bail out.
+                    return;
+                }
 
-            //Deleting
-            context.getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
-            if (Aware.DEBUG) Log.d(TAG, "AWARE plugin removed:" + packageName);
+                Intent installed = new Intent(ACTION_AWARE_PLUGIN_UNINSTALLED);
+                installed.putExtra(EXTRA_PLUGIN, packageName);
+                context.sendBroadcast(installed);
+
+                //Check study compliance
+                if (Aware.isStudy(context)) {
+                    Cursor studyInfo = Aware.getStudy(context, Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SERVER));
+                    if (studyInfo != null && studyInfo.moveToFirst()) {
+                        try {
+                            JSONArray studyConfig = new JSONArray(studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                            JSONArray plugins = new JSONArray();
+                            for (int i = 0; i < studyConfig.length(); i++) {
+                                try {
+                                    JSONObject element = studyConfig.getJSONObject(i);
+                                    if (element.has("plugins")) {
+                                        plugins = element.getJSONArray("plugins");
+                                    }
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            for (int j = 0; j < plugins.length(); j++) {
+                                JSONObject plugin_config = plugins.getJSONObject(j);
+                                String package_name = plugin_config.getString("plugin");
+
+                                //Participant is breaking compliance, just uninstalled a plugin we have as needed for the study!
+                                if (package_name.equalsIgnoreCase(packageName)) {
+                                    ContentValues complianceEntry = new ContentValues();
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_KEY, studyInfo.getInt(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_KEY)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_API, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_API)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_URL, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_URL)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, studyInfo.getLong(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString(studyInfo.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "uninstalled plugin: " + package_name);
+
+                                    context.getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
+
+                                    if (Aware.DEBUG)
+                                        Log.d(Aware.TAG, "Study compliance check: " + complianceEntry.toString());
+                                }
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (studyInfo != null && !studyInfo.isClosed()) studyInfo.close();
+                }
+
+                //clean-up settings & schedules
+                context.getContentResolver().delete(Aware_Settings.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
+                context.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
+
+                //Deleting
+                context.getContentResolver().delete(Aware_Plugins.CONTENT_URI, Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + packageName + "'", null);
+                if (Aware.DEBUG) Log.d(TAG, "AWARE plugin removed:" + packageName);
+            }
         }
     }
-}
 
     /**
      * BroadcastReceiver that monitors for AWARE framework actions:
@@ -2003,144 +2001,144 @@ public static class AndroidPackageMonitor extends BroadcastReceiver {
      */
     private static final Aware_Broadcaster aware_BR = new Aware_Broadcaster();
 
-public static class Aware_Broadcaster extends BroadcastReceiver {
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        //We are only synching the device information, study compliance and overall framework execution logs.
-        String[] DATABASE_TABLES = new String[]{Aware_Provider.DATABASE_TABLES[0], Aware_Provider.DATABASE_TABLES[3], Aware_Provider.DATABASE_TABLES[4]};
-        String[] TABLES_FIELDS = new String[]{Aware_Provider.TABLES_FIELDS[0], Aware_Provider.TABLES_FIELDS[3], Aware_Provider.TABLES_FIELDS[4]};
-        Uri[] CONTEXT_URIS = new Uri[]{Aware_Device.CONTENT_URI, Aware_Provider.Aware_Studies.CONTENT_URI, Aware_Provider.Aware_Log.CONTENT_URI};
+    public static class Aware_Broadcaster extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //We are only synching the device information, study compliance and overall framework execution logs.
+            String[] DATABASE_TABLES = new String[]{Aware_Provider.DATABASE_TABLES[0], Aware_Provider.DATABASE_TABLES[3], Aware_Provider.DATABASE_TABLES[4]};
+            String[] TABLES_FIELDS = new String[]{Aware_Provider.TABLES_FIELDS[0], Aware_Provider.TABLES_FIELDS[3], Aware_Provider.TABLES_FIELDS[4]};
+            Uri[] CONTEXT_URIS = new Uri[]{Aware_Device.CONTENT_URI, Aware_Provider.Aware_Studies.CONTENT_URI, Aware_Provider.Aware_Log.CONTENT_URI};
 
-        if (intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA) && Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
-            for (int i = 0; i < DATABASE_TABLES.length; i++) {
-                Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
-                webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
-                webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
-                webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, TABLES_FIELDS[i]);
-                webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, CONTEXT_URIS[i].toString());
-                context.startService(webserviceHelper);
-            }
-        }
-
-        if (intent.getAction().equals(Aware.ACTION_AWARE_CLEAR_DATA)) {
-            for (int i = 0; i < DATABASE_TABLES.length; i++) {
-                context.getContentResolver().delete(Aware_Provider.Aware_Device.CONTENT_URI, null, null);
-                if (Aware.DEBUG) Log.d(TAG, "Cleared " + CONTEXT_URIS[i]);
-
-                //Clear remotely if webservices are active
-                if (Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
+            if (intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA) && Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
+                for (int i = 0; i < DATABASE_TABLES.length; i++) {
                     Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
-                    webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_CLEAR_TABLE);
+                    webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
                     webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
+                    webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, TABLES_FIELDS[i]);
+                    webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, CONTEXT_URIS[i].toString());
                     context.startService(webserviceHelper);
                 }
             }
-        }
 
-        if (intent.getAction().equals(Aware.ACTION_QUIT_STUDY)) {
-            Aware.reset(context);
+            if (intent.getAction().equals(Aware.ACTION_AWARE_CLEAR_DATA)) {
+                for (int i = 0; i < DATABASE_TABLES.length; i++) {
+                    context.getContentResolver().delete(Aware_Provider.Aware_Device.CONTENT_URI, null, null);
+                    if (Aware.DEBUG) Log.d(TAG, "Cleared " + CONTEXT_URIS[i]);
+
+                    //Clear remotely if webservices are active
+                    if (Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
+                        Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
+                        webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_CLEAR_TABLE);
+                        webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
+                        context.startService(webserviceHelper);
+                    }
+                }
+            }
+
+            if (intent.getAction().equals(Aware.ACTION_QUIT_STUDY)) {
+                Aware.reset(context);
+            }
         }
     }
-}
 
     /**
      * Checks if we have access to the storage of the device. Turns off AWARE when we don't, turns it back on when available again.
      */
     private static final Storage_Broadcaster storage_BR = new Storage_Broadcaster();
 
-public static class Storage_Broadcaster extends BroadcastReceiver {
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        if (intent.getAction().equals(Intent.ACTION_MEDIA_MOUNTED)) {
-            if (Aware.DEBUG) Log.d(TAG, "Resuming AWARE data logging...");
-            Intent aware = new Intent(context, Aware.class);
-            context.startService(aware);
-        }
-        if (intent.getAction().equals(Intent.ACTION_MEDIA_UNMOUNTED)) {
-            if (Aware.DEBUG)
-                Log.w(TAG, "Stopping AWARE data logging until the SDCard is available again...");
-            Aware.stopAWARE(context);
+    public static class Storage_Broadcaster extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(Intent.ACTION_MEDIA_MOUNTED)) {
+                if (Aware.DEBUG) Log.d(TAG, "Resuming AWARE data logging...");
+                Intent aware = new Intent(context, Aware.class);
+                context.startService(aware);
+            }
+            if (intent.getAction().equals(Intent.ACTION_MEDIA_UNMOUNTED)) {
+                if (Aware.DEBUG)
+                    Log.w(TAG, "Stopping AWARE data logging until the SDCard is available again...");
+                Aware.stopAWARE(context);
+            }
         }
     }
-}
 
     /**
      * Checks if we still have the accessibility services active or not
      */
     private static final AwareBoot awareBoot = new AwareBoot();
 
-public static class AwareBoot extends BroadcastReceiver {
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        boolean logging = false;
-        if ((context.getPackageName().equalsIgnoreCase("com.aware.phone") || context.getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
-            logging = true;
-        }
+    public static class AwareBoot extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            boolean logging = false;
+            if ((context.getPackageName().equalsIgnoreCase("com.aware.phone") || context.getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+                logging = true;
+            }
 
-        if (logging) {
-            try {
-                //Retrieve phone battery info
-                ContentValues rowData = new ContentValues();
-                Intent batt = context.getApplicationContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-                Bundle extras = batt.getExtras();
-                if (extras != null) {
-                    rowData.put(Battery_Provider.Battery_Data.TIMESTAMP, System.currentTimeMillis());
-                    rowData.put(Battery_Provider.Battery_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                    rowData.put(Battery_Provider.Battery_Data.LEVEL, extras.getInt(BatteryManager.EXTRA_LEVEL));
-                    rowData.put(Battery_Provider.Battery_Data.SCALE, extras.getInt(BatteryManager.EXTRA_SCALE));
-                    rowData.put(Battery_Provider.Battery_Data.VOLTAGE, extras.getInt(BatteryManager.EXTRA_VOLTAGE));
-                    rowData.put(Battery_Provider.Battery_Data.TEMPERATURE, extras.getInt(BatteryManager.EXTRA_TEMPERATURE) / 10);
-                    rowData.put(Battery_Provider.Battery_Data.PLUG_ADAPTOR, extras.getInt(BatteryManager.EXTRA_PLUGGED));
-                    rowData.put(Battery_Provider.Battery_Data.HEALTH, extras.getInt(BatteryManager.EXTRA_HEALTH));
-                    rowData.put(Battery_Provider.Battery_Data.TECHNOLOGY, extras.getString(BatteryManager.EXTRA_TECHNOLOGY));
-                }
-
-                //Remove charging reminder if previously visible
-                if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BATTERY_CHANGED) && Aware.getSetting(context, Aware_Preferences.REMIND_TO_CHARGE).equalsIgnoreCase("true")) {
-                    if (extras.getInt(BatteryManager.EXTRA_STATUS) == BatteryManager.BATTERY_STATUS_CHARGING) {
-                        checkBatteryLeft(context, true);
+            if (logging) {
+                try {
+                    //Retrieve phone battery info
+                    ContentValues rowData = new ContentValues();
+                    Intent batt = context.getApplicationContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+                    Bundle extras = batt.getExtras();
+                    if (extras != null) {
+                        rowData.put(Battery_Provider.Battery_Data.TIMESTAMP, System.currentTimeMillis());
+                        rowData.put(Battery_Provider.Battery_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
+                        rowData.put(Battery_Provider.Battery_Data.LEVEL, extras.getInt(BatteryManager.EXTRA_LEVEL));
+                        rowData.put(Battery_Provider.Battery_Data.SCALE, extras.getInt(BatteryManager.EXTRA_SCALE));
+                        rowData.put(Battery_Provider.Battery_Data.VOLTAGE, extras.getInt(BatteryManager.EXTRA_VOLTAGE));
+                        rowData.put(Battery_Provider.Battery_Data.TEMPERATURE, extras.getInt(BatteryManager.EXTRA_TEMPERATURE) / 10);
+                        rowData.put(Battery_Provider.Battery_Data.PLUG_ADAPTOR, extras.getInt(BatteryManager.EXTRA_PLUGGED));
+                        rowData.put(Battery_Provider.Battery_Data.HEALTH, extras.getInt(BatteryManager.EXTRA_HEALTH));
+                        rowData.put(Battery_Provider.Battery_Data.TECHNOLOGY, extras.getString(BatteryManager.EXTRA_TECHNOLOGY));
                     }
-                }
-                if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
-                    Aware.debug(context, "phone: on");
-                    rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_BOOTED);
 
-                    Intent aware = new Intent(context, Aware.class);
-                    context.startService(aware);
-                }
-                if (intent.getAction().equalsIgnoreCase(Intent.ACTION_SHUTDOWN)) {
-                    Aware.debug(context, "phone: off");
-                    rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_SHUTDOWN);
-                }
-                if (intent.getAction().equalsIgnoreCase(Intent.ACTION_REBOOT)) {
-                    Aware.debug(context, "phone: reboot");
-                    rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_REBOOT);
-                }
-                if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)
-                        || intent.getAction().equalsIgnoreCase(Intent.ACTION_SHUTDOWN)
-                        || intent.getAction().equalsIgnoreCase(Intent.ACTION_REBOOT)) {
-                    try {
-                        if (Aware.DEBUG) Log.d(TAG, "Battery: " + rowData.toString());
-                        context.getContentResolver().insert(Battery_Provider.Battery_Data.CONTENT_URI, rowData);
-                    } catch (SQLiteException e) {
-                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-                    } catch (SQLException e) {
-                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                    //Remove charging reminder if previously visible
+                    if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BATTERY_CHANGED) && Aware.getSetting(context, Aware_Preferences.REMIND_TO_CHARGE).equalsIgnoreCase("true")) {
+                        if (extras.getInt(BatteryManager.EXTRA_STATUS) == BatteryManager.BATTERY_STATUS_CHARGING) {
+                            checkBatteryLeft(context, true);
+                        }
                     }
+                    if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
+                        Aware.debug(context, "phone: on");
+                        rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_BOOTED);
+
+                        Intent aware = new Intent(context, Aware.class);
+                        context.startService(aware);
+                    }
+                    if (intent.getAction().equalsIgnoreCase(Intent.ACTION_SHUTDOWN)) {
+                        Aware.debug(context, "phone: off");
+                        rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_SHUTDOWN);
+                    }
+                    if (intent.getAction().equalsIgnoreCase(Intent.ACTION_REBOOT)) {
+                        Aware.debug(context, "phone: reboot");
+                        rowData.put(Battery_Provider.Battery_Data.STATUS, Battery.STATUS_PHONE_REBOOT);
+                    }
+                    if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)
+                            || intent.getAction().equalsIgnoreCase(Intent.ACTION_SHUTDOWN)
+                            || intent.getAction().equalsIgnoreCase(Intent.ACTION_REBOOT)) {
+                        try {
+                            if (Aware.DEBUG) Log.d(TAG, "Battery: " + rowData.toString());
+                            context.getContentResolver().insert(Battery_Provider.Battery_Data.CONTENT_URI, rowData);
+                        } catch (SQLiteException e) {
+                            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                        } catch (SQLException e) {
+                            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                        }
+                    }
+                } catch (RuntimeException e) {
+                    //Gingerbread does not allow these intents. Disregard for 2.3.3
                 }
-            } catch (RuntimeException e) {
-                //Gingerbread does not allow these intents. Disregard for 2.3.3
+            }
+
+            //Guarantees that all plugins also come back up again on reboot
+            if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
+                Intent aware = new Intent(context, Aware.class);
+                context.startService(aware);
             }
         }
 
-        //Guarantees that all plugins also come back up again on reboot
-        if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
-            Intent aware = new Intent(context, Aware.class);
-            context.startService(aware);
-        }
     }
-
-}
 
     private static void complianceStatus(Context context) {
         ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(CONNECTIVITY_SERVICE);

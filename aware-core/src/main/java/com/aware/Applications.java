@@ -271,26 +271,9 @@ public class Applications extends AccessibilityService {
         }
     }
 
-    private static SchedulerTicker schedulerTicker = new SchedulerTicker();
-    public static class SchedulerTicker extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            //Executed every 1-minute. OS will send this tickle automatically
-            if (intent.getAction().equals(Intent.ACTION_TIME_TICK)) {
-                Intent scheduler = new Intent(context, Scheduler.class);
-                scheduler.setAction(Scheduler.ACTION_AWARE_SCHEDULER_CHECK);
-                context.startService(scheduler);
-            }
-        }
-    }
-
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
-
-        IntentFilter tick = new IntentFilter();
-        tick.addAction(Intent.ACTION_TIME_TICK);
-        registerReceiver(schedulerTicker, tick);
 
         Aware.debug(this, "created: " + getClass().getName() + " package: " + getPackageName());
 
@@ -389,9 +372,6 @@ public class Applications extends AccessibilityService {
         Scheduler.removeSchedule(this, SCHEDULER_APPLICATIONS_BACKGROUND);
 
         Log.d(TAG, "Accessibility Service has been unbound...");
-
-        //Stop listening to time ticks
-        unregisterReceiver(schedulerTicker);
 
         //notify the user
         Applications.isAccessibilityServiceActive(getApplicationContext());
