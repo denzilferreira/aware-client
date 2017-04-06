@@ -573,6 +573,9 @@ public class Aware extends Service {
                     startAWARE(getApplicationContext());
                     startPlugins(getApplicationContext());
                 }
+            } else {
+                startAWARE(getApplicationContext());
+                startPlugins(getApplicationContext());
             }
 
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
