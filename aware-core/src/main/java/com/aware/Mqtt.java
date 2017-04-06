@@ -148,7 +148,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
      */
     public static final String EXTRA_MESSAGE = "message";
 
-    private static MqttAsyncClient MQTT_CLIENT = null;
+    private static MqttClient MQTT_CLIENT = null;
 
     @Override
     public void connectionLost(Throwable throwable) {
@@ -345,7 +345,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
                 if (MQTT_CLIENT != null && MQTT_CLIENT.isConnected()) {
                     if (DEBUG) Log.d(TAG, "Connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
-                } else if (MQTT_CLIENT == null) {
+                } else {
                     initializeMQTT();
                 }
             }
@@ -403,6 +403,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         MQTT_OPTIONS.setConnectionTimeout(Integer.parseInt(MQTT_KEEPALIVE) + 10); //add 10 seconds to keep alive as options timeout
         MQTT_OPTIONS.setKeepAliveInterval(Integer.parseInt(MQTT_KEEPALIVE));
         MQTT_OPTIONS.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
+        MQTT_OPTIONS.setAutomaticReconnect(true);
 
         if (MQTT_USERNAME.length() > 0)
             MQTT_OPTIONS.setUserName(MQTT_USERNAME);
@@ -421,7 +422,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         }
 
         try {
-            MQTT_CLIENT = new MqttAsyncClient(
+            MQTT_CLIENT = new MqttClient(
                     MQTT_URL,
                     String.valueOf(Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).hashCode()),
                     MQTT_MESSAGES_PERSISTENCE);
@@ -454,9 +455,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         protected Boolean doInBackground(MqttConnectOptions... params) {
             options = params[0];
             try {
-                if (MQTT_CLIENT != null && !MQTT_CLIENT.isConnected()) {
-                    MQTT_CLIENT.connect(options);
-                }
+                MQTT_CLIENT.connect(options);
             } catch (MqttSecurityException e) {
                 if (Aware.DEBUG) Log.e(TAG, "SecurityException: " + e.getMessage());
                 return false;
