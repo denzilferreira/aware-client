@@ -544,7 +544,12 @@ public class WebserviceHelper extends Service {
             return context_data;
         }
 
-        private void performDatabaseSpaceMaintenance(Uri CONTENT_URI, long last) {
+        private void performDatabaseSpaceMaintenance(Uri CONTENT_URI, long last, String[] columnsStr) {
+            // keep records when contain end_timestamp (session-based entries), only remove the rows where the end_timestamp > 0
+            String deleteSessionBasedSensors = "";
+            if (exists(columnsStr, "double_end_timestamp")) {
+                deleteSessionBasedSensors = " and double_end_timestamp > 0";
+            }
 
             if (WEBSERVICE_REMOVE_DATA) {
                 mContext.getContentResolver().delete(CONTENT_URI, "timestamp <= " + last, null);
@@ -558,19 +563,19 @@ public class WebserviceHelper extends Service {
                         cal.add(Calendar.DAY_OF_YEAR, -7);
                         if (Aware.DEBUG)
                             Log.d(Aware.TAG, " Cleaning locally any data older than last week (yyyy/mm/dd): " + cal.get(Calendar.YEAR) + '/' + (cal.get(Calendar.MONTH) + 1) + '/' + cal.get(Calendar.DAY_OF_MONTH));
-                        rowsDeleted = mContext.getContentResolver().delete(CONTENT_URI, "timestamp < " + cal.getTimeInMillis(), null);
+                        rowsDeleted = mContext.getContentResolver().delete(CONTENT_URI, "timestamp < " + cal.getTimeInMillis() + deleteSessionBasedSensors, null);
                         break;
                     case 2: //Monthly
                         cal.add(Calendar.MONTH, -1);
                         if (Aware.DEBUG)
                             Log.d(Aware.TAG, " Cleaning locally any data older than last month (yyyy/mm/dd): " + cal.get(Calendar.YEAR) + '/' + (cal.get(Calendar.MONTH) + 1) + '/' + cal.get(Calendar.DAY_OF_MONTH));
-                        rowsDeleted = mContext.getContentResolver().delete(CONTENT_URI, "timestamp < " + cal.getTimeInMillis(), null);
+                        rowsDeleted = mContext.getContentResolver().delete(CONTENT_URI, "timestamp < " + cal.getTimeInMillis()+ deleteSessionBasedSensors, null);
                         break;
                     case 3: //Daily
                         cal.add(Calendar.DAY_OF_YEAR, -1);
                         if (Aware.DEBUG)
                             Log.d(Aware.TAG, "Cleaning locally any data older than today (yyyy/mm/dd): " + cal.get(Calendar.YEAR) + '/' + (cal.get(Calendar.MONTH) + 1) + '/' + cal.get(Calendar.DAY_OF_MONTH) + " from " + CONTENT_URI.toString());
-                        rowsDeleted = mContext.getContentResolver().delete(CONTENT_URI, "timestamp < " + cal.getTimeInMillis(), null);
+                        rowsDeleted = mContext.getContentResolver().delete(CONTENT_URI, "timestamp < " + cal.getTimeInMillis()+ deleteSessionBasedSensors, null);
                         break;
                     case 4: //Always (experimental)
                         if (highFrequencySensors.contains(DATABASE_TABLE))
@@ -662,6 +667,13 @@ public class WebserviceHelper extends Service {
             return true;
         }
 
+        private boolean isTableAllowedForMaintenance(String table_name){
+            //we need to keep the schedulers and aware_studies tables and on those tables that contain
+            if(table_name.equalsIgnoreCase("aware_studies") || table_name.equalsIgnoreCase("scheduler"))
+                return false;
+            return true;
+        }
+
         @Override
         public String call() throws Exception {
             if (ACTION.equals(ACTION_AWARE_WEBSERVICE_SYNC_TABLE)) {
@@ -676,6 +688,7 @@ public class WebserviceHelper extends Service {
                         String latest = getLatestRecordInDatabase();
                         String study_condition = getRemoteSyncCondition();
                         int total_records = getNumberOfRecordsToSync(CONTENT_URI, columnsStr, latest, study_condition);
+                        boolean allow_table_maintenance = isTableAllowedForMaintenance(DATABASE_TABLE);
 
                         if (Aware.DEBUG) {
                             Log.d(Aware.TAG, "Sync " + DATABASE_TABLE + " exists: " + (response != null && response.length() == 0));
@@ -706,8 +719,8 @@ public class WebserviceHelper extends Service {
                             while (uploaded_records < total_records && lastSynced > 0 && isWifiNeededAndConnected());
 
                             //Are we performing database space maintenance?
-                            if (removeFrom > 0)
-                                performDatabaseSpaceMaintenance(CONTENT_URI, removeFrom);
+                            if (removeFrom > 0 && allow_table_maintenance)
+                                performDatabaseSpaceMaintenance(CONTENT_URI, removeFrom, columnsStr);
 
                             if (DEBUG)
                                 Log.d(Aware.TAG, DATABASE_TABLE + " sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis() - start) / 1000));
