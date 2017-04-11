@@ -126,15 +126,47 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
             Uri study_uri = Uri.parse(study_url);
             String protocol = study_uri.getScheme();
             List<String> path_segments = study_uri.getPathSegments();
-
-            study_api_key = path_segments.get(path_segments.size() - 1);
-            study_id = path_segments.get(path_segments.size() - 2);
-
             String request;
-            if (protocol.equals("https")) {
 
-                //Note: Joining a study always downloads the certificate.
-                SSLManager.downloadCertificate(getApplicationContext(), study_uri.getHost(), true);
+            // Check if scan originates from AWARE Create
+            if(study_uri.getHost().equals("create.awareframework.com")) {
+                try {
+                    request = new Http().dataGET(study_url, true);
+
+                    if (request.equals("[]")) {
+                        return null;
+                    }
+
+                    JSONArray configs_study = new JSONArray(request);
+
+                    String study_data_string = String.valueOf(configs_study.getJSONObject(0).getJSONObject("Study config"));
+                    JSONObject study_data = new JSONObject(study_data_string);
+
+                    study_api_key = "AWARE_ESM";
+                    study_id = path_segments.get(path_segments.size() - 2);
+                    JSONObject study_config_jsonObject = configs_study.getJSONObject(2);
+                    JSONArray study_config_jsonArray = new JSONArray();
+                    study_config_jsonArray.put(study_config_jsonObject); // Convert to JSON Object because AWARE expects a JSON Object
+                    study_config = study_config_jsonArray.toString();
+
+                    if (Aware.DEBUG) {
+                        Log.d(Aware.TAG, "doInBackground: " + study_config);
+                    }
+
+                    return study_data;
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            else {
+                study_api_key = path_segments.get(path_segments.size() - 1);
+                study_id = path_segments.get(path_segments.size() - 2);
+
+                if (protocol.equals("https")) {
+
+                    //Note: Joining a study always downloads the certificate.
+                    SSLManager.downloadCertificate(getApplicationContext(), study_uri.getHost(), true);
 
 //                try {
 //                    Intent installHTTPS = KeyChain.createInstallIntent();
@@ -154,61 +186,61 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
 //                    e.printStackTrace();
 //                }
 
-                try {
-                    request = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
-                } catch (FileNotFoundException e) {
-                    request = null;
-                }
-            } else {
-                request = new Http().dataGET(study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
-            }
-
-            if (request != null) {
-                try {
-                    if (request.equals("[]")) {
-                        return null;
-                    }
-                    JSONObject study_data = new JSONObject(request);
-
-                    //Automatically register this device on the study and create credentials for this device ID!
-                    Hashtable<String, String> data = new Hashtable<>();
-                    data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-                    data.put("platform", "android");
                     try {
-                        PackageInfo package_info = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), 0);
-                        data.put("package_name", package_info.packageName);
-                        data.put("package_version_code", String.valueOf(package_info.versionCode));
-                        data.put("package_version_name", String.valueOf(package_info.versionName));
-                    } catch (PackageManager.NameNotFoundException e) {
-                        Log.d(Aware.TAG, "Failed to put package info: " + e);
-                        e.printStackTrace();
+                        request = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                    } catch (FileNotFoundException e) {
+                        request = null;
                     }
+                } else {
+                    request = new Http().dataGET(study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                }
 
-                    String answer;
-                    if (protocol.equals("https")) {
-                        try {
-                            answer = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url)).dataPOST(study_url, data, true);
-                        } catch (FileNotFoundException e) {
-                            answer = null;
+                if (request != null) {
+                    try {
+                        if (request.equals("[]")) {
+                            return null;
                         }
-                    } else {
-                        answer = new Http().dataPOST(study_url, data, true);
-                    }
+                        JSONObject study_data = new JSONObject(request);
 
-                    if (answer != null) {
+                        //Automatically register this device on the study and create credentials for this device ID!
+                        Hashtable<String, String> data = new Hashtable<>();
+                        data.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                        data.put("platform", "android");
                         try {
-                            JSONArray configs_study = new JSONArray(answer);
-                            if (!configs_study.getJSONObject(0).has("message")) {
-                                study_config = configs_study.toString();
-                            }
-                        } catch (JSONException e) {
+                            PackageInfo package_info = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), 0);
+                            data.put("package_name", package_info.packageName);
+                            data.put("package_version_code", String.valueOf(package_info.versionCode));
+                            data.put("package_version_name", String.valueOf(package_info.versionName));
+                        } catch (PackageManager.NameNotFoundException e) {
+                            Log.d(Aware.TAG, "Failed to put package info: " + e);
                             e.printStackTrace();
                         }
-                    } else return null;
 
-                    return study_data;
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                        String answer;
+                        if (protocol.equals("https")) {
+                            try {
+                                answer = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url)).dataPOST(study_url, data, true);
+                            } catch (FileNotFoundException e) {
+                                answer = null;
+                            }
+                        } else {
+                            answer = new Http().dataPOST(study_url, data, true);
+                        }
+
+                        if (answer != null) {
+                            try {
+                                JSONArray configs_study = new JSONArray(answer);
+                                if (!configs_study.getJSONObject(0).has("message")) {
+                                    study_config = configs_study.toString();
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        } else return null;
+                        return study_data;
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
             return null;
@@ -250,6 +282,7 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_KEY, study_id);
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_API, study_api_key);
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_URL, study_url);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_JOINED, System.currentTimeMillis());
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_PI, result.getString("researcher_first") + " " + result.getString("researcher_last") + "\nContact: " + result.getString("researcher_contact"));
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, study_config);
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_TITLE, result.getString("study_name"));

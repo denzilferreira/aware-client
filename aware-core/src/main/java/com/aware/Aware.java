@@ -311,52 +311,52 @@ public class Aware extends Service {
     private class AsyncStudyCheck extends AsyncTask<Void, Void, Boolean> {
         @Override
         protected Boolean doInBackground(Void... params) {
-
-            //Ping AWARE's server with awareContext device's information for framework's statistics log
-            Hashtable<String, String> studyCheck = new Hashtable<>();
-            studyCheck.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-            studyCheck.put("study_check", "1");
-
-            try {
-                String webserver = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
-                String protocol = webserver.substring(0, webserver.indexOf(":"));
-
-                String study_status;
-                if (protocol.equalsIgnoreCase("https")) {
-                    study_status = new Https(SSLManager.getHTTPS(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER))).dataPOST(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER), studyCheck, true);
-                } else {
-                    study_status = new Http().dataPOST(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER), studyCheck, true);
-                }
-
-                if (study_status == null)
-                    return true; //unable to connect to server, timeout, etc. We do nothing.
-
-                if (DEBUG)
-                    Log.d(Aware.TAG, "Study_status: \n" + study_status);
-
-                try {
-                    JSONArray status = new JSONArray(study_status);
-
-                    JSONObject study = status.getJSONObject(0);
-                    if (!study.getBoolean("status")) {
-                        return false; //study no longer active, make clients quit the study and reset.
-                    }
-
-                    //Ignored by standalone apps. They handle their own sensors, so server settings do not apply.
-                    if (!getResources().getBoolean(R.bool.standalone)) {
-                        if (study.getString("config").equalsIgnoreCase("[]")) {
-                            Aware.tweakSettings(getApplicationContext(), new JSONArray(study.getString("config")));
-                        } else if (!study.getString("config").equalsIgnoreCase("[]")) {
-                            JSONObject configJSON = new JSONObject(study.getString("config"));
-                            Aware.tweakSettings(getApplicationContext(), new JSONArray().put(configJSON));
-                        }
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
+//TODO
+//            //Ping AWARE's server with awareContext device's information for framework's statistics log
+//            Hashtable<String, String> studyCheck = new Hashtable<>();
+//            studyCheck.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+//            studyCheck.put("study_check", "1");
+//
+//            try {
+//                String webserver = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
+//                String protocol = webserver.substring(0, webserver.indexOf(":"));
+//
+//                String study_status;
+//                if (protocol.equalsIgnoreCase("https")) {
+//                    study_status = new Https(SSLManager.getHTTPS(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER))).dataPOST(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER), studyCheck, true);
+//                } else {
+//                    study_status = new Http().dataPOST(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER), studyCheck, true);
+//                }
+//
+//                if (study_status == null)
+//                    return true; //unable to connect to server, timeout, etc. We do nothing.
+//
+//                if (DEBUG)
+//                    Log.d(Aware.TAG, "Study_status: \n" + study_status);
+//
+//                try {
+//                    JSONArray status = new JSONArray(study_status);
+//
+//                    JSONObject study = status.getJSONObject(0);
+//                    if (!study.getBoolean("status")) {
+//                        return false; //study no longer active, make clients quit the study and reset.
+//                    }
+//
+//                    //Ignored by standalone apps. They handle their own sensors, so server settings do not apply.
+//                    if (!getResources().getBoolean(R.bool.standalone)) {
+//                        if (study.getString("config").equalsIgnoreCase("[]")) {
+//                            Aware.tweakSettings(getApplicationContext(), new JSONArray(study.getString("config")));
+//                        } else if (!study.getString("config").equalsIgnoreCase("[]")) {
+//                            JSONObject configJSON = new JSONObject(study.getString("config"));
+//                            Aware.tweakSettings(getApplicationContext(), new JSONArray().put(configJSON));
+//                        }
+//                    }
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//            } catch (FileNotFoundException e) {
+//                e.printStackTrace();
+//            }
             return true;
         }
 
@@ -447,6 +447,7 @@ public class Aware extends Service {
             participant = true;
 
         if (study != null && !study.isClosed()) study.close();
+
         return participant;
     }
 
@@ -1454,15 +1455,22 @@ public class Aware extends Service {
             Uri study_uri = Uri.parse(full_url);
             // New study URL, chopping off query parameters.
             String protocol = study_uri.getScheme();
+            String request = null;
+            String study_id = null;
             List<String> path_segments = study_uri.getPathSegments();
 
             String study_api_key = path_segments.get(path_segments.size() - 1);
-            String study_id = path_segments.get(path_segments.size() - 2);
 
-            String request;
-            if (protocol.equals("https")) {
+            if(study_uri.getHost().equals("create.awareframework.com")) {
+                request = new Http().dataGET(full_url.substring(0, full_url.indexOf("/study/")) + study_api_key, true);
+                study_id = study_api_key;
+            }
+            else {
+                study_id = path_segments.get(path_segments.size() - 2);
 
-                SSLManager.downloadCertificate(getApplicationContext(), study_uri.getHost(), true);
+                if (protocol.equals("https")) {
+
+                    SSLManager.downloadCertificate(getApplicationContext(), study_uri.getHost(), true);
 
 //                try {
 //                    Intent installHTTPS = KeyChain.createInstallIntent();
@@ -1482,13 +1490,14 @@ public class Aware extends Service {
 //                    e.printStackTrace();
 //                }
 
-                try {
-                    request = new Https(SSLManager.getHTTPS(getApplicationContext(), full_url)).dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
-                } catch (FileNotFoundException e) {
-                    request = null;
+                    try {
+                        request = new Https(SSLManager.getHTTPS(getApplicationContext(), full_url)).dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                    } catch (FileNotFoundException e) {
+                        request = null;
+                    }
+                } else {
+                    request = new Http().dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
                 }
-            } else {
-                request = new Http().dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
             }
 
             if (request != null) {

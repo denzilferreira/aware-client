@@ -114,6 +114,7 @@ public class Aware_Join_Study extends Aware_Activity {
                     ContentValues studyData = new ContentValues();
                     studyData.put(Aware_Provider.Aware_Studies.STUDY_JOINED, System.currentTimeMillis());
                     getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, studyData, Aware_Provider.Aware_Studies.STUDY_ID + "=" + study.getInt(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_ID)), null);
+                    Aware.setSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER, study_url);
                 }
                 if (study != null && !study.isClosed()) study.close();
 
