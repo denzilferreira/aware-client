@@ -154,7 +154,7 @@ public class Aware_Sensor extends Service {
                     CONTEXT_PRODUCER.onContext();
                 }
             }
-            if (intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA) && Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
+            if (intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA)) {
                 if (DATABASE_TABLES != null && TABLES_FIELDS != null && CONTEXT_URIS != null) {
                     for (int i = 0; i < DATABASE_TABLES.length; i++) {
                         Intent webserviceHelper = new Intent(context, WebserviceHelper.class);

@@ -24,8 +24,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.Date;
 import java.util.concurrent.ExecutionException;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLPeerUnverifiedException;
 
 /**
  * Created by denzil on 15/12/15.
@@ -37,6 +45,7 @@ public class SSLManager {
      * Handle a study URL.  Fetch data from query parameters if it is there.  Otherwise,
      * use the classic method of downloading the certificate over http.  Enforces the key
      * management policy.
+     *
      * @param context app context
      * @param url     full URL, including protocol and query arguments
      * @param block   if true, this method blocks, otherwise downloading is in background.
@@ -68,11 +77,54 @@ public class SSLManager {
                         Log.d(Aware.TAG, "Certificates: Already present and key_management=once: " + hostname);
                 }
             } else {
-                if (!hasCertificate(context, hostname)) {
-                    if (Aware.DEBUG) Log.d(Aware.TAG, "Certificates: Downloading certificate: " + hostname);
-                    downloadCertificate(context, hostname, block);
+                try {
+                    URL javaURL = new URL(url);
+                    if (!hasCertificate(context, hostname) && (getCertificateExpiration(javaURL) != null && System.currentTimeMillis() >= getCertificateExpiration(javaURL).getTime())) {
+                        if (Aware.DEBUG)
+                            Log.d(Aware.TAG, "Certificates: Downloading certificate: " + hostname);
+
+                        downloadCertificate(context, hostname, block);
+                    }
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
                 }
             }
+        }
+    }
+
+    /**
+     * Taken from https://www.experts-exchange.com/questions/27668989/Getting-SSL-Certificate-expiry-date.html
+     *
+     * @param url
+     * @return
+     */
+    public static Date getCertificateExpiration(URL url) {
+        try {
+            URLConnection conn = url.openConnection();
+            if (conn instanceof HttpsURLConnection) {
+                // retrieve the N-length signing chain for the server certificates
+                // certs[0] is the server's certificate
+                // certs[1] - certs[N-1] are the intermediate authorities that signed the cert
+                // certs[N] is the root certificate authority of the chain
+                Certificate[] certs = ((HttpsURLConnection) conn).getServerCertificates();
+                if (certs.length > 0 && certs[0] instanceof X509Certificate) {
+                    // certs[0] is an X.509 certificate, return its "notAfter" date
+                    return ((X509Certificate) certs[0]).getNotAfter();
+                }
+            }
+            // connection is not HTTPS or server is not signed with an X.509 certificate, return null
+            return null;
+        } catch (SSLPeerUnverifiedException spue) {
+            // connection to server is not verified, unable to get certificates
+            return null;
+        } catch (IllegalStateException ise) {
+            // shouldn't get here -- indicates attempt to get certificates before
+            // connection is established
+            return null;
+        } catch (IOException ioe) {
+            // error connecting to URL -- this must be caught last since
+            // other exceptions are subclasses of IOException
+            return null;
         }
     }
 
@@ -263,7 +315,7 @@ public class SSLManager {
      * Load HTTPS certificate from server: server.crt
      *
      * @param context context
-     * @param server server URL, http://{hostname}/index.php
+     * @param server  server URL, http://{hostname}/index.php
      * @return FileInputStream of certificate
      * @throws FileNotFoundException
      */
@@ -275,7 +327,7 @@ public class SSLManager {
 
         File root_folder;
         if (!context.getResources().getBoolean(R.bool.standalone)) {
-            root_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE")+ "/credentials"); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
+            root_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE") + "/credentials"); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
         } else {
             root_folder = new File(ContextCompat.getExternalFilesDirs(context, null)[0] + "/AWARE/credentials"); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
         }
@@ -298,7 +350,7 @@ public class SSLManager {
      * NOTE: different from getHTTPS. Here, we have the MQTT server address/IP as input parameter.
      *
      * @param context context
-     * @param server server hostname
+     * @param server  server hostname
      * @return Input stream of opened certificate.
      * @throws FileNotFoundException
      */
@@ -308,7 +360,7 @@ public class SSLManager {
 
         File root_folder;
         if (!context.getResources().getBoolean(R.bool.standalone)) {
-            root_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE")+ "/credentials"); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
+            root_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE") + "/credentials"); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
         } else {
             root_folder = new File(ContextCompat.getExternalFilesDirs(context, null)[0] + "/AWARE/credentials"); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
         }

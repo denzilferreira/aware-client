@@ -10,7 +10,7 @@ android {
         versionCode version_code
         versionName version_readable
         targetSdkVersion 25
-        minSdkVersion 10 //Android 2.3.3
+        minSdkVersion 11 //Android 2.3.3
     }
 
     signingConfigs {
