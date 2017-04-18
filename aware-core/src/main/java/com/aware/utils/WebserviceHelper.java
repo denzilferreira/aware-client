@@ -277,6 +277,9 @@ public class WebserviceHelper extends Service {
             // For each start request, send a message to start a job and deliver the
             // start ID so we know which request we're stopping when we finish the job
             String table = intent.getStringExtra(EXTRA_TABLE);
+
+            if (Aware.DEBUG) Log.d(Aware.TAG, "Processing " + table);
+
             int tableHash = table.hashCode();
             if (mSyncFastQueue.currentMessage != tableHash && mSyncSlowQueueA.currentMessage != tableHash && mSyncSlowQueueB.currentMessage != tableHash
                     && !mSyncFastQueue.hasMessages(tableHash) && !mSyncSlowQueueA.hasMessages(tableHash) && !mSyncSlowQueueB.hasMessages(tableHash)) {
@@ -671,7 +674,6 @@ public class WebserviceHelper extends Service {
                 String response = createRemoteTable();
 
                 if (response != null || WEBSERVICE_SIMPLE) {
-
                     try {
                         String[] columnsStr = getTableColumnsNames(CONTENT_URI);
                         String latest = getLatestRecordInDatabase();
