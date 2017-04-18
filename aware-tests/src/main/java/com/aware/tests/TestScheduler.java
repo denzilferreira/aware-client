@@ -5,7 +5,9 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.BatteryManager;
 
+import com.aware.Applications;
 import com.aware.Aware;
+import com.aware.Battery;
 import com.aware.ESM;
 import com.aware.Screen;
 import com.aware.providers.Battery_Provider;
@@ -35,7 +37,8 @@ public class TestScheduler implements AwareTest {
 //        testContextual(context);
 //        testConditional(context);
 //        testTime(context);
-        testRandom(context);
+//        testRandom(context);
+        testESMTrigger(context);
 
         Aware.startScheduler(context);
     }
@@ -149,7 +152,7 @@ public class TestScheduler implements AwareTest {
             factory.addESM(esmPAM);
 
             Scheduler.Schedule contextual = new Scheduler.Schedule("test_contextual");
-            contextual.addContext(Screen.ACTION_AWARE_SCREEN_ON);
+            contextual.addContext(Battery.ACTION_AWARE_BATTERY_DISCHARGING);
             contextual.setActionType(Scheduler.ACTION_TYPE_BROADCAST);
             contextual.setActionIntentAction(ESM.ACTION_AWARE_QUEUE_ESM);
             contextual.addActionExtra(ESM.EXTRA_ESM, factory.build());

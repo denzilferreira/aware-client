@@ -144,10 +144,11 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
 
                     study_api_key = "AWARE_ESM";
                     study_id = path_segments.get(path_segments.size() - 2);
-                    JSONObject study_config_jsonObject = configs_study.getJSONObject(2);
-                    JSONArray study_config_jsonArray = new JSONArray();
-                    study_config_jsonArray.put(study_config_jsonObject); // Convert to JSON Object because AWARE expects a JSON Object
-                    study_config = study_config_jsonArray.toString();
+                    //JSONObject study_config_jsonObject = configs_study.getJSONObject(2);
+                    //JSONArray study_config_jsonArray = new JSONArray();
+                    //study_config_jsonArray.put(study_config_jsonObject); // Convert to JSON Object because AWARE expects a JSON Object
+                    study_config = configs_study.toString();
+                    //study_config = study_config_jsonArray.toString();
 
                     if (Aware.DEBUG) {
                         Log.d(Aware.TAG, "doInBackground: " + study_config);
