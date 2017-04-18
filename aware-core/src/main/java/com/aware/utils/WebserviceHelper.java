@@ -38,10 +38,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -64,28 +61,29 @@ public class WebserviceHelper extends Service {
     private static int notificationID = 0;
     private static int total_rows_synced = 0;
 
-    private static SyncQueue mSyncFastQueue;
-    private static Looper mServiceLooperFastQueue;
-    static ExecutorService executorFastQueue;
+    private SyncQueue mSyncFastQueue;
+    private Looper mServiceLooperFastQueue;
+    private ExecutorService executorFastQueue;
 
-    private static SyncQueue mSyncSlowQueueA;
-    private static Looper mServiceLooperSlowQueueA;
-    static ExecutorService executorSlowQueueA;
+    private SyncQueue mSyncSlowQueueA;
+    private Looper mServiceLooperSlowQueueA;
+    private ExecutorService executorSlowQueueA;
 
-    private static SyncQueue mSyncSlowQueueB;
-    private static Looper mServiceLooperSlowQueueB;
-    static ExecutorService executorSlowQueueB;
+    private SyncQueue mSyncSlowQueueB;
+    private Looper mServiceLooperSlowQueueB;
+    private ExecutorService executorSlowQueueB;
 
     private static boolean nextSlowQueue = false;
 
-    private static ArrayList<String> highFrequencySensors = new ArrayList<>();
+    private static final ArrayList<String> highFrequencySensors = new ArrayList<>();
     private static final ArrayList<String> dontClearSensors = new ArrayList<>();
 
     // Handler that receives messages from the thread
     private final class SyncQueue extends Handler {
         ExecutorService executor;
-        public int currentMessage;
-        public SyncQueue(Looper looper, ExecutorService executor) {
+        int currentMessage;
+
+        SyncQueue(Looper looper, ExecutorService executor) {
             super(looper);
             // One thread to sync data with the server
             this.executor = executor;
@@ -132,16 +130,13 @@ public class WebserviceHelper extends Service {
 
         notificationID = 0;
 
-        HandlerThread threadFast = new HandlerThread("SyncFastQueue",
-                android.os.Process.THREAD_PRIORITY_BACKGROUND);
+        HandlerThread threadFast = new HandlerThread("SyncFastQueue", android.os.Process.THREAD_PRIORITY_BACKGROUND);
         threadFast.start();
 
-        HandlerThread threadSlowA = new HandlerThread("SyncSlowAQueue",
-                android.os.Process.THREAD_PRIORITY_BACKGROUND);
+        HandlerThread threadSlowA = new HandlerThread("SyncSlowAQueue", android.os.Process.THREAD_PRIORITY_BACKGROUND);
         threadSlowA.start();
 
-        HandlerThread threadSlowB = new HandlerThread("SyncSlowBQueue",
-                android.os.Process.THREAD_PRIORITY_BACKGROUND);
+        HandlerThread threadSlowB = new HandlerThread("SyncSlowBQueue", android.os.Process.THREAD_PRIORITY_BACKGROUND);
         threadSlowB.start();
 
         // Get the HandlerThread's Looper and use it for our Handler
@@ -196,7 +191,6 @@ public class WebserviceHelper extends Service {
     private int getBatchSize() {
         double availableRam;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-
             String load;
             try (RandomAccessFile reader = new RandomAccessFile("/proc/meminfo", "r")) {
                 load = reader.readLine();
@@ -258,7 +252,6 @@ public class WebserviceHelper extends Service {
         boolean DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
 
         if (intent.getAction().equals(ACTION_AWARE_WEBSERVICE_SYNC_TABLE)) {
-
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_CHARGING).equals("true")) {
                 Intent batt = getApplicationContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
                 int plugged = batt.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
@@ -273,24 +266,20 @@ public class WebserviceHelper extends Service {
             }
 
             //Check if we are supposed to sync over WiFi only
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true")) {
-                ConnectivityManager connManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-                NetworkInfo activeNetwork = connManager.getActiveNetworkInfo();
-                if (!(activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected())) {
-                    if (Aware.DEBUG)
-                        Log.d(Aware.TAG, "Sync data only over Wi-Fi. Will try again later...");
+            if (!isWifiNeededAndConnected()) {
+                if (Aware.DEBUG)
+                    Log.d(Aware.TAG, "Sync data only over Wi-Fi. Will try again later...");
 
-                    stopSelf();
-                    return START_REDELIVER_INTENT;
-                }
+                stopSelf();
+                return START_REDELIVER_INTENT;
             }
 
             // For each start request, send a message to start a job and deliver the
             // start ID so we know which request we're stopping when we finish the job
             String table = intent.getStringExtra(EXTRA_TABLE);
             int tableHash = table.hashCode();
-            if(mSyncFastQueue.currentMessage != tableHash && mSyncSlowQueueA.currentMessage != tableHash && mSyncSlowQueueB.currentMessage != tableHash &&
-                    !mSyncFastQueue.hasMessages(tableHash) && !mSyncSlowQueueA.hasMessages(tableHash) && !mSyncSlowQueueB.hasMessages(tableHash)){
+            if (mSyncFastQueue.currentMessage != tableHash && mSyncSlowQueueA.currentMessage != tableHash && mSyncSlowQueueB.currentMessage != tableHash
+                    && !mSyncFastQueue.hasMessages(tableHash) && !mSyncSlowQueueA.hasMessages(tableHash) && !mSyncSlowQueueB.hasMessages(tableHash)) {
                 if (!highFrequencySensors.contains(table)) { //Non High Frequency sensors go together
                     Message msg = buildMessage(mSyncFastQueue, intent, DEBUG, DEVICE_ID, WEBSERVER, WEBSERVICE_SIMPLE, WEBSERVICE_REMOVE_DATA, MAX_POST_SIZE, startId, notificationID++);
                     mSyncFastQueue.sendMessage(msg);
@@ -308,6 +297,15 @@ public class WebserviceHelper extends Service {
 
         // If we get killed, after returning from here, restart
         return START_REDELIVER_INTENT;
+    }
+
+    public boolean isWifiNeededAndConnected() {
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true")) {
+            ConnectivityManager connManager = (ConnectivityManager) getApplicationContext().getSystemService(CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetwork = connManager.getActiveNetworkInfo();
+            return (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected());
+        }
+        return true;
     }
 
     private Message buildMessage(SyncQueue queue, Intent intent, boolean DEBUG, String DEVICE_ID, String WEBSERVER, boolean WEBSERVICE_SIMPLE, boolean WEBSERVICE_REMOVE_DATA, int MAX_POST_SIZE, int startId, int notificationID) {
@@ -329,7 +327,6 @@ public class WebserviceHelper extends Service {
         msg.setData(bundle);
         msg.arg1 = startId;
         return msg;
-
     }
 
     /**
@@ -570,13 +567,13 @@ public class WebserviceHelper extends Service {
                         cal.add(Calendar.MONTH, -1);
                         if (Aware.DEBUG)
                             Log.d(Aware.TAG, " Cleaning locally any data older than last month (yyyy/mm/dd): " + cal.get(Calendar.YEAR) + '/' + (cal.get(Calendar.MONTH) + 1) + '/' + cal.get(Calendar.DAY_OF_MONTH));
-                        rowsDeleted = mContext.getContentResolver().delete(CONTENT_URI, "timestamp < " + cal.getTimeInMillis()+ deleteSessionBasedSensors, null);
+                        rowsDeleted = mContext.getContentResolver().delete(CONTENT_URI, "timestamp < " + cal.getTimeInMillis() + deleteSessionBasedSensors, null);
                         break;
                     case 3: //Daily
                         cal.add(Calendar.DAY_OF_YEAR, -1);
                         if (Aware.DEBUG)
                             Log.d(Aware.TAG, "Cleaning locally any data older than today (yyyy/mm/dd): " + cal.get(Calendar.YEAR) + '/' + (cal.get(Calendar.MONTH) + 1) + '/' + cal.get(Calendar.DAY_OF_MONTH) + " from " + CONTENT_URI.toString());
-                        rowsDeleted = mContext.getContentResolver().delete(CONTENT_URI, "timestamp < " + cal.getTimeInMillis()+ deleteSessionBasedSensors, null);
+                        rowsDeleted = mContext.getContentResolver().delete(CONTENT_URI, "timestamp < " + cal.getTimeInMillis() + deleteSessionBasedSensors, null);
                         break;
                     case 4: //Always (experimental)
                         if (highFrequencySensors.contains(DATABASE_TABLE))
@@ -659,18 +656,9 @@ public class WebserviceHelper extends Service {
             return lastSynced;
         }
 
-        boolean isWifiNeededAndConnected() {
-            if (Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true")) {
-                ConnectivityManager connManager = (ConnectivityManager) mContext.getSystemService(CONNECTIVITY_SERVICE);
-                NetworkInfo activeNetwork = connManager.getActiveNetworkInfo();
-                return (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected());
-            }
-            return true;
-        }
-
-        private boolean isTableAllowedForMaintenance(String table_name){
+        private boolean isTableAllowedForMaintenance(String table_name) {
             //we need to keep the schedulers and aware_studies tables and on those tables that contain
-            if(table_name.equalsIgnoreCase("aware_studies") || table_name.equalsIgnoreCase("scheduler"))
+            if (table_name.equalsIgnoreCase("aware_studies") || table_name.equalsIgnoreCase("scheduler"))
                 return false;
             return true;
         }
@@ -694,8 +682,10 @@ public class WebserviceHelper extends Service {
                         if (Aware.DEBUG) {
                             Log.d(Aware.TAG, "Sync " + DATABASE_TABLE + " exists: " + (response != null && response.length() == 0));
                             if (!latest.equals("[]")) Log.d(Aware.TAG, "Latest: " + latest);
-                            if (study_condition.length() > 0) Log.d(Aware.TAG, "Since: " + study_condition);
-                            if (total_records > 0) Log.d(Aware.TAG, "Rows to sync: " + total_records);
+                            if (study_condition.length() > 0)
+                                Log.d(Aware.TAG, "Since: " + study_condition);
+                            if (total_records > 0)
+                                Log.d(Aware.TAG, "Rows to sync: " + total_records);
                         }
 
                         if (total_records > 0) {
