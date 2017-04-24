@@ -8,8 +8,10 @@ import android.os.BatteryManager;
 import com.aware.Applications;
 import com.aware.Aware;
 import com.aware.Battery;
+import com.aware.Communication;
 import com.aware.ESM;
 import com.aware.Screen;
+import com.aware.providers.Applications_Provider;
 import com.aware.providers.Battery_Provider;
 import com.aware.providers.Scheduler_Provider;
 import com.aware.providers.Screen_Provider;
@@ -35,10 +37,10 @@ public class TestScheduler implements AwareTest {
 //        testInterval(context);
 //        testTimer(context);
 //        testContextual(context);
-//        testConditional(context);
+        testConditional(context);
 //        testTime(context);
 //        testRandom(context);
-        testESMTrigger(context);
+//        testESMTrigger(context);
 
         Aware.startScheduler(context);
     }
@@ -103,15 +105,23 @@ public class TestScheduler implements AwareTest {
      */
     private void testConditional(Context c) {
         try {
+            ESM_PAM esmPAM = new ESM_PAM();
+            esmPAM.setTitle("PAM")
+                    .setInstructions("Pick the closest to how you feel right now.")
+                    .setSubmitButton("OK")
+                    .setTrigger("AWARE Test");
+
+            ESMFactory factory = new ESMFactory();
+            factory.addESM(esmPAM);
+
             Scheduler.Schedule conditional = new Scheduler.Schedule("screen_on");
             conditional
-                    .addCondition(Uri.parse("content://com.aware.phone.provider.screen/screen"),
-                            Screen_Provider.Screen_Data.SCREEN_STATUS + "=" + Screen.STATUS_SCREEN_ON
+                    .addCondition(Uri.parse("content://com.aware.phone.provider.applications/applications_foreground"),
+                        Applications_Provider.Applications_Foreground.APPLICATION_NAME + " LIKE " + "'Facebook'" + " AND " + "timestamp / 1000 > (strftime('%s','now'))"
                     )
-                    .setActionType(Scheduler.ACTION_TYPE_SERVICE)
-                    .setActionClass(c.getPackageName() + "/" + Aware_TTS.class.getName())
-                    .addActionExtra(Aware_TTS.EXTRA_TTS_TEXT, "How can I help?")
-                    .addActionExtra(Aware_TTS.EXTRA_TTS_REQUESTER, c.getPackageName());
+                    .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
+                    .setActionIntentAction(ESM.ACTION_AWARE_QUEUE_ESM)
+                    .addActionExtra(ESM.EXTRA_ESM, factory.build());
             Scheduler.saveSchedule(c, conditional);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -140,19 +150,16 @@ public class TestScheduler implements AwareTest {
 
     private void testESMTrigger(Context c) {
         try {
-
             ESM_PAM esmPAM = new ESM_PAM();
             esmPAM.setTitle("PAM")
                     .setInstructions("Pick the closest to how you feel right now.")
                     .setSubmitButton("OK")
-                    .setNotificationTimeout(10)
                     .setTrigger("AWARE Test");
 
             ESMFactory factory = new ESMFactory();
             factory.addESM(esmPAM);
 
             Scheduler.Schedule contextual = new Scheduler.Schedule("test_contextual");
-            contextual.addContext(Battery.ACTION_AWARE_BATTERY_DISCHARGING);
             contextual.setActionType(Scheduler.ACTION_TYPE_BROADCAST);
             contextual.setActionIntentAction(ESM.ACTION_AWARE_QUEUE_ESM);
             contextual.addActionExtra(ESM.EXTRA_ESM, factory.build());
