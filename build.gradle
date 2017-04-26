@@ -1,11 +1,14 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+def currentGit = "git -C ${rootDir} describe --long --always --dirty".execute().text.trim()
+
 project.ext {
     mqtt_libs = (System.getenv("mqtt_libs") as String ?: "1.1.0")
     ion_libs = (System.getenv("ion_libs") as String ?: "2.1.6")
     support_libs = (System.getenv("support_libs") as String ?: "25.3.0")
     google_libs = (System.getenv("google_libs") ?: "10.2.0")
     version_code = (System.getenv("aware_revision") as Integer ?: 700)
-    version_readable = "4.0." + version_code + "." + (System.getenv("aware_label") as String ?: "selfie")
+    version_readable = "4.0." + version_code + "." + (System.getenv("aware_label") as String ?: "selfie" + ".git=" + currentGit)
 }
 
 buildscript {
