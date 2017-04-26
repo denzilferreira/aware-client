@@ -1462,7 +1462,7 @@ public class Aware extends Service {
             String request;
             if (protocol.equals("https")) {
 
-                SSLManager.downloadCertificate(getApplicationContext(), study_uri.getHost(), true);
+                SSLManager.handleUrl(getApplicationContext(), full_url, true);
 
 //                try {
 //                    Intent installHTTPS = KeyChain.createInstallIntent();

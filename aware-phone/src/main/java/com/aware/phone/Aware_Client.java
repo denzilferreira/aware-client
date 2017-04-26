@@ -462,8 +462,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         protected Boolean doInBackground(Void... params) {
             // Download the certificate, and block since we are already running in background
             // and we need the certificate immediately.
-            Uri server_url = Uri.parse("https://api.awareframework.com/index.php");
-            SSLManager.downloadCertificate(getApplicationContext(), server_url.getHost(), true);
+            SSLManager.handleUrl(getApplicationContext(), "https://api.awareframework.com/index.php", true);
 
             //Ping AWARE's server with getApplicationContext() device's information for framework's statistics log
             Hashtable<String, String> device_ping = new Hashtable<>();
