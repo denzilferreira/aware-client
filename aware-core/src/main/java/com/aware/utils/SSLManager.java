@@ -79,7 +79,8 @@ public class SSLManager {
             } else {
                 try {
                     URL javaURL = new URL(url);
-                    if (!hasCertificate(context, hostname) && (getCertificateExpiration(javaURL) != null && System.currentTimeMillis() >= getCertificateExpiration(javaURL).getTime())) {
+                    Date certificateExpiration = getCertificateExpiration(javaURL);
+                    if (!hasCertificate(context, hostname) && (certificateExpiration != null && System.currentTimeMillis() >= certificateExpiration.getTime())) {
                         if (Aware.DEBUG)
                             Log.d(Aware.TAG, "Certificates: Downloading certificate: " + hostname);
 
