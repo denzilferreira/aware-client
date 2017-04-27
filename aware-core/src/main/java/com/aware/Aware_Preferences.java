@@ -605,4 +605,11 @@ public class Aware_Preferences {
      * If in a study, remind the user to charge the phone when at 15%.
      */
     public static final String REMIND_TO_CHARGE = "remind_to_charge";
+
+    /**
+     * For all sensors, discard sensor events that come in more often than frequency.
+     * The frequency is enforced if this setting OR the sensor-specific setting is set.
+     */
+    public static final String ENFORCE_FREQUENCY_ALL = "enforce_frequency_all";
+
 }

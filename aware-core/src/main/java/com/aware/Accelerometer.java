@@ -277,7 +277,8 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
                 int new_frequency = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER));
                 double new_threshold = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_ACCELEROMETER));
-                boolean new_enforce_frequency = Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER_ENFORCE).equals("true");
+                boolean new_enforce_frequency = (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_ACCELEROMETER_ENFORCE).equals("true")
+                        || Aware.getSetting(getApplicationContext(), Aware_Preferences.ENFORCE_FREQUENCY_ALL).equals("true"));
 
                 if (FREQUENCY != new_frequency
                         || THRESHOLD != new_threshold
