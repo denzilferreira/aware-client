@@ -367,6 +367,15 @@ public class Locations extends Aware_Sensor implements LocationListener {
 
     @Override
     public void onLocationChanged(Location newLocation) {
+        // We save ALL locations, no matter which provider it comes from, for the most complete
+        // history and future analysis.
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.LOCATION_SAVE_ALL).equals("true")) {
+            saveLocation(newLocation);
+            Intent locationEvent = new Intent(ACTION_AWARE_LOCATIONS);
+            sendBroadcast(locationEvent);
+            return;
+        }
+
         Location bestLocation;
 
         //If we have both GPS and Network active, check if we got a better location. Otherwise always keep the latest.
@@ -390,33 +399,7 @@ public class Locations extends Aware_Sensor implements LocationListener {
             bestLocation = newLocation;
         }
 
-        // Are we within the geofence, if we are given one?
-        Boolean permitted = testGeoFence(bestLocation.getLatitude(), bestLocation.getLongitude());
-        if (Aware.DEBUG) Log.d(TAG, "Locations: geofencing: permitted=" + permitted);
-
-
-        ContentValues rowData = new ContentValues();
-        rowData.put(Locations_Data.TIMESTAMP, System.currentTimeMillis());
-        rowData.put(Locations_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-        rowData.put(Locations_Data.PROVIDER, bestLocation.getProvider());
-        if (permitted) {
-            rowData.put(Locations_Data.LATITUDE, bestLocation.getLatitude());
-            rowData.put(Locations_Data.LONGITUDE, bestLocation.getLongitude());
-            rowData.put(Locations_Data.BEARING, bestLocation.getBearing());
-            rowData.put(Locations_Data.SPEED, bestLocation.getSpeed());
-            rowData.put(Locations_Data.ALTITUDE, bestLocation.getAltitude());
-            rowData.put(Locations_Data.ACCURACY, bestLocation.getAccuracy());
-        } else {
-            rowData.put(Locations_Data.LABEL, "outofbounds");
-        }
-
-        try {
-            getContentResolver().insert(Locations_Data.CONTENT_URI, rowData);
-        } catch (SQLiteException e) {
-            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-        } catch (SQLException e) {
-            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-        }
+        saveLocation(bestLocation);
 
         Intent locationEvent = new Intent(ACTION_AWARE_LOCATIONS);
         sendBroadcast(locationEvent);
@@ -483,6 +466,27 @@ public class Locations extends Aware_Sensor implements LocationListener {
         if (Aware.DEBUG)
             Log.d(TAG, "onStatusChanged: " + provider + " Status:" + status + " Extras:" + extras.toString());
 
+        // Save ALL locations, no matter which provider it comes from or how it relates to past
+        // locations.
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.LOCATION_SAVE_ALL).equals("true")) {
+            boolean updated = false;
+            Location newLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if (newLocation != null) {
+                saveLocation(newLocation);
+                updated = true;
+            }
+            newLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            if (newLocation != null) {
+                saveLocation(newLocation);
+                updated = true;
+            }
+            if (updated) {
+                Intent locationEvent = new Intent(ACTION_AWARE_LOCATIONS);
+                sendBroadcast(locationEvent);
+            }
+            return;
+        }
+
         //Save best location, could be GPS or network
         //This covers the case when the GPS stopped and we did not get a location fix.
         Location lastGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -500,6 +504,19 @@ public class Locations extends Aware_Sensor implements LocationListener {
         } else {
             bestLocation = lastGPS;
         }
+
+        saveLocation(bestLocation);
+
+        Intent locationEvent = new Intent(ACTION_AWARE_LOCATIONS);
+        sendBroadcast(locationEvent);
+    }
+
+    /**
+     *  Save a location, handling geofencing.
+     *
+     * @param bestLocation Location to save
+     */
+    public void saveLocation(Location bestLocation) {
 
         // Are we within the geofence, if we are given one?
         // Below we don't handle bestLocaiton=null case
@@ -529,7 +546,5 @@ public class Locations extends Aware_Sensor implements LocationListener {
             if (Aware.DEBUG) Log.d(TAG, e.getMessage());
         }
 
-        Intent locationEvent = new Intent(ACTION_AWARE_LOCATIONS);
-        sendBroadcast(locationEvent);
     }
 }
