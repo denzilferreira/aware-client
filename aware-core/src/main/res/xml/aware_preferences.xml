@@ -135,8 +135,8 @@
             <ListPreference
                 android:defaultValue="200000"
                 android:dependency="status_barometer"
-                android:entries="@array/frequency_readable"
-                android:entryValues="@array/frequency_values"
+                android:entries="@array/low_frequency_readable"
+                android:entryValues="@array/low_frequency_values"
                 android:key="frequency_barometer"
                 android:persistent="true"
                 android:summary="%s"
@@ -381,8 +381,8 @@
             <ListPreference
                 android:defaultValue="200000"
                 android:dependency="status_light"
-                android:entries="@array/frequency_readable"
-                android:entryValues="@array/frequency_values"
+                android:entries="@array/low_frequency_readable"
+                android:entryValues="@array/low_frequency_values"
                 android:key="frequency_light"
                 android:persistent="true"
                 android:summary="%s"
@@ -548,8 +548,8 @@
             <ListPreference
                 android:defaultValue="200000"
                 android:dependency="status_proximity"
-                android:entries="@array/frequency_readable"
-                android:entryValues="@array/frequency_values"
+                android:entries="@array/low_frequency_readable"
+                android:entryValues="@array/low_frequency_values"
                 android:key="frequency_proximity"
                 android:persistent="true"
                 android:summary="%s"
@@ -640,8 +640,8 @@
             <ListPreference
                 android:defaultValue="200000"
                 android:dependency="status_temperature"
-                android:entries="@array/frequency_readable"
-                android:entryValues="@array/frequency_values"
+                android:entries="@array/low_frequency_readable"
+                android:entryValues="@array/low_frequency_values"
                 android:key="frequency_temperature"
                 android:persistent="true"
                 android:summary="%s"
