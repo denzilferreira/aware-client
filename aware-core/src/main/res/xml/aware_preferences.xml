@@ -363,7 +363,7 @@
                 android:defaultValue="false"
                 android:key="location_save_all"
                 android:persistent="true"
-                android:summary="Don't use heurestics to only record best locations"
+                android:summary="Don't use heuristics to only record best locations"
                 android:title="Save all locations" />
         </PreferenceScreen>
         <PreferenceScreen
