@@ -307,7 +307,7 @@
                 android:inputType="number"
                 android:key="frequency_location_gps"
                 android:persistent="true"
-                android:summary="X seconds. (0 = always on)"
+                android:summary="Seconds (0 = always on)"
                 android:title="Minimum GPS update frequency" />
 
             <EditTextPreference
@@ -316,7 +316,7 @@
                 android:inputType="number"
                 android:key="min_location_gps_accuracy"
                 android:persistent="true"
-                android:summary="X meters. (0 = always on)"
+                android:summary="Meters (0 = always on)"
                 android:title="Movement threshold for GPS updates" />
 
             <CheckBoxPreference
@@ -332,7 +332,7 @@
                 android:inputType="number"
                 android:key="frequency_location_network"
                 android:persistent="true"
-                android:summary="X seconds. (0 = always on)"
+                android:summary="Seconds (0 = always on)"
                 android:title="Minimum triangulation update frequency" />
 
             <EditTextPreference
@@ -341,12 +341,18 @@
                 android:inputType="number"
                 android:key="min_location_network_accuracy"
                 android:persistent="true"
-                android:summary="X meters. (0 = always on)"
+                android:summary="Meters (0 = always on)"
                 android:title="Movement threshold for triangulation updates" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_location_passive"
+                android:persistent="true"
+                android:summary="Don't fetch locations, but use locations if other apps request them."
+                android:title="Passive location provider" />
 
             <EditTextPreference
                 android:defaultValue="300"
-                android:dependency="status_location_gps"
                 android:inputType="number"
                 android:key="location_expiration_time"
                 android:persistent="true"
@@ -355,7 +361,6 @@
 
             <CheckBoxPreference
                 android:defaultValue="false"
-                android:dependency="status_location_gps"
                 android:key="location_save_all"
                 android:persistent="true"
                 android:summary="Don't use heurestics to only record best locations"

@@ -2221,7 +2221,9 @@ public class Aware extends Service {
             startInstallations(context);
         } else stopInstallations(context);
 
-        if (Aware.getSetting(context, Aware_Preferences.STATUS_LOCATION_GPS).equals("true") || Aware.getSetting(context, Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true")) {
+        if (Aware.getSetting(context, Aware_Preferences.STATUS_LOCATION_GPS).equals("true")
+                || Aware.getSetting(context, Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true")
+                || Aware.getSetting(context, Aware_Preferences.STATUS_LOCATION_PASSIVE).equals("true")) {
             startLocations(context);
         } else stopLocations(context);
 
@@ -2718,7 +2720,9 @@ public class Aware extends Service {
      */
     public static void stopLocations(Context context) {
         if (context == null) return;
-        if (!Aware.getSetting(context, Aware_Preferences.STATUS_LOCATION_GPS).equals("true") && !Aware.getSetting(context, Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true")) {
+        if (!Aware.getSetting(context, Aware_Preferences.STATUS_LOCATION_GPS).equals("true")
+                && !Aware.getSetting(context, Aware_Preferences.STATUS_LOCATION_NETWORK).equals("true")
+                && !Aware.getSetting(context, Aware_Preferences.STATUS_LOCATION_PASSIVE).equals("true")) {
             if (locationsSrv != null) context.stopService(locationsSrv);
         }
     }

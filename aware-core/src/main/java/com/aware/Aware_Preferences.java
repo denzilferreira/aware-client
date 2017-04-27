@@ -216,6 +216,14 @@ public class Aware_Preferences {
      */
     public static final String LOCATION_SAVE_ALL = "location_save_all";
 
+
+    /**
+     * Activate/deactivate passive location log (boolean).  This does not turn on GPS/network
+     * location tracking, but if any other application turns on location requests, Aware will
+     * receive the locations too, with little battery overhead.
+     */
+    public static final String STATUS_LOCATION_PASSIVE = "status_location_passive";
+
     /**
      * Activate/deactivate light sensor log (boolean)
      */
