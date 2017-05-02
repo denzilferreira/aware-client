@@ -114,6 +114,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         }
         if (PERMISSIONS_OK) {
             Intent aware = new Intent(this, Aware.class);
+            aware.setAction(Aware.ACTION_AWARE_PRIORITY_FOREGROUND);
             startService(aware);
         }
     }
