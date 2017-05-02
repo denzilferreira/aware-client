@@ -74,7 +74,7 @@ public class StudyUtils extends IntentService {
 //            SSLManager.handleUrl(getApplicationContext(), full_url, true);
 
             //Note: Joining a study always downloads the certificate
-            SSLManager.downloadCertificate(getApplicationContext(), study_uri.getHost(), true);
+            SSLManager.handleUrl(getApplicationContext(), full_url, true);
 
 //            try {
 //                Intent installHTTPS = KeyChain.createInstallIntent();

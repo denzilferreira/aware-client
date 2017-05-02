@@ -134,7 +134,7 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
             if (protocol.equals("https")) {
 
                 //Note: Joining a study always downloads the certificate.
-                SSLManager.downloadCertificate(getApplicationContext(), study_uri.getHost(), true);
+                SSLManager.handleUrl(getApplicationContext(), study_url, true);
 
 //                try {
 //                    Intent installHTTPS = KeyChain.createInstallIntent();
