@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="study_check_interval_min" type="integer" format="integer">10</item>
+    <item name="keep_alive_interval_min" type="integer" format="integer">5</item>
+</resources>
