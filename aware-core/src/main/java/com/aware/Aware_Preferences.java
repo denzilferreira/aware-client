@@ -549,6 +549,19 @@ public class Aware_Preferences {
     public static final String HASH_FUNCTION_PHONE = "hash_function_phone";
 
     /**
+     * hash function MAC.  Do we hash MAC addresses?
+     * blank=unhashed, non-blank=run this hash program (see Encrypter).
+     */
+    public static final String HASH_FUNCTION_MAC = "hash_function_mac";
+
+
+    /**
+     * hash function for SSID/network names/bluetooth names.
+     * blank=unhashed, non-blank=run this hash program.
+     */
+    public static final String HASH_FUNCTION_SSID = "hash_function_ssid";
+
+    /**
      * Activate/deactivate significant motion sensing
      */
     public static final String STATUS_SIGNIFICANT_MOTION = "status_significant_motion";

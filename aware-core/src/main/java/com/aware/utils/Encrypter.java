@@ -198,6 +198,29 @@ public class Encrypter {
         return _hashProgram(context, clear, hashProgram);
     }
 
+    /*
+     * Hash a MAC address.  Defaults to not hashing.
+     */
+    public static final String hashMac(Context context, String clear) {
+        String hashProgram = Aware.getSetting(context.getApplicationContext(), Aware_Preferences.HASH_FUNCTION_MAC);
+        if (hashProgram.equals("")) {
+            hashProgram = "clear";
+        }
+        return _hashProgram(context, clear, hashProgram);
+    }
+
+    /*
+     * Hash a wifi/bluetooth SSID/name.  Defaults to not hashing.
+     */
+    public static final String hashSsid(Context context, String clear) {
+        String hashProgram = Aware.getSetting(context.getApplicationContext(), Aware_Preferences.HASH_FUNCTION_SSID);
+        if (hashProgram.equals("")) {
+            hashProgram = "clear";
+        }
+        return _hashProgram(context, clear, hashProgram);
+    }
+
+
 
     private static byte[] getRawKey(byte[] seed) throws Exception {
         KeyGenerator kgen = KeyGenerator.getInstance("AES");
