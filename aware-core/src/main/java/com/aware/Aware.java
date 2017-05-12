@@ -285,33 +285,6 @@ public class Aware extends Service {
         }
     }
 
-//    public void foreground(boolean enable) {
-//        if (enable) {
-//
-//            Intent aware = new Intent(this, Aware.class);
-//            PendingIntent onTap = PendingIntent.getService(this, 0, aware, 0);
-//
-//            Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
-//            PendingIntent onSync = PendingIntent.getBroadcast(this, 0, sync, 0);
-//
-//            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
-//            mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
-//            mBuilder.setContentText(getApplicationContext().getResources().getString(R.string.foreground_notification_text));
-//            mBuilder.setOngoing(true);
-//            mBuilder.setOnlyAlertOnce(true);
-//            mBuilder.setContentIntent(onTap);
-//            mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
-//
-//            if (isStudy(this)) {
-//                mBuilder.addAction(R.drawable.ic_stat_aware_sync, getApplicationContext().getResources().getString(R.string.foreground_notification_sync_text), onSync);
-//            }
-//
-//            startForeground(AWARE_FOREGROUND_SERVICE, mBuilder.build());
-//        } else {
-//            stopForeground(true);
-//        }
-//    }
-
     /**
      * Checks if current package is not affected by Volte, Doze
      * NOTE: this only works for Android OS native battery savings, not custom ones (e.g., Sony Stamina, etc).

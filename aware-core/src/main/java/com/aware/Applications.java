@@ -324,6 +324,10 @@ public class Applications extends AccessibilityService {
         foreground.addAction(Aware.ACTION_AWARE_PRIORITY_BACKGROUND);
         registerReceiver(foregroundMgr, foreground);
 
+        IntentFilter scheduler = new IntentFilter();
+        scheduler.addAction(Intent.ACTION_TIME_TICK);
+        registerReceiver(schedulerTicker, scheduler);
+
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FOREGROUND_PRIORITY).equals("true")) {
             foreground(true);
         }
@@ -378,9 +382,9 @@ public class Applications extends AccessibilityService {
     public void onInterrupt() {
         if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
             try {
-                if (awareMonitor != null) { //if Android kills it, this is null!
-                    unregisterReceiver(awareMonitor);
-                }
+                if (awareMonitor != null) unregisterReceiver(awareMonitor);
+                if (foregroundMgr != null) unregisterReceiver(foregroundMgr);
+                if (schedulerTicker != null) unregisterReceiver(schedulerTicker);
             } catch (IllegalArgumentException e) {
             }
         }
@@ -395,12 +399,9 @@ public class Applications extends AccessibilityService {
     public boolean onUnbind(Intent intent) {
         if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
             try {
-                if (awareMonitor != null) {
-                    unregisterReceiver(awareMonitor);
-                }
-                if (foregroundMgr != null) {
-                    unregisterReceiver(foregroundMgr);
-                }
+                if (awareMonitor != null) unregisterReceiver(awareMonitor);
+                if (foregroundMgr != null) unregisterReceiver(foregroundMgr);
+                if (schedulerTicker != null) unregisterReceiver(schedulerTicker);
             } catch (IllegalArgumentException e) {
             }
         }
@@ -508,6 +509,19 @@ public class Applications extends AccessibilityService {
             return false;
         }
         return true;
+    }
+
+    private final SchedulerTicker schedulerTicker = new SchedulerTicker();
+    public class SchedulerTicker extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //Executed every 1-minute. OS will send this tickle automatically
+            if (intent.getAction().equals(Intent.ACTION_TIME_TICK)) {
+                Intent scheduler = new Intent(context, Scheduler.class);
+                scheduler.setAction(Scheduler.ACTION_AWARE_SCHEDULER_CHECK);
+                context.startService(scheduler);
+            }
+        }
     }
 
     private final Foreground_Priority foregroundMgr = new Foreground_Priority();
