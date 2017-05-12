@@ -29,6 +29,7 @@ import com.aware.providers.WiFi_Provider.WiFi_Data;
 import com.aware.providers.WiFi_Provider.WiFi_Sensor;
 import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
+import com.aware.utils.Encrypter;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -171,9 +172,9 @@ public class WiFi extends Aware_Sensor {
             ContentValues rowData = new ContentValues();
             rowData.put(WiFi_Sensor.DEVICE_ID, Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID));
             rowData.put(WiFi_Sensor.TIMESTAMP, System.currentTimeMillis());
-            rowData.put(WiFi_Sensor.MAC_ADDRESS, mWifi.getMacAddress());
-            rowData.put(WiFi_Sensor.BSSID, ((mWifi.getBSSID() != null) ? mWifi.getBSSID() : ""));
-            rowData.put(WiFi_Sensor.SSID, ((mWifi.getSSID() != null) ? mWifi.getSSID() : ""));
+            rowData.put(WiFi_Sensor.MAC_ADDRESS, Encrypter.hashMac(mContext, mWifi.getMacAddress()));
+            rowData.put(WiFi_Sensor.BSSID, Encrypter.hashMac(mContext, mWifi.getBSSID()));
+            rowData.put(WiFi_Sensor.SSID, Encrypter.hashSsid(mContext, mWifi.getSSID()));
 
             try {
                 mContext.getContentResolver().insert(WiFi_Sensor.CONTENT_URI, rowData);
@@ -215,8 +216,8 @@ public class WiFi extends Aware_Sensor {
                 ContentValues rowData = new ContentValues();
                 rowData.put(WiFi_Data.DEVICE_ID, Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID));
                 rowData.put(WiFi_Data.TIMESTAMP, currentScan);
-                rowData.put(WiFi_Data.BSSID, ap.BSSID);
-                rowData.put(WiFi_Data.SSID, ap.SSID);
+                rowData.put(WiFi_Data.BSSID, Encrypter.hashMac(mContext, ap.BSSID));
+                rowData.put(WiFi_Data.SSID, Encrypter.hashSsid(mContext, ap.SSID));
                 rowData.put(WiFi_Data.SECURITY, ap.capabilities);
                 rowData.put(WiFi_Data.FREQUENCY, ap.frequency);
                 rowData.put(WiFi_Data.RSSI, ap.level);

@@ -543,9 +543,23 @@ public class Aware_Preferences {
     public static final String HASH_SALT = "hash_salt";
 
     /**
-     * hash function salt.  If "device_id", then salt with this device's device_id.
+     * hash function phone.  If "device_id", then salt with this device's device_id.
+     * This can be a hash name or a hash program
      */
     public static final String HASH_FUNCTION_PHONE = "hash_function_phone";
+
+    /**
+     * hash function MAC.  Do we hash MAC addresses?
+     * blank=unhashed, non-blank=run this hash program (see Encrypter).
+     */
+    public static final String HASH_FUNCTION_MAC = "hash_function_mac";
+
+
+    /**
+     * hash function for SSID/network names/bluetooth names.
+     * blank=unhashed, non-blank=run this hash program.
+     */
+    public static final String HASH_FUNCTION_SSID = "hash_function_ssid";
 
     /**
      * Activate/deactivate significant motion sensing

@@ -38,6 +38,7 @@ import com.aware.providers.Bluetooth_Provider.Bluetooth_Data;
 import com.aware.providers.Bluetooth_Provider.Bluetooth_Sensor;
 import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
+import com.aware.utils.Encrypter;
 
 /**
  * Bluetooth Module. For now, scans and returns surrounding bluetooth devices and RSSI dB values.
@@ -229,8 +230,8 @@ public class Bluetooth extends Aware_Sensor {
                 ContentValues rowData = new ContentValues();
                 rowData.put(Bluetooth_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
                 rowData.put(Bluetooth_Data.TIMESTAMP, System.currentTimeMillis());
-                rowData.put(Bluetooth_Data.BT_ADDRESS, btDevice.getAddress());
-                rowData.put(Bluetooth_Data.BT_NAME, ((btDevice.getName()!=null)?btDevice.getName():""));
+                rowData.put(Bluetooth_Data.BT_ADDRESS, Encrypter.hashMac(context, btDevice.getAddress()));
+                rowData.put(Bluetooth_Data.BT_NAME, Encrypter.hashSsid(context, btDevice.getName()));
                 rowData.put(Bluetooth_Data.BT_RSSI, btDeviceRSSI);
                 rowData.put(Bluetooth_Data.BT_LABEL, scanTimestamp);
 
@@ -310,8 +311,8 @@ public class Bluetooth extends Aware_Sensor {
             ContentValues rowData = new ContentValues();
             rowData.put(Bluetooth_Sensor.TIMESTAMP, System.currentTimeMillis());
             rowData.put(Bluetooth_Sensor.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-            rowData.put(Bluetooth_Sensor.BT_ADDRESS, btAdapter.getAddress());
-            rowData.put(Bluetooth_Sensor.BT_NAME, ((btAdapter.getName()!=null)?btAdapter.getName():""));
+            rowData.put(Bluetooth_Sensor.BT_ADDRESS, Encrypter.hashMac(getApplicationContext(), btAdapter.getAddress()));
+            rowData.put(Bluetooth_Sensor.BT_NAME, Encrypter.hashSsid(getApplicationContext(), btAdapter.getName()));
 
             getContentResolver().insert(Bluetooth_Sensor.CONTENT_URI, rowData);
 
