@@ -59,9 +59,13 @@ public class Light extends Aware_Sensor implements SensorEventListener {
     private static PowerManager.WakeLock wakeLock = null;
 
     private static Float LAST_VALUE = null;
+    private static long LAST_TS = 0;
+    private static long LAST_SAVE = 0;
 
     private static int FREQUENCY = -1;
     private static double THRESHOLD = 0;
+    // Reject any data points that come in more often than frequency
+    private static boolean ENFORCE_FREQUENCY = false;
 
     /**
      * Broadcasted event: new light values
@@ -100,28 +104,33 @@ public class Light extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        long TS = System.currentTimeMillis();
+        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY/1000 )
+            return;
         if (LAST_VALUE != null && THRESHOLD > 0 && Math.abs(event.values[0] - LAST_VALUE) < THRESHOLD) {
             return;
         }
 
+        LAST_TS = TS;
         LAST_VALUE = event.values[0];
 
         ContentValues rowData = new ContentValues();
         rowData.put(Light_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-        rowData.put(Light_Data.TIMESTAMP, System.currentTimeMillis());
+        rowData.put(Light_Data.TIMESTAMP, TS);
         rowData.put(Light_Data.LIGHT_LUX, event.values[0]);
         rowData.put(Light_Data.ACCURACY, event.accuracy);
         rowData.put(Light_Data.LABEL, LABEL);
 
-        if (data_values.size() < 250) {
-            data_values.add(rowData);
+        data_values.add(rowData);
+        LAST_TS = TS;
 
-            Intent lightData = new Intent(ACTION_AWARE_LIGHT);
-            lightData.putExtra(EXTRA_DATA, rowData);
-            sendBroadcast(lightData);
+        Intent lightData = new Intent(ACTION_AWARE_LIGHT);
+        lightData.putExtra(EXTRA_DATA, rowData);
+        sendBroadcast(lightData);
 
-            if (Aware.DEBUG) Log.d(TAG, "Light:" + rowData.toString());
+        if (Aware.DEBUG) Log.d(TAG, "Light:" + rowData.toString());
 
+        if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;
         }
 
@@ -138,6 +147,7 @@ public class Light extends Aware_Sensor implements SensorEventListener {
             if (Aware.DEBUG) Log.d(TAG, e.getMessage());
         }
         data_values.clear();
+        LAST_SAVE = TS;
     }
 
     /**
@@ -259,14 +269,21 @@ public class Light extends Aware_Sensor implements SensorEventListener {
                     Aware.setSetting(this, Aware_Preferences.THRESHOLD_LIGHT, 0.0);
                 }
 
-                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT))
-                        || THRESHOLD != Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_LIGHT))) {
+                int new_frequency = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT));
+                double new_threshold = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_LIGHT));
+                boolean new_enforce_frequency = (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT_ENFORCE).equals("true")
+                        || Aware.getSetting(getApplicationContext(), Aware_Preferences.ENFORCE_FREQUENCY_ALL).equals("true"));
+
+                if (FREQUENCY != new_frequency
+                        || THRESHOLD != new_threshold
+                        || ENFORCE_FREQUENCY != new_enforce_frequency) {
 
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mLight);
 
-                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT));
-                    THRESHOLD = Double.parseDouble(Aware.getSetting(getApplicationContext(), Aware_Preferences.THRESHOLD_LIGHT));
+                    FREQUENCY = new_frequency;
+                    THRESHOLD = new_threshold;
+                    ENFORCE_FREQUENCY = new_enforce_frequency;
                 }
 
                 mSensorManager.registerListener(this, mLight, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LIGHT)), sensorHandler);
