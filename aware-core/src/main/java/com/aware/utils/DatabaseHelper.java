@@ -226,10 +226,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private synchronized SQLiteDatabase getDatabaseFile() {
         try {
             File aware_folder;
-            if (!mContext.getResources().getBoolean(R.bool.standalone)) {
-                aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString()); // sdcard/AWARE/ (shareable, does not delete when uninstalling)
+            if (mContext.getResources().getBoolean(R.bool.internalstorage)) {
+                // Internal storage.  This is not acceassible to any other apps and is removed once
+                // app is uninstalled.  Plugins can't use it.  Hard-coded to off, only change if
+                // you know what you are doing.  Beware!
+                aware_folder = mContext.getFilesDir();
+            } else if (!mContext.getResources().getBoolean(R.bool.standalone)) {
+                // sdcard/AWARE/ (shareable, does not delete when uninstalling)
+                aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString());
             } else {
-                aware_folder = new File(ContextCompat.getExternalFilesDirs(mContext, null)[0] + "/AWARE"); // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
+                // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
+                aware_folder = new File(ContextCompat.getExternalFilesDirs(mContext, null)[0] + "/AWARE");
             }
 
             if (!aware_folder.exists()) {
