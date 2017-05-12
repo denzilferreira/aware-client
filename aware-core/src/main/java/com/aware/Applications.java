@@ -31,6 +31,7 @@ import android.provider.Settings;
 import android.support.annotation.IntDef;
 import android.support.v4.accessibilityservice.AccessibilityServiceInfoCompat;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.WakefulBroadcastReceiver;
 import android.support.v4.view.accessibility.AccessibilityEventCompat;
 import android.support.v4.view.accessibility.AccessibilityManagerCompat;
 import android.text.TextUtils;
@@ -271,6 +272,32 @@ public class Applications extends AccessibilityService {
         }
     }
 
+    public void foreground(boolean enable) {
+        if (enable) {
+            Intent aware = new Intent(this, Aware.class);
+            PendingIntent onTap = PendingIntent.getService(this, 0, aware, 0);
+
+            Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
+            PendingIntent onSync = PendingIntent.getBroadcast(this, 0, sync, 0);
+
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
+            mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
+            mBuilder.setContentText(getApplicationContext().getResources().getString(R.string.foreground_notification_text));
+            mBuilder.setOngoing(true);
+            mBuilder.setOnlyAlertOnce(true);
+            mBuilder.setContentIntent(onTap);
+            mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
+
+            if (Aware.isStudy(this)) {
+                mBuilder.addAction(R.drawable.ic_stat_aware_sync, getApplicationContext().getResources().getString(R.string.foreground_notification_sync_text), onSync);
+            }
+
+            startForeground(Aware.AWARE_FOREGROUND_SERVICE, mBuilder.build());
+        } else {
+            stopForeground(true);
+        }
+    }
+
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
@@ -288,10 +315,23 @@ public class Applications extends AccessibilityService {
         //This makes sure that plugins and apps can check if the accessibility service is active
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, true);
 
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
-        filter.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
-        registerReceiver(awareMonitor, filter);
+        IntentFilter webservices = new IntentFilter();
+        webservices.addAction(Aware.ACTION_AWARE_SYNC_DATA);
+        webservices.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
+        registerReceiver(awareMonitor, webservices);
+
+        IntentFilter foreground = new IntentFilter();
+        foreground.addAction(Aware.ACTION_AWARE_PRIORITY_FOREGROUND);
+        foreground.addAction(Aware.ACTION_AWARE_PRIORITY_BACKGROUND);
+        registerReceiver(foregroundMgr, foreground);
+
+        IntentFilter scheduler = new IntentFilter();
+        scheduler.addAction(Intent.ACTION_TIME_TICK);
+        registerReceiver(schedulerTicker, scheduler);
+
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FOREGROUND_PRIORITY).equals("true")) {
+            foreground(true);
+        }
 
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS).length() == 0) {
             Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS, 1);
@@ -343,9 +383,9 @@ public class Applications extends AccessibilityService {
     public void onInterrupt() {
         if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
             try {
-                if (awareMonitor != null) {
-                    unregisterReceiver(awareMonitor);
-                }
+                if (awareMonitor != null) unregisterReceiver(awareMonitor);
+                if (foregroundMgr != null) unregisterReceiver(foregroundMgr);
+                if (schedulerTicker != null) unregisterReceiver(schedulerTicker);
             } catch (IllegalArgumentException e) {
             }
         }
@@ -360,9 +400,9 @@ public class Applications extends AccessibilityService {
     public boolean onUnbind(Intent intent) {
         if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
             try {
-                if (awareMonitor != null) {
-                    unregisterReceiver(awareMonitor);
-                }
+                if (awareMonitor != null) unregisterReceiver(awareMonitor);
+                if (foregroundMgr != null) unregisterReceiver(foregroundMgr);
+                if (schedulerTicker != null) unregisterReceiver(schedulerTicker);
             } catch (IllegalArgumentException e) {
             }
         }
@@ -472,6 +512,35 @@ public class Applications extends AccessibilityService {
         return true;
     }
 
+    private final SchedulerTicker schedulerTicker = new SchedulerTicker();
+    public class SchedulerTicker extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //Executed every 1-minute. OS will send this tickle automatically
+            if (intent.getAction().equals(Intent.ACTION_TIME_TICK)) {
+                Intent scheduler = new Intent(context, Scheduler.class);
+                scheduler.setAction(Scheduler.ACTION_AWARE_SCHEDULER_CHECK);
+                context.startService(scheduler);
+            }
+        }
+    }
+
+    private final Foreground_Priority foregroundMgr = new Foreground_Priority();
+    public class Foreground_Priority extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equalsIgnoreCase(Aware.ACTION_AWARE_PRIORITY_FOREGROUND)) {
+                if (DEBUG) Log.d(TAG, "Setting AWARE with foreground priority");
+                foreground(true);
+            }
+
+            if (intent.getAction().equalsIgnoreCase(Aware.ACTION_AWARE_PRIORITY_BACKGROUND)) {
+                if (DEBUG) Log.d(TAG, "Setting AWARE with background priority");
+                foreground(false);
+            }
+        }
+    }
+
     /**
      * Received AWARE broadcasts
      * - ACTION_AWARE_SYNC_DATA
@@ -480,7 +549,7 @@ public class Applications extends AccessibilityService {
      * @author df
      */
     private static final Applications_Broadcaster awareMonitor = new Applications_Broadcaster();
-    public static class Applications_Broadcaster extends BroadcastReceiver {
+    public static class Applications_Broadcaster extends WakefulBroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
 
@@ -495,7 +564,7 @@ public class Applications extends AccessibilityService {
                     webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
                     webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, TABLES_FIELDS[i]);
                     webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, CONTEXT_URIS[i].toString());
-                    context.startService(webserviceHelper);
+                    startWakefulService(context, webserviceHelper);
                 }
             }
 
@@ -510,7 +579,7 @@ public class Applications extends AccessibilityService {
                         Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
                         webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_CLEAR_TABLE);
                         webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
-                        context.startService(webserviceHelper);
+                        startWakefulService(context, webserviceHelper);
                     }
                 }
             }

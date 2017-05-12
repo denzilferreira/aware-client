@@ -896,6 +896,13 @@
                 android:summary="Remind to charge when 15%"
                 android:title="Battery reminder" />
 
+            <CheckBoxPreference
+                android:defaultValue="true"
+                android:key="foreground_priority"
+                android:persistent="true"
+                android:summary="RECOMMENDED to keep AWARE running non-stop."
+                android:title="Foreground priority" />
+
         </PreferenceScreen>
     </PreferenceCategory>
 

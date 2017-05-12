@@ -626,4 +626,9 @@ public class Aware_Preferences {
      */
     public static final String ENFORCE_FREQUENCY_ALL = "enforce_frequency_all";
 
+    /**
+     * Makes AWARE a foreground service
+     */
+    public static final String FOREGROUND_PRIORITY = "foreground_priority";
+
 }

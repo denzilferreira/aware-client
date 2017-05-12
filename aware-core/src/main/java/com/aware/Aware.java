@@ -177,7 +177,7 @@ public class Aware extends Service {
     /**
      * Notification ID for AWARE service as foreground (to handle Doze, Android O battery optimizations)
      */
-    private static final int AWARE_FOREGROUND_SERVICE = 220882;
+    public static final int AWARE_FOREGROUND_SERVICE = 220882;
 
     /**
      * Used on the scheduler class to define global schedules for AWARE, SYNC and SPACE MAINTENANCE actions
@@ -282,33 +282,6 @@ public class Aware extends Service {
                 e.printStackTrace();
             }
             return true;
-        }
-    }
-
-    public void foreground(boolean enable) {
-        if (enable) {
-
-            Intent aware = new Intent(this, Aware.class);
-            PendingIntent onTap = PendingIntent.getService(this, 0, aware, 0);
-
-            Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
-            PendingIntent onSync = PendingIntent.getBroadcast(this, 0, sync, 0);
-
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
-            mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
-            mBuilder.setContentText(getApplicationContext().getResources().getString(R.string.foreground_notification_text));
-            mBuilder.setOngoing(true);
-            mBuilder.setOnlyAlertOnce(true);
-            mBuilder.setContentIntent(onTap);
-            mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
-
-            if (isStudy(this)) {
-                mBuilder.addAction(R.drawable.ic_stat_aware_sync, getApplicationContext().getResources().getString(R.string.foreground_notification_sync_text), onSync);
-            }
-
-            startForeground(AWARE_FOREGROUND_SERVICE, mBuilder.build());
-        } else {
-            stopForeground(true);
         }
     }
 
@@ -601,17 +574,6 @@ public class Aware extends Service {
             }
 
             if (intent != null && intent.getAction() != null) {
-
-                if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_PRIORITY_FOREGROUND)) {
-                    if (DEBUG) Log.d(TAG, "Setting AWARE with foreground priority");
-                    foreground(true);
-                }
-
-                if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_PRIORITY_BACKGROUND)) {
-                    if (DEBUG) Log.d(TAG, "Setting AWARE with background priority");
-                    foreground(false);
-                }
-
                 if (intent.getAction().equalsIgnoreCase(ACTION_AWARE_STUDY_COMPLIANCE)) {
                     complianceStatus(getApplicationContext());
                     checkBatteryLeft(getApplicationContext(), false);

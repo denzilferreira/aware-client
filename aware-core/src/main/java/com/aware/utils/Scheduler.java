@@ -930,10 +930,6 @@ public class Scheduler extends Aware_Sensor {
     public void onCreate() {
         super.onCreate();
         if (DEBUG) Log.d(TAG, "Scheduler is created");
-
-        IntentFilter tick = new IntentFilter();
-        tick.addAction(Intent.ACTION_TIME_TICK);
-        registerReceiver(schedulerTicker, tick);
     }
 
     /**
@@ -1118,19 +1114,6 @@ public class Scheduler extends Aware_Sensor {
         return START_STICKY;
     }
 
-    private static SchedulerTicker schedulerTicker = new SchedulerTicker();
-    public static class SchedulerTicker extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            //Executed every 1-minute. OS will send this tickle automatically
-            if (intent.getAction().equals(Intent.ACTION_TIME_TICK)) {
-                Intent scheduler = new Intent(context, Scheduler.class);
-                scheduler.setAction(Scheduler.ACTION_AWARE_SCHEDULER_CHECK);
-                context.startService(scheduler);
-            }
-        }
-    }
-
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -1144,8 +1127,6 @@ public class Scheduler extends Aware_Sensor {
         for (String schedule_id : schedulerDataObservers.keySet()) {
             clearContentObservers(getApplicationContext(), schedule_id);
         }
-
-        if (schedulerTicker != null) unregisterReceiver(schedulerTicker);
     }
 
     /**
