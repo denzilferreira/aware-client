@@ -296,14 +296,14 @@ public class Aware extends Service {
 
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
             mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
-            mBuilder.setContentText("AWARE is active.");
+            mBuilder.setContentText(getApplicationContext().getResources().getString(R.string.foreground_notification_text));
             mBuilder.setOngoing(true);
             mBuilder.setOnlyAlertOnce(true);
             mBuilder.setContentIntent(onTap);
             mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
 
             if (isStudy(this)) {
-                mBuilder.addAction(R.drawable.ic_stat_aware_sync, "Sync", onSync);
+                mBuilder.addAction(R.drawable.ic_stat_aware_sync, getApplicationContext().getResources().getString(R.string.foreground_notification_sync_text), onSync);
             }
 
             startForeground(AWARE_FOREGROUND_SERVICE, mBuilder.build());
