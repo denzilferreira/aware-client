@@ -2,6 +2,7 @@
 package com.aware.utils;
 
 import android.app.ActivityManager;
+import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -20,6 +21,7 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.text.format.DateUtils;
 import android.util.Log;
@@ -46,7 +48,11 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class WebserviceHelper extends Service {
+/**
+ * Notes:
+ * Denzil: This is a wakeful service called by the sync wakefulbroadcastreceiver. This guarantees the service is not interrupted by deep sleep.
+ */
+public class WebserviceHelper extends IntentService {
 
     public static final String ACTION_AWARE_WEBSERVICE_SYNC_TABLE = "ACTION_AWARE_WEBSERVICE_SYNC_TABLE";
     public static final String ACTION_AWARE_WEBSERVICE_CLEAR_TABLE = "ACTION_AWARE_WEBSERVICE_CLEAR_TABLE";
@@ -77,6 +83,10 @@ public class WebserviceHelper extends Service {
 
     private static final ArrayList<String> highFrequencySensors = new ArrayList<>();
     private static final ArrayList<String> dontClearSensors = new ArrayList<>();
+
+    public WebserviceHelper() {
+        super("AWARE Sync Helper");
+    }
 
     // Handler that receives messages from the thread
     private final class SyncQueue extends Handler {
@@ -765,6 +775,11 @@ public class WebserviceHelper extends Service {
     public IBinder onBind(Intent intent) {
         // We don't provide binding, so return null
         return null;
+    }
+
+    @Override
+    protected void onHandleIntent(@Nullable Intent intent) {
+        //no-op
     }
 
     @Override

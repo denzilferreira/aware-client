@@ -31,6 +31,7 @@ import android.provider.Settings;
 import android.support.annotation.IntDef;
 import android.support.v4.accessibilityservice.AccessibilityServiceInfoCompat;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.WakefulBroadcastReceiver;
 import android.support.v4.view.accessibility.AccessibilityEventCompat;
 import android.support.v4.view.accessibility.AccessibilityManagerCompat;
 import android.text.TextUtils;
@@ -548,7 +549,7 @@ public class Applications extends AccessibilityService {
      * @author df
      */
     private static final Applications_Broadcaster awareMonitor = new Applications_Broadcaster();
-    public static class Applications_Broadcaster extends BroadcastReceiver {
+    public static class Applications_Broadcaster extends WakefulBroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
 
@@ -563,7 +564,7 @@ public class Applications extends AccessibilityService {
                     webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
                     webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, TABLES_FIELDS[i]);
                     webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, CONTEXT_URIS[i].toString());
-                    context.startService(webserviceHelper);
+                    startWakefulService(context, webserviceHelper);
                 }
             }
 
@@ -578,7 +579,7 @@ public class Applications extends AccessibilityService {
                         Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
                         webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_CLEAR_TABLE);
                         webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
-                        context.startService(webserviceHelper);
+                        startWakefulService(context, webserviceHelper);
                     }
                 }
             }
