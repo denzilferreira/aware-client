@@ -409,7 +409,7 @@ public class WebserviceHelper extends Service {
             // Only if WEBSERVICE_REMOVE_DATA is true can we safely do this, and
             // we also require WEBSERVICE_SIMPLE so that we can remove data while
             // still having safe commits.
-            if (!(WEBSERVICE_SIMPLE && WEBSERVICE_REMOVE_DATA)) {
+            if (!(WEBSERVICE_SIMPLE && WEBSERVICE_REMOVE_DATA) || dontClearSensors.contains(DATABASE_TABLE)) {
                 // Normal AWARE API always gets here.
                 if (protocol.equals("https")) {
                     try {
