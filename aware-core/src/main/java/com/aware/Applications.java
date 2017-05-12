@@ -271,6 +271,32 @@ public class Applications extends AccessibilityService {
         }
     }
 
+    public void foreground(boolean enable) {
+        if (enable) {
+            Intent aware = new Intent(this, Aware.class);
+            PendingIntent onTap = PendingIntent.getService(this, 0, aware, 0);
+
+            Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
+            PendingIntent onSync = PendingIntent.getBroadcast(this, 0, sync, 0);
+
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
+            mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
+            mBuilder.setContentText(getApplicationContext().getResources().getString(R.string.foreground_notification_text));
+            mBuilder.setOngoing(true);
+            mBuilder.setOnlyAlertOnce(true);
+            mBuilder.setContentIntent(onTap);
+            mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
+
+            if (Aware.isStudy(this)) {
+                mBuilder.addAction(R.drawable.ic_stat_aware_sync, getApplicationContext().getResources().getString(R.string.foreground_notification_sync_text), onSync);
+            }
+
+            startForeground(Aware.AWARE_FOREGROUND_SERVICE, mBuilder.build());
+        } else {
+            stopForeground(true);
+        }
+    }
+
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
@@ -288,10 +314,19 @@ public class Applications extends AccessibilityService {
         //This makes sure that plugins and apps can check if the accessibility service is active
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, true);
 
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
-        filter.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
-        registerReceiver(awareMonitor, filter);
+        IntentFilter webservices = new IntentFilter();
+        webservices.addAction(Aware.ACTION_AWARE_SYNC_DATA);
+        webservices.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
+        registerReceiver(awareMonitor, webservices);
+
+        IntentFilter foreground = new IntentFilter();
+        foreground.addAction(Aware.ACTION_AWARE_PRIORITY_FOREGROUND);
+        foreground.addAction(Aware.ACTION_AWARE_PRIORITY_BACKGROUND);
+        registerReceiver(foregroundMgr, foreground);
+
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FOREGROUND_PRIORITY).equals("true")) {
+            foreground(true);
+        }
 
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS).length() == 0) {
             Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS, 1);
@@ -343,7 +378,7 @@ public class Applications extends AccessibilityService {
     public void onInterrupt() {
         if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
             try {
-                if (awareMonitor != null) {
+                if (awareMonitor != null) { //if Android kills it, this is null!
                     unregisterReceiver(awareMonitor);
                 }
             } catch (IllegalArgumentException e) {
@@ -362,6 +397,9 @@ public class Applications extends AccessibilityService {
             try {
                 if (awareMonitor != null) {
                     unregisterReceiver(awareMonitor);
+                }
+                if (foregroundMgr != null) {
+                    unregisterReceiver(foregroundMgr);
                 }
             } catch (IllegalArgumentException e) {
             }
@@ -470,6 +508,22 @@ public class Applications extends AccessibilityService {
             return false;
         }
         return true;
+    }
+
+    private final Foreground_Priority foregroundMgr = new Foreground_Priority();
+    public class Foreground_Priority extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equalsIgnoreCase(Aware.ACTION_AWARE_PRIORITY_FOREGROUND)) {
+                if (DEBUG) Log.d(TAG, "Setting AWARE with foreground priority");
+                foreground(true);
+            }
+
+            if (intent.getAction().equalsIgnoreCase(Aware.ACTION_AWARE_PRIORITY_BACKGROUND)) {
+                if (DEBUG) Log.d(TAG, "Setting AWARE with background priority");
+                foreground(false);
+            }
+        }
     }
 
     /**

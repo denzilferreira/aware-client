@@ -114,7 +114,6 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         }
         if (PERMISSIONS_OK) {
             Intent aware = new Intent(this, Aware.class);
-            aware.setAction(Aware.ACTION_AWARE_PRIORITY_FOREGROUND);
             startService(aware);
         }
     }
@@ -210,6 +209,13 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                             setResult(Activity.RESULT_OK, study_scan);
                             finish();
                         }
+                    }
+                    if (pref.getKey().equalsIgnoreCase(Aware_Preferences.FOREGROUND_PRIORITY)) {
+                        sendBroadcast(new Intent(Aware.ACTION_AWARE_PRIORITY_FOREGROUND));
+                    }
+                } else {
+                    if (pref.getKey().equalsIgnoreCase(Aware_Preferences.FOREGROUND_PRIORITY)) {
+                        sendBroadcast(new Intent(Aware.ACTION_AWARE_PRIORITY_BACKGROUND));
                     }
                 }
             }
@@ -392,7 +398,8 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                         findPreference(Aware_Preferences.REMIND_TO_CHARGE),
                         findPreference(Aware_Preferences.WEBSERVICE_SIMPLE),
                         findPreference(Aware_Preferences.WEBSERVICE_REMOVE_DATA),
-                        findPreference(Aware_Preferences.DEBUG_DB_SLOW)
+                        findPreference(Aware_Preferences.DEBUG_DB_SLOW),
+                        findPreference(Aware_Preferences.FOREGROUND_PRIORITY)
                 );
             } else {
                 new SettingsSync().execute(
@@ -443,7 +450,8 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                         findPreference(Aware_Preferences.REMIND_TO_CHARGE),
                         findPreference(Aware_Preferences.WEBSERVICE_SIMPLE),
                         findPreference(Aware_Preferences.WEBSERVICE_REMOVE_DATA),
-                        findPreference(Aware_Preferences.DEBUG_DB_SLOW)
+                        findPreference(Aware_Preferences.DEBUG_DB_SLOW),
+                        findPreference(Aware_Preferences.FOREGROUND_PRIORITY)
                 );
             }
 
