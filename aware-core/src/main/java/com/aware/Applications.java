@@ -286,13 +286,15 @@ public class Applications extends AccessibilityService {
             mBuilder.setOngoing(true);
             mBuilder.setOnlyAlertOnce(true);
             mBuilder.setContentIntent(onTap);
-            mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
 
             if (Aware.isStudy(this)) {
                 mBuilder.addAction(R.drawable.ic_stat_aware_sync, getApplicationContext().getResources().getString(R.string.foreground_notification_sync_text), onSync);
             }
 
-            startForeground(Aware.AWARE_FOREGROUND_SERVICE, mBuilder.build());
+            Notification not = mBuilder.build();
+            not.defaults = 0;
+
+            startForeground(Aware.AWARE_FOREGROUND_SERVICE, not);
         } else {
             stopForeground(true);
         }
