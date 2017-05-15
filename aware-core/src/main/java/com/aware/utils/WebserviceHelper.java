@@ -224,14 +224,29 @@ public class WebserviceHelper extends IntentService {
             availableRam = memInfo.totalMem / 1048576000.0;
         }
 
+        int busyqueues = getBusyQueues();
+        if (busyqueues == 0) busyqueues = 1;
+
         if (availableRam <= 1.0)
-            return 1000;
+            return 1000/busyqueues;
         else if (availableRam <= 2.0)
-            return 3000;
+            return 3000/busyqueues;
         else if (availableRam <= 4.0)
-            return 10000;
+            return 10000/busyqueues;
         else
-            return 20000;
+            return 20000/busyqueues;
+    }
+
+    /**
+     * How many of the queues are currently busy?
+     * @return busy queues count
+     */
+    private int getBusyQueues() {
+        int total = 0;
+        if (!mServiceLooperFastQueue.getQueue().isIdle()) total++;
+        if (!mServiceLooperSlowQueueA.getQueue().isIdle()) total++;
+        if (!mServiceLooperSlowQueueB.getQueue().isIdle()) total++;
+        return total;
     }
 
     @Override
