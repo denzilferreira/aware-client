@@ -453,7 +453,7 @@ public class Aware extends Service {
         boolean participant = false;
 
         Cursor study = c.getContentResolver().query(Aware_Provider.Aware_Studies.CONTENT_URI, null,
-                Aware_Provider.Aware_Studies.STUDY_URL + " LIKE '" + Aware.getSetting(c, Aware_Preferences.WEBSERVICE_SERVER) +
+                Aware_Provider.Aware_Studies.STUDY_URL + " LIKE '" + Aware.getSetting(c, Aware_Preferences.WEBSERVICE_SERVER) + "%" +
                         "' AND " + Aware_Provider.Aware_Studies.STUDY_JOINED + ">0" +
                         " AND " + Aware_Provider.Aware_Studies.STUDY_EXIT + "=0",
                 null, null);
