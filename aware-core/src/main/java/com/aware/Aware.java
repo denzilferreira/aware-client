@@ -302,7 +302,7 @@ public class Aware extends Service {
         if (!is_ignored) {
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_recharge);
-            mBuilder.setContentTitle("Doze");
+            mBuilder.setContentTitle(context.getApplicationContext().getResources().getString(R.string.aware_activate_battery_optimize_ignore_title));
             mBuilder.setContentText(context.getApplicationContext().getResources().getString(R.string.aware_activate_battery_optimize_ignore));
             mBuilder.setAutoCancel(true);
             mBuilder.setOnlyAlertOnce(true); //notify the user only once
