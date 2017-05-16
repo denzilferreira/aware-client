@@ -1259,27 +1259,43 @@ public class Scheduler extends Aware_Sensor {
                 if (DEBUG) Log.d(Scheduler.TAG, "Trigger interval (delayed): " + execute_interval);
             }
 
+            // This is used to prevent executing the schedule multiple times for the same interval.
+            // It defaults to true, and if a schedule repeats in the same time period (for example,
+            // an hour trigger and the schedule runner runs multiple times in that hour), then
+            // it will be set to false.  But, the most fine-grained condition takes precedence.
+            // For example, if we have an hour condition, it shouldn't run twice in an hour, but it
+            // should run multiple times in the same day.
+            Boolean execute_not_same_interval = true;
+
             Boolean execute_month = null;
             if (schedule.getMonths().length() > 0) {
                 execute_month = is_trigger_month(schedule);
+                if (execute_month)
+                    execute_not_same_interval = (previous == null) || !is_same_month(previous, now);
                 if (DEBUG) Log.d(Scheduler.TAG, "Trigger month: " + execute_month);
             }
 
             Boolean execute_weekdays = null;
             if (schedule.getWeekdays().length() > 0) {
                 execute_weekdays = is_trigger_weekday(schedule);
+                if (execute_weekdays)
+                    execute_not_same_interval = (previous == null) || !is_same_weekday(previous, now);
                 if (DEBUG) Log.d(Scheduler.TAG, "Trigger weekday: " + execute_weekdays);
             }
 
             Boolean execute_hours = null;
             if (schedule.getHours().length() > 0) {
                 execute_hours = is_trigger_hour(schedule);
+                if (execute_hours)
+                    execute_not_same_interval = (previous == null) || !is_same_hour_day(previous, now);
                 if (DEBUG) Log.d(Scheduler.TAG, "Trigger hour: " + execute_hours);
             }
 
             Boolean execute_minutes = null;
             if (schedule.getMinutes().length() > 0) {
                 execute_minutes = is_trigger_minute(schedule);
+                if (execute_minutes)
+                    execute_not_same_interval = (previous == null) || !is_same_minute_hour(previous, now);
                 if (DEBUG) Log.d(Scheduler.TAG, "Trigger minute: " + execute_minutes);
             }
 
@@ -1289,6 +1305,7 @@ public class Scheduler extends Aware_Sensor {
             if (execute_weekdays != null) executers.add(execute_weekdays);
             if (execute_hours != null) executers.add(execute_hours);
             if (execute_minutes != null) executers.add(execute_minutes);
+            if (execute_not_same_interval != null) executers.add(execute_not_same_interval);
 
             return !executers.contains(false);
 
