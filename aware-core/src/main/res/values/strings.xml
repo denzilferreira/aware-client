@@ -24,6 +24,7 @@
     <string name="plugins_required">Plugins needed (install to join)</string>
     <string name="sign_up">Sign Up!</string>
     <string name="install">Install</string>
-    <string name="foreground_notification_text">AWARE is active.</string>
+    <string name="foreground_notification_title">AWARE</string>
+    <string name="foreground_notification_text">Data collection active</string>
     <string name="foreground_notification_sync_text">Sync</string>
 </resources>
