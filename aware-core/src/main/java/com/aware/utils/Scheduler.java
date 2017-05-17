@@ -32,6 +32,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Random;
 
@@ -136,36 +137,33 @@ public class Scheduler extends Aware_Sensor {
                 int latest = schedule.getDailyLatest();
 
                 start.set(Calendar.HOUR_OF_DAY, earliest);
-                start.set(Calendar.MINUTE, start.get(Calendar.MINUTE));
-                start.set(Calendar.SECOND, start.get(Calendar.SECOND));
-                start.set(Calendar.MILLISECOND, start.get(Calendar.MILLISECOND));
+                start.set(Calendar.MINUTE, 0);
+                start.set(Calendar.SECOND, 0);
+                start.set(Calendar.MILLISECOND, 0);
 
                 end.set(Calendar.HOUR_OF_DAY, latest);
                 end.set(Calendar.MINUTE, 59);
                 end.set(Calendar.SECOND, 59);
                 end.set(Calendar.MILLISECOND, 999);
 
-                if (now.get(Calendar.HOUR_OF_DAY) > earliest) { //earliest today is earlier today, let's assign randoms for the rest of today
-                    start.set(Calendar.HOUR_OF_DAY, now.get(Calendar.HOUR_OF_DAY));
-                    start.add(Calendar.MINUTE, 15); //schedule randomly 15 minutes from now->latest
-
-                    Log.d(TAG, "Random times set for today between " + start.getTime().toString() + " and " + end.getTime().toString());
+                String original_id = schedule.getScheduleID();
+                // Get the random events for today
+                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), original_id);
+                // Remove events that are in the past
+                Iterator<Long> iter = randoms.iterator();
+                while(iter.hasNext()) {
+                    if (iter.next() < now.getTimeInMillis() + 15*60*1000) {
+                        iter.remove();
+                    }
                 }
-
-                if (now.get(Calendar.HOUR_OF_DAY) > latest) { //too late to schedule them today, schedule for the next day starting at the earliest hour onwards
+                Log.d(TAG, "Random times for today between " + start.getTime().toString() + " and " + end.getTime().toString() + ":  "+randoms.size() + " left");
+                // If we have no events left today, reschedule for tomorrow instead.
+                if (randoms.size() <= 0) {
                     start.add(Calendar.DAY_OF_YEAR, 1);
-                    start.set(Calendar.HOUR_OF_DAY, earliest);
-                    start.set(Calendar.MINUTE, 0);
-                    start.set(Calendar.SECOND, 0);
-                    start.set(Calendar.MILLISECOND, 0);
-
                     end.add(Calendar.DAY_OF_YEAR, 1);
-
+                    randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), original_id);
                     Log.d(TAG, "Random times set for tomorrow between " + start.getTime().toString() + " and " + end.getTime().toString());
                 }
-
-                String original_id = schedule.getScheduleID();
-                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), original_id);
 
                 long max = getLastRandom(randoms);
                 for (Long r : randoms) {
@@ -251,37 +249,33 @@ public class Scheduler extends Aware_Sensor {
                 int latest = schedule.getDailyLatest();
 
                 start.set(Calendar.HOUR_OF_DAY, earliest);
-                start.set(Calendar.MINUTE, start.get(Calendar.MINUTE));
-                start.set(Calendar.SECOND, start.get(Calendar.SECOND));
-                start.set(Calendar.MILLISECOND, start.get(Calendar.MILLISECOND));
+                start.set(Calendar.MINUTE, 0);
+                start.set(Calendar.SECOND, 0);
+                start.set(Calendar.MILLISECOND, 0);
 
                 end.set(Calendar.HOUR_OF_DAY, latest);
                 end.set(Calendar.MINUTE, 59);
                 end.set(Calendar.SECOND, 59);
                 end.set(Calendar.MILLISECOND, 999);
 
-                if (now.get(Calendar.HOUR_OF_DAY) > earliest) { //earliest today is earlier today, let's assign randoms for the rest of today
-                    start.set(Calendar.HOUR_OF_DAY, now.get(Calendar.HOUR_OF_DAY));
-                    start.add(Calendar.MINUTE, 15); //schedule randomly 15 minutes from now->latest
-
-                    Log.d(TAG, "Random times set for today between " + start.getTime().toString() + " and " + end.getTime().toString());
+                String original_id = schedule.getScheduleID();
+                // Get the random events for today
+                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), original_id);
+                // Remove events that are in the past
+                Iterator<Long> iter = randoms.iterator();
+                while(iter.hasNext()) {
+                    if (iter.next() < now.getTimeInMillis() + 15*60*1000) {
+                        iter.remove();
+                    }
                 }
-
-                //too late to schedule them today, schedule for the next day
-                if (now.get(Calendar.HOUR_OF_DAY) > latest) {
+                Log.d(TAG, "Random times for today between " + start.getTime().toString() + " and " + end.getTime().toString() + ":  "+randoms.size() + " left");
+                // If we have no events left today, reschedule for tomorrow instead.
+                if (randoms.size() <= 0) {
                     start.add(Calendar.DAY_OF_YEAR, 1);
-                    start.set(Calendar.HOUR_OF_DAY, earliest);
-                    start.set(Calendar.MINUTE, 0);
-                    start.set(Calendar.SECOND, 0);
-                    start.set(Calendar.MILLISECOND, 0);
-
                     end.add(Calendar.DAY_OF_YEAR, 1);
-
+                    randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), original_id);
                     Log.d(TAG, "Random times set for tomorrow between " + start.getTime().toString() + " and " + end.getTime().toString());
                 }
-
-                String original_id = schedule.getScheduleID();
-                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), original_id);
 
                 long max = getLastRandom(randoms);
 
