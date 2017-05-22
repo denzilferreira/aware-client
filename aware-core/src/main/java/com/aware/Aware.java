@@ -1467,14 +1467,16 @@ public class Aware extends Service {
                     continue;
             }
 
+            if (immutable_settings.contains(server_sensor.getString("setting"))) {
+                continue; //don't do anything
+            }
+
             boolean is_present = false;
             for (int j = 0; j < local.length(); j++) {
                 JSONObject local_sensor = local.getJSONObject(j);
-                if (immutable_settings.contains(local_sensor.getString("setting"))) {
-                    continue; //don't do anything
-                }
 
-                if (local_sensor.getString("setting").equalsIgnoreCase(server_sensor.getString("setting"))) {
+                if (local_sensor.getString("setting").equalsIgnoreCase(server_sensor.getString("setting"))
+                        && local_sensor.getString("value").equals(server_sensor.getString("value"))) {
                     is_present = true;
                     break;
                 }
