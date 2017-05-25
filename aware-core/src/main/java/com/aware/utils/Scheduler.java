@@ -29,6 +29,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Locale;
@@ -1610,31 +1611,21 @@ public class Scheduler extends Aware_Sensor {
     public static ArrayList<Long> random_times(Calendar start, Calendar end, int amount, int interval_minutes) {
         ArrayList<Long> randomList = new ArrayList<>();
 
-        int minDifferenceMillis = interval_minutes * 60 * 1000;
+        long totalInterval = end.getTimeInMillis() - start.getTimeInMillis();
+        long minDifferenceMillis = interval_minutes * 60 * 1000;
+        long effectiveInterval = totalInterval - minDifferenceMillis*(amount-1);
 
-        long startedLoop = System.currentTimeMillis();
+        // Create random intervals without the minimum interval.
         while (randomList.size() < amount) {
-
-            if ((System.currentTimeMillis() - startedLoop) >= 3000) break;
-
-            boolean valid_random = true;
-
-            long random = start.getTimeInMillis() + (long) (Math.random() * (end.getTimeInMillis() - start.getTimeInMillis()));
-
-            if (randomList.size() == 0) {
-                randomList.add(random);
-            } else {
-                for (int i = 0; i < randomList.size(); i++) {
-                    Long timestamp = randomList.get(i);
-                    if (Math.abs(timestamp - random) < minDifferenceMillis) {
-                        valid_random = false;
-                    }
-                }
-                if (valid_random) {
-                    randomList.add(random);
-                }
-            }
+            long random = start.getTimeInMillis() + (long) (Math.random() * effectiveInterval);
+            randomList.add(random);
         }
+        // Sort and add the minimum intervals between all events.
+        Collections.sort(randomList);
+        for(int i=0 ; i<randomList.size(); i++) {
+            randomList.set(i, randomList.get(i) + i*minDifferenceMillis);
+        }
+
         return randomList;
     }
 
