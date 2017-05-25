@@ -164,8 +164,8 @@ public class Scheduler extends Aware_Sensor {
                     Log.d(TAG, "Random times set for tomorrow between " + start.getTime().toString() + " and " + end.getTime().toString());
                 }
 
-                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
                 String original_id = schedule.getScheduleID();
+                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), original_id);
 
                 long max = getLastRandom(randoms);
                 for (Long r : randoms) {
@@ -280,8 +280,8 @@ public class Scheduler extends Aware_Sensor {
                     Log.d(TAG, "Random times set for tomorrow between " + start.getTime().toString() + " and " + end.getTime().toString());
                 }
 
-                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
                 String original_id = schedule.getScheduleID();
+                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), original_id);
 
                 long max = getLastRandom(randoms);
 
@@ -368,8 +368,8 @@ public class Scheduler extends Aware_Sensor {
 
             Log.d(TAG, "Random times set for tomorrow between " + start.getTime().toString() + " and " + end.getTime().toString());
 
-            ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
             String original_id = schedule.getScheduleID();
+            ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), original_id);
 
             long max = getLastRandom(randoms);
 
@@ -1600,9 +1600,10 @@ public class Scheduler extends Aware_Sensor {
      * @param interval_minutes how much time is set between timestamps, in minutes
      * @return ArrayList<Long> of timestamps between interval
      */
-    public static ArrayList<Long> random_times(Calendar start, Calendar end, int amount, int interval_minutes) {
+    public static ArrayList<Long> random_times(Calendar start, Calendar end, int amount, int interval_minutes, String seed) {
+        //String seed = "hJYAe7cV";
         ArrayList<Long> randomList = new ArrayList<>();
-        Random rng = new Random(String.format("seed-ocxhbefuk-%d-%d", start.get(Calendar.YEAR), start.get(Calendar.DAY_OF_YEAR)).hashCode());
+        Random rng = new Random(String.format("%s-%d-%d", seed, start.get(Calendar.YEAR), start.get(Calendar.DAY_OF_YEAR)).hashCode());
 
         long totalInterval = end.getTimeInMillis() - start.getTimeInMillis();
         long minDifferenceMillis = interval_minutes * 60 * 1000;
