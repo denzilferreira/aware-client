@@ -152,7 +152,7 @@ public class Scheduler extends Aware_Sensor {
                 // Remove events that are in the past
                 Iterator<Long> iter = randoms.iterator();
                 while(iter.hasNext()) {
-                    if (iter.next() < now.getTimeInMillis() + 15*60*1000) {
+                    if (iter.next() < now.getTimeInMillis() + 2*1000) {
                         iter.remove();
                     }
                 }
@@ -264,7 +264,7 @@ public class Scheduler extends Aware_Sensor {
                 // Remove events that are in the past
                 Iterator<Long> iter = randoms.iterator();
                 while(iter.hasNext()) {
-                    if (iter.next() < now.getTimeInMillis() + 15*60*1000) {
+                    if (iter.next() < now.getTimeInMillis() + 2*1000) {
                         iter.remove();
                     }
                 }
