@@ -282,6 +282,7 @@ public class Applications extends AccessibilityService {
 
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
             mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
+            mBuilder.setContentTitle(getApplicationContext().getResources().getString(R.string.foreground_notification_title));
             mBuilder.setContentText(getApplicationContext().getResources().getString(R.string.foreground_notification_text));
             mBuilder.setOngoing(true);
             mBuilder.setOnlyAlertOnce(true);
@@ -496,7 +497,7 @@ public class Applications extends AccessibilityService {
         if (!isAccessibilityEnabled(c)) {
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_accessibility);
-            mBuilder.setContentTitle("Please enable AWARE");
+            mBuilder.setContentTitle(c.getResources().getString(R.string.aware_activate_accessibility_title));
             mBuilder.setContentText(c.getResources().getString(R.string.aware_activate_accessibility));
             mBuilder.setAutoCancel(true);
             mBuilder.setOnlyAlertOnce(true); //notify the user only once
