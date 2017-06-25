@@ -453,7 +453,7 @@ public class Aware extends Service {
         boolean participant = false;
 
         Cursor study = c.getContentResolver().query(Aware_Provider.Aware_Studies.CONTENT_URI, null,
-                Aware_Provider.Aware_Studies.STUDY_URL + " LIKE '" + Aware.getSetting(c, Aware_Preferences.WEBSERVICE_SERVER) +
+                Aware_Provider.Aware_Studies.STUDY_URL + " LIKE '" + Aware.getSetting(c, Aware_Preferences.WEBSERVICE_SERVER) + "%" +
                         "' AND " + Aware_Provider.Aware_Studies.STUDY_JOINED + ">0" +
                         " AND " + Aware_Provider.Aware_Studies.STUDY_EXIT + "=0",
                 null, null);
@@ -487,7 +487,7 @@ public class Aware extends Service {
      * @return
      */
     public static Cursor getStudy(Context c, String study_url) {
-        return c.getContentResolver().query(Aware_Provider.Aware_Studies.CONTENT_URI, null, Aware_Provider.Aware_Studies.STUDY_URL + " LIKE '" + study_url + "'", null, Aware_Provider.Aware_Studies.STUDY_TIMESTAMP + " DESC LIMIT 1");
+        return c.getContentResolver().query(Aware_Provider.Aware_Studies.CONTENT_URI, null, Aware_Provider.Aware_Studies.STUDY_URL + " LIKE '" + study_url + "%'", null, Aware_Provider.Aware_Studies.STUDY_TIMESTAMP + " DESC LIMIT 1");
     }
 
     @Override
