@@ -86,6 +86,7 @@ public class Aware_Join_Study extends Aware_Activity {
             Toast.makeText(Aware_Join_Study.this, "Error getting study information.", Toast.LENGTH_SHORT).show();
             finish();
         }
+
         if (qry != null && qry.moveToFirst()) {
             try {
                 study_configs = new JSONArray(qry.getString(qry.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
@@ -113,7 +114,8 @@ public class Aware_Join_Study extends Aware_Activity {
                 if (study != null && study.moveToFirst()) {
                     ContentValues studyData = new ContentValues();
                     studyData.put(Aware_Provider.Aware_Studies.STUDY_JOINED, System.currentTimeMillis());
-                    getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, studyData, Aware_Provider.Aware_Studies.STUDY_ID + "=" + study.getInt(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_ID)), null);
+                    studyData.put(Aware_Provider.Aware_Studies.STUDY_EXIT, 0);
+                    getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, studyData, Aware_Provider.Aware_Studies.STUDY_URL + " LIKE '" + study_url + "'", null);
                 }
                 if (study != null && !study.isClosed()) study.close();
 
@@ -125,7 +127,7 @@ public class Aware_Join_Study extends Aware_Activity {
             @Override
             public void onClick(View view) {
                 //User is trying to exit the study he was enrolled.
-                Cursor dbStudy = Aware.getStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
+                Cursor dbStudy = Aware.getStudy(getApplicationContext(), study_url);
                 if (dbStudy != null && dbStudy.moveToFirst()) {
                     ContentValues complianceEntry = new ContentValues();
                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
@@ -245,6 +247,17 @@ public class Aware_Join_Study extends Aware_Activity {
             mQuitting.setCancelable(false);
             mQuitting.setInverseBackgroundForced(false);
             mQuitting.show();
+            mQuitting.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialogInterface) {
+                    finish();
+
+                    //Redirect the user to the main UI
+                    Intent mainUI = new Intent(getApplicationContext(), Aware_Client.class);
+                    mainUI.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(mainUI);
+                }
+            });
         }
 
         @Override
@@ -256,14 +269,6 @@ public class Aware_Join_Study extends Aware_Activity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-
-            finish();
-
-            //Redirect the user to the main UI
-            Intent mainUI = new Intent(getApplicationContext(), Aware_Client.class);
-            mainUI.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(mainUI);
-
             mQuitting.dismiss();
         }
     }
@@ -283,6 +288,17 @@ public class Aware_Join_Study extends Aware_Activity {
             mLoading.setCancelable(false);
             mLoading.setInverseBackgroundForced(false);
             mLoading.show();
+            mLoading.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialogInterface) {
+                    finish();
+
+                    //Redirect the user to the main UI
+                    Intent mainUI = new Intent(getApplicationContext(), Aware_Client.class);
+                    mainUI.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(mainUI);
+                }
+            });
         }
 
         @Override
@@ -294,14 +310,6 @@ public class Aware_Join_Study extends Aware_Activity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-
-            finish();
-
-            //Redirect the user to the main UI
-            Intent mainUI = new Intent(getApplicationContext(), Aware_Client.class);
-            mainUI.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(mainUI);
-
             mLoading.dismiss();
         }
     }
@@ -310,7 +318,7 @@ public class Aware_Join_Study extends Aware_Activity {
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-
+        //no-op, dummy from Aware_Activity super class interface
     }
 
     public static class PluginCompliance extends BroadcastReceiver {
