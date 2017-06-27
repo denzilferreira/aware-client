@@ -502,8 +502,7 @@ public class Locations extends Aware_Sensor implements LocationListener {
 
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
-        if (Aware.DEBUG)
-            Log.d(TAG, "onStatusChanged: " + provider + " Status:" + status + " Extras:" + extras.toString());
+        if (Aware.DEBUG) Log.d(TAG, "onStatusChanged: " + provider + " Status:" + status + " Extras:" + ((extras!=null)?extras.toString():""));
 
         // Save ALL locations, no matter which provider it comes from or how it relates to past
         // locations.

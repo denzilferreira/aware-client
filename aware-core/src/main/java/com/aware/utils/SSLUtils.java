@@ -66,33 +66,6 @@ public class SSLUtils {
         } catch (KeyStoreException e) {
 //            Log.e(Aware.TAG, "Failed KeyStore." + e.getMessage());
         }
-
-//        try {
-//            //load SSL certificate
-//            InputStream crt = SSLManager.getCertificate(mContext, host);
-//
-//            //Load SSL public certificate so we can talk with the server
-//            CertificateFactory cf = CertificateFactory.getInstance("X.509", "BC");
-//            Certificate ca = cf.generateCertificate(crt);
-//
-//            KeyStore caKS = KeyStore.getInstance("BKS");
-//            caKS.load(null, null);
-//            caKS.setCertificateEntry("certificate", ca);
-//            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("PKIX");
-//            trustManagerFactory.init(caKS);
-//
-//            //Initialize a SSL connection context, TLSv1.2 (Mosquitto)
-//            sslContext = SSLContext.getInstance("TLSv1.2");
-//            sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
-//
-//            //Fix for known-bug on <= JellyBean (4.x)
-//            System.setProperty("http.keepAlive", "false");
-//            return(sslContext.getSocketFactory());
-//
-//        } catch (Exception x){
-//            //ignore error of SSL
-//            x.printStackTrace();
-//        }
         return null;
     }
 }

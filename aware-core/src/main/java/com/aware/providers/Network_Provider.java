@@ -93,7 +93,7 @@ public class Network_Provider extends ContentProvider {
      * Delete entry from the database
      */
     @Override
-    public int delete(Uri uri, String selection, String[] selectionArgs) {
+    public synchronized int delete(Uri uri, String selection, String[] selectionArgs) {
 
         initialiseDatabase();
 
@@ -134,7 +134,7 @@ public class Network_Provider extends ContentProvider {
      * Insert entry to the database
      */
     @Override
-    public Uri insert(Uri uri, ContentValues initialValues) {
+    public synchronized Uri insert(Uri uri, ContentValues initialValues) {
 
         initialiseDatabase();
 
@@ -222,7 +222,7 @@ public class Network_Provider extends ContentProvider {
      * Update application on the database
      */
     @Override
-    public int update(Uri uri, ContentValues values, String selection,
+    public synchronized int update(Uri uri, ContentValues values, String selection,
                       String[] selectionArgs) {
 
         initialiseDatabase();

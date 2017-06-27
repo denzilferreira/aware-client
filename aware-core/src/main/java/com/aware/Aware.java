@@ -1677,8 +1677,8 @@ public class Aware extends Service {
         context.getContentResolver().delete(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, null);
 
         //Read default client settings
-        SharedPreferences prefs = context.getSharedPreferences(context.getPackageName(), Context.MODE_PRIVATE);
-        PreferenceManager.setDefaultValues(context, context.getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
+        SharedPreferences prefs = context.getApplicationContext().getSharedPreferences(context.getApplicationContext().getPackageName(), Context.MODE_PRIVATE);
+        PreferenceManager.setDefaultValues(context.getApplicationContext(), context.getApplicationContext().getPackageName(), Context.MODE_PRIVATE, R.xml.aware_preferences, true);
         prefs.edit().commit();
 
         Map<String, ?> defaults = prefs.getAll();

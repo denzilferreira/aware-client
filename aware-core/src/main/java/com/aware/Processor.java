@@ -144,6 +144,12 @@ public class Processor extends Aware_Sensor {
                 Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR, 10);
             }
 
+            try {
+                Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR));
+            } catch (NumberFormatException e) {
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR, 10);
+            }
+
             Aware.setSetting(this, Aware_Preferences.STATUS_PROCESSOR, true);
             if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR))) {
                 mHandler.removeCallbacks(mRunnable);

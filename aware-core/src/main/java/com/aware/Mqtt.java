@@ -344,7 +344,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                 Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, true);
 
                 if (MQTT_CLIENT != null && MQTT_CLIENT.isConnected()) {
-                    if (DEBUG) Log.d(TAG, "Connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
+                    if (DEBUG)
+                        Log.d(TAG, "Connected to MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
                 } else {
                     initializeMQTT();
                 }
@@ -412,27 +413,24 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
             MQTT_OPTIONS.setPassword(MQTT_PASSWORD.toCharArray());
 
         if (MQTT_PROTOCOL.equalsIgnoreCase("ssl")) {
-            SocketFactory factory = new SSLUtils(this).getSocketFactory(MQTT_SERVER);
-            if (factory != null) {
+            try {
+                SocketFactory factory = new SSLUtils(this).getSocketFactory(MQTT_SERVER);
                 MQTT_OPTIONS.setSocketFactory(factory);
-            } else {
+                
+                MQTT_CLIENT = new MqttClient(
+                        MQTT_URL,
+                        String.valueOf(Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).hashCode()),
+                        MQTT_MESSAGES_PERSISTENCE);
+
+                MQTT_CLIENT.setCallback(this);
+
+                new MQTTAsync().execute(MQTT_OPTIONS);
+
+            } catch (NullPointerException e) {
                 Log.e(Mqtt.TAG, "Unable to create SSL factory. Certificate missing?");
-                return; //unable to read the SSL certificate. This happens when the client has yet to download the certificate. Everything resumes when successful.
+            } catch (MqttException | IllegalArgumentException e) {
+                if (Aware.DEBUG) Log.e(TAG, "Failed: " + e.getMessage());
             }
-        }
-
-        try {
-            MQTT_CLIENT = new MqttClient(
-                    MQTT_URL,
-                    String.valueOf(Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).hashCode()),
-                    MQTT_MESSAGES_PERSISTENCE);
-
-            MQTT_CLIENT.setCallback(this);
-
-            new MQTTAsync().execute(MQTT_OPTIONS);
-
-        } catch (MqttException | IllegalArgumentException e) {
-            if (Aware.DEBUG) Log.e(TAG, "Failed: " + e.getMessage());
         }
     }
 

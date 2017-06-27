@@ -124,6 +124,8 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
         protected JSONObject doInBackground(String... params) {
             study_url = params[0];
 
+            if (study_url.length() == 0) return null;
+
             if (Aware.DEBUG) Log.d(Aware.TAG, "Aware_QRCode study_url: " + study_url);
 
             Uri study_uri = Uri.parse(study_url);
@@ -223,7 +225,7 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                     }
                 });
                 builder.setTitle("Study information");
-                builder.setMessage("Unable to retrieve this study information. Try again later.");
+                builder.setMessage("Unable to retrieve this study information: " + study_url + "\nTry again later.");
                 builder.show();
             } else {
 
