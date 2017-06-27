@@ -255,8 +255,8 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                         ContentValues studyData = new ContentValues();
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
-                        studyData.put(Aware_Provider.Aware_Studies.STUDY_JOINED, 0); //reset to not joined yet
-                        studyData.put(Aware_Provider.Aware_Studies.STUDY_EXIT, 0); //reset to not joined yet
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_JOINED, 0);
+                        studyData.put(Aware_Provider.Aware_Studies.STUDY_EXIT, 0);
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_KEY, study_id);
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_API, study_api_key);
                         studyData.put(Aware_Provider.Aware_Studies.STUDY_URL, study_url);

@@ -126,7 +126,7 @@ public class Aware_Join_Study extends Aware_Activity {
         btnQuit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //User is trying to exit the study he was enrolled.
+
                 Cursor dbStudy = Aware.getStudy(getApplicationContext(), study_url);
                 if (dbStudy != null && dbStudy.moveToFirst()) {
                     ContentValues complianceEntry = new ContentValues();
@@ -138,7 +138,7 @@ public class Aware_Join_Study extends Aware_Activity {
                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, dbStudy.getLong(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
-                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_EXIT, System.currentTimeMillis());
+                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_EXIT, dbStudy.getLong(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_EXIT)));
                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "attempt to quit study");
@@ -147,22 +147,12 @@ public class Aware_Join_Study extends Aware_Activity {
                 }
                 if (dbStudy != null && !dbStudy.isClosed()) dbStudy.close();
 
-                //Sync immediately just this record, skipping all others
-                Intent webserviceHelper = new Intent(getApplicationContext(), WebserviceHelper.class);
-                webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
-                webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, Aware_Provider.DATABASE_TABLES[3]);
-                webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, Aware_Provider.TABLES_FIELDS[3]);
-                webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, Aware_Provider.Aware_Studies.CONTENT_URI.toString());
-                startService(webserviceHelper);
-
                 new AlertDialog.Builder(Aware_Join_Study.this)
                         .setMessage("Are you sure you want to quit the study?")
                         .setCancelable(false)
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                dialogInterface.dismiss();
-
                                 btnQuit.setEnabled(false);
                                 btnQuit.setAlpha(1f);
                                 btnAction.setEnabled(false);
@@ -188,13 +178,7 @@ public class Aware_Join_Study extends Aware_Activity {
                                 }
                                 if (dbStudy != null && !dbStudy.isClosed()) dbStudy.close();
 
-                                //Sync immediately just this record, skipping all others
-                                Intent webserviceHelper = new Intent(getApplicationContext(), WebserviceHelper.class);
-                                webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
-                                webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, Aware_Provider.DATABASE_TABLES[3]);
-                                webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, Aware_Provider.TABLES_FIELDS[3]);
-                                webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, Aware_Provider.Aware_Studies.CONTENT_URI.toString());
-                                startService(webserviceHelper);
+                                dialogInterface.dismiss();
 
                                 new QuitStudyAsync().execute();
                             }
@@ -202,8 +186,6 @@ public class Aware_Join_Study extends Aware_Activity {
                         .setNegativeButton("No", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                dialogInterface.dismiss();
-
                                 Cursor dbStudy = Aware.getStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
                                 if (dbStudy != null && dbStudy.moveToFirst()) {
                                     ContentValues complianceEntry = new ContentValues();
@@ -215,7 +197,7 @@ public class Aware_Join_Study extends Aware_Activity {
                                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_PI, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_PI)));
                                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_CONFIG)));
                                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_JOINED, dbStudy.getLong(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED)));
-                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_EXIT, 0); //still on study
+                                    complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_EXIT, dbStudy.getLong(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_EXIT)));
                                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_TITLE, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TITLE)));
                                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, dbStudy.getString(dbStudy.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION)));
                                     complianceEntry.put(Aware_Provider.Aware_Studies.STUDY_COMPLIANCE, "canceled quit");
@@ -223,6 +205,20 @@ public class Aware_Join_Study extends Aware_Activity {
                                     getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, complianceEntry);
                                 }
                                 if (dbStudy != null && !dbStudy.isClosed()) dbStudy.close();
+
+                                dialogInterface.dismiss();
+                            }
+                        })
+                        .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                            @Override
+                            public void onDismiss(DialogInterface dialogInterface) {
+                                //Sync to server the studies statuses
+                                Intent webserviceHelper = new Intent(getApplicationContext(), WebserviceHelper.class);
+                                webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
+                                webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, Aware_Provider.DATABASE_TABLES[3]);
+                                webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, Aware_Provider.TABLES_FIELDS[3]);
+                                webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, Aware_Provider.Aware_Studies.CONTENT_URI.toString());
+                                startService(webserviceHelper);
                             }
                         })
                         .show();
@@ -292,7 +288,6 @@ public class Aware_Join_Study extends Aware_Activity {
                 @Override
                 public void onDismiss(DialogInterface dialogInterface) {
                     finish();
-
                     //Redirect the user to the main UI
                     Intent mainUI = new Intent(getApplicationContext(), Aware_Client.class);
                     mainUI.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -341,7 +336,6 @@ public class Aware_Join_Study extends Aware_Activity {
     }
 
     private void populateStudyInfo(JSONArray study_config) {
-
         JSONArray plugins = new JSONArray();
         JSONArray sensors = new JSONArray();
 

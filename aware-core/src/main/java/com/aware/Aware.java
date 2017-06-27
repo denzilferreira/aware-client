@@ -444,8 +444,7 @@ public class Aware extends Service {
     }
 
     /**
-     * Identifies if the devices is enrolled in a study
-     *
+     * Identifies if the devices is enrolled in a study. We use the latest entry in the study table and check if the participant is still enrolled
      * @param c
      * @return
      */

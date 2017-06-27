@@ -206,7 +206,6 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                             Intent joinStudy = new Intent(getApplicationContext(), Aware_Join_Study.class);
                             joinStudy.putExtra(Aware_Join_Study.EXTRA_STUDY_URL, Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
                             startActivity(joinStudy);
-                            finish();
                         }
                     }
                     if (pref.getKey().equalsIgnoreCase(Aware_Preferences.FOREGROUND_PRIORITY)) {
