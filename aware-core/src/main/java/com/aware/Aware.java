@@ -476,14 +476,14 @@ public class Aware extends Service {
     }
 
     /**
-     * Fetch the cursor for a study, given the study URL
+     * Fetch the cursor for a study, given the study URL, that is still enrolled
      *
      * @param c
      * @param study_url
      * @return
      */
     public static Cursor getStudy(Context c, String study_url) {
-        return c.getContentResolver().query(Aware_Provider.Aware_Studies.CONTENT_URI, null, Aware_Provider.Aware_Studies.STUDY_URL + " LIKE '" + study_url + "%'", null, Aware_Provider.Aware_Studies.STUDY_TIMESTAMP + " DESC LIMIT 1");
+        return c.getContentResolver().query(Aware_Provider.Aware_Studies.CONTENT_URI, null, Aware_Provider.Aware_Studies.STUDY_URL + " LIKE '" + study_url + "%' AND " + Aware_Provider.Aware_Studies.STUDY_EXIT + "=0", null, Aware_Provider.Aware_Studies.STUDY_TIMESTAMP + " DESC LIMIT 1");
     }
 
     @Override
@@ -1470,7 +1470,6 @@ public class Aware extends Service {
             List<String> path_segments = study_uri.getPathSegments();
 
             if (path_segments.size() > 0) {
-
                 String study_api_key = path_segments.get(path_segments.size() - 1);
                 String study_id = path_segments.get(path_segments.size() - 2);
 
@@ -1537,8 +1536,7 @@ public class Aware extends Service {
                         }
 
                         Cursor dbStudy = Aware.getStudy(getApplicationContext(), full_url);
-                        if (Aware.DEBUG)
-                            Log.d(Aware.TAG, DatabaseUtils.dumpCursorToString(dbStudy));
+                        if (Aware.DEBUG) Log.d(Aware.TAG, DatabaseUtils.dumpCursorToString(dbStudy));
 
                         if (dbStudy == null || !dbStudy.moveToFirst()) {
                             ContentValues studyData = new ContentValues();
@@ -1555,15 +1553,15 @@ public class Aware extends Service {
 
                             getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, studyData);
 
-                            if (Aware.DEBUG) {
+                            if (Aware.DEBUG)
                                 Log.d(Aware.TAG, "New study data: " + studyData.toString());
-                            }
+
                         } else {
-                            //Update the information to the latest
                             ContentValues studyData = new ContentValues();
                             studyData.put(Aware_Provider.Aware_Studies.STUDY_DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
                             studyData.put(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP, System.currentTimeMillis());
                             studyData.put(Aware_Provider.Aware_Studies.STUDY_JOINED, System.currentTimeMillis());
+                            studyData.put(Aware_Provider.Aware_Studies.STUDY_EXIT, 0);
                             studyData.put(Aware_Provider.Aware_Studies.STUDY_KEY, study_id);
                             studyData.put(Aware_Provider.Aware_Studies.STUDY_API, study_api_key);
                             studyData.put(Aware_Provider.Aware_Studies.STUDY_URL, full_url);
@@ -1572,7 +1570,7 @@ public class Aware extends Service {
                             studyData.put(Aware_Provider.Aware_Studies.STUDY_TITLE, studyInfo.getString("study_name"));
                             studyData.put(Aware_Provider.Aware_Studies.STUDY_DESCRIPTION, studyInfo.getString("study_description"));
 
-                            getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, studyData, Aware_Provider.Aware_Studies.STUDY_ID + "=" + study_id, null);
+                            getContentResolver().insert(Aware_Provider.Aware_Studies.CONTENT_URI, studyData);
 
                             if (Aware.DEBUG) {
                                 Log.d(Aware.TAG, "Rejoined study data: " + studyData.toString());
@@ -1671,17 +1669,6 @@ public class Aware extends Service {
     public static void reset(Context context) {
         String device_id = Aware.getSetting(context, Aware_Preferences.DEVICE_ID);
         String device_label = Aware.getSetting(context, Aware_Preferences.DEVICE_LABEL);
-
-//        //We were in a study, let's quit now
-//        if (Aware.isStudy(context)) {
-//            Cursor study = Aware.getStudy(context, Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SERVER));
-//            if (study != null && study.moveToFirst()) {
-//                ContentValues data = new ContentValues();
-//                data.put(Aware_Provider.Aware_Studies.STUDY_EXIT, System.currentTimeMillis());
-//                context.getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, data, Aware_Provider.Aware_Studies.STUDY_ID + "=" + study.getInt(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_ID)), null);
-//            }
-//            if (study != null && !study.isClosed()) study.close();
-//        }
 
         //Remove all settings
         context.getContentResolver().delete(Aware_Settings.CONTENT_URI, null, null);
