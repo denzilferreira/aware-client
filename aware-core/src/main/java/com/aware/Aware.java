@@ -33,7 +33,6 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
-import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -42,7 +41,6 @@ import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -60,7 +58,6 @@ import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.providers.Aware_Provider.Aware_Settings;
 import com.aware.providers.Battery_Provider;
 import com.aware.providers.Scheduler_Provider;
-import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Plugin;
 import com.aware.utils.DownloadPluginService;
 import com.aware.utils.Http;
@@ -81,7 +78,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -252,6 +248,10 @@ public class Aware extends Service {
         foreground.addAction(Aware.ACTION_AWARE_PRIORITY_BACKGROUND);
         registerReceiver(foregroundMgr, foreground);
 
+        IntentFilter scheduler = new IntentFilter();
+        scheduler.addAction(Intent.ACTION_TIME_TICK);
+        registerReceiver(schedulerTicker, scheduler);
+
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             stopSelf();
             return;
@@ -261,6 +261,7 @@ public class Aware extends Service {
     }
 
     private final Foreground_Priority foregroundMgr = new Foreground_Priority();
+
     public class Foreground_Priority extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -302,6 +303,20 @@ public class Aware extends Service {
             startForeground(Aware.AWARE_FOREGROUND_SERVICE, not);
         } else {
             stopForeground(true);
+        }
+    }
+
+    private final SchedulerTicker schedulerTicker = new SchedulerTicker();
+
+    public class SchedulerTicker extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //Executed every 1-minute. OS will send this tickle automatically
+            if (intent.getAction().equals(Intent.ACTION_TIME_TICK)) {
+                Intent scheduler = new Intent(context, Scheduler.class);
+                scheduler.setAction(Scheduler.ACTION_AWARE_SCHEDULER_CHECK);
+                context.startService(scheduler);
+            }
         }
     }
 
@@ -496,6 +511,7 @@ public class Aware extends Service {
 
     /**
      * Identifies if the devices is enrolled in a study. We use the latest entry in the study table and check if the participant is still enrolled
+     *
      * @param c
      * @return
      */
@@ -1587,7 +1603,8 @@ public class Aware extends Service {
                         }
 
                         Cursor dbStudy = Aware.getStudy(getApplicationContext(), full_url);
-                        if (Aware.DEBUG) Log.d(Aware.TAG, DatabaseUtils.dumpCursorToString(dbStudy));
+                        if (Aware.DEBUG)
+                            Log.d(Aware.TAG, DatabaseUtils.dumpCursorToString(dbStudy));
 
                         if (dbStudy == null || !dbStudy.moveToFirst()) {
                             ContentValues studyData = new ContentValues();
@@ -1713,6 +1730,7 @@ public class Aware extends Service {
             unregisterReceiver(storage_BR);
             unregisterReceiver(awareBoot);
             unregisterReceiver(foregroundMgr);
+            unregisterReceiver(schedulerTicker);
         } catch (IllegalArgumentException e) {
             //There is no API to check if a broadcast receiver already is registered. Since Aware.java is shared accross plugins, the receiver is only registered on the client, not the plugins.
         }
