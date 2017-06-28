@@ -3,6 +3,7 @@ package com.aware;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -246,12 +247,62 @@ public class Aware extends Service {
         boot.addAction(Intent.ACTION_BATTERY_CHANGED);
         registerReceiver(awareBoot, boot);
 
+        IntentFilter foreground = new IntentFilter();
+        foreground.addAction(Aware.ACTION_AWARE_PRIORITY_FOREGROUND);
+        foreground.addAction(Aware.ACTION_AWARE_PRIORITY_BACKGROUND);
+        registerReceiver(foregroundMgr, foreground);
+
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             stopSelf();
             return;
         }
 
         if (Aware.DEBUG) Log.d(TAG, "AWARE framework is created!");
+    }
+
+    private final Foreground_Priority foregroundMgr = new Foreground_Priority();
+    public class Foreground_Priority extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equalsIgnoreCase(Aware.ACTION_AWARE_PRIORITY_FOREGROUND)) {
+                if (DEBUG) Log.d(TAG, "Setting AWARE with foreground priority");
+                foreground(true);
+            }
+
+            if (intent.getAction().equalsIgnoreCase(Aware.ACTION_AWARE_PRIORITY_BACKGROUND)) {
+                if (DEBUG) Log.d(TAG, "Setting AWARE with background priority");
+                foreground(false);
+            }
+        }
+    }
+
+    public void foreground(boolean enable) {
+        if (enable) {
+            Intent aware = new Intent(this, Aware.class);
+            PendingIntent onTap = PendingIntent.getService(this, 0, aware, 0);
+
+            Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
+            PendingIntent onSync = PendingIntent.getBroadcast(this, 0, sync, 0);
+
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
+            mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
+            mBuilder.setContentTitle(getApplicationContext().getResources().getString(R.string.foreground_notification_title));
+            mBuilder.setContentText(getApplicationContext().getResources().getString(R.string.foreground_notification_text));
+            mBuilder.setOngoing(true);
+            mBuilder.setOnlyAlertOnce(true);
+            mBuilder.setContentIntent(onTap);
+
+            if (Aware.isStudy(this)) {
+                mBuilder.addAction(R.drawable.ic_stat_aware_sync, getApplicationContext().getResources().getString(R.string.foreground_notification_sync_text), onSync);
+            }
+
+            Notification not = mBuilder.build();
+            not.defaults = 0;
+
+            startForeground(Aware.AWARE_FOREGROUND_SERVICE, not);
+        } else {
+            stopForeground(true);
+        }
     }
 
     private class AsyncPing extends AsyncTask<Void, Void, Boolean> {
@@ -1661,6 +1712,7 @@ public class Aware extends Service {
             unregisterReceiver(aware_BR);
             unregisterReceiver(storage_BR);
             unregisterReceiver(awareBoot);
+            unregisterReceiver(foregroundMgr);
         } catch (IllegalArgumentException e) {
             //There is no API to check if a broadcast receiver already is registered. Since Aware.java is shared accross plugins, the receiver is only registered on the client, not the plugins.
         }

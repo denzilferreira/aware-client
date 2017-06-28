@@ -272,35 +272,6 @@ public class Applications extends AccessibilityService {
         }
     }
 
-    public void foreground(boolean enable) {
-        if (enable) {
-            Intent aware = new Intent(this, Aware.class);
-            PendingIntent onTap = PendingIntent.getService(this, 0, aware, 0);
-
-            Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
-            PendingIntent onSync = PendingIntent.getBroadcast(this, 0, sync, 0);
-
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
-            mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
-            mBuilder.setContentTitle(getApplicationContext().getResources().getString(R.string.foreground_notification_title));
-            mBuilder.setContentText(getApplicationContext().getResources().getString(R.string.foreground_notification_text));
-            mBuilder.setOngoing(true);
-            mBuilder.setOnlyAlertOnce(true);
-            mBuilder.setContentIntent(onTap);
-
-            if (Aware.isStudy(this)) {
-                mBuilder.addAction(R.drawable.ic_stat_aware_sync, getApplicationContext().getResources().getString(R.string.foreground_notification_sync_text), onSync);
-            }
-
-            Notification not = mBuilder.build();
-            not.defaults = 0;
-
-            startForeground(Aware.AWARE_FOREGROUND_SERVICE, not);
-        } else {
-            stopForeground(true);
-        }
-    }
-
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
@@ -323,17 +294,12 @@ public class Applications extends AccessibilityService {
         webservices.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
         registerReceiver(awareMonitor, webservices);
 
-        IntentFilter foreground = new IntentFilter();
-        foreground.addAction(Aware.ACTION_AWARE_PRIORITY_FOREGROUND);
-        foreground.addAction(Aware.ACTION_AWARE_PRIORITY_BACKGROUND);
-        registerReceiver(foregroundMgr, foreground);
-
         IntentFilter scheduler = new IntentFilter();
         scheduler.addAction(Intent.ACTION_TIME_TICK);
         registerReceiver(schedulerTicker, scheduler);
 
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FOREGROUND_PRIORITY).equals("true")) {
-            foreground(true);
+            sendBroadcast(new Intent(Aware.ACTION_AWARE_PRIORITY_FOREGROUND));
         }
 
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS).length() == 0) {
@@ -387,7 +353,6 @@ public class Applications extends AccessibilityService {
         if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
             try {
                 if (awareMonitor != null) unregisterReceiver(awareMonitor);
-                if (foregroundMgr != null) unregisterReceiver(foregroundMgr);
                 if (schedulerTicker != null) unregisterReceiver(schedulerTicker);
             } catch (IllegalArgumentException e) {
             }
@@ -404,7 +369,6 @@ public class Applications extends AccessibilityService {
         if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
             try {
                 if (awareMonitor != null) unregisterReceiver(awareMonitor);
-                if (foregroundMgr != null) unregisterReceiver(foregroundMgr);
                 if (schedulerTicker != null) unregisterReceiver(schedulerTicker);
             } catch (IllegalArgumentException e) {
             }
@@ -524,22 +488,6 @@ public class Applications extends AccessibilityService {
                 Intent scheduler = new Intent(context, Scheduler.class);
                 scheduler.setAction(Scheduler.ACTION_AWARE_SCHEDULER_CHECK);
                 context.startService(scheduler);
-            }
-        }
-    }
-
-    private final Foreground_Priority foregroundMgr = new Foreground_Priority();
-    public class Foreground_Priority extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equalsIgnoreCase(Aware.ACTION_AWARE_PRIORITY_FOREGROUND)) {
-                if (DEBUG) Log.d(TAG, "Setting AWARE with foreground priority");
-                foreground(true);
-            }
-
-            if (intent.getAction().equalsIgnoreCase(Aware.ACTION_AWARE_PRIORITY_BACKGROUND)) {
-                if (DEBUG) Log.d(TAG, "Setting AWARE with background priority");
-                foreground(false);
             }
         }
     }
