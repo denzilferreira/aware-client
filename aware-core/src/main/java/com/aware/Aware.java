@@ -3,6 +3,8 @@ package com.aware;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.AlarmManager;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -32,7 +34,6 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
-import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -41,7 +42,6 @@ import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -59,7 +59,6 @@ import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.providers.Aware_Provider.Aware_Settings;
 import com.aware.providers.Battery_Provider;
 import com.aware.providers.Scheduler_Provider;
-import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Plugin;
 import com.aware.utils.DownloadPluginService;
 import com.aware.utils.Http;
@@ -80,7 +79,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -246,12 +244,67 @@ public class Aware extends Service {
         boot.addAction(Intent.ACTION_BATTERY_CHANGED);
         registerReceiver(awareBoot, boot);
 
+        IntentFilter foreground = new IntentFilter();
+        foreground.addAction(Aware.ACTION_AWARE_PRIORITY_FOREGROUND);
+        foreground.addAction(Aware.ACTION_AWARE_PRIORITY_BACKGROUND);
+        registerReceiver(foregroundMgr, foreground);
+
+        AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+        Intent scheduler = new Intent(this, Scheduler.class);
+        PendingIntent repeating = PendingIntent.getService(getApplicationContext(), 0, scheduler, PendingIntent.FLAG_UPDATE_CURRENT);
+        am.setAlarmClock(new AlarmManager.AlarmClockInfo(System.currentTimeMillis() + (60000), repeating), repeating); //every minute
+
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             stopSelf();
             return;
         }
 
         if (Aware.DEBUG) Log.d(TAG, "AWARE framework is created!");
+    }
+
+    private final Foreground_Priority foregroundMgr = new Foreground_Priority();
+    public class Foreground_Priority extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equalsIgnoreCase(Aware.ACTION_AWARE_PRIORITY_FOREGROUND)) {
+                if (DEBUG) Log.d(TAG, "Setting AWARE with foreground priority");
+                foreground(true);
+            }
+
+            if (intent.getAction().equalsIgnoreCase(Aware.ACTION_AWARE_PRIORITY_BACKGROUND)) {
+                if (DEBUG) Log.d(TAG, "Setting AWARE with background priority");
+                foreground(false);
+            }
+        }
+    }
+
+    public void foreground(boolean enable) {
+        if (enable) {
+            Intent aware = new Intent(this, Aware.class);
+            PendingIntent onTap = PendingIntent.getService(this, 0, aware, 0);
+
+            Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
+            PendingIntent onSync = PendingIntent.getBroadcast(this, 0, sync, 0);
+
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
+            mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
+            mBuilder.setContentTitle(getApplicationContext().getResources().getString(R.string.foreground_notification_title));
+            mBuilder.setContentText(getApplicationContext().getResources().getString(R.string.foreground_notification_text));
+            mBuilder.setOngoing(true);
+            mBuilder.setOnlyAlertOnce(true);
+            mBuilder.setContentIntent(onTap);
+
+            if (Aware.isStudy(this)) {
+                mBuilder.addAction(R.drawable.ic_stat_aware_sync, getApplicationContext().getResources().getString(R.string.foreground_notification_sync_text), onSync);
+            }
+
+            Notification not = mBuilder.build();
+            not.defaults = 0;
+
+            startForeground(Aware.AWARE_FOREGROUND_SERVICE, not);
+        } else {
+            stopForeground(true);
+        }
     }
 
     private class AsyncPing extends AsyncTask<Void, Void, Boolean> {
@@ -324,6 +377,7 @@ public class Aware extends Service {
     }
 
     private class AsyncStudyCheck extends AsyncTask<Void, Void, Boolean> {
+
         @Override
         protected Boolean doInBackground(Void... params) {
 
@@ -445,6 +499,7 @@ public class Aware extends Service {
 
     /**
      * Identifies if the devices is enrolled in a study. We use the latest entry in the study table and check if the participant is still enrolled
+     *
      * @param c
      * @return
      */
@@ -1536,7 +1591,8 @@ public class Aware extends Service {
                         }
 
                         Cursor dbStudy = Aware.getStudy(getApplicationContext(), full_url);
-                        if (Aware.DEBUG) Log.d(Aware.TAG, DatabaseUtils.dumpCursorToString(dbStudy));
+                        if (Aware.DEBUG)
+                            Log.d(Aware.TAG, DatabaseUtils.dumpCursorToString(dbStudy));
 
                         if (dbStudy == null || !dbStudy.moveToFirst()) {
                             ContentValues studyData = new ContentValues();
@@ -1661,6 +1717,7 @@ public class Aware extends Service {
             unregisterReceiver(aware_BR);
             unregisterReceiver(storage_BR);
             unregisterReceiver(awareBoot);
+            unregisterReceiver(foregroundMgr);
         } catch (IllegalArgumentException e) {
             //There is no API to check if a broadcast receiver already is registered. Since Aware.java is shared accross plugins, the receiver is only registered on the client, not the plugins.
         }
@@ -2110,7 +2167,21 @@ public class Aware extends Service {
                 context.startService(aware);
             }
         }
+    }
 
+    /**
+     * Check whether a service is running or not
+     * @param serviceClass
+     * @return
+     */
+    public static boolean isServiceRunning(Context context, Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void complianceStatus(Context context) {

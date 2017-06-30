@@ -258,6 +258,8 @@ public class WebserviceHelper extends IntentService {
             MAX_POST_SIZE = 100; //default for Android Wear (we have a limit of 100KB of data packet size (Message API restrictions)
         }
 
+        if (Aware.DEBUG) Log.d("AWARE::Webservice", "Batch size is: " + MAX_POST_SIZE);
+
         String DEVICE_ID = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
         boolean DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
 
