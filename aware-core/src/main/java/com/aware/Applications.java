@@ -121,6 +121,11 @@ public class Applications extends AccessibilityService {
     public void onAccessibilityEvent(AccessibilityEvent event) {
         if (event.getPackageName() == null) return;
 
+        if (!Aware.isServiceRunning(getApplicationContext(), Aware.class)) {
+            Intent aware = new Intent(this, Aware.class);
+            startService(aware);
+        }
+
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_NOTIFICATIONS).equals("true") && event.getEventType() == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED) {
             Notification notificationDetails = (Notification) event.getParcelableData();
             if (notificationDetails != null) {

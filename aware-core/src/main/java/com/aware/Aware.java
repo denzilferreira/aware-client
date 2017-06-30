@@ -2180,7 +2180,21 @@ public class Aware extends Service {
                 context.startService(aware);
             }
         }
+    }
 
+    /**
+     * Check whether a service is running or not
+     * @param serviceClass
+     * @return
+     */
+    public static boolean isServiceRunning(Context context, Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void complianceStatus(Context context) {
