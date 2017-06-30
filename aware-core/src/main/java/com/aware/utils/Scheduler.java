@@ -11,6 +11,7 @@ import android.content.IntentFilter;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
@@ -991,10 +992,14 @@ public class Scheduler extends Aware_Sensor {
 
         if (PERMISSIONS_OK) {
 
-            AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
-            Intent scheduler = new Intent(this, Scheduler.class);
-            PendingIntent repeating = PendingIntent.getService(getApplicationContext(), 0, scheduler, PendingIntent.FLAG_UPDATE_CURRENT);
-            am.setAlarmClock(new AlarmManager.AlarmClockInfo(System.currentTimeMillis() + (60000), repeating), repeating); //next minute
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+                Intent scheduler = new Intent(this, Scheduler.class);
+                PendingIntent repeating = PendingIntent.getService(getApplicationContext(), 0, scheduler, PendingIntent.FLAG_UPDATE_CURRENT);
+                am.setAlarmClock(new AlarmManager.AlarmClockInfo(System.currentTimeMillis() + (60000), repeating), repeating); //next minute
+            } else {
+                //no-op: using a repeating alarm for older versions of Android.
+            }
 
             DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
 
