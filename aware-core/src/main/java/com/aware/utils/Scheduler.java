@@ -1,5 +1,7 @@
 package com.aware.utils;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentValues;
@@ -924,8 +926,6 @@ public class Scheduler extends Aware_Sensor {
         }
     }
 
-
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -990,6 +990,12 @@ public class Scheduler extends Aware_Sensor {
         super.onStartCommand(intent, flags, startId);
 
         if (PERMISSIONS_OK) {
+
+            AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+            Intent scheduler = new Intent(this, Scheduler.class);
+            PendingIntent repeating = PendingIntent.getService(getApplicationContext(), 0, scheduler, PendingIntent.FLAG_UPDATE_CURRENT);
+            am.setAlarmClock(new AlarmManager.AlarmClockInfo(System.currentTimeMillis() + (60000), repeating), repeating); //next minute
+
             DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
 
             if (DEBUG) Log.d(TAG, "Checking for scheduled tasks: " + getPackageName());

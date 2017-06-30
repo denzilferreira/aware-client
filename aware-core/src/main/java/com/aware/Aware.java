@@ -3,6 +3,7 @@ package com.aware;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -248,9 +249,10 @@ public class Aware extends Service {
         foreground.addAction(Aware.ACTION_AWARE_PRIORITY_BACKGROUND);
         registerReceiver(foregroundMgr, foreground);
 
-        IntentFilter scheduler = new IntentFilter();
-        scheduler.addAction(Intent.ACTION_TIME_TICK);
-        registerReceiver(schedulerTicker, scheduler);
+        AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+        Intent scheduler = new Intent(this, Scheduler.class);
+        PendingIntent repeating = PendingIntent.getService(getApplicationContext(), 0, scheduler, PendingIntent.FLAG_UPDATE_CURRENT);
+        am.setAlarmClock(new AlarmManager.AlarmClockInfo(System.currentTimeMillis() + (60000), repeating), repeating); //every minute
 
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             stopSelf();
@@ -261,7 +263,6 @@ public class Aware extends Service {
     }
 
     private final Foreground_Priority foregroundMgr = new Foreground_Priority();
-
     public class Foreground_Priority extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -303,20 +304,6 @@ public class Aware extends Service {
             startForeground(Aware.AWARE_FOREGROUND_SERVICE, not);
         } else {
             stopForeground(true);
-        }
-    }
-
-    private final SchedulerTicker schedulerTicker = new SchedulerTicker();
-
-    public class SchedulerTicker extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            //Executed every 1-minute. OS will send this tickle automatically
-            if (intent.getAction().equals(Intent.ACTION_TIME_TICK)) {
-                Intent scheduler = new Intent(context, Scheduler.class);
-                scheduler.setAction(Scheduler.ACTION_AWARE_SCHEDULER_CHECK);
-                context.startService(scheduler);
-            }
         }
     }
 
@@ -390,6 +377,7 @@ public class Aware extends Service {
     }
 
     private class AsyncStudyCheck extends AsyncTask<Void, Void, Boolean> {
+
         @Override
         protected Boolean doInBackground(Void... params) {
 
@@ -1730,7 +1718,6 @@ public class Aware extends Service {
             unregisterReceiver(storage_BR);
             unregisterReceiver(awareBoot);
             unregisterReceiver(foregroundMgr);
-            unregisterReceiver(schedulerTicker);
         } catch (IllegalArgumentException e) {
             //There is no API to check if a broadcast receiver already is registered. Since Aware.java is shared accross plugins, the receiver is only registered on the client, not the plugins.
         }
