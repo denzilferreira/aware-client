@@ -1,5 +1,6 @@
 package com.aware.phone.ui;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -11,6 +12,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
@@ -79,7 +81,31 @@ public class Aware_Join_Study extends Aware_Activity {
 
         llPluginsRequired = (LinearLayout) findViewById(R.id.ll_plugins_required);
 
-        study_url = getIntent().getStringExtra(EXTRA_STUDY_URL);
+        Intent intent = getIntent();
+        String scheme = intent.getScheme();
+
+        // This path is taken when Aware joins a study through a URL intent, for example
+        // if a user clicks the URL "aware-register+https://server.com/path/to/study"
+        if (scheme != null && scheme.startsWith("aware-register+")) {
+            if (Aware.DEBUG) Log.d(Aware.TAG, "AwareJoinStudy url=" + intent.getData().toString());
+            // Create new URL builder, change the scheme to everything after the "+".
+            Uri.Builder new_uri = intent.getData().buildUpon();
+            String new_scheme = scheme.substring(scheme.lastIndexOf("+") + 1);
+            new_uri.scheme(new_scheme);
+            study_url = new_uri.build().toString();
+            // Actually join the study.  Problem: we want to go through the same verification
+            // as we do when joining by QR code.
+            Aware.joinStudy(getApplicationContext(), study_url);
+            //Aware_QRCode.joinByUrl(study_url);
+            // Exit this activity.  Problem: activity is uninitialized and thus crashes next time
+            // it is resumed.
+            setResult(Activity.RESULT_OK);
+            finish();
+            return;
+        }
+
+        // Default branch (when does this run?)
+        study_url = intent.getStringExtra(EXTRA_STUDY_URL);
 
         Cursor qry = Aware.getStudy(this, study_url);
         if (qry == null || !qry.moveToFirst()) {

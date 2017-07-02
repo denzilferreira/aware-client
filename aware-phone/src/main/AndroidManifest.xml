@@ -121,6 +121,13 @@
             android:label="Join study"
             android:launchMode="singleTop"
             android:theme="@style/Theme.Aware">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="aware-register+http" />
+                <data android:scheme="aware-register+https" />
+            </intent-filter>
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.aware.phone.Aware_Client" />
