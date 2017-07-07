@@ -37,6 +37,8 @@ import com.aware.phone.Aware_Client;
 import com.aware.phone.R;
 import com.aware.ui.PermissionsHandler;
 
+import net.sqlcipher.database.SQLiteDatabase;
+
 import java.util.ArrayList;
 
 public abstract class Aware_Activity extends AppCompatPreferenceActivity {
@@ -44,6 +46,9 @@ public abstract class Aware_Activity extends AppCompatPreferenceActivity {
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+
+        // Init SQLCipher
+        SQLiteDatabase.loadLibs(getApplicationContext());
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);

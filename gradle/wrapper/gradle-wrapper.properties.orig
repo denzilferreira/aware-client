@@ -1,0 +1,10 @@
+<<<<<<< HEAD
+#Sat Jul 08 09:43:48 EEST 2017
+=======
+#Fri Jul 07 12:41:43 BST 2017
+>>>>>>> New: Encryption works with empty password
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-4.1-milestone-1-all.zip

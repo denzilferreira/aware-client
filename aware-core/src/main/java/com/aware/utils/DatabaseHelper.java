@@ -5,11 +5,11 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDatabase.CursorFactory;
-import android.database.sqlite.SQLiteException;
-import android.database.sqlite.SQLiteOpenHelper;
+import net.sqlcipher.SQLException;
+import net.sqlcipher.database.SQLiteDatabase;
+import net.sqlcipher.database.SQLiteDatabase.CursorFactory;
+import net.sqlcipher.database.SQLiteException;
+import net.sqlcipher.database.SQLiteOpenHelper;
 import android.os.Build;
 import android.os.Environment;
 import android.support.v4.content.ContextCompat;
@@ -17,6 +17,8 @@ import android.support.v4.content.PermissionChecker;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.aware.Aware;
+import com.aware.Aware_Preferences;
 import com.aware.R;
 
 import org.json.JSONArray;
@@ -169,7 +171,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return columns;
     }
 
-    @Override
+
     public synchronized SQLiteDatabase getWritableDatabase() {
         try {
             if (database != null) {
@@ -203,7 +205,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    @Override
+
     public synchronized SQLiteDatabase getReadableDatabase() {
         try {
             if (database != null) {
@@ -243,7 +245,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 aware_folder.mkdirs();
             }
 
-            database = SQLiteDatabase.openOrCreateDatabase(new File(aware_folder, this.databaseName).getPath(), this.cursorFactory);
+            database = SQLiteDatabase.openOrCreateDatabase(new File(aware_folder, this.databaseName).getPath(), "", this.cursorFactory);
             return database;
         } catch (SQLiteException e) {
             return null;
