@@ -164,6 +164,8 @@ public class WebserviceHelper extends IntentService {
 
         if (Aware.DEBUG) Log.d(Aware.TAG, "Synching all the databases...");
 
+        Aware.debug(this, "STUDY-SYNC");
+
         if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SILENT).equals("true"))
             notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
@@ -318,7 +320,19 @@ public class WebserviceHelper extends IntentService {
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true")) {
             ConnectivityManager connManager = (ConnectivityManager) getApplicationContext().getSystemService(CONNECTIVITY_SERVICE);
             NetworkInfo activeNetwork = connManager.getActiveNetworkInfo();
-            return (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected());
+            boolean sync = (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected());
+
+            //Allow fallback to 3G if it's been 6h+ since the last time we synced over WiFi (safeguard data collection)
+            Cursor lastSynched = getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE 'STUDY-SYNC'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
+            if (lastSynched != null && lastSynched.moveToFirst()) {
+
+                long synched = lastSynched.getLong(lastSynched.getColumnIndex(Aware_Provider.Aware_Log.LOG_TIMESTAMP));
+                sync = (System.currentTimeMillis()-synched >= 6 * 60 * 60 * 1000);
+
+                lastSynched.close();
+            }
+
+            return sync;
         }
         return true;
     }
