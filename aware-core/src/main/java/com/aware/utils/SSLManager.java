@@ -15,6 +15,7 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,6 +30,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -89,7 +91,7 @@ public class SSLManager {
                         CertificateFactory cf = CertificateFactory.getInstance("X.509");
                         X509Certificate cert = (X509Certificate) cf.generateCertificate(localCertificate);
 
-                        if (System.currentTimeMillis() > cert.getNotAfter().getTime()) { //expired, download new certificate
+                        if (System.currentTimeMillis() > cert.getNotAfter().getTime()) { //local certificate is expired, download new certificate
                             downloadCertificate(context, hostname, true);
                             //this will force download of SSL certificate from the server. Checked every 15 minutes until successful update to up-to-date certificate.
                         }
@@ -109,7 +111,7 @@ public class SSLManager {
      * @param url
      * @return
      */
-    public static Date getCertificateExpiration(URL url) {
+    public static Date getRemoteCertificateExpiration(URL url) {
         try {
             HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
             conn.setConnectTimeout(5000); //5 seconds to connect
@@ -128,6 +130,51 @@ public class SSLManager {
             if (certs.length > 0 && certs[0] instanceof X509Certificate) {
                 // certs[0] is an X.509 certificate, return its "notAfter" date
                 return ((X509Certificate) certs[0]).getNotAfter();
+            }
+
+            // connection is not HTTPS or server is not signed with an X.509 certificate, return null
+            return null;
+        } catch (SSLPeerUnverifiedException spue) {
+            // connection to server is not verified, unable to get certificates
+            Log.d(Aware.TAG, "Certificates: " + spue.getMessage());
+            return null;
+        } catch (IllegalStateException ise) {
+            // shouldn't get here -- indicates attempt to get certificates before
+            // connection is established
+            Log.d(Aware.TAG, "Certificates: " + ise.getMessage());
+            return null;
+        } catch (IOException ioe) {
+            // error connecting to URL -- this must be caught last since
+            // other exceptions are subclasses of IOException
+            Log.d(Aware.TAG, "Certificates: " + ioe.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Downloads the certificate directly from the URL, instead of a public folder.
+     * @param url
+     * @return
+     */
+    public static X509Certificate retrieveRemoteCertificate(URL url) {
+        try {
+            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+            conn.setConnectTimeout(5000); //5 seconds to connect
+            conn.setReadTimeout(10000); //10 seconds to acknowledge the response
+
+            long now = System.currentTimeMillis();
+            while (conn.getResponseCode() != HttpsURLConnection.HTTP_OK || now - System.currentTimeMillis() <= 5000) {
+                //noop - wait up to 5 seconds to retrieve the certificate
+            }
+
+            // retrieve the N-length signing chain for the server certificates
+            // certs[0] is the server's certificate
+            // certs[1] - certs[N-1] are the intermediate authorities that signed the cert
+            // certs[N] is the root certificate authority of the chain
+            Certificate[] certs = conn.getServerCertificates();
+            if (certs.length > 0 && certs[0] instanceof X509Certificate) {
+                // certs[0] is an X.509 certificate, return its "notAfter" date
+                return ((X509Certificate) certs[0]);
             }
 
             // connection is not HTTPS or server is not signed with an X.509 certificate, return null
@@ -179,24 +226,36 @@ public class SSLManager {
         }
         root_folder.mkdirs();
 
-        Future https = Ion.with(context.getApplicationContext())
-                .load("http://" + cert_host + "/public/server.crt")
-                .noCache()
-                .write(new File(root_folder.toString() + "/server.crt"))
-                .setCallback(new FutureCallback<File>() {
-                    @Override
-                    public void onCompleted(Exception e, File result) {
-                        if (e != null) {
-                            Log.d(Aware.TAG, "ERROR SSL certificate: " + e.getMessage());
-                        }
-                    }
-                });
+        try {
+            X509Certificate certificate = retrieveRemoteCertificate(new URL(hostname));
+            Log.d(Aware.TAG, "Certificate info: " + certificate.toString());
 
-        if (block) {
-            try {
-                https.get();
-            } catch (java.lang.InterruptedException | ExecutionException e) {
-                // What to do here?
+            byte[] certificate_data = certificate.getEncoded();
+
+            FileOutputStream outputStream = new FileOutputStream(new File(root_folder.toString() + "/server.crt"));
+            outputStream.write(certificate_data);
+            outputStream.close();
+
+        } catch (CertificateEncodingException | IOException | NullPointerException e) {
+            Future https = Ion.with(context.getApplicationContext())
+                    .load("http://" + cert_host + "/public/server.crt")
+                    .noCache()
+                    .write(new File(root_folder.toString() + "/server.crt"))
+                    .setCallback(new FutureCallback<File>() {
+                        @Override
+                        public void onCompleted(Exception e, File result) {
+                            if (e != null) {
+                                Log.d(Aware.TAG, "ERROR SSL certificate: " + e.getMessage());
+                            }
+                        }
+                    });
+
+            if (block) {
+                try {
+                    https.get();
+                } catch (java.lang.InterruptedException | ExecutionException j) {
+                    // What to do here?
+                }
             }
         }
     }
@@ -292,8 +351,15 @@ public class SSLManager {
         if (!root_folder.exists()) {
             root_folder.mkdirs();
         }
-        File host_credentials = new File(root_folder.toString(), hostname);
-        return host_credentials.exists();
+
+        File host_credentials = new File(root_folder.toString(), hostname + "/server.crt");
+        try {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            X509Certificate certificate = (X509Certificate) cf.generateCertificate(new FileInputStream(host_credentials.getPath()));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
 

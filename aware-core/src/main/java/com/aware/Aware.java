@@ -270,12 +270,13 @@ public class Aware extends Service {
     public class Foreground_Priority extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+            //do nothing unless it's the client or a standalone application
+            if (! (context.getPackageName().equals("com.aware.phone") || context.getApplicationContext().getResources().getBoolean(R.bool.standalone))) return;
+
             if (intent.getAction().equalsIgnoreCase(Aware.ACTION_AWARE_PRIORITY_FOREGROUND)) {
                 if (DEBUG) Log.d(TAG, "Setting AWARE with foreground priority");
                 foreground(true);
-            }
-
-            if (intent.getAction().equalsIgnoreCase(Aware.ACTION_AWARE_PRIORITY_BACKGROUND)) {
+            } else if (intent.getAction().equalsIgnoreCase(Aware.ACTION_AWARE_PRIORITY_BACKGROUND)) {
                 if (DEBUG) Log.d(TAG, "Setting AWARE with background priority");
                 foreground(false);
             }
@@ -1707,8 +1708,6 @@ public class Aware extends Service {
                         e.printStackTrace();
                     }
                 }
-            } else {
-
             }
         }
     }

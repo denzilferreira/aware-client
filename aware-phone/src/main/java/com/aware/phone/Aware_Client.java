@@ -203,6 +203,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
                             Toast.makeText(getApplicationContext(), "Study URL missing...", Toast.LENGTH_SHORT).show();
                         } else if (!Aware.isStudy(getApplicationContext())) {
+                            //Shows UI to allow the user to join study
                             Intent joinStudy = new Intent(getApplicationContext(), Aware_Join_Study.class);
                             joinStudy.putExtra(Aware_Join_Study.EXTRA_STUDY_URL, Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
                             startActivity(joinStudy);
