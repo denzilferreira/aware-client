@@ -322,16 +322,15 @@ public class WebserviceHelper extends IntentService {
             NetworkInfo activeNetwork = connManager.getActiveNetworkInfo();
             boolean sync = (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected());
 
-            //Allow fallback to 3G if it's been 6h+ since the last time we synced over WiFi (safeguard data collection)
-            Cursor lastSynched = getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE 'STUDY-SYNC'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
-            if (lastSynched != null && lastSynched.moveToFirst()) {
-
-                long synched = lastSynched.getLong(lastSynched.getColumnIndex(Aware_Provider.Aware_Log.LOG_TIMESTAMP));
-                sync = (System.currentTimeMillis()-synched >= 6 * 60 * 60 * 1000);
-
-                lastSynched.close();
+            if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).equals("0")) {
+                //Allow fallback to 3G if it's been xh+ since the last time we synced over WiFi (force data sync by any means necessary)
+                Cursor lastSynched = getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE 'STUDY-SYNC'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
+                if (lastSynched != null && lastSynched.moveToFirst()) {
+                    long synched = lastSynched.getLong(lastSynched.getColumnIndex(Aware_Provider.Aware_Log.LOG_TIMESTAMP));
+                    sync = (System.currentTimeMillis()-synched >= Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK)) * 60 * 60 * 1000);
+                    lastSynched.close();
+                }
             }
-
             return sync;
         }
         return true;

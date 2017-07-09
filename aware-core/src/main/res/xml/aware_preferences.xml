@@ -858,6 +858,16 @@
                 android:summary="Sync only over Wi-Fi"
                 android:title="Wi-Fi only" />
 
+            <ListPreference
+                android:defaultValue="0"
+                android:dependency="webservice_wifi_only"
+                android:entries="@array/fallback_network_readable"
+                android:entryValues="@array/fallback_network_values"
+                android:key="fallback_network"
+                android:persistent="true"
+                android:summary="Fallback to 3G"
+                android:title="Fallback to 3G" />
+
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="webservice_charging"
@@ -919,8 +929,8 @@
                 android:defaultValue="true"
                 android:key="debug_flag"
                 android:persistent="true"
-                android:title="Debugging"
-                android:summary="Show messages in logcat" />
+                android:summary="Show messages in logcat"
+                android:title="Debugging" />
 
             <EditTextPreference
                 android:defaultValue="AWARE"

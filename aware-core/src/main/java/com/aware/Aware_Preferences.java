@@ -631,4 +631,8 @@ public class Aware_Preferences {
      */
     public static final String FOREGROUND_PRIORITY = "foreground_priority";
 
+    /**
+     * Fallback to network sync after xh have elapsed without WiFi synching
+     */
+    public static final String WEBSERVICE_FALLBACK_NETWORK = "fallback_network";
 }
