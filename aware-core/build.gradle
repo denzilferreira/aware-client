@@ -64,9 +64,7 @@ artifacts {
 dependencies {
     implementation "org.eclipse.paho:org.eclipse.paho.client.mqttv3:$mqtt_libs"
     implementation "com.koushikdutta.ion:ion:$ion_libs"
-    implementation "com.android.support:cardview-v7:$support_libs"
     implementation "com.android.support:gridlayout-v7:$support_libs"
     implementation "com.android.support:appcompat-v7:$support_libs"
-    implementation "com.android.support:design:$support_libs"
 }
 
