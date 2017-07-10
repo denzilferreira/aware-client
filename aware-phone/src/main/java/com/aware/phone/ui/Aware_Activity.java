@@ -42,20 +42,6 @@ import java.util.ArrayList;
 public abstract class Aware_Activity extends AppCompatPreferenceActivity {
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == Aware_Preferences.REQUEST_JOIN_STUDY) {
-            if (resultCode == RESULT_OK) {
-                //Load join study wizard. We already have the study info on the database.
-                Intent studyInfo = new Intent(this, Aware_Join_Study.class);
-                studyInfo.putExtra(Aware_Join_Study.EXTRA_STUDY_URL, data.getStringExtra(Aware_Join_Study.EXTRA_STUDY_URL));
-                startActivity(studyInfo);
-                finish();
-            }
-        }
-    }
-
-    @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
@@ -127,7 +113,8 @@ public abstract class Aware_Activity extends AppCompatPreferenceActivity {
                 startActivity(permissions);
             } else {
                 Intent join_study = new Intent(Aware_Activity.this, Aware_QRCode.class);
-                startActivityForResult(join_study, Aware_Preferences.REQUEST_JOIN_STUDY);
+                join_study.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(join_study);
             }
         }
         if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_study))) {

@@ -2,6 +2,7 @@
 package com.aware.utils;
 
 import android.app.ActivityManager;
+import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -20,6 +21,7 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.text.format.DateUtils;
 import android.util.Log;
@@ -46,7 +48,11 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class WebserviceHelper extends Service {
+/**
+ * Notes:
+ * Denzil: This is a wakeful service called by the sync wakefulbroadcastreceiver. This guarantees the service is not interrupted by deep sleep.
+ */
+public class WebserviceHelper extends IntentService {
 
     public static final String ACTION_AWARE_WEBSERVICE_SYNC_TABLE = "ACTION_AWARE_WEBSERVICE_SYNC_TABLE";
     public static final String ACTION_AWARE_WEBSERVICE_CLEAR_TABLE = "ACTION_AWARE_WEBSERVICE_CLEAR_TABLE";
@@ -77,6 +83,10 @@ public class WebserviceHelper extends Service {
 
     private static final ArrayList<String> highFrequencySensors = new ArrayList<>();
     private static final ArrayList<String> dontClearSensors = new ArrayList<>();
+
+    public WebserviceHelper() {
+        super("AWARE Sync Helper");
+    }
 
     // Handler that receives messages from the thread
     private final class SyncQueue extends Handler {
@@ -153,6 +163,8 @@ public class WebserviceHelper extends Service {
         mSyncSlowQueueB = new SyncQueue(mServiceLooperSlowQueueB, executorSlowQueueB);
 
         if (Aware.DEBUG) Log.d(Aware.TAG, "Synching all the databases...");
+
+        Aware.debug(this, "STUDY-SYNC");
 
         if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SILENT).equals("true"))
             notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -248,6 +260,8 @@ public class WebserviceHelper extends Service {
             MAX_POST_SIZE = 100; //default for Android Wear (we have a limit of 100KB of data packet size (Message API restrictions)
         }
 
+        if (Aware.DEBUG) Log.d("AWARE::Webservice", "Batch size is: " + MAX_POST_SIZE);
+
         String DEVICE_ID = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
         boolean DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
 
@@ -306,7 +320,23 @@ public class WebserviceHelper extends Service {
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true")) {
             ConnectivityManager connManager = (ConnectivityManager) getApplicationContext().getSystemService(CONNECTIVITY_SERVICE);
             NetworkInfo activeNetwork = connManager.getActiveNetworkInfo();
-            return (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected());
+            boolean sync = (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected());
+
+            //we are connected to WiFi, we are done here.
+            if (sync) return sync;
+
+            //Fallback to 3G if no wifi for x hours
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).length() > 0
+                    && !Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).equals("0")) {
+
+                Cursor lastSynched = getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE 'STUDY-SYNC'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
+                if (lastSynched != null && lastSynched.moveToFirst()) {
+                    long synched = lastSynched.getLong(lastSynched.getColumnIndex(Aware_Provider.Aware_Log.LOG_TIMESTAMP));
+                    sync = (System.currentTimeMillis()-synched >= Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK)) * 60 * 60 * 1000);
+                    lastSynched.close();
+                }
+            }
+            return sync;
         }
         return true;
     }
@@ -409,7 +439,7 @@ public class WebserviceHelper extends Service {
             // Only if WEBSERVICE_REMOVE_DATA is true can we safely do this, and
             // we also require WEBSERVICE_SIMPLE so that we can remove data while
             // still having safe commits.
-            if (!(WEBSERVICE_SIMPLE && WEBSERVICE_REMOVE_DATA)) {
+            if (!(WEBSERVICE_SIMPLE && WEBSERVICE_REMOVE_DATA) || dontClearSensors.contains(DATABASE_TABLE)) {
                 // Normal AWARE API always gets here.
                 if (protocol.equals("https")) {
                     try {
@@ -765,6 +795,11 @@ public class WebserviceHelper extends Service {
     public IBinder onBind(Intent intent) {
         // We don't provide binding, so return null
         return null;
+    }
+
+    @Override
+    protected void onHandleIntent(@Nullable Intent intent) {
+        //no-op
     }
 
     @Override

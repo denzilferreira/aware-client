@@ -6,13 +6,10 @@ import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.ActivityManager;
 import android.app.ActivityManager.ProcessErrorStateInfo;
 import android.app.ActivityManager.RunningAppProcessInfo;
-import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -28,12 +25,10 @@ import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
-import android.support.annotation.IntDef;
-import android.support.v4.accessibilityservice.AccessibilityServiceInfoCompat;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.WakefulBroadcastReceiver;
 import android.support.v4.view.accessibility.AccessibilityEventCompat;
 import android.support.v4.view.accessibility.AccessibilityManagerCompat;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
@@ -125,6 +120,11 @@ public class Applications extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         if (event.getPackageName() == null) return;
+
+        if (!Aware.isServiceRunning(getApplicationContext(), Aware.class)) {
+            Intent aware = new Intent(this, Aware.class);
+            startService(aware);
+        }
 
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_NOTIFICATIONS).equals("true") && event.getEventType() == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED) {
             Notification notificationDetails = (Notification) event.getParcelableData();
@@ -288,10 +288,14 @@ public class Applications extends AccessibilityService {
         //This makes sure that plugins and apps can check if the accessibility service is active
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, true);
 
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
-        filter.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
-        registerReceiver(awareMonitor, filter);
+        IntentFilter webservices = new IntentFilter();
+        webservices.addAction(Aware.ACTION_AWARE_SYNC_DATA);
+        webservices.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
+        registerReceiver(awareMonitor, webservices);
+
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FOREGROUND_PRIORITY).equals("true")) {
+            sendBroadcast(new Intent(Aware.ACTION_AWARE_PRIORITY_FOREGROUND));
+        }
 
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS).length() == 0) {
             Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS, 1);
@@ -343,9 +347,7 @@ public class Applications extends AccessibilityService {
     public void onInterrupt() {
         if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
             try {
-                if (awareMonitor != null) {
-                    unregisterReceiver(awareMonitor);
-                }
+                if (awareMonitor != null) unregisterReceiver(awareMonitor);
             } catch (IllegalArgumentException e) {
             }
         }
@@ -360,9 +362,7 @@ public class Applications extends AccessibilityService {
     public boolean onUnbind(Intent intent) {
         if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
             try {
-                if (awareMonitor != null) {
-                    unregisterReceiver(awareMonitor);
-                }
+                if (awareMonitor != null) unregisterReceiver(awareMonitor);
             } catch (IllegalArgumentException e) {
             }
         }
@@ -454,7 +454,7 @@ public class Applications extends AccessibilityService {
         if (!isAccessibilityEnabled(c)) {
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_accessibility);
-            mBuilder.setContentTitle("Please enable AWARE");
+            mBuilder.setContentTitle(c.getResources().getString(R.string.aware_activate_accessibility_title));
             mBuilder.setContentText(c.getResources().getString(R.string.aware_activate_accessibility));
             mBuilder.setAutoCancel(true);
             mBuilder.setOnlyAlertOnce(true); //notify the user only once
@@ -480,7 +480,8 @@ public class Applications extends AccessibilityService {
      * @author df
      */
     private static final Applications_Broadcaster awareMonitor = new Applications_Broadcaster();
-    public static class Applications_Broadcaster extends BroadcastReceiver {
+
+    public static class Applications_Broadcaster extends WakefulBroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
 
@@ -495,7 +496,7 @@ public class Applications extends AccessibilityService {
                     webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
                     webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, TABLES_FIELDS[i]);
                     webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, CONTEXT_URIS[i].toString());
-                    context.startService(webserviceHelper);
+                    startWakefulService(context, webserviceHelper);
                 }
             }
 
@@ -510,7 +511,7 @@ public class Applications extends AccessibilityService {
                         Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
                         webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_CLEAR_TABLE);
                         webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
-                        context.startService(webserviceHelper);
+                        startWakefulService(context, webserviceHelper);
                     }
                 }
             }

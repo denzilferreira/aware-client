@@ -9,6 +9,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.content.ContextCompat;
@@ -139,8 +140,23 @@ public class Processor extends Aware_Sensor {
         super.onStartCommand(intent, flags, startId);
 
         if (PERMISSIONS_OK) {
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                Log.d(TAG, "Processor service is not allowed by Google, buuuu. Disabling sensor...");
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_PROCESSOR, false);
+                Aware.stopProcessor(getApplicationContext());
+                stopSelf();
+                return START_STICKY;
+            }
+
             DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR).length() == 0) {
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR, 10);
+            }
+
+            try {
+                Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR));
+            } catch (NumberFormatException e) {
                 Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR, 10);
             }
 
@@ -176,6 +192,10 @@ public class Processor extends Aware_Sensor {
      */
     public static HashMap<String, Integer> getProcessorLoad() {
         HashMap<String, Integer> processor = new HashMap<String, Integer>();
+        processor.put("user", 0);
+        processor.put("system",0);
+        processor.put("idle",0);
+
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream("/proc/stat")), 5000);
             String line = "";
@@ -186,7 +206,7 @@ public class Processor extends Aware_Sensor {
                 processor.put("system", Integer.parseInt(items[4]));
                 processor.put("idle", Integer.parseInt(items[5]));
             }
-            if (reader != null) reader.close();
+            reader.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

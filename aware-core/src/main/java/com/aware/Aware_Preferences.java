@@ -55,13 +55,18 @@ public class Aware_Preferences {
     public static final String STATUS_ACCELEROMETER = "status_accelerometer";
 
     /**
-     * Accelerometer frequency in milliseconds: e.g.,
+     * Accelerometer frequency in microseconds: e.g.,
      * 0 - fastest
      * 20000 - game
      * 60000 - UI
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_ACCELEROMETER = "frequency_accelerometer";
+
+    /**
+     * Discard sensor events that come in more often than frequency
+     */
+    public static final String FREQUENCY_ACCELEROMETER_ENFORCE = "frequency_accelerometer_enforce";
 
     /**
      * Accelerometer threshold (float).  Do not record consecutive points if
@@ -130,13 +135,18 @@ public class Aware_Preferences {
     public static final String STATUS_GRAVITY = "status_gravity";
 
     /**
-     * Gravity frequency in milliseconds: e.g.,
+     * Gravity frequency in microseconds: e.g.,
      * 0 - fastest
      * 20000 - game
      * 60000 - UI
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_GRAVITY = "frequency_gravity";
+
+    /**
+     * Discard sensor events that come in more often than frequency
+     */
+    public static final String FREQUENCY_GRAVITY_ENFORCE = "frequency_gravity_enforce";
 
     /**
      * Threshold (float).  Do not record consecutive points if
@@ -150,13 +160,18 @@ public class Aware_Preferences {
     public static final String STATUS_GYROSCOPE = "status_gyroscope";
 
     /**
-     * Gyroscope frequency in milliseconds: e.g.,
+     * Gyroscope frequency in microseconds: e.g.,
      * 0 - fastest
      * 20000 - game
      * 60000 - UI
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_GYROSCOPE = "frequency_gyroscope";
+
+    /**
+     * Discard sensor events that come in more often than frequency
+     */
+    public static final String FREQUENCY_GYROSCOPE_ENFORCE = "frequency_gyroscope_enforce";
 
     /**
      * Threshold (float).  Do not record consecutive points if
@@ -209,18 +224,39 @@ public class Aware_Preferences {
     public static final String LOCATION_GEOFENCE = "location_geofence";
 
     /**
+     * Save all locations.  All locations given to the location service will be saved,
+     * without applying any logic to find the currently most accurate locations.
+     * This makes for a slightly more complicated analysis later on, but more data
+     * to work with.
+     */
+    public static final String LOCATION_SAVE_ALL = "location_save_all";
+
+
+    /**
+     * Activate/deactivate passive location log (boolean).  This does not turn on GPS/network
+     * location tracking, but if any other application turns on location requests, Aware will
+     * receive the locations too, with little battery overhead.
+     */
+    public static final String STATUS_LOCATION_PASSIVE = "status_location_passive";
+
+    /**
      * Activate/deactivate light sensor log (boolean)
      */
     public static final String STATUS_LIGHT = "status_light";
 
     /**
-     * Light frequency in milliseconds: e.g.,
+     * Light frequency in microseconds: e.g.,
      * 0 - fastest
      * 20000 - game
      * 60000 - UI
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_LIGHT = "frequency_light";
+
+    /**
+     * Discard sensor events that come in more often than frequency
+     */
+    public static final String FREQUENCY_LIGHT_ENFORCE = "frequency_light_enforce";
 
     /**
      * Light threshold (float).  Do not record consecutive points if
@@ -234,7 +270,7 @@ public class Aware_Preferences {
     public static final String STATUS_LINEAR_ACCELEROMETER = "status_linear_accelerometer";
 
     /**
-     * Linear accelerometer frequency in milliseconds: e.g.,
+     * Linear accelerometer frequency in microseconds: e.g.,
      * 0 - fastest
      * 20000 - game
      * 60000 - UI
@@ -242,6 +278,10 @@ public class Aware_Preferences {
      */
     public static final String FREQUENCY_LINEAR_ACCELEROMETER = "frequency_linear_accelerometer";
 
+    /**
+     * Discard sensor events that come in more often than frequency
+     */
+    public static final String FREQUENCY_LINEAR_ACCELEROMETER_ENFORCE = "frequency_linear_accelerometer_enforce";
 
     /**
      * Linear accelerometer threshold (float).  Do not record consecutive points if
@@ -270,13 +310,18 @@ public class Aware_Preferences {
     public static final String STATUS_MAGNETOMETER = "status_magnetometer";
 
     /**
-     * Magnetometer frequency in milliseconds: e.g.,
+     * Magnetometer frequency in microseconds: e.g.,
      * 0 - fastest
      * 20000 - game
      * 60000 - UI
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_MAGNETOMETER = "frequency_magnetometer";
+
+    /**
+     * Discard sensor events that come in more often than frequency
+     */
+    public static final String FREQUENCY_MAGNETOMETER_ENFORCE = "frequency_magnetometer_enforce";
 
     /**
      * Threshold (float).  Do not record consecutive points if
@@ -290,13 +335,18 @@ public class Aware_Preferences {
     public static final String STATUS_BAROMETER = "status_barometer";
 
     /**
-     * Barometer frequency in milliseconds: e.g.,
+     * Barometer frequency in microseconds: e.g.,
      * 0 - fastest
      * 20000 - game
      * 60000 - UI
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_BAROMETER = "frequency_barometer";
+
+    /**
+     * Discard sensor events that come in more often than frequency
+     */
+    public static final String FREQUENCY_BAROMETER_ENFORCE = "frequency_barometer_enforce";
 
     /**
      * Threshold (float).  Do not record consecutive points if
@@ -330,13 +380,18 @@ public class Aware_Preferences {
     public static final String STATUS_PROXIMITY = "status_proximity";
 
     /**
-     * Proximity frequency in milliseconds: e.g.,
+     * Proximity frequency in microseconds: e.g.,
      * 0 - fastest
      * 20000 - game
      * 60000 - UI
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_PROXIMITY = "frequency_proximity";
+
+    /**
+     * Discard sensor events that come in more often than frequency
+     */
+    public static final String FREQUENCY_PROXIMITY_ENFORCE = "frequency_proximity_enforce";
 
     /**
      * Threshold (float).  Do not record consecutive points if
@@ -350,13 +405,18 @@ public class Aware_Preferences {
     public static final String STATUS_ROTATION = "status_rotation";
 
     /**
-     * Rotation frequency in milliseconds: e.g.,
+     * Rotation frequency in microseconds: e.g.,
      * 0 - fastest
      * 20000 - game
      * 60000 - UI
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_ROTATION = "frequency_rotation";
+
+    /**
+     * Discard sensor events that come in more often than frequency
+     */
+    public static final String FREQUENCY_ROTATION_ENFORCE = "frequency_rotation_enforce";
 
     /**
      * Threshold (float).  Do not record consecutive points if
@@ -375,13 +435,18 @@ public class Aware_Preferences {
     public static final String STATUS_TEMPERATURE = "status_temperature";
 
     /**
-     * Temperature frequency in milliseconds: e.g.,
+     * Temperature frequency in microseconds: e.g.,
      * 0 - fastest
      * 20000 - game
      * 60000 - UI
      * 200000 - normal (default)
      */
     public static final String FREQUENCY_TEMPERATURE = "frequency_temperature";
+
+    /**
+     * Discard sensor events that come in more often than frequency
+     */
+    public static final String FREQUENCY_TEMPERATURE_ENFORCE = "frequency_temperature_enforce";
 
     /**
      * Threshold (float).  Do not record consecutive points if
@@ -527,9 +592,23 @@ public class Aware_Preferences {
     public static final String HASH_SALT = "hash_salt";
 
     /**
-     * hash function salt.  If "device_id", then salt with this device's device_id.
+     * hash function phone.  If "device_id", then salt with this device's device_id.
+     * This can be a hash name or a hash program
      */
     public static final String HASH_FUNCTION_PHONE = "hash_function_phone";
+
+    /**
+     * hash function MAC.  Do we hash MAC addresses?
+     * blank=unhashed, non-blank=run this hash program (see Encrypter).
+     */
+    public static final String HASH_FUNCTION_MAC = "hash_function_mac";
+
+
+    /**
+     * hash function for SSID/network names/bluetooth names.
+     * blank=unhashed, non-blank=run this hash program.
+     */
+    public static final String HASH_FUNCTION_SSID = "hash_function_ssid";
 
     /**
      * Activate/deactivate significant motion sensing
@@ -540,4 +619,20 @@ public class Aware_Preferences {
      * If in a study, remind the user to charge the phone when at 15%.
      */
     public static final String REMIND_TO_CHARGE = "remind_to_charge";
+
+    /**
+     * For all sensors, discard sensor events that come in more often than frequency.
+     * The frequency is enforced if this setting OR the sensor-specific setting is set.
+     */
+    public static final String ENFORCE_FREQUENCY_ALL = "enforce_frequency_all";
+
+    /**
+     * Makes AWARE a foreground service
+     */
+    public static final String FOREGROUND_PRIORITY = "foreground_priority";
+
+    /**
+     * Fallback to network sync after xh have elapsed without WiFi synching
+     */
+    public static final String WEBSERVICE_FALLBACK_NETWORK = "fallback_network";
 }

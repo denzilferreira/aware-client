@@ -203,12 +203,18 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER).length() == 0) {
                             Toast.makeText(getApplicationContext(), "Study URL missing...", Toast.LENGTH_SHORT).show();
                         } else if (!Aware.isStudy(getApplicationContext())) {
-                            Aware.joinStudy(getApplicationContext(), Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
-                            Intent study_scan = new Intent();
-                            study_scan.putExtra(Aware_Join_Study.EXTRA_STUDY_URL, Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
-                            setResult(Activity.RESULT_OK, study_scan);
-                            finish();
+                            //Shows UI to allow the user to join study
+                            Intent joinStudy = new Intent(getApplicationContext(), Aware_Join_Study.class);
+                            joinStudy.putExtra(Aware_Join_Study.EXTRA_STUDY_URL, Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER));
+                            startActivity(joinStudy);
                         }
+                    }
+                    if (pref.getKey().equalsIgnoreCase(Aware_Preferences.FOREGROUND_PRIORITY)) {
+                        sendBroadcast(new Intent(Aware.ACTION_AWARE_PRIORITY_FOREGROUND));
+                    }
+                } else {
+                    if (pref.getKey().equalsIgnoreCase(Aware_Preferences.FOREGROUND_PRIORITY)) {
+                        sendBroadcast(new Intent(Aware.ACTION_AWARE_PRIORITY_BACKGROUND));
                     }
                 }
             }
@@ -388,10 +394,12 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                         findPreference(Aware_Preferences.WEBSERVICE_CHARGING),
                         findPreference(Aware_Preferences.WEBSERVICE_SILENT),
                         findPreference(Aware_Preferences.WEBSERVICE_WIFI_ONLY),
+                        findPreference(Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK),
                         findPreference(Aware_Preferences.REMIND_TO_CHARGE),
                         findPreference(Aware_Preferences.WEBSERVICE_SIMPLE),
                         findPreference(Aware_Preferences.WEBSERVICE_REMOVE_DATA),
-                        findPreference(Aware_Preferences.DEBUG_DB_SLOW)
+                        findPreference(Aware_Preferences.DEBUG_DB_SLOW),
+                        findPreference(Aware_Preferences.FOREGROUND_PRIORITY)
                 );
             } else {
                 new SettingsSync().execute(
@@ -439,10 +447,12 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                         findPreference(Aware_Preferences.WEBSERVICE_CHARGING),
                         findPreference(Aware_Preferences.WEBSERVICE_SILENT),
                         findPreference(Aware_Preferences.WEBSERVICE_WIFI_ONLY),
+                        findPreference(Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK),
                         findPreference(Aware_Preferences.REMIND_TO_CHARGE),
                         findPreference(Aware_Preferences.WEBSERVICE_SIMPLE),
                         findPreference(Aware_Preferences.WEBSERVICE_REMOVE_DATA),
-                        findPreference(Aware_Preferences.DEBUG_DB_SLOW)
+                        findPreference(Aware_Preferences.DEBUG_DB_SLOW),
+                        findPreference(Aware_Preferences.FOREGROUND_PRIORITY)
                 );
             }
 
@@ -462,8 +472,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         protected Boolean doInBackground(Void... params) {
             // Download the certificate, and block since we are already running in background
             // and we need the certificate immediately.
-            Uri server_url = Uri.parse("https://api.awareframework.com/index.php");
-            SSLManager.downloadCertificate(getApplicationContext(), server_url.getHost(), true);
+            SSLManager.handleUrl(getApplicationContext(), "https://api.awareframework.com/index.php", true);
 
             //Ping AWARE's server with getApplicationContext() device's information for framework's statistics log
             Hashtable<String, String> device_ping = new Hashtable<>();

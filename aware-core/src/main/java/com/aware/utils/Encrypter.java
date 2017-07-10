@@ -77,12 +77,12 @@ public class Encrypter {
      * One-way string hashing using any algorithm
      * @param clear Text to be hashed
      * @param hash_function One of the allowed Android hash functions.  You sould be very sure
-     *                      that only a known hash_function is passed. (MD5, SHA-1, SHA-256,
-     *                      SHA-384, SHA-512).q
+     *                      that only a known hash_function is passed.
+     *                      (MD5, SHA-1, SHA-256, SHA-384, SHA-512).
      * @return String
      */
     public static final String hashGeneric(String clear, String hash_function) {
-        if( clear == null ) return "";
+        if( clear == null || clear.length() == 0 ) return "";
         try {
             // Create Hash
             MessageDigest digest = java.security.MessageDigest.getInstance(hash_function);
@@ -101,8 +101,66 @@ public class Encrypter {
 
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
+            return "<invalid alg "+hash_function+">";
         }
-        return "";
+    }
+
+    /*
+     * Run a hash program to hash data.  This not only does a hash, but can salt the cleartext,
+     * normalize the data, or apply other transformations.
+     *
+     * This looks up the settingName and runs it as a hash program.  It splits it by commas and
+     * runs these commands:
+     * - Anything not below: hash using that hash name (hashGeneric).  Ends processing.
+     * - "true": hash using the global HASH_FUNCTION and HASH_SALT.  Ends processing.
+     * - "clear": return the cleartext (default for some modes)
+     * - "salt=XXXX": salt using this value
+     * - "salt=device_id": salt using the device_id
+     * - "last=N": take only the last N digits
+     * - "normalize": Remove all non [0-9+] characters.
+     */
+    public static final String _hashProgram(Context context, String clear, String hashProgram) {
+        if( clear == null || clear.length() == 0  ) return "";
+
+        if (hashProgram.length() > 0) {
+            String[] hashProgramCommands = hashProgram.split(",");
+            for (String command: hashProgramCommands) {
+                if (command.equals("salt=device_id")) {
+                    // Salt using the device_id
+                    clear = clear + Aware.getSetting(context, Aware_Preferences.DEVICE_ID);
+                } else if (command.startsWith("salt=")) {
+                    // Salt using any string
+                    String[] command_split = command.split("=");
+                    // If salting with a empty hash, do nothing.
+                    if (command_split.length == 1) continue;
+                    clear = clear + command_split[1];
+                } else if (command.equals("normalize")) {
+                    // Remove all characters not in [0-9+]
+                    clear = clear.replaceAll("[^\\d+]", "");
+                } else if (command.equals("normalizeAlnum")) {
+                    // Remove all characters not in [0-9A-Za-z+]
+                    clear = clear.replaceAll("[^\\dA-Za-z+]", "");
+                } else if (command.startsWith("last=")) {
+                    // Take only the last N digits
+                    int start_idx = clear.length() - Integer.parseInt(command.split("=")[1]);
+                    if (start_idx < 0)
+                        start_idx = 0;
+                    clear = clear.substring(start_idx);
+                } else if (command.equals("clear")) {
+                    // Do not hash.  This is default for some modes.
+                    return clear;
+                } else if (command.equals("true")) {
+                    // Hash using global settings
+                    return hash(context, clear);
+                } else {
+                    // This is a hash algorithm name.  Hash it and return.  Stops loop.
+                    return hashGeneric(clear, command);
+                }
+            }
+        }
+        // Default: hash with default parameters (actually sets default parameters and calls
+        // this function again) if there are no
+        return hash(context, clear);
     }
 
     /**
@@ -110,77 +168,58 @@ public class Encrypter {
      * "hash_function") and calls the right hash.  It handles backwards compatibility:
      * defaults to SHA-1, and also defaults to SHA-1 if an invalid algorithm name is given.
      *
+     * This performs the default hashing.  The actual work is desegated to _hashProgram().
+     *
      * @param context Application context (for getting settings)
      * @param clear Text to be hashed
      * @return Hex-encoded hash
      */
     public static final String hash(Context context, String clear) {
-        if( clear == null ) return "";
-        String HASH_FUNCTION = Aware.getSetting(context.getApplicationContext(), Aware_Preferences.HASH_FUNCTION);
+        String hashProgram = Aware.getSetting(context.getApplicationContext(), Aware_Preferences.HASH_FUNCTION);
+        if (hashProgram.equals("")) {
+            // Default if unset
+            hashProgram = "SHA-1";
+        }
+
         String HASH_SALT = Aware.getSetting(context.getApplicationContext(), Aware_Preferences.HASH_SALT);
         // Option to salt per-device.
         if (HASH_SALT.equals("device_id"))
-            HASH_SALT = Aware.getSetting(context, Aware_Preferences.DEVICE_ID);
+            hashProgram = "salt=device_id," + hashProgram;
         // HASH_SALT defaults to empty
-        clear = clear + HASH_SALT;
-
-        // Go through and find our hash function, and apply it.  Handle defaults to SHA-1.
-        // Currently testing for each value individually to ensure a proper value is passed
-        // (or else exception raised)
-        if (HASH_FUNCTION.equals("")) {
-            // Default if unset
-            return hashSHA1(clear);
-        } else if (HASH_FUNCTION.equals("SHA-1")) {
-            return hashSHA1(clear);
-        } else if (HASH_FUNCTION.equals("SHA-256")) {
-            // Remember to be careful to only allow allowed names here.
-            return hashGeneric(clear, HASH_FUNCTION);
-        } else if (HASH_FUNCTION.equals("SHA-512")) {
-            return hashGeneric(clear, HASH_FUNCTION);
-        } else if (HASH_FUNCTION.equals("MD5")) {
-            return hashMD5(clear);
-        } else {
-            return hashGeneric(clear, "SHA-1");
-        }
+        hashProgram = "salt="+ HASH_SALT + "," + hashProgram;
+        return _hashProgram(context, clear, hashProgram);
     }
 
-    /**
-     * Hash a phone number.  This considers the setting "hash_function_phone" and can treat
-     * the number specially.  Options are "normalize": remove all characters except "+" and
-     * 0-9 from the number so that hashes can be compared.  "last6": only hashes the last six
-     * characters.  "salt_deviceid": Salt using our device_id.  Note that HASH_SALT is also
-     * applied!
-     *
-     * @param context Application context (for getting settings)
-     * @param clear Text to hash
-     * @return Hex-encoded hash
+    /*
+     * Hash a phone number.  Default to hashing even if blank.
      */
     public static final String hashPhone(Context context, String clear) {
-        String HASH_FUNCTION_PHONE = Aware.getSetting(context.getApplicationContext(), Aware_Preferences.HASH_FUNCTION_PHONE);
-
-        if (HASH_FUNCTION_PHONE.equals("normalize")) {
-            // Remove everything except 0-9 and "+"
-            clear = clear.replaceAll("[^\\d+]", "");
-            return hash(context, clear);
-        } else if (HASH_FUNCTION_PHONE.equals("last6")) {
-            // Hash only last six digits characters
-            clear = clear.replaceAll("[^\\d+]", "");
-            // Find the last six
-            int start_idx = clear.length() - 6;
-            if (start_idx < 0)
-                start_idx = 0;
-            clear = clear.substring(start_idx);
-            return hash(context, clear);
-        } else if (HASH_FUNCTION_PHONE.equals("salt_deviceid")) {
-            // Salt using our device ID.  Note that if HASH_SALT is also applied!
-            clear = clear.replaceAll("[^\\d+]", "");
-            clear = clear + Aware.getSetting(context, Aware_Preferences.DEVICE_ID);
-            return hash(context, clear);
-        }
-        else {
-            return hash(context, clear);
-        }
+        String hashProgram = Aware.getSetting(context.getApplicationContext(), Aware_Preferences.HASH_FUNCTION_PHONE);
+        return _hashProgram(context, clear, hashProgram);
     }
+
+    /*
+     * Hash a MAC address.  Defaults to not hashing.
+     */
+    public static final String hashMac(Context context, String clear) {
+        String hashProgram = Aware.getSetting(context.getApplicationContext(), Aware_Preferences.HASH_FUNCTION_MAC);
+        if (hashProgram.equals("")) {
+            hashProgram = "clear";
+        }
+        return _hashProgram(context, clear, hashProgram);
+    }
+
+    /*
+     * Hash a wifi/bluetooth SSID/name.  Defaults to not hashing.
+     */
+    public static final String hashSsid(Context context, String clear) {
+        String hashProgram = Aware.getSetting(context.getApplicationContext(), Aware_Preferences.HASH_FUNCTION_SSID);
+        if (hashProgram.equals("")) {
+            hashProgram = "clear";
+        }
+        return _hashProgram(context, clear, hashProgram);
+    }
+
 
 
     private static byte[] getRawKey(byte[] seed) throws Exception {

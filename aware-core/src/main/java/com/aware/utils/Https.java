@@ -14,6 +14,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -22,12 +23,14 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.zip.GZIPInputStream;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
@@ -218,7 +221,7 @@ public class Https {
             return result;
 
         } catch (IOException | NullPointerException e) {
-//            Log.e(TAG, "Sync HTTPS dataGet io/null error: " + e.getMessage());
+            Log.e(TAG, "Sync HTTPS dataGet io/null error: " + e.getMessage());
         }
 
         return null;

@@ -43,6 +43,8 @@ import java.util.List;
 /**
  * Service that allows plugins/applications to send data to AWARE's dashboard study
  * Note: joins a study without requiring a QRCode, just the study URL
+ *
+ * TODO: fix parsing of the URL segments that may be missing
  */
 public class StudyUtils extends IntentService {
 
@@ -71,28 +73,7 @@ public class StudyUtils extends IntentService {
         String request;
         if (protocol.equals("https")) {
 
-//            SSLManager.handleUrl(getApplicationContext(), full_url, true);
-
-            //Note: Joining a study always downloads the certificate
-            SSLManager.downloadCertificate(getApplicationContext(), study_uri.getHost(), true);
-
-//            try {
-//                Intent installHTTPS = KeyChain.createInstallIntent();
-//                installHTTPS.putExtra(KeyChain.EXTRA_NAME, study_host);
-//
-//                //Convert .crt to X.509 so Android knows what it is.
-//                CertificateFactory cf = CertificateFactory.getInstance("X.509");
-//                InputStream caInput = SSLManager.getHTTPS(getApplicationContext(), full_url);
-//                Certificate ca = cf.generateCertificate(caInput);
-//
-//                installHTTPS.putExtra(KeyChain.EXTRA_CERTIFICATE, ca.getEncoded());
-//                installHTTPS.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//                startActivity(installHTTPS);
-//            } catch (FileNotFoundException e) {
-//                e.printStackTrace();
-//            } catch (CertificateException e) {
-//                e.printStackTrace();
-//            }
+            SSLManager.handleUrl(getApplicationContext(), full_url, true);
 
             try {
                 request = new Https(SSLManager.getHTTPS(getApplicationContext(), full_url)).dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);

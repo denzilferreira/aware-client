@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.IBinder;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
+import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
 
 import com.aware.Aware;
@@ -121,6 +122,12 @@ public class Aware_Plugin extends Service {
 
             PERMISSIONS_OK = true;
 
+            //Restores core AWARE service in case it get's killed
+            if (!Aware.isServiceRunning(getApplicationContext(), Aware.class)) {
+                Intent aware = new Intent(getApplicationContext(), Aware.class);
+                startService(aware);
+            }
+
             if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                 SSLManager.handleUrl(getApplicationContext(), Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER), true);
             }
@@ -161,7 +168,7 @@ public class Aware_Plugin extends Service {
      *
      * @author denzil
      */
-    public class ContextBroadcaster extends BroadcastReceiver {
+    public class ContextBroadcaster extends WakefulBroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(Aware.ACTION_AWARE_CURRENT_CONTEXT)) {
@@ -177,7 +184,7 @@ public class Aware_Plugin extends Service {
                         webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
                         webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, TABLES_FIELDS[i]);
                         webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, CONTEXT_URIS[i].toString());
-                        context.startService(webserviceHelper);
+                        startWakefulService(context, webserviceHelper);
                     }
                 }
             }
@@ -193,7 +200,7 @@ public class Aware_Plugin extends Service {
                             Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
                             webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_CLEAR_TABLE);
                             webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
-                            context.startService(webserviceHelper);
+                            startWakefulService(context, webserviceHelper);
                         }
                     }
                 }
