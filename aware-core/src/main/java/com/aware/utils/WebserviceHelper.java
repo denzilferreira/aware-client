@@ -322,9 +322,13 @@ public class WebserviceHelper extends IntentService {
             NetworkInfo activeNetwork = connManager.getActiveNetworkInfo();
             boolean sync = (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected());
 
-            if ( Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).length() > 0
+            //we are connected to WiFi, we are done here.
+            if (sync) return sync;
+
+            //Fallback to 3G if no wifi for x hours
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).length() > 0
                     && !Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).equals("0")) {
-                //Allow fallback to 3G if it's been xh+ since the last time we synced over WiFi (force data sync by any means necessary)
+
                 Cursor lastSynched = getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE 'STUDY-SYNC'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
                 if (lastSynched != null && lastSynched.moveToFirst()) {
                     long synched = lastSynched.getLong(lastSynched.getColumnIndex(Aware_Provider.Aware_Log.LOG_TIMESTAMP));
