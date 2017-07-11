@@ -202,6 +202,15 @@
             </intent-filter>
         </receiver>
 
+        <receiver android:name="com.aware.Aware$Aware_Broadcaster"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="ACTION_AWARE_CLEAR_DATA" />
+                <action android:name="ACTION_AWARE_SYNC_DATA" />
+                <action android:name="ACTION_QUIT_STUDY" />
+            </intent-filter>
+        </receiver>
+
         <!-- Core providers -->
         <provider
             android:name="com.aware.providers.Scheduler_Provider"
