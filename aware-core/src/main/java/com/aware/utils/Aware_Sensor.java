@@ -117,6 +117,12 @@ public class Aware_Sensor extends Service {
 
             PERMISSIONS_OK = true;
 
+            //Restores core AWARE service in case it get's killed
+            if (!Aware.isServiceRunning(getApplicationContext(), Aware.class)) {
+                Intent aware = new Intent(getApplicationContext(), Aware.class);
+                startService(aware);
+            }
+
             if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                 SSLManager.handleUrl(getApplicationContext(), Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER), true);
             }

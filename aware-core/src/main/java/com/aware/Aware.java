@@ -231,11 +231,11 @@ public class Aware extends Service {
         storage.addDataScheme("file");
         registerReceiver(storage_BR, storage);
 
-        IntentFilter aware_actions = new IntentFilter();
-        aware_actions.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
-        aware_actions.addAction(Aware.ACTION_AWARE_SYNC_DATA);
-        aware_actions.addAction(Aware.ACTION_QUIT_STUDY);
-        registerReceiver(aware_BR, aware_actions);
+        //IntentFilter aware_actions = new IntentFilter();
+        //aware_actions.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
+        //aware_actions.addAction(Aware.ACTION_AWARE_SYNC_DATA);
+        //aware_actions.addAction(Aware.ACTION_QUIT_STUDY);
+        //registerReceiver(aware_BR, aware_actions);
 
         IntentFilter boot = new IntentFilter();
         boot.addAction(Intent.ACTION_BOOT_COMPLETED);
@@ -1717,7 +1717,7 @@ public class Aware extends Service {
         super.onDestroy();
 
         try {
-            unregisterReceiver(aware_BR);
+            //unregisterReceiver(aware_BR);
             unregisterReceiver(storage_BR);
             unregisterReceiver(awareBoot);
             unregisterReceiver(foregroundMgr);
@@ -2037,6 +2037,8 @@ public class Aware extends Service {
     public static class Aware_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+
+            if (! (context.getPackageName().equals("com.aware.phone") || context.getApplicationContext().getResources().getBoolean(R.bool.standalone))) return;
             //We are only synching the device information, study compliance and overall framework execution logs.
             String[] DATABASE_TABLES = new String[]{Aware_Provider.DATABASE_TABLES[0], Aware_Provider.DATABASE_TABLES[3], Aware_Provider.DATABASE_TABLES[4]};
             String[] TABLES_FIELDS = new String[]{Aware_Provider.TABLES_FIELDS[0], Aware_Provider.TABLES_FIELDS[3], Aware_Provider.TABLES_FIELDS[4]};
@@ -2138,6 +2140,9 @@ public class Aware extends Service {
 
                         Intent aware = new Intent(context, Aware.class);
                         context.startService(aware);
+                        // Start the foreground service only if it's the client or a standalone application
+                        if ((context.getPackageName().equals("com.aware.phone") || context.getApplicationContext().getResources().getBoolean(R.bool.standalone)))
+                            context.sendBroadcast(new Intent(Aware.ACTION_AWARE_PRIORITY_FOREGROUND));
                     }
                     if (intent.getAction().equalsIgnoreCase(Intent.ACTION_SHUTDOWN)) {
                         Aware.debug(context, "phone: off");
