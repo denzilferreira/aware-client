@@ -238,6 +238,8 @@ public class WiFi extends Aware_Sensor {
                 mContext.sendBroadcast(detectedAP);
             }
 
+            if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_WIFI_SCAN_ENDED);
+
             Intent scanEnd = new Intent(ACTION_AWARE_WIFI_SCAN_ENDED);
             mContext.sendBroadcast(scanEnd);
 
@@ -264,6 +266,7 @@ public class WiFi extends Aware_Sensor {
 
             if (intent.getAction().equals(WiFi.ACTION_AWARE_WIFI_REQUEST_SCAN)) {
                 if (wifiManager.isWifiEnabled()) {
+                    if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_WIFI_SCAN_STARTED);
                     Intent scanStart = new Intent(ACTION_AWARE_WIFI_SCAN_STARTED);
                     sendBroadcast(scanStart);
                     wifiManager.startScan();
