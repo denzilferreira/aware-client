@@ -185,6 +185,11 @@ public class Aware extends Service {
     public static final String SCHEDULE_STUDY_COMPLIANCE = "schedule_aware_study_compliance";
     public static final String SCHEDULE_KEEP_ALIVE = "schedule_aware_keep_alive";
 
+    /**
+     * Used to store the encryption password
+     */
+    public static final String ENCRYPTION_PREFS_NAME = "Encryption_File";
+
     private static Intent accelerometerSrv = null;
     private static Intent locationsSrv = null;
     private static Intent bluetoothSrv = null;
@@ -265,6 +270,7 @@ public class Aware extends Service {
         }
 
         if (Aware.DEBUG) Log.d(TAG, "AWARE framework is created!");
+        Log.d(Aware.TAG, "Julio: Awareframework is created");
     }
 
     private final Foreground_Priority foregroundMgr = new Foreground_Priority();

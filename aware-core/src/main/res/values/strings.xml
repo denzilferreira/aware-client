@@ -27,4 +27,7 @@
     <string name="foreground_notification_title">AWARE</string>
     <string name="foreground_notification_text">Data collection active</string>
     <string name="foreground_notification_sync_text">Sync</string>
+    <string name="question_encrypt">Do you want to encrypt your local data with a random password?</string>
+    <string name="no_encrypt">Cancel</string>
+    <string name="yes_encrypt">Encrypt</string>
 </resources>

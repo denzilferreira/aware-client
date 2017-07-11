@@ -3,6 +3,7 @@ package com.aware.utils;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import net.sqlcipher.SQLException;
@@ -50,6 +51,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private CursorFactory cursorFactory;
     private SQLiteDatabase database;
     private Context mContext;
+    private String password;
 
     private HashMap<String, String> renamed_columns = new HashMap<>();
 
@@ -61,6 +63,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         tableFields = table_fields;
         newVersion = database_version;
         cursorFactory = cursor_factory;
+
+        SharedPreferences settings = mContext.getSharedPreferences(Aware.ENCRYPTION_PREFS_NAME, 0);
+        password = settings.getString ("password", "");
+        Log.d(Aware.TAG, "Julio: Encryption password in database helper: " + password);
     }
 
     public void setRenamedColumns(HashMap<String, String> renamed) {
@@ -245,7 +251,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 aware_folder.mkdirs();
             }
 
-            database = SQLiteDatabase.openOrCreateDatabase(new File(aware_folder, this.databaseName).getPath(), "", this.cursorFactory);
+            database = SQLiteDatabase.openOrCreateDatabase(new File(aware_folder, this.databaseName).getPath(), password, this.cursorFactory);
             return database;
         } catch (SQLiteException e) {
             return null;

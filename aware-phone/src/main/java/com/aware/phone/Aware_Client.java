@@ -2,8 +2,9 @@
 package com.aware.phone;
 
 import android.Manifest;
-import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -15,11 +16,10 @@ import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.PowerManager;
+import android.os.Environment;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
@@ -27,7 +27,6 @@ import android.preference.Preference;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
-import android.provider.Settings;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v7.widget.Toolbar;
@@ -45,6 +44,10 @@ import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Https;
 import com.aware.utils.SSLManager;
 
+import net.sqlcipher.database.SQLiteDatabase;
+import net.sqlcipher.database.SQLiteException;
+
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -66,8 +69,130 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     private static final ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
     private static final Hashtable<String, Integer> optionalSensors = new Hashtable<>();
 
+    public static final String NO_PASSWORD = "password_does_not_exist";
+    private static final String DISMISSED_ENCRYPTION = "dismissed_encryption";
+
+    private void encryptAllDatabases(){
+
+    }
+
+    private void generateEncryptionPassword(SharedPreferences settings){
+        UUID uuid = UUID.randomUUID();
+
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putString("password", uuid.toString());
+        editor.commit();
+        Log.d(Aware.TAG, "Julio: Encryption password: " + uuid.toString());
+    }
+
+    public class EncryptDataDialogFragment extends DialogFragment {
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the Builder class for convenient dialog construction
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setMessage(R.string.question_encrypt)
+                    .setPositiveButton(R.string.yes_encrypt, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // FIRE ZE MISSILES!
+                            Log.d(Aware.TAG, "Julio: Encrypt");
+                            encryptAllDatabases();
+                        }
+                    })
+                    .setNegativeButton(R.string.no_encrypt, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // User cancelled the dialog
+                            Log.d(Aware.TAG, "Julio: User decided not to encrypt");
+                            SharedPreferences settings = getSharedPreferences(Aware.ENCRYPTION_PREFS_NAME, 0);
+                            SharedPreferences.Editor editor = settings.edit();
+                            //editor.putBoolean(DISMISSED_ENCRYPTION, true);
+                            editor.putString("password", "");
+                            editor.commit();
+                        }
+                    });
+            // Create the AlertDialog object and return it
+            return builder.create();
+        }
+    }
+
+    private String getAwareFolderPath(){
+        File aware_folder;
+        if (getApplicationContext().getResources().getBoolean(com.aware.R.bool.internalstorage)) {
+            // Internal storage.  This is not accessible to any other apps and is removed once
+            // app is uninstalled.  Plugins can't use it.  Hard-coded to off, only change if
+            // you know what you are doing.  Beware!
+            aware_folder = getApplicationContext().getFilesDir();
+        } else if (!getApplicationContext().getResources().getBoolean(com.aware.R.bool.standalone)) {
+            // sdcard/AWARE/ (shareable, does not delete when uninstalling)
+            aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString());
+        } else {
+            // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
+            aware_folder = new File(ContextCompat.getExternalFilesDirs(getApplicationContext(), null)[0] + "/AWARE");
+        }
+
+        return aware_folder.getPath();
+    }
+
+    private boolean tryOpenEncryptedDatabase(String password){
+        try {
+
+            SQLiteDatabase.CursorFactory factory = null;
+            File path = new File(getAwareFolderPath(), "aware.db");
+            Log.d(Aware.TAG, "Julio: Aware folder" + path);
+            if(!path.exists())
+                Log.d(Aware.TAG, "Julio: Database does not exist" + path);
+            SQLiteDatabase database = SQLiteDatabase.openDatabase(path.getPath(), password, factory, SQLiteDatabase.OPEN_READONLY);
+            database.close();
+            return true;
+        } catch (SQLiteException e) {
+            return false;
+        }
+    }
+
+    private void updateEncryptionPassword(){
+
+        File awareDB = new File(getAwareFolderPath(), "aware.db");
+        SharedPreferences settings = getSharedPreferences(Aware.ENCRYPTION_PREFS_NAME, 0);
+        // If Aware.db does not exist, assign random UUID as password
+        if(!awareDB.exists()){
+            Log.d(Aware.TAG, "Julio: This is a clean install, encrypt all databases");
+            generateEncryptionPassword(settings);
+        }
+        else{
+            // Aware.db exists, check if we have a password
+
+            String password = settings.getString ("password", NO_PASSWORD);
+            //Boolean dismissed_encryption= settings.getBoolean (DISMISSED_ENCRYPTION, false);
+
+            // If password has not been stored locally, then check if an empty password works
+            if(password.equalsIgnoreCase(NO_PASSWORD) && tryOpenEncryptedDatabase("") ){
+                // Ask user if we should generate a random password, if not, empty password is used
+                Log.d(Aware.TAG, "Julio: Plain password works, asking user if they want to generate one");
+                DialogFragment dialog = new EncryptDataDialogFragment();
+                dialog.show(getFragmentManager(), "encryption");
+            }
+            else if(tryOpenEncryptedDatabase(password) ) {
+                // Aware was already installed with encryption, stored password works, use it.
+                // This normally happens when the phone is rebooted for example.
+                Log.d(Aware.TAG, "Julio: Stored password works, all ok");
+
+            }
+            else{
+                // We don't have a valid password, stop Aware
+                // TODO: Let user know
+                Log.d(Aware.TAG, "Julio: We don't have a valid encryption password, stopping Aware");
+                //this.finish();
+            }
+        }
+
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Init SQLCipher
+        Log.d(Aware.TAG, "Julio: OnCreate Aware_Client");
+        SQLiteDatabase.loadLibs(getApplicationContext());
+        //if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
+        //    updateEncryptionPassword();
+
         super.onCreate(savedInstanceState);
 
         prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
