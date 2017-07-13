@@ -2,14 +2,20 @@
 package com.aware.utils;
 
 import android.Manifest;
+import android.accounts.Account;
 import android.app.Service;
+import android.content.AbstractThreadedSyncAdapter;
 import android.content.BroadcastReceiver;
+import android.content.ContentProviderClient;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SyncResult;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
@@ -69,6 +75,12 @@ public class Aware_Sensor extends Service {
     public boolean PERMISSIONS_OK = true;
 
     /**
+     * variables for the sync adapter functionality
+     */
+    private static SensorSyncAdapter sensorSyncAdapter = null;
+    private static final Object sensorSyncLock = new Object();
+
+    /**
      * Interface to share context with other applications/addons<br/>
      * You MUST broadcast your contexts here!
      *
@@ -93,6 +105,12 @@ public class Aware_Sensor extends Service {
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
         Log.d(Aware.TAG, "created: " + getClass().getName() + " package: " + getPackageName());
+
+        synchronized (sensorSyncLock) {
+            if (sensorSyncAdapter == null) {
+                sensorSyncAdapter = new SensorSyncAdapter(getApplicationContext(), true);
+            }
+        }
     }
 
     @Override
@@ -207,6 +225,24 @@ public class Aware_Sensor extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return sensorSyncAdapter.getSyncAdapterBinder();
+    }
+
+    /**
+     * Enables integration with the sync adapter functionality of Android
+     * @author denzilferreira
+     */
+    public class SensorSyncAdapter extends AbstractThreadedSyncAdapter {
+        ContentResolver mContentResolver;
+
+        public SensorSyncAdapter(Context context, boolean autoInitialize) {
+            super(context, autoInitialize);
+            mContentResolver = context.getContentResolver();
+        }
+
+        @Override
+        public void onPerformSync(Account account, Bundle bundle, String s, ContentProviderClient contentProviderClient, SyncResult syncResult) {
+
+        }
     }
 }

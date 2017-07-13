@@ -304,6 +304,6 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return super.onBind(intent);
     }
 }

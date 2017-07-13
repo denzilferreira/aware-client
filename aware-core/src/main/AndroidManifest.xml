@@ -8,6 +8,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- Support for Sync Adapters -->
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" android:maxSdkVersion="22" />
+
     <!-- Permissions to safeguard data collection quality -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -40,9 +45,16 @@
         <service
             android:name="com.aware.utils.Scheduler"
             android:exported="true" />
+
         <service
             android:name="com.aware.Aware"
-            android:exported="true" />
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator"/>
+            </intent-filter>
+            <meta-data android:name="android.accounts.AccountAuthenticator" android:resource="@xml/aware_authenticator" />
+        </service>
+
         <service
             android:name="com.aware.Aware$JoinStudy"
             android:exported="true" />
@@ -94,9 +106,24 @@
         <service
             android:name="com.aware.Traffic"
             android:exported="true" />
+
         <service
             android:name="com.aware.Accelerometer"
-            android:exported="true" />
+            android:exported="true">
+        </service>
+
+        <!--<service
+            android:name="com.aware.Accelerometer"
+            android:exported="true"
+            android:process=":sync">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/accelerometer" />
+        </service>-->
+
         <service
             android:name="com.aware.Gyroscope"
             android:exported="true" />
@@ -202,7 +229,8 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.aware.Aware$Aware_Broadcaster"
+        <receiver
+            android:name="com.aware.Aware$Aware_Broadcaster"
             android:exported="true">
             <intent-filter>
                 <action android:name="ACTION_AWARE_CLEAR_DATA" />

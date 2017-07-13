@@ -2,6 +2,11 @@
 package com.aware;
 
 import android.Manifest;
+import android.accounts.AbstractAccountAuthenticator;
+import android.accounts.Account;
+import android.accounts.AccountAuthenticatorResponse;
+import android.accounts.AccountManager;
+import android.accounts.NetworkErrorException;
 import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.Notification;
@@ -11,6 +16,7 @@ import android.app.Service;
 import android.app.UiModeManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -53,6 +59,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.aware.providers.Accelerometer_Provider;
 import com.aware.providers.Aware_Provider;
 import com.aware.providers.Aware_Provider.Aware_Device;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
@@ -77,6 +84,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.Authenticator;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -214,11 +222,28 @@ public class Aware extends Service {
 
     private static AsyncStudyCheck studyCheck = null;
 
+    /**
+     * Variable for the Doze ignore list
+     */
     private static final int AWARE_BATTERY_OPTIMIZATION_ID = 567567;
+
+    /**
+     * Variables for Sync Adapter and AWARE accounts' support
+     */
+    public static final String AWARE_ACCOUNT_TYPE = "com.awareframework";
+    public static final String AWARE_ACCOUNT = "awareframework";
+    private Authenticator mAuthenticator;
+
+    Account mAccount;
+
+    public static Account getAccount() {
+        return new Account(AWARE_ACCOUNT, AWARE_ACCOUNT_TYPE);
+    }
+
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return mAuthenticator.getIBinder();
     }
 
     @Override
@@ -230,12 +255,6 @@ public class Aware extends Service {
         storage.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
         storage.addDataScheme("file");
         registerReceiver(storage_BR, storage);
-
-        //IntentFilter aware_actions = new IntentFilter();
-        //aware_actions.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
-        //aware_actions.addAction(Aware.ACTION_AWARE_SYNC_DATA);
-        //aware_actions.addAction(Aware.ACTION_QUIT_STUDY);
-        //registerReceiver(aware_BR, aware_actions);
 
         IntentFilter boot = new IntentFilter();
         boot.addAction(Intent.ACTION_BOOT_COMPLETED);
@@ -263,15 +282,81 @@ public class Aware extends Service {
             return;
         }
 
+        mAuthenticator = new Authenticator(this);
+        mAccount = CreateAwareAccount(getApplicationContext());
+
         if (Aware.DEBUG) Log.d(TAG, "AWARE framework is created!");
     }
 
+    /**
+     * This function creates an AWARE account if not existent on the phone.
+     *
+     * @param context
+     * @return
+     */
+    public static Account CreateAwareAccount(Context context) {
+        Account awareAccount = new Account(AWARE_ACCOUNT, AWARE_ACCOUNT_TYPE);
+        AccountManager accountManager = (AccountManager) context.getSystemService(ACCOUNT_SERVICE);
+        if (accountManager.addAccountExplicitly(awareAccount, null, null)) {
+            ContentResolver.setIsSyncable(awareAccount, Accelerometer_Provider.AUTHORITY, 1);
+            ContentResolver.setSyncAutomatically(awareAccount, Accelerometer_Provider.AUTHORITY, true);
+        }
+        return awareAccount;
+    }
+
+    /**
+     * Does nothing for now. In the future, allow users to create and manage AWARE accounts.
+     * TODO: Useful to bind multiple devices together within one umbrella account.
+     */
+    public class Authenticator extends AbstractAccountAuthenticator {
+        public Authenticator(Context context) {
+            super(context);
+        }
+
+        @Override
+        public Bundle editProperties(AccountAuthenticatorResponse accountAuthenticatorResponse, String s) {
+            return null;
+        }
+
+        @Override
+        public Bundle addAccount(AccountAuthenticatorResponse accountAuthenticatorResponse, String s, String s1, String[] strings, Bundle bundle) throws NetworkErrorException {
+            return null;
+        }
+
+        @Override
+        public Bundle confirmCredentials(AccountAuthenticatorResponse accountAuthenticatorResponse, Account account, Bundle bundle) throws NetworkErrorException {
+            return null;
+        }
+
+        @Override
+        public Bundle getAuthToken(AccountAuthenticatorResponse accountAuthenticatorResponse, Account account, String s, Bundle bundle) throws NetworkErrorException {
+            return null;
+        }
+
+        @Override
+        public String getAuthTokenLabel(String s) {
+            return null;
+        }
+
+        @Override
+        public Bundle updateCredentials(AccountAuthenticatorResponse accountAuthenticatorResponse, Account account, String s, Bundle bundle) throws NetworkErrorException {
+            return null;
+        }
+
+        @Override
+        public Bundle hasFeatures(AccountAuthenticatorResponse accountAuthenticatorResponse, Account account, String[] strings) throws NetworkErrorException {
+            return null;
+        }
+    }
+
     private final Foreground_Priority foregroundMgr = new Foreground_Priority();
+
     public class Foreground_Priority extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             //do nothing unless it's the client or a standalone application
-            if (! (context.getPackageName().equals("com.aware.phone") || context.getApplicationContext().getResources().getBoolean(R.bool.standalone))) return;
+            if (!(context.getPackageName().equals("com.aware.phone") || context.getApplicationContext().getResources().getBoolean(R.bool.standalone)))
+                return;
 
             if (intent.getAction().equalsIgnoreCase(Aware.ACTION_AWARE_PRIORITY_FOREGROUND)) {
                 if (DEBUG) Log.d(TAG, "Setting AWARE with foreground priority");
@@ -1052,7 +1137,7 @@ public class Aware extends Service {
         if (key.equals(Aware_Preferences.DEVICE_LABEL) && ((String) value).length() > 0) {
             ContentValues newLabel = new ContentValues();
             newLabel.put(Aware_Provider.Aware_Device.LABEL, (String) value);
-            context.getContentResolver().update(Aware_Provider.Aware_Device.CONTENT_URI, newLabel, Aware_Provider.Aware_Device.DEVICE_ID + " LIKE '" + Aware.getSetting(context, Aware_Preferences.DEVICE_ID) + "'", null);
+            context.getApplicationContext().getContentResolver().update(Aware_Provider.Aware_Device.CONTENT_URI, newLabel, Aware_Provider.Aware_Device.DEVICE_ID + " LIKE '" + Aware.getSetting(context, Aware_Preferences.DEVICE_ID) + "'", null);
         }
 
         ContentValues setting = new ContentValues();
@@ -1064,12 +1149,12 @@ public class Aware extends Service {
             setting.put(Aware_Settings.SETTING_PACKAGE_NAME, context.getPackageName());
         }
 
-        Cursor qry = context.getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'"), null, null);
+        Cursor qry = context.getApplicationContext().getContentResolver().query(Aware_Settings.CONTENT_URI, null, Aware_Settings.SETTING_KEY + " LIKE '" + key + "' AND " + Aware_Settings.SETTING_PACKAGE_NAME + " LIKE " + ((is_global) ? "'com.aware.phone'" : "'" + context.getPackageName() + "'"), null, null);
         //update
         if (qry != null && qry.moveToFirst()) {
             try {
                 if (!qry.getString(qry.getColumnIndex(Aware_Settings.SETTING_VALUE)).equals(value.toString())) {
-                    context.getContentResolver().update(Aware_Settings.CONTENT_URI, setting, Aware_Settings.SETTING_ID + "=" + qry.getInt(qry.getColumnIndex(Aware_Settings.SETTING_ID)), null);
+                    context.getApplicationContext().getContentResolver().update(Aware_Settings.CONTENT_URI, setting, Aware_Settings.SETTING_ID + "=" + qry.getInt(qry.getColumnIndex(Aware_Settings.SETTING_ID)), null);
                     if (Aware.DEBUG) Log.d(Aware.TAG, "Updated: " + key + "=" + value);
                 }
             } catch (SQLiteException e) {
@@ -1080,7 +1165,7 @@ public class Aware extends Service {
             //insert
         } else {
             try {
-                context.getContentResolver().insert(Aware_Settings.CONTENT_URI, setting);
+                context.getApplicationContext().getContentResolver().insert(Aware_Settings.CONTENT_URI, setting);
                 if (Aware.DEBUG) Log.d(Aware.TAG, "Added: " + key + "=" + value);
             } catch (SQLiteException e) {
                 if (Aware.DEBUG) Log.d(TAG, e.getMessage());
@@ -1261,7 +1346,7 @@ public class Aware extends Service {
                             JSONArray localSensorsConfig = localConfig.getJSONObject(0).getJSONArray("sensors");
                             // First, do we need to replace an existing config value?
                             boolean isModification = false;
-                            for (int j=0 ; j<localSensorsConfig.length(); j++) {
+                            for (int j = 0; j < localSensorsConfig.length(); j++) {
                                 if (localSensorsConfig.getJSONObject(j).getString("setting").equalsIgnoreCase(toEnable.getString("setting"))) {
                                     localSensorsConfig.put(j, toEnable);
                                     isModification = true;
@@ -1269,7 +1354,7 @@ public class Aware extends Service {
                                 }
                             }
                             // Add a new config value to the array.
-                            if (! isModification ) {
+                            if (!isModification) {
                                 localSensorsConfig.put(toEnable);
                             }
                         }
@@ -2054,7 +2139,8 @@ public class Aware extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            if (! (context.getPackageName().equals("com.aware.phone") || context.getApplicationContext().getResources().getBoolean(R.bool.standalone))) return;
+            if (!(context.getPackageName().equals("com.aware.phone") || context.getApplicationContext().getResources().getBoolean(R.bool.standalone)))
+                return;
             //We are only synching the device information, study compliance and overall framework execution logs.
             String[] DATABASE_TABLES = new String[]{Aware_Provider.DATABASE_TABLES[0], Aware_Provider.DATABASE_TABLES[3], Aware_Provider.DATABASE_TABLES[4]};
             String[] TABLES_FIELDS = new String[]{Aware_Provider.TABLES_FIELDS[0], Aware_Provider.TABLES_FIELDS[3], Aware_Provider.TABLES_FIELDS[4]};
@@ -2195,6 +2281,7 @@ public class Aware extends Service {
 
     /**
      * Check whether a service is running or not
+     *
      * @param serviceClass
      * @return
      */
