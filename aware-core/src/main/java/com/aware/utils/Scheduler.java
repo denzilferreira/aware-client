@@ -147,8 +147,10 @@ public class Scheduler extends Aware_Sensor {
                 end.set(Calendar.MILLISECOND, 999);
 
                 String original_id = schedule.getScheduleID();
+                String random_seed = original_id;
+                random_seed += "-" + Aware.getSetting(context, Aware_Preferences.DEVICE_ID);
                 // Get the random events for today
-                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), original_id);
+                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), random_seed);
                 // Remove events that are in the past
                 Iterator<Long> iter = randoms.iterator();
                 while(iter.hasNext()) {
@@ -161,7 +163,7 @@ public class Scheduler extends Aware_Sensor {
                 if (randoms.size() <= 0) {
                     start.add(Calendar.DAY_OF_YEAR, 1);
                     end.add(Calendar.DAY_OF_YEAR, 1);
-                    randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), original_id);
+                    randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), random_seed);
                     Log.d(TAG, "Random times set for tomorrow between " + start.getTime().toString() + " and " + end.getTime().toString());
                 }
 
@@ -259,8 +261,10 @@ public class Scheduler extends Aware_Sensor {
                 end.set(Calendar.MILLISECOND, 999);
 
                 String original_id = schedule.getScheduleID();
+                String random_seed = original_id;
+                random_seed += "-" + Aware.getSetting(context, Aware_Preferences.DEVICE_ID);
                 // Get the random events for today
-                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), original_id);
+                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), random_seed);
                 // Remove events that are in the past
                 Iterator<Long> iter = randoms.iterator();
                 while(iter.hasNext()) {
@@ -273,7 +277,7 @@ public class Scheduler extends Aware_Sensor {
                 if (randoms.size() <= 0) {
                     start.add(Calendar.DAY_OF_YEAR, 1);
                     end.add(Calendar.DAY_OF_YEAR, 1);
-                    randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), original_id);
+                    randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), random_seed);
                     Log.d(TAG, "Random times set for tomorrow between " + start.getTime().toString() + " and " + end.getTime().toString());
                 }
 
@@ -363,7 +367,9 @@ public class Scheduler extends Aware_Sensor {
             Log.d(TAG, "Random times set for tomorrow between " + start.getTime().toString() + " and " + end.getTime().toString());
 
             String original_id = schedule.getScheduleID();
-            ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), original_id);
+            String random_seed = original_id;
+            random_seed += "-" + Aware.getSetting(context, Aware_Preferences.DEVICE_ID);
+            ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), random_seed);
 
             long max = getLastRandom(randoms);
 
@@ -1594,10 +1600,11 @@ public class Scheduler extends Aware_Sensor {
      * @param interval_minutes how much time is set between timestamps, in minutes
      * @return ArrayList<Long> of timestamps between interval
      */
-    public static ArrayList<Long> random_times(Calendar start, Calendar end, int amount, int interval_minutes, String seed) {
+    public static ArrayList<Long> random_times(Calendar start, Calendar end, int amount, int interval_minutes, String random_seed) {
         //String seed = "hJYAe7cV";
         ArrayList<Long> randomList = new ArrayList<>();
-        Random rng = new Random(String.format("%s-%d-%d", seed, start.get(Calendar.YEAR), start.get(Calendar.DAY_OF_YEAR)).hashCode());
+        random_seed = String.format("%s-%d-%d", random_seed, start.get(Calendar.YEAR), start.get(Calendar.DAY_OF_YEAR));
+        Random rng = new Random(random_seed.hashCode());
 
         long totalInterval = end.getTimeInMillis() - start.getTimeInMillis();
         long minDifferenceMillis = interval_minutes * 60 * 1000;
