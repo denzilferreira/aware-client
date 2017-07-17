@@ -116,7 +116,7 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
         proxyData.putExtra(EXTRA_DATA, rowData);
         sendBroadcast(proxyData);
 
-        if (Aware.DEBUG) Log.d(TAG, "Proximity:" + rowData.toString());
+        //if (Aware.DEBUG) Log.d(TAG, "Proximity:" + rowData.toString());
 
         if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;

@@ -120,7 +120,7 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
         pressureData.putExtra(EXTRA_DATA, rowData);
         sendBroadcast(pressureData);
 
-        if (Aware.DEBUG) Log.d(TAG, "Barometer:" + rowData.toString());
+        //if (Aware.DEBUG) Log.d(TAG, "Barometer:" + rowData.toString());
 
         if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;
