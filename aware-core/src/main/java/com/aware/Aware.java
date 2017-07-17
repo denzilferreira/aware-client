@@ -262,6 +262,7 @@ public class Aware extends Service {
         } else {
             IntentFilter scheduler = new IntentFilter();
             scheduler.addAction(Intent.ACTION_TIME_TICK);
+            schedulerTicker.interval_ms = 60000 * getApplicationContext().getResources().getInteger(R.integer.alarm_wakeup_interval_min);
             registerReceiver(schedulerTicker, scheduler);
         }
 
@@ -327,8 +328,8 @@ public class Aware extends Service {
 
     public class SchedulerTicker extends BroadcastReceiver {
         long last_time = 0;
-        // This is a static context, so we can't get the app resources here.  Hardcode for the
-        // time being.
+        // This is a static context, so we can't get the app resources here.  Set to the default
+        // here, and configure in Aware.onCreate.
         long interval_ms = 60000;
         @Override
         public void onReceive(Context context, Intent intent) {
