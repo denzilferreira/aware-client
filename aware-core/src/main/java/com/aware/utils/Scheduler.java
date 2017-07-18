@@ -10,6 +10,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -198,11 +200,23 @@ public class Scheduler extends Aware_Sensor {
 
                 Cursor schedules = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + context.getPackageName() + "'", null, null);
                 if (schedules != null && schedules.getCount() == 1) {
-                    Log.d(Scheduler.TAG, "Updating already existing schedule...");
-                    context.getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + ((is_global) ? "com.aware.phone" : context.getPackageName()) + "'", null);
+                    try {
+                        Log.d(Scheduler.TAG, "Updating already existing schedule...");
+                        context.getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + ((is_global) ? "com.aware.phone" : context.getPackageName()) + "'", null);
+                    } catch (SQLiteException e) {
+                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                    } catch (SQLException e) {
+                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                    }
                 } else {
-                    Log.d(Scheduler.TAG, "New schedule: " + data.toString());
-                    context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
+                    try {
+                        Log.d(Scheduler.TAG, "New schedule: " + data.toString());
+                        context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
+                    } catch (SQLiteException e) {
+                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                    } catch (SQLException e) {
+                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                    }
                 }
 
                 if (schedules != null && !schedules.isClosed()) schedules.close();
