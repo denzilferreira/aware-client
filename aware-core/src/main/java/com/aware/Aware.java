@@ -66,6 +66,8 @@ import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.providers.Aware_Provider.Aware_Settings;
 import com.aware.providers.Battery_Provider;
 import com.aware.providers.Scheduler_Provider;
+import com.aware.utils.Aware_Authenticator;
+import com.aware.utils.Aware_Authenticator_Service;
 import com.aware.utils.Aware_Plugin;
 import com.aware.utils.DownloadPluginService;
 import com.aware.utils.Http;
@@ -228,22 +230,13 @@ public class Aware extends Service {
     private static final int AWARE_BATTERY_OPTIMIZATION_ID = 567567;
 
     /**
-     * Variables for Sync Adapter and AWARE accounts' support
+     * Holds a reference to the AWARE account
      */
-    public static final String AWARE_ACCOUNT_TYPE = "com.awareframework";
-    public static final String AWARE_ACCOUNT = "awareframework";
-    private Authenticator mAuthenticator;
-
-    Account mAccount;
-
-    public static Account getAccount() {
-        return new Account(AWARE_ACCOUNT, AWARE_ACCOUNT_TYPE);
-    }
-
+    private static Account aware_account;
 
     @Override
     public IBinder onBind(Intent intent) {
-        return mAuthenticator.getIBinder();
+        return null;
     }
 
     @Override
@@ -283,71 +276,23 @@ public class Aware extends Service {
             return;
         }
 
-        mAuthenticator = new Authenticator(this);
-        mAccount = CreateAwareAccount(getApplicationContext());
-
         if (Aware.DEBUG) Log.d(TAG, "AWARE framework is created!");
+
+        aware_account = getAWAREAccount(this);
     }
 
     /**
-     * This function creates an AWARE account if not existent on the phone.
-     *
+     * Return AWARE's account
      * @param context
      * @return
      */
-    public static Account CreateAwareAccount(Context context) {
-        Account awareAccount = new Account(AWARE_ACCOUNT, AWARE_ACCOUNT_TYPE);
-        AccountManager accountManager = (AccountManager) context.getSystemService(ACCOUNT_SERVICE);
-        if (accountManager.addAccountExplicitly(awareAccount, null, null)) {
-            ContentResolver.setIsSyncable(awareAccount, Accelerometer_Provider.AUTHORITY, 1);
-            ContentResolver.setSyncAutomatically(awareAccount, Accelerometer_Provider.AUTHORITY, true);
+    public static Account getAWAREAccount(Context context) {
+        if (aware_account == null) {
+            aware_account = new Account(Aware_Authenticator.AWARE_ACCOUNT, Aware_Authenticator.AWARE_ACCOUNT_TYPE);
+            AccountManager accountManager = (AccountManager) context.getSystemService(ACCOUNT_SERVICE);
+            accountManager.addAccountExplicitly(aware_account, null, null);
         }
-        return awareAccount;
-    }
-
-    /**
-     * Does nothing for now. In the future, allow users to create and manage AWARE accounts.
-     * TODO: Useful to bind multiple devices together within one umbrella account.
-     */
-    public class Authenticator extends AbstractAccountAuthenticator {
-        public Authenticator(Context context) {
-            super(context);
-        }
-
-        @Override
-        public Bundle editProperties(AccountAuthenticatorResponse accountAuthenticatorResponse, String s) {
-            return null;
-        }
-
-        @Override
-        public Bundle addAccount(AccountAuthenticatorResponse accountAuthenticatorResponse, String s, String s1, String[] strings, Bundle bundle) throws NetworkErrorException {
-            return null;
-        }
-
-        @Override
-        public Bundle confirmCredentials(AccountAuthenticatorResponse accountAuthenticatorResponse, Account account, Bundle bundle) throws NetworkErrorException {
-            return null;
-        }
-
-        @Override
-        public Bundle getAuthToken(AccountAuthenticatorResponse accountAuthenticatorResponse, Account account, String s, Bundle bundle) throws NetworkErrorException {
-            return null;
-        }
-
-        @Override
-        public String getAuthTokenLabel(String s) {
-            return null;
-        }
-
-        @Override
-        public Bundle updateCredentials(AccountAuthenticatorResponse accountAuthenticatorResponse, Account account, String s, Bundle bundle) throws NetworkErrorException {
-            return null;
-        }
-
-        @Override
-        public Bundle hasFeatures(AccountAuthenticatorResponse accountAuthenticatorResponse, Account account, String[] strings) throws NetworkErrorException {
-            return null;
-        }
+        return aware_account;
     }
 
     private final Foreground_Priority foregroundMgr = new Foreground_Priority();

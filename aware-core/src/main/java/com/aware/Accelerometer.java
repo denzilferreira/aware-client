@@ -1,11 +1,17 @@
 
 package com.aware;
 
+import android.accounts.Account;
+import android.app.Service;
+import android.content.AbstractThreadedSyncAdapter;
 import android.content.BroadcastReceiver;
+import android.content.ContentProviderClient;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SyncResult;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
@@ -16,16 +22,19 @@ import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.aware.providers.Accelerometer_Provider;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Data;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Sensor;
 import com.aware.utils.Aware_Sensor;
+import com.aware.utils.WebserviceHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -304,6 +313,6 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return super.onBind(intent);
+        return null;
     }
 }

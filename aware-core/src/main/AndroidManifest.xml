@@ -11,7 +11,9 @@
     <!-- Support for Sync Adapters -->
     <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
-    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" android:maxSdkVersion="22" />
+    <uses-permission
+        android:name="android.permission.AUTHENTICATE_ACCOUNTS"
+        android:maxSdkVersion="22" />
 
     <!-- Permissions to safeguard data collection quality -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -38,27 +40,38 @@
             android:launchMode="standard"
             android:theme="@style/Theme.AppCompat.Translucent" />
 
-        <!-- Services -->
-        <service
-            android:name="com.aware.Keyboard"
-            android:exported="true" />
-        <service
-            android:name="com.aware.utils.Scheduler"
-            android:exported="true" />
-
-        <service
-            android:name="com.aware.Aware"
-            android:exported="true">
+        <!-- AWARE account service -->
+        <service android:name="com.aware.utils.Aware_Authenticator_Service">
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator"/>
             </intent-filter>
             <meta-data android:name="android.accounts.AccountAuthenticator" android:resource="@xml/aware_authenticator" />
         </service>
 
+        <!-- AWARE sync adapter service -->
+        <service android:name="com.aware.syncadapters.Accelerometer_Sync"
+            android:exported="true"
+            android:label="Sync Accelerometer"
+            android:process=":sync">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter"/>
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/accelerometer"/>
+        </service>
+
+        <!-- Sensor services -->
+        <service
+            android:name="com.aware.Keyboard"
+            android:exported="true" />
+        <service
+            android:name="com.aware.utils.Scheduler"
+            android:exported="true" />
+        <service
+            android:name="com.aware.Aware"
+            android:exported="true"></service>
         <service
             android:name="com.aware.Aware$JoinStudy"
             android:exported="true" />
-
         <service
             android:name="com.aware.Applications"
             android:enabled="@bool/accessibility_access"
@@ -72,7 +85,6 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/aware_accessibility_config" />
         </service>
-
         <service
             android:name="com.aware.Applications$BackgroundService"
             android:exported="true" />
@@ -106,24 +118,9 @@
         <service
             android:name="com.aware.Traffic"
             android:exported="true" />
-
         <service
             android:name="com.aware.Accelerometer"
-            android:exported="true">
-        </service>
-
-        <!--<service
-            android:name="com.aware.Accelerometer"
-            android:exported="true"
-            android:process=":sync">
-            <intent-filter>
-                <action android:name="android.content.SyncAdapter" />
-            </intent-filter>
-            <meta-data
-                android:name="android.content.SyncAdapter"
-                android:resource="@xml/accelerometer" />
-        </service>-->
-
+            android:exported="true"></service>
         <service
             android:name="com.aware.Gyroscope"
             android:exported="true" />
@@ -188,7 +185,6 @@
             android:exported="true" />
 
         <!-- Shared BroadcastReceivers -->
-
         <receiver
             android:name="com.aware.utils.Aware_TTS$Aware_TTS_Receiver"
             android:exported="true">
@@ -244,174 +240,203 @@
             android:name="com.aware.providers.Scheduler_Provider"
             android:authorities="${applicationId}.provider.scheduler"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Bluetooth_Provider"
             android:authorities="${applicationId}.provider.bluetooth"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Applications_Provider"
             android:authorities="${applicationId}.provider.applications"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Locations_Provider"
             android:authorities="${applicationId}.provider.locations"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Installations_Provider"
             android:authorities="${applicationId}.provider.installations"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.ESM_Provider"
             android:authorities="${applicationId}.provider.esm"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Temperature_Provider"
             android:authorities="${applicationId}.provider.temperature"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Linear_Accelerometer_Provider"
             android:authorities="${applicationId}.provider.accelerometer.linear"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Gravity_Provider"
             android:authorities="${applicationId}.provider.gravity"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Barometer_Provider"
             android:authorities="${applicationId}.provider.barometer"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Magnetometer_Provider"
             android:authorities="${applicationId}.provider.magnetometer"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Proximity_Provider"
             android:authorities="${applicationId}.provider.proximity"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Light_Provider"
             android:authorities="${applicationId}.provider.light"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Telephony_Provider"
             android:authorities="${applicationId}.provider.telephony"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Aware_Provider"
             android:authorities="${applicationId}.provider.aware"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Rotation_Provider"
             android:authorities="${applicationId}.provider.rotation"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.WiFi_Provider"
             android:authorities="${applicationId}.provider.wifi"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Accelerometer_Provider"
             android:authorities="${applicationId}.provider.accelerometer"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Gyroscope_Provider"
             android:authorities="${applicationId}.provider.gyroscope"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Traffic_Provider"
             android:authorities="${applicationId}.provider.traffic"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Mqtt_Provider"
             android:authorities="${applicationId}.provider.mqtt"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Processor_Provider"
             android:authorities="${applicationId}.provider.processor"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.TimeZone_Provider"
             android:authorities="${applicationId}.provider.timezone"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Battery_Provider"
             android:authorities="${applicationId}.provider.battery"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Screen_Provider"
             android:authorities="${applicationId}.provider.screen"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Network_Provider"
             android:authorities="${applicationId}.provider.network"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Communication_Provider"
             android:authorities="${applicationId}.provider.communication"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Keyboard_Provider"
             android:authorities="${applicationId}.provider.keyboard"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
         <provider
             android:name="com.aware.providers.Significant_Provider"
             android:authorities="${applicationId}.provider.significant"
             android:exported="true"
+            android:syncable="true"
             android:readPermission="com.aware.READ_CONTEXT_DATA"
             android:writePermission="com.aware.WRITE_CONTEXT_DATA" />
 
