@@ -1010,7 +1010,8 @@ public class Scheduler extends Aware_Sensor {
                 AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
                 Intent scheduler = new Intent(this, Scheduler.class);
                 PendingIntent repeating = PendingIntent.getService(getApplicationContext(), 0, scheduler, PendingIntent.FLAG_UPDATE_CURRENT);
-                am.setAlarmClock(new AlarmManager.AlarmClockInfo(System.currentTimeMillis() + (60000), repeating), repeating); //next minute
+                int wakeup_interval_ms = 60000 * getApplicationContext().getResources().getInteger(R.integer.alarm_wakeup_interval_min);
+                am.setAlarmClock(new AlarmManager.AlarmClockInfo(System.currentTimeMillis() + (wakeup_interval_ms), repeating), repeating); //next minute
             } else {
                 //no-op: using a repeating alarm for older versions of Android.
             }
