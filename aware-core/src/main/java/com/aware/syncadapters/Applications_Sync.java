@@ -8,9 +8,9 @@ import android.support.annotation.Nullable;
 /**
  * Created by denzil on 18/07/2017.
  */
-public class Accelerometer_Sync extends Service {
+public class Applications_Sync extends Service {
 
-    private Accelerometer_Adapter sSyncAdapter = null;
+    private Applications_Adapter sSyncAdapter = null;
     private static final Object sSyncAdapterLock = new Object();
 
     @Override
@@ -18,7 +18,7 @@ public class Accelerometer_Sync extends Service {
         super.onCreate();
         synchronized (sSyncAdapterLock) {
             if (sSyncAdapter == null)
-                sSyncAdapter = new Accelerometer_Adapter(getApplicationContext(), true);
+                sSyncAdapter = new Applications_Adapter(getApplicationContext(), true);
         }
     }
 

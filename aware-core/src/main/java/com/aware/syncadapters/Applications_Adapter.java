@@ -11,30 +11,31 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import com.aware.providers.Accelerometer_Provider;
+import com.aware.providers.Applications_Provider;
 import com.aware.utils.WebserviceHelper;
 
 /**
  * Created by denzil on 18/07/2017.
  */
-public class Accelerometer_Adapter extends AbstractThreadedSyncAdapter {
+public class Applications_Adapter extends AbstractThreadedSyncAdapter {
 
     private Context mContext;
 
-    public Accelerometer_Adapter(Context context, boolean autoInitialize) {
+    public Applications_Adapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
         mContext = context;
     }
 
-    public Accelerometer_Adapter(Context context, boolean autoInitialize, boolean allowParallelSyncs, ContentResolver mContentResolver) {
+    public Applications_Adapter(Context context, boolean autoInitialize, boolean allowParallelSyncs, ContentResolver mContentResolver) {
         super(context, autoInitialize, allowParallelSyncs);
         mContext = context;
     }
 
     @Override
     public void onPerformSync(Account account, Bundle bundle, String authority, ContentProviderClient provider, SyncResult syncResult) {
-        String[] DATABASE_TABLES = Accelerometer_Provider.DATABASE_TABLES;
-        String[] TABLES_FIELDS = Accelerometer_Provider.TABLES_FIELDS;
-        Uri[] CONTEXT_URIS = new Uri[]{Accelerometer_Provider.Accelerometer_Sensor.CONTENT_URI, Accelerometer_Provider.Accelerometer_Data.CONTENT_URI};
+        String[] DATABASE_TABLES = Applications_Provider.DATABASE_TABLES;
+        String[] TABLES_FIELDS = Applications_Provider.TABLES_FIELDS;
+        Uri[] CONTEXT_URIS = new Uri[]{Applications_Provider.Applications_Foreground.CONTENT_URI, Applications_Provider.Applications_History.CONTENT_URI, Applications_Provider.Applications_Notifications.CONTENT_URI, Applications_Provider.Applications_Crashes.CONTENT_URI};
 
         for (int i = 0; i < DATABASE_TABLES.length; i++) {
             Intent webserviceHelper = new Intent(getContext(), WebserviceHelper.class);

@@ -2,11 +2,8 @@
 package com.aware;
 
 import android.Manifest;
-import android.accounts.AbstractAccountAuthenticator;
 import android.accounts.Account;
-import android.accounts.AccountAuthenticatorResponse;
 import android.accounts.AccountManager;
-import android.accounts.NetworkErrorException;
 import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.Notification;
@@ -16,7 +13,6 @@ import android.app.Service;
 import android.app.UiModeManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -59,15 +55,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.aware.providers.Accelerometer_Provider;
 import com.aware.providers.Aware_Provider;
 import com.aware.providers.Aware_Provider.Aware_Device;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.providers.Aware_Provider.Aware_Settings;
 import com.aware.providers.Battery_Provider;
 import com.aware.providers.Scheduler_Provider;
-import com.aware.utils.Aware_Authenticator;
-import com.aware.utils.Aware_Authenticator_Service;
+import com.aware.utils.Aware_Accounts;
 import com.aware.utils.Aware_Plugin;
 import com.aware.utils.DownloadPluginService;
 import com.aware.utils.Http;
@@ -86,7 +80,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.Authenticator;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -230,7 +223,7 @@ public class Aware extends Service {
     private static final int AWARE_BATTERY_OPTIMIZATION_ID = 567567;
 
     /**
-     * Holds a reference to the AWARE account
+     * Holds a reference to the AWARE account, automatically restore in each plugin.
      */
     private static Account aware_account;
 
@@ -283,14 +276,17 @@ public class Aware extends Service {
 
     /**
      * Return AWARE's account
+     *
      * @param context
      * @return
      */
     public static Account getAWAREAccount(Context context) {
         if (aware_account == null) {
-            aware_account = new Account(Aware_Authenticator.AWARE_ACCOUNT, Aware_Authenticator.AWARE_ACCOUNT_TYPE);
+            aware_account = new Account(Aware_Accounts.Aware_Account.AWARE_ACCOUNT, Aware_Accounts.Aware_Account.AWARE_ACCOUNT_TYPE);
+
             AccountManager accountManager = (AccountManager) context.getSystemService(ACCOUNT_SERVICE);
-            accountManager.addAccountExplicitly(aware_account, null, null);
+            if (accountManager.getAccountsByType(Aware_Accounts.Aware_Account.AWARE_ACCOUNT_TYPE).length == 0)
+                accountManager.addAccountExplicitly(aware_account, null, null);
         }
         return aware_account;
     }

@@ -27,4 +27,6 @@
     <string name="foreground_notification_title">AWARE</string>
     <string name="foreground_notification_text">Data collection active</string>
     <string name="foreground_notification_sync_text">Sync</string>
+    <string name="sensor_accelerometer">Accelerometer</string>
+    <string name="sensor_applications">Applications</string>
 </resources>
