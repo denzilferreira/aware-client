@@ -1006,6 +1006,12 @@ public class Scheduler extends Aware_Sensor {
 
         if (PERMISSIONS_OK) {
 
+            //Restores core AWARE service in case it get's killed
+            if (!Aware.isServiceRunning(getApplicationContext(), Aware.class)) {
+                Intent aware = new Intent(getApplicationContext(), Aware.class);
+                startService(aware);
+            }
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
                 Intent scheduler = new Intent(this, Scheduler.class);
