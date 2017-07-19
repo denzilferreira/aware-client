@@ -264,6 +264,10 @@ public class Aware extends Service {
             return;
         }
 
+        // Start the foreground service only if it's the client or a standalone application
+        if ((getApplicationContext().getPackageName().equals("com.aware.phone") || getApplicationContext().getApplicationContext().getResources().getBoolean(R.bool.standalone)))
+            getApplicationContext().sendBroadcast(new Intent(Aware.ACTION_AWARE_PRIORITY_FOREGROUND));
+
         if (Aware.DEBUG) Log.d(TAG, "AWARE framework is created!");
     }
 
