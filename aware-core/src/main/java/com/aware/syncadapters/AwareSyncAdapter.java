@@ -1,20 +1,22 @@
+package com.aware.syncadapters;
 
-package com.aware.utils;
-
+import android.accounts.Account;
 import android.app.ActivityManager;
-import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.AbstractThreadedSyncAdapter;
+import android.content.ContentProviderClient;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SyncResult;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
-import android.os.IBinder;
+import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.text.format.DateUtils;
 import android.util.Log;
@@ -23,6 +25,10 @@ import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.R;
 import com.aware.providers.Aware_Provider;
+import com.aware.utils.Http;
+import com.aware.utils.Https;
+import com.aware.utils.SSLManager;
+import com.aware.utils.WebserviceHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,34 +44,35 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Notes:
- * Denzil: This is a wakeful service called by the sync wakefulbroadcastreceiver. This guarantees the service is not interrupted by deep sleep.
+ * Created by denzilferreira on 19/07/2017.
  */
-public class WebserviceHelper extends IntentService {
+public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
 
-    public static final String ACTION_AWARE_WEBSERVICE_SYNC_TABLE = "ACTION_AWARE_WEBSERVICE_SYNC_TABLE";
-    public static final String ACTION_AWARE_WEBSERVICE_CLEAR_TABLE = "ACTION_AWARE_WEBSERVICE_CLEAR_TABLE";
+    private String[] DATABASE_TABLES;
+    private String[] TABLES_FIELDS;
+    private Uri[] CONTEXT_URIS;
 
-    public static final String EXTRA_TABLE = "table";
-    public static final String EXTRA_FIELDS = "fields";
-    public static final String EXTRA_CONTENT_URI = "uri";
+    private Context mContext;
+    private NotificationManager notManager;
 
-    private static NotificationManager notManager;
+    private String web_server;
+    private String protocol;
 
-    private static long sync_start = 0;
-    private static int notificationID = 99990;
+    private long sync_start = 0;
+    private int notificationID = 99990;
     private int total_rows_synced = 0;
+
+    private final String TAG = "AWARESyncAdapter";
+
+    private final String EXTRA_FIELDS = "fields";
 
     private static final ArrayList<String> highFrequencySensors = new ArrayList<>();
     private static final ArrayList<String> dontClearSensors = new ArrayList<>();
 
-    public WebserviceHelper() {
-        super("AWARE Sync Helper");
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
+    public void init(String[] DATABASE_TABLES, String[] TABLES_FIELDS, Uri[] CONTEXT_URIS) {
+        this.DATABASE_TABLES = DATABASE_TABLES;
+        this.TABLES_FIELDS = TABLES_FIELDS;
+        this.CONTEXT_URIS = CONTEXT_URIS;
 
         highFrequencySensors.add("accelerometer");
         highFrequencySensors.add("gyroscope");
@@ -76,19 +83,203 @@ public class WebserviceHelper extends IntentService {
         highFrequencySensors.add("rotation");
         highFrequencySensors.add("temperature");
         highFrequencySensors.add("proximity");
-//
+
         dontClearSensors.add("aware_studies");
-
-        if (Aware.DEBUG) Log.d(Aware.TAG, "Synching all the databases...");
-
-        Aware.debug(this, "STUDY-SYNC");
-
-        if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SILENT).equals("true"))
-            notManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-        sync_start = System.currentTimeMillis();
     }
 
+    public AwareSyncAdapter(Context context, boolean autoInitialize, boolean allowParallelSyncs) {
+        super(context, autoInitialize, allowParallelSyncs);
+        this.mContext = context;
+    }
+
+    /**
+     * Cleans-up local and remote data
+     */
+    public void onSpaceMaintenance() {
+        if (DATABASE_TABLES != null && CONTEXT_URIS != null) {
+            for (int i = 0; i < DATABASE_TABLES.length; i++) {
+                //Clear locally
+                mContext.getContentResolver().delete(CONTEXT_URIS[i], null, null);
+                if (Aware.DEBUG) Log.d(TAG, "Cleared " + CONTEXT_URIS[i].toString());
+
+                //Clear remotely
+                if (Aware.getSetting(mContext, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
+
+                    if (Aware.DEBUG)
+                        Log.d(Aware.TAG, "Clearing data..." + DATABASE_TABLES[i]);
+
+                    Hashtable<String, String> request = new Hashtable<>();
+                    request.put(Aware_Preferences.DEVICE_ID, Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID));
+
+                    if (protocol.equals("https")) {
+                        try {
+                            new Https(SSLManager.getHTTPS(mContext, web_server)).dataPOST(web_server + "/" + DATABASE_TABLES[i] + "/clear_table", request, true);
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        new Http().dataPOST(web_server + "/" + DATABASE_TABLES[i] + "/clear_table", request, true);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Sends the data to AWARE server of the study
+     * @param account
+     * @param extras
+     * @param authority
+     * @param provider
+     * @param syncResult
+     */
+    @Override
+    public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
+        Cursor webservice = mContext.getContentResolver().query(Aware_Provider.Aware_Settings.CONTENT_URI, null, Aware_Provider.Aware_Settings.SETTING_KEY + " LIKE '" + Aware_Preferences.WEBSERVICE_SERVER + "'", null, null);
+        if (webservice != null && webservice.moveToFirst()) {
+            web_server = webservice.getString(webservice.getColumnIndex(Aware_Provider.Aware_Settings.SETTING_VALUE));
+        }
+        if (webservice != null && ! webservice.isClosed()) webservice.close();
+
+        //Fixed: not part of a study, do nothing
+        if (web_server.length() == 0 || web_server.equalsIgnoreCase("https://api.awareframework.com/index.php")) {
+            return;
+        }
+
+        protocol = web_server.substring(0, web_server.indexOf(":"));
+
+        // Check if we need the phone to be plugged
+        if (Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_CHARGING).equals("true")) {
+            Intent batt = mContext.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+            int plugged = batt.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+            boolean isCharging = (plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB);
+
+            if (!isCharging) {
+                if (Aware.DEBUG)
+                    Log.d(Aware.TAG, "Only sync data if charging...");
+                return;
+            }
+        }
+
+        //Check if we are supposed to sync over WiFi only
+        if (!isWifiNeededAndConnected()) {
+            if (Aware.DEBUG) Log.d(Aware.TAG, "Sync data only over Wi-Fi. Will try again later...");
+            return;
+        }
+
+        if (Aware.DEBUG) {
+            Log.d(Aware.TAG, "Synching: " + authority);
+        }
+
+        Aware.debug(mContext, "STUDY-SYNC");
+
+        if (!Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
+            notManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+        }
+
+        boolean web_service_simple = Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_SIMPLE).equals("true");
+        boolean web_service_remove_data = Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_REMOVE_DATA).equals("true");
+
+        /**
+         * Max number of rows to place on the HTTP(s) post
+         */
+        int MAX_POST_SIZE = getBatchSize();
+
+        if (Aware.is_watch(mContext)) {
+            MAX_POST_SIZE = 100; //default for Android Wear (we have a limit of 100KB of data packet size (Message API restrictions)
+        }
+
+        if (Aware.DEBUG) Log.d(TAG, "Batch size is: " + MAX_POST_SIZE);
+
+        String device_id = Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID);
+        boolean DEBUG = Aware.getSetting(mContext, Aware_Preferences.DEBUG_FLAG).equals("true");
+
+        for (int i = 0; i < DATABASE_TABLES.length; i++) {
+            String database_table = DATABASE_TABLES[i];
+            String table_fields = TABLES_FIELDS[i];
+            String URI = CONTEXT_URIS[i].toString();
+
+            if (Aware.DEBUG) Log.d(Aware.TAG, "Processing " + database_table);
+            Uri CONTENT_URI = Uri.parse(URI);
+            String response = createRemoteTable(device_id, table_fields, web_service_simple, protocol, mContext, web_server, database_table);
+
+            if (response != null || web_service_simple) {
+                try {
+                    String[] columnsStr = getTableColumnsNames(CONTENT_URI, mContext);
+                    String latest = getLatestRecordInDatabase(device_id, web_service_simple, web_service_remove_data, database_table, protocol, mContext, web_server);
+                    String study_condition = getRemoteSyncCondition(mContext, database_table);
+                    int total_records = getNumberOfRecordsToSync(CONTENT_URI, columnsStr, latest, study_condition, mContext);
+                    boolean allow_table_maintenance = isTableAllowedForMaintenance(database_table);
+
+                    if (Aware.DEBUG) {
+                        Log.d(Aware.TAG, "Sync " + database_table + " exists: " + (response != null && response.length() == 0));
+                        if (!latest.equals("[]")) Log.d(Aware.TAG, "Latest: " + latest);
+                        if (study_condition.length() > 0)
+                            Log.d(Aware.TAG, "Since: " + study_condition);
+                        if (total_records > 0)
+                            Log.d(Aware.TAG, "Rows to sync: " + total_records);
+                    }
+
+                    // If we have records to sync
+                    if (total_records > 0) {
+                        JSONArray remoteLatestData = new JSONArray(latest);
+                        long start = System.currentTimeMillis();
+                        int uploaded_records = 0;
+                        int batches = (int) Math.ceil(total_records / (double) MAX_POST_SIZE);
+                        long lastSynced;
+                        long removeFrom = 0;
+
+                        do { //paginate cursor so it does not explode the phone's memory
+
+                            if (!Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_SILENT).equals("true"))
+                                notifyUser(mContext, "Syncing batch " + (uploaded_records + MAX_POST_SIZE) / MAX_POST_SIZE + " of " + batches + " from " + database_table, false, true, notificationID);
+
+                            Cursor sync_data = getSyncData(remoteLatestData, CONTENT_URI, study_condition, columnsStr, uploaded_records, mContext, MAX_POST_SIZE);
+
+                            lastSynced = syncBatch(sync_data, database_table, device_id, mContext, protocol, web_server, DEBUG);
+
+                            if (lastSynced > 0) removeFrom = lastSynced;
+
+                            uploaded_records += MAX_POST_SIZE;
+                        }
+                        while (uploaded_records < total_records && lastSynced > 0 && isWifiNeededAndConnected());
+
+                        //Are we performing database space maintenance?
+                        if (removeFrom > 0 && allow_table_maintenance)
+                            performDatabaseSpaceMaintenance(CONTENT_URI, removeFrom, columnsStr, web_service_remove_data, mContext, database_table, DEBUG);
+
+                        if (DEBUG)
+                            Log.d(Aware.TAG, database_table + " sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis() - start) / 1000));
+
+                        if (!Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
+                            notifyUser(mContext, "Finished syncing " + database_table + ". Thanks!", true, false, notificationID);
+                        }
+                    } else {
+                        //nothing to upload, no need to do anything now.
+                        return;
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        long total_seconds = (System.currentTimeMillis() - sync_start) / 1000;
+
+        if (Aware.DEBUG)
+            Log.d(Aware.TAG, "Syncing " + authority+ " finished. Total records: " + total_rows_synced + " Total time: " + DateUtils.formatElapsedTime(total_seconds));
+    }
+
+    /**
+     * Creates a notification with upload status updates
+     * @param mContext
+     * @param message
+     * @param dismiss
+     * @param indetermined
+     * @param id
+     */
     private void notifyUser(Context mContext, String message, boolean dismiss, boolean indetermined, int id) {
         if (!dismiss) {
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(mContext);
@@ -117,6 +308,10 @@ public class WebserviceHelper extends IntentService {
         }
     }
 
+    /**
+     * Returns a batch size depending on the available RAM of the device.
+     * @return
+     */
     private int getBatchSize() {
         double availableRam;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
@@ -137,7 +332,7 @@ public class WebserviceHelper extends IntentService {
 
             availableRam = Double.parseDouble(value) / 1048576.0;
         } else {
-            ActivityManager actManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            ActivityManager actManager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
             ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
             actManager.getMemoryInfo(memInfo);
             availableRam = memInfo.totalMem / 1048576000.0;
@@ -153,10 +348,13 @@ public class WebserviceHelper extends IntentService {
             return 20000;
     }
 
-
+    /**
+     * Check if we have an acceptable network availability state
+     * @return
+     */
     public boolean isWifiNeededAndConnected() {
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true")) {
-            ConnectivityManager connManager = (ConnectivityManager) getApplicationContext().getSystemService(CONNECTIVITY_SERVICE);
+        if (Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true")) {
+            ConnectivityManager connManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo activeNetwork = connManager.getActiveNetworkInfo();
             boolean sync = (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected());
 
@@ -164,13 +362,13 @@ public class WebserviceHelper extends IntentService {
             if (sync) return sync;
 
             //Fallback to 3G if no wifi for x hours
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).length() > 0
-                    && !Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).equals("0")) {
+            if (Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).length() > 0
+                    && !Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).equals("0")) {
 
-                Cursor lastSynched = getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE 'STUDY-SYNC'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
+                Cursor lastSynched = mContext.getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE 'STUDY-SYNC'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
                 if (lastSynched != null && lastSynched.moveToFirst()) {
                     long synched = lastSynched.getLong(lastSynched.getColumnIndex(Aware_Provider.Aware_Log.LOG_TIMESTAMP));
-                    sync = (System.currentTimeMillis() - synched >= Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK)) * 60 * 60 * 1000);
+                    sync = (System.currentTimeMillis() - synched >= Integer.parseInt(Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK)) * 60 * 60 * 1000);
                     lastSynched.close();
                 }
             }
@@ -178,7 +376,6 @@ public class WebserviceHelper extends IntentService {
         }
         return true;
     }
-
 
     private String createRemoteTable(String DEVICE_ID, String TABLES_FIELDS, Boolean WEBSERVICE_SIMPLE, String protocol, Context mContext, String WEBSERVER, String DATABASE_TABLE) {
         //Check first if we have database table remotely, otherwise create it!
@@ -486,169 +683,4 @@ public class WebserviceHelper extends IntentService {
         }
         return false;
     }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        // We don't provide binding, so return null
-        return null;
-    }
-
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        String web_server = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
-        String protocol = web_server.substring(0, web_server.indexOf(":"));
-        String database_table = intent.getStringExtra(EXTRA_TABLE);
-
-        //Fixed: not part of a study, do nothing
-        if (web_server.length() == 0 || web_server.equalsIgnoreCase("https://api.awareframework.com/index.php")) {
-            stopSelf();
-            return;
-        }
-
-        boolean web_service_simple = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SIMPLE).equals("true");
-        boolean web_service_remove_data = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_REMOVE_DATA).equals("true");
-
-        /**
-         * Max number of rows to place on the HTTP(s) post
-         */
-        int MAX_POST_SIZE = getBatchSize();
-
-        if (Aware.is_watch(getApplicationContext())) {
-            MAX_POST_SIZE = 100; //default for Android Wear (we have a limit of 100KB of data packet size (Message API restrictions)
-        }
-
-        if (Aware.DEBUG) Log.d("AWARE::Webservice", "Batch size is: " + MAX_POST_SIZE);
-
-        String device_id = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
-        boolean DEBUG = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_FLAG).equals("true");
-
-        // Syncing tables
-        if (intent.getAction().equals(ACTION_AWARE_WEBSERVICE_SYNC_TABLE)) {
-
-            String table_fields = intent.getStringExtra(EXTRA_FIELDS);
-            String URI = intent.getStringExtra(EXTRA_CONTENT_URI);
-            Context mContext = getApplicationContext();
-
-
-            // Check if we need the phone to be plugged
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_CHARGING).equals("true")) {
-                Intent batt = getApplicationContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-                int plugged = batt.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-                boolean isCharging = (plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB);
-
-                if (!isCharging) {
-                    if (Aware.DEBUG)
-                        Log.d(Aware.TAG, "Only sync data if charging...");
-                    stopSelf();
-                    return;
-                }
-            }
-
-            //Check if we are supposed to sync over WiFi only
-            if (!isWifiNeededAndConnected()) {
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Sync data only over Wi-Fi. Will try again later...");
-
-                stopSelf();
-                return;
-            }
-
-            // Start syncing
-            if (Aware.DEBUG) Log.d(Aware.TAG, "Processing " + database_table);
-            Uri CONTENT_URI = Uri.parse(URI);
-            String response = createRemoteTable(device_id, table_fields, web_service_simple, protocol, mContext, web_server, database_table);
-
-            if (response != null || web_service_simple) {
-                try {
-                    String[] columnsStr = getTableColumnsNames(CONTENT_URI, mContext);
-                    String latest = getLatestRecordInDatabase(device_id, web_service_simple, web_service_remove_data, database_table, protocol, mContext, web_server);
-                    String study_condition = getRemoteSyncCondition(mContext, database_table);
-                    int total_records = getNumberOfRecordsToSync(CONTENT_URI, columnsStr, latest, study_condition, mContext);
-                    boolean allow_table_maintenance = isTableAllowedForMaintenance(database_table);
-
-                    if (Aware.DEBUG) {
-                        Log.d(Aware.TAG, "Sync " + database_table + " exists: " + (response != null && response.length() == 0));
-                        if (!latest.equals("[]")) Log.d(Aware.TAG, "Latest: " + latest);
-                        if (study_condition.length() > 0)
-                            Log.d(Aware.TAG, "Since: " + study_condition);
-                        if (total_records > 0)
-                            Log.d(Aware.TAG, "Rows to sync: " + total_records);
-                    }
-
-                    // If we have records to sync
-                    if (total_records > 0) {
-                        JSONArray remoteLatestData = new JSONArray(latest);
-                        long start = System.currentTimeMillis();
-                        int uploaded_records = 0;
-                        int batches = (int) Math.ceil(total_records / (double) MAX_POST_SIZE);
-                        long lastSynced;
-                        long removeFrom = 0;
-
-                        do { //paginate cursor so it does not explode the phone's memory
-
-                            if (!Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_SILENT).equals("true"))
-                                notifyUser(mContext, "Syncing batch " + (uploaded_records + MAX_POST_SIZE) / MAX_POST_SIZE + " of " + batches + " from " + database_table, false, true, notificationID);
-
-                            Cursor sync_data = getSyncData(remoteLatestData, CONTENT_URI, study_condition, columnsStr, uploaded_records, mContext, MAX_POST_SIZE);
-
-                            lastSynced = syncBatch(sync_data, database_table, device_id, mContext, protocol, web_server, DEBUG);
-
-                            if (lastSynced > 0) removeFrom = lastSynced;
-
-                            uploaded_records += MAX_POST_SIZE;
-                        }
-                        while (uploaded_records < total_records && lastSynced > 0 && isWifiNeededAndConnected());
-
-                        //Are we performing database space maintenance?
-                        if (removeFrom > 0 && allow_table_maintenance)
-                            performDatabaseSpaceMaintenance(CONTENT_URI, removeFrom, columnsStr, web_service_remove_data, mContext, database_table, DEBUG);
-
-                        if (DEBUG)
-                            Log.d(Aware.TAG, database_table + " sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis() - start) / 1000));
-
-                        if (!Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
-                            notifyUser(mContext, "Finished syncing " + database_table + ". Thanks!", true, false, notificationID);
-                        }
-                    } else {
-                        //nothing to upload, no need to do anything now.
-                        return;
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        if (intent.getAction().equals(ACTION_AWARE_WEBSERVICE_CLEAR_TABLE)) {
-            if (Aware.DEBUG)
-                Log.d(Aware.TAG, "Clearing data..." + database_table);
-
-            Hashtable<String, String> request = new Hashtable<>();
-            request.put(Aware_Preferences.DEVICE_ID, device_id);
-
-            if (protocol.equals("https")) {
-                try {
-                    new Https(SSLManager.getHTTPS(getApplicationContext(), web_server)).dataPOST(web_server + "/" + database_table + "/clear_table", request, true);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                new Http().dataPOST(web_server + "/" + database_table + "/clear_table", request, true);
-            }
-        }
-
-    }
-
-    @Override
-    public void onDestroy() {
-
-        long total_seconds = (System.currentTimeMillis() - sync_start) / 1000;
-
-        if (Aware.DEBUG)
-            Log.d(Aware.TAG, "Syncing all databases finished. Total records: " + total_rows_synced + " Total time: " + DateUtils.formatElapsedTime(total_seconds));
-
-    }
 }
-

@@ -36,7 +36,7 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
     /**
      * Authority of content provider
      */
-    public static String AUTHORITY = "com.aware.provider.accelerometer.linear";
+    public static String AUTHORITY = "com.aware.provider.sync_accelerometer.linear";
 
     // ContentProvider query paths
     private static final int ACCEL_DEV = 1;

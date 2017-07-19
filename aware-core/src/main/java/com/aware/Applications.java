@@ -52,7 +52,7 @@ import java.util.List;
  * Service that logs application usage on the device.
  * Updates every time the user changes application or accesses a sub activity on the screen.
  * - ACTION_AWARE_APPLICATIONS_FOREGROUND: new application on the screen
- * - ACTION_AWARE_APPLICATIONS_HISTORY: applications running was just updated
+ * - ACTION_AWARE_APPLICATIONS_HISTORY: sync_applications running was just updated
  * - ACTION_AWARE_APPLICATIONS_NOTIFICATIONS: new notification received
  * - ACTION_AWARE_APPLICATIONS_CRASHES: an application crashed, error and ANR conditions
  *
@@ -520,7 +520,7 @@ public class Applications extends AccessibilityService {
 
     /**
      * Applications background service
-     * - Updates the current running applications statistics
+     * - Updates the current running sync_applications statistics
      * - Uploads data to the webservice
      *
      * @author df
@@ -539,7 +539,7 @@ public class Applications extends AccessibilityService {
                     Log.d(TAG, "Removed scheduler: " + SCHEDULER_APPLICATIONS_BACKGROUND);
             }
 
-            //Updating list of running applications/services
+            //Updating list of running sync_applications/services
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && intent.getAction().equals(ACTION_AWARE_APPLICATIONS_HISTORY)) {
 
                 ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
@@ -548,7 +548,7 @@ public class Applications extends AccessibilityService {
 
                 if (runningApps == null) return;
 
-                if (DEBUG) Log.d(TAG, "Running " + runningApps.size() + " applications");
+                if (DEBUG) Log.d(TAG, "Running " + runningApps.size() + " sync_applications");
 
                 for (RunningAppProcessInfo app : runningApps) {
                     try {
@@ -613,7 +613,7 @@ public class Applications extends AccessibilityService {
                     }
                 }
 
-                //Close open applications that are not running anymore
+                //Close open sync_applications that are not running anymore
                 try {
                     Cursor appsOpened = getContentResolver().query(Applications_History.CONTENT_URI, null, Applications_History.END_TIMESTAMP + "=0", null, null);
                     if (appsOpened != null && appsOpened.moveToFirst()) {
@@ -642,7 +642,7 @@ public class Applications extends AccessibilityService {
         }
 
         /**
-         * Check if the application on the database, exists on the running applications
+         * Check if the application on the database, exists on the running sync_applications
          *
          * @param {@link List}<RunningAppProcessInfo> runningApps
          * @param {@link Cursor} row

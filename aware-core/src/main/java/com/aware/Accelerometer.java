@@ -67,7 +67,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     private static boolean ENFORCE_FREQUENCY = false;
 
     /**
-     * Broadcasted event: new accelerometer values
+     * Broadcasted event: new sync_accelerometer values
      * extra: context (ContentValues)
      * extra: sensor (ContentValues)
      */
@@ -241,10 +241,6 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         filter.addAction(ACTION_AWARE_ACCELEROMETER_LABEL);
         registerReceiver(dataLabeler, filter);
 
-        DATABASE_TABLES = Accelerometer_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Accelerometer_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Accelerometer_Sensor.CONTENT_URI, Accelerometer_Data.CONTENT_URI};
-
         if (Aware.DEBUG) Log.d(TAG, "Accelerometer service created!");
     }
 
@@ -268,7 +264,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
         if (PERMISSIONS_OK) {
             if (mAccelerometer == null) {
-                if (Aware.DEBUG) Log.w(TAG, "This device does not have an accelerometer!");
+                if (Aware.DEBUG) Log.w(TAG, "This device does not have an sync_accelerometer!");
                 Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, false);
                 stopSelf();
             } else {

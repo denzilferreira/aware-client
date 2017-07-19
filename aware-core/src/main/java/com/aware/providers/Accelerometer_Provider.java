@@ -26,8 +26,8 @@ import java.util.HashMap;
 
 /**
  * AWARE Accelerometer Content Provider Allows you to access all the recorded
- * accelerometer readings on the database Database is located at the SDCard :
- * /AWARE/accelerometer.db
+ * sync_accelerometer readings on the database Database is located at the SDCard :
+ * /AWARE/sync_accelerometer.db
  *
  * @author denzil
  */
@@ -77,7 +77,7 @@ public class Accelerometer_Provider extends ContentProvider {
     }
 
     /**
-     * Logged accelerometer data
+     * Logged sync_accelerometer data
      *
      * @author df
      */
@@ -103,7 +103,7 @@ public class Accelerometer_Provider extends ContentProvider {
     public static String DATABASE_NAME = "accelerometer.db";
     public static final String[] DATABASE_TABLES = {"sensor_accelerometer", "accelerometer"};
     public static final String[] TABLES_FIELDS = {
-            // accelerometer device information
+            // sync_accelerometer device information
             Accelerometer_Sensor._ID + " integer primary key autoincrement,"
                     + Accelerometer_Sensor.TIMESTAMP + " real default 0,"
                     + Accelerometer_Sensor.DEVICE_ID + " text default '',"
@@ -117,7 +117,7 @@ public class Accelerometer_Provider extends ContentProvider {
                     + Accelerometer_Sensor.VERSION + " text default '',"
                     + "UNIQUE(" + Accelerometer_Sensor.DEVICE_ID + ")",
 
-            // accelerometer data
+            // sync_accelerometer data
             Accelerometer_Data._ID + " integer primary key autoincrement,"
                     + Accelerometer_Data.TIMESTAMP + " real default 0,"
                     + Accelerometer_Data.DEVICE_ID + " text default '',"
@@ -226,7 +226,7 @@ public class Accelerometer_Provider extends ContentProvider {
     }
 
     /**
-     * Batch insert for high performance sensors (e.g., accelerometer, etc)
+     * Batch insert for high performance sensors (e.g., sync_accelerometer, etc)
      *
      * @param uri
      * @param values

@@ -141,7 +141,7 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
         accelData.putExtra(EXTRA_DATA, rowData);
         sendBroadcast(accelData);
 
-        if (Aware.DEBUG) Log.d(TAG, "Linear-accelerometer:" + rowData.toString());
+        if (Aware.DEBUG) Log.d(TAG, "Linear-sync_accelerometer:" + rowData.toString());
 
         if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;
@@ -212,7 +212,7 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
             accel_dev.putExtra(EXTRA_SENSOR, rowData);
             sendBroadcast(accel_dev);
 
-            if (Aware.DEBUG) Log.d(TAG, "Linear-accelerometer sensor: " + rowData.toString());
+            if (Aware.DEBUG) Log.d(TAG, "Linear-sync_accelerometer sensor: " + rowData.toString());
         }
         if (accelInfo != null && !accelInfo.isClosed()) accelInfo.close();
     }
@@ -241,7 +241,7 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
         filter.addAction(ACTION_AWARE_LINEAR_LABEL);
         registerReceiver(dataLabeler, filter);
 
-        if (Aware.DEBUG) Log.d(TAG, "Linear-accelerometer service created!");
+        if (Aware.DEBUG) Log.d(TAG, "Linear-sync_accelerometer service created!");
     }
 
     @Override
@@ -256,7 +256,7 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
 
         unregisterReceiver(dataLabeler);
 
-        if (Aware.DEBUG) Log.d(TAG, "Linear-accelerometer service terminated...");
+        if (Aware.DEBUG) Log.d(TAG, "Linear-sync_accelerometer service terminated...");
     }
 
     @Override
@@ -265,7 +265,7 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
 
         if (PERMISSIONS_OK) {
             if (mLinearAccelerator == null) {
-                if (Aware.DEBUG) Log.w(TAG, "This device does not have a linear-accelerometer!");
+                if (Aware.DEBUG) Log.w(TAG, "This device does not have a linear-sync_accelerometer!");
                 Aware.setSetting(this, Aware_Preferences.STATUS_LINEAR_ACCELEROMETER, false);
                 stopSelf();
             } else {
@@ -301,7 +301,7 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
                 mSensorManager.registerListener(this, mLinearAccelerator, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER)), sensorHandler);
                 LAST_SAVE = System.currentTimeMillis();
 
-                if (Aware.DEBUG) Log.d(TAG, "Linear-accelerometer service active: " + FREQUENCY + "ms");
+                if (Aware.DEBUG) Log.d(TAG, "Linear-sync_accelerometer service active: " + FREQUENCY + "ms");
             }
         }
 
