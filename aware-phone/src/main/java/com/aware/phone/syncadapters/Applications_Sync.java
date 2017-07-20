@@ -1,4 +1,4 @@
-package com.aware.syncadapters;
+package com.aware.phone.syncadapters;
 
 import android.accounts.Account;
 import android.app.Service;
@@ -13,14 +13,14 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
-import com.aware.providers.Accelerometer_Provider;
-import com.aware.providers.Aware_Provider;
+import com.aware.providers.Applications_Provider;
+import com.aware.syncadapters.AwareSyncAdapter;
 import com.aware.utils.WebserviceHelper;
 
 /**
  * Created by denzil on 18/07/2017.
  */
-public class Accelerometer_Sync extends Service {
+public class Applications_Sync extends Service {
 
     private AwareSyncAdapter sSyncAdapter = null;
     private static final Object sSyncAdapterLock = new Object();
@@ -29,15 +29,18 @@ public class Accelerometer_Sync extends Service {
     public void onCreate() {
         super.onCreate();
         synchronized (sSyncAdapterLock) {
-            if (sSyncAdapter == null)
+            if (sSyncAdapter == null) {
                 sSyncAdapter = new AwareSyncAdapter(getApplicationContext(), true, true);
                 sSyncAdapter.init(
-                        Accelerometer_Provider.DATABASE_TABLES, Accelerometer_Provider.TABLES_FIELDS,
+                        Applications_Provider.DATABASE_TABLES,
+                        Applications_Provider.TABLES_FIELDS,
                         new Uri[]{
-                            Accelerometer_Provider.Accelerometer_Sensor.CONTENT_URI,
-                            Accelerometer_Provider.Accelerometer_Data.CONTENT_URI
-                        }
-                );
+                                Applications_Provider.Applications_Foreground.CONTENT_URI,
+                                Applications_Provider.Applications_History.CONTENT_URI,
+                                Applications_Provider.Applications_Notifications.CONTENT_URI,
+                                Applications_Provider.Applications_Crashes.CONTENT_URI
+                        });
+            }
         }
     }
 

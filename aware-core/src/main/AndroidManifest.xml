@@ -48,26 +48,6 @@
             <meta-data android:name="android.accounts.AccountAuthenticator" android:resource="@xml/aware_authenticator" />
         </service>
 
-        <!-- AWARE sync adapter services -->
-        <service
-            android:name="com.aware.syncadapters.Accelerometer_Sync"
-            android:exported="true"
-            android:process=":sync">
-            <intent-filter>
-                <action android:name="android.content.SyncAdapter" />
-            </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_accelerometer" />
-        </service>
-        <service
-            android:name="com.aware.syncadapters.Applications_Sync"
-            android:exported="true"
-            android:process=":sync">
-            <intent-filter>
-                <action android:name="android.content.SyncAdapter" />
-            </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_applications" />
-        </service>
-
         <!-- Sensor services -->
         <service
             android:name="com.aware.Keyboard"

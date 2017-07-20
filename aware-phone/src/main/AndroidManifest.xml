@@ -15,18 +15,10 @@
         android:label="Write to AWARE&apos;s Context data"
         android:protectionLevel="normal" />
 
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.camera.front"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.camera.autofocus"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.telephony"
-        android:required="false" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.front" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    <uses-feature android:name="android.hardware.telephony" android:required="false" />
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -80,7 +72,7 @@
             android:label="@string/aware_stream"
             android:launchMode="singleTop"
             android:noHistory="true"
-            android:theme="@style/Theme.Aware"/>
+            android:theme="@style/Theme.Aware" />
         <activity
             android:name="com.aware.phone.ui.Aware_QRCode"
             android:configChanges="keyboardHidden|orientation|screenSize"
@@ -122,11 +114,13 @@
             android:launchMode="singleTop"
             android:theme="@style/Theme.Aware">
             <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="aware"/>
-                <data android:scheme="aware-ssl"/>
+
+                <data android:scheme="aware" />
+                <data android:scheme="aware-ssl" />
             </intent-filter>
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -153,6 +147,24 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
+
+        <!-- AWARE sync adapter services -->
+        <service
+            android:name="com.aware.phone.syncadapters.Accelerometer_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_accelerometer" />
+        </service>
+        <service
+            android:name="com.aware.phone.syncadapters.Applications_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_applications" />
+        </service>
 
     </application>
 

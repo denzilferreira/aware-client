@@ -24,8 +24,7 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    implementation project(':aware-core')
+    api project(':aware-core')
     implementation "com.android.support:appcompat-v7:$support_libs"
     implementation "com.android.support:gridlayout-v7:$support_libs"
 }

@@ -170,27 +170,34 @@ public class Aware_Sensor extends Service {
                 }
             }
             if (intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA)) {
-//                Bundle syncOptions = new Bundle();
-//                syncOptions.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
-//                syncOptions.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
-//                ContentResolver.requestSync(Aware.getAWAREAccount(context),);
-            }
-            if (intent.getAction().equals(Aware.ACTION_AWARE_CLEAR_DATA)) {
-//                if (DATABASE_TABLES != null && CONTEXT_URIS != null) {
+                //TODO: Ask the sync adapter to do it's business, instead of using the webservice helper
+//                if (DATABASE_TABLES != null && TABLES_FIELDS != null && CONTEXT_URIS != null) {
 //                    for (int i = 0; i < DATABASE_TABLES.length; i++) {
-//                        //Clear locally
-//                        context.getContentResolver().delete(CONTEXT_URIS[i], null, null);
-//                        if (Aware.DEBUG) Log.d(TAG, "Cleared " + CONTEXT_URIS[i].toString());
-//
-//                        //Clear remotely
-//                        if (Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
-//                            Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
-//                            webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_CLEAR_TABLE);
-//                            webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
-//                            startWakefulService(context, webserviceHelper);
-//                        }
+//                        Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
+//                        webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
+//                        webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
+//                        webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, TABLES_FIELDS[i]);
+//                        webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, CONTEXT_URIS[i].toString());
+//                        startWakefulService(context, webserviceHelper);
 //                    }
 //                }
+            }
+            if (intent.getAction().equals(Aware.ACTION_AWARE_CLEAR_DATA)) {
+                if (DATABASE_TABLES != null && CONTEXT_URIS != null) {
+                    for (int i = 0; i < DATABASE_TABLES.length; i++) {
+                        //Clear locally
+                        context.getContentResolver().delete(CONTEXT_URIS[i], null, null);
+                        if (Aware.DEBUG) Log.d(TAG, "Cleared " + CONTEXT_URIS[i].toString());
+
+                        //Clear remotely
+                        if (Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
+                            Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
+                            webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_CLEAR_TABLE);
+                            webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
+                            startWakefulService(context, webserviceHelper);
+                        }
+                    }
+                }
             }
             if (intent.getAction().equals(Aware.ACTION_AWARE_STOP_SENSORS)) {
                 if (Aware.DEBUG) Log.d(TAG, TAG + " stopped");
