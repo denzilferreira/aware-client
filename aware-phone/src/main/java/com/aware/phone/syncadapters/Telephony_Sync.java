@@ -6,7 +6,6 @@ import android.net.Uri;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
-import com.aware.providers.Gravity_Provider;
 import com.aware.providers.Telephony_Provider;
 import com.aware.syncadapters.AwareSyncAdapter;
 
@@ -29,7 +28,7 @@ public class Telephony_Sync extends Service {
                         Telephony_Provider.DATABASE_TABLES,
                         Telephony_Provider.TABLES_FIELDS,
                         new Uri[]{
-                                Telephony_Provider.Telephony_Data.CONTENT_URI
+                                Telephony_Provider.Telephony_Data.CONTENT_URI, Telephony_Provider.GSM_Data.CONTENT_URI, Telephony_Provider.GSM_Neighbors_Data.CONTENT_URI, Telephony_Provider.CDMA_Data.CONTENT_URI
                         });
             }
         }

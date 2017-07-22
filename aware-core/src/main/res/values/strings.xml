@@ -33,7 +33,6 @@
     <string name="sensor_bluetooth">Bluetooth</string>
     <string name="sensor_locations">Locations</string>
     <string name="sensor_installations">Installations</string>
-    <string name="sensor_locations">Locations</string>
     <string name="sensor_esms">Mobile questionnaires/ESM</string>
     <string name="sensor_temperature">Temperature</string>
     <string name="sensor_linear_accelerometer">Linear Accelerometer</string>
