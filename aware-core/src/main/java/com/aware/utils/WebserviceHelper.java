@@ -98,6 +98,8 @@ public class WebserviceHelper extends IntentService {
         if (intent == null) return;
 
         web_server = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
+        if (web_server.length() == 0) return; //no webservice URL defined?
+
         protocol = web_server.substring(0, web_server.indexOf(":"));
         database_table = intent.getStringExtra(EXTRA_TABLE);
 

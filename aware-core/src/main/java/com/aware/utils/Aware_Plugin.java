@@ -3,28 +3,21 @@ package com.aware.utils;
 
 import android.Manifest;
 import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
-import com.aware.R;
 import com.aware.ui.PermissionsHandler;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 
 /**
  * Aware_Plugin: Extend to integrate with the framework (extension of Android Service class).

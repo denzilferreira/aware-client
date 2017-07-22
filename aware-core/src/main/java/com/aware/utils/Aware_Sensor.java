@@ -2,35 +2,22 @@
 package com.aware.utils;
 
 import android.Manifest;
-import android.accounts.Account;
-import android.app.IntentService;
 import android.app.Service;
-import android.content.AbstractThreadedSyncAdapter;
-import android.content.BroadcastReceiver;
-import android.content.ContentProviderClient;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SyncResult;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
-import com.aware.R;
 import com.aware.ui.PermissionsHandler;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 
 /**
  * Aware_Sensor: Extend to integrate with the framework (extension of Android Service class).
@@ -170,17 +157,16 @@ public class Aware_Sensor extends Service {
                 }
             }
             if (intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA)) {
-                //TODO: Ask the sync adapter to do it's business, instead of using the webservice helper
-//                if (DATABASE_TABLES != null && TABLES_FIELDS != null && CONTEXT_URIS != null) {
-//                    for (int i = 0; i < DATABASE_TABLES.length; i++) {
-//                        Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
-//                        webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
-//                        webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
-//                        webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, TABLES_FIELDS[i]);
-//                        webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, CONTEXT_URIS[i].toString());
-//                        startWakefulService(context, webserviceHelper);
-//                    }
-//                }
+                if (DATABASE_TABLES != null && TABLES_FIELDS != null && CONTEXT_URIS != null) {
+                    for (int i = 0; i < DATABASE_TABLES.length; i++) {
+                        Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
+                        webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
+                        webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
+                        webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, TABLES_FIELDS[i]);
+                        webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, CONTEXT_URIS[i].toString());
+                        startWakefulService(context, webserviceHelper);
+                    }
+                }
             }
             if (intent.getAction().equals(Aware.ACTION_AWARE_CLEAR_DATA)) {
                 if (DATABASE_TABLES != null && CONTEXT_URIS != null) {
