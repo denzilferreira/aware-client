@@ -457,7 +457,7 @@ public class Aware extends Service {
                     }
 
                     //Ignored by standalone apps. They handle their own sensors, so server settings do not apply.
-                    if (!getResources().getBoolean(R.bool.standalone)) {
+                    if (getPackageName().equals("com.aware.phone") || !getResources().getBoolean(R.bool.standalone)) {
                         if (study.getString("config").equalsIgnoreCase("[]")) {
                             Aware.tweakSettings(getApplicationContext(), new JSONArray(study.getString("config")));
                         } else if (!study.getString("config").equalsIgnoreCase("[]")) {
