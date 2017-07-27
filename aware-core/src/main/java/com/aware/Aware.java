@@ -1412,14 +1412,14 @@ public class Aware extends Service {
             }
         }
 
+        //Set schedulers
+        if (schedulers.length() > 0)
+            Scheduler.setSchedules(c, schedulers);
+
         if (config_changed) {
             ContentValues newCfg = new ContentValues();
             newCfg.put(Aware_Provider.Aware_Studies.STUDY_CONFIG, localConfig.toString());
             c.getContentResolver().update(Aware_Provider.Aware_Studies.CONTENT_URI, newCfg, Aware_Provider.Aware_Studies._ID + "=" + study_id, null);
-
-            //Set schedulers
-            if (schedulers.length() > 0)
-                Scheduler.setSchedules(c, schedulers);
 
             Intent aware = new Intent(c, Aware.class);
             c.startService(aware);
