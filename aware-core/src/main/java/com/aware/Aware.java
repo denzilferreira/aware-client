@@ -252,14 +252,21 @@ public class Aware extends Service {
         foreground.addAction(Aware.ACTION_AWARE_PRIORITY_BACKGROUND);
         registerReceiver(foregroundMgr, foreground);
 
-        AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
-        Intent scheduler = new Intent(this, Scheduler.class);
-        PendingIntent repeating = PendingIntent.getService(getApplicationContext(), 0, scheduler, PendingIntent.FLAG_UPDATE_CURRENT);
-        int wakeup_interval_ms = 60000 * getApplicationContext().getResources().getInteger(R.integer.alarm_wakeup_interval_min);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            am.setAlarmClock(new AlarmManager.AlarmClockInfo(System.currentTimeMillis() + (wakeup_interval_ms), repeating), repeating); //every minute
+        if (getApplicationContext().getResources().getBoolean(R.bool.alarmwakeup)) {
+            AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+            Intent scheduler = new Intent(this, Scheduler.class);
+            PendingIntent repeating = PendingIntent.getService(getApplicationContext(), 0, scheduler, PendingIntent.FLAG_UPDATE_CURRENT);
+            int wakeup_interval_ms = 60000 * getApplicationContext().getResources().getInteger(R.integer.alarm_wakeup_interval_min);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                am.setAlarmClock(new AlarmManager.AlarmClockInfo(System.currentTimeMillis() + (wakeup_interval_ms), repeating), repeating); //every minute
+            } else {
+                am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + wakeup_interval_ms, wakeup_interval_ms, repeating);
+            }
         } else {
-            am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + wakeup_interval_ms, wakeup_interval_ms, repeating);
+            IntentFilter scheduler = new IntentFilter();
+            scheduler.addAction(Intent.ACTION_TIME_TICK);
+            schedulerTicker.interval_ms = 60000 * getApplicationContext().getResources().getInteger(R.integer.alarm_wakeup_interval_min);
+            registerReceiver(schedulerTicker, scheduler);
         }
 
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
@@ -317,6 +324,30 @@ public class Aware extends Service {
             startForeground(Aware.AWARE_FOREGROUND_SERVICE, not);
         } else {
             stopForeground(true);
+        }
+    }
+
+    private final SchedulerTicker schedulerTicker = new SchedulerTicker();
+
+    public class SchedulerTicker extends BroadcastReceiver {
+        long last_time = 0;
+        // This is a static context, so we can't get the app resources here.  Set to the default
+        // here, and configure in Aware.onCreate.
+        long interval_ms = 60000;
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //Executed every 1-minute. OS will send this tickle automatically
+            if (intent.getAction().equals(Intent.ACTION_TIME_TICK)) {
+                long ts = System.currentTimeMillis();
+                // Subtract 30s.  The ticker only is every minute anyway, this gives us some
+                // slack in case the interval is slightly less than 60000ms.
+                if (ts > last_time + interval_ms - 30000) {
+                    last_time = ts;
+                    Intent scheduler = new Intent(context, Scheduler.class);
+                    scheduler.setAction(Scheduler.ACTION_AWARE_SCHEDULER_CHECK);
+                    context.startService(scheduler);
+                }
+            }
         }
     }
 
@@ -1745,6 +1776,9 @@ public class Aware extends Service {
             unregisterReceiver(storage_BR);
             unregisterReceiver(awareBoot);
             unregisterReceiver(foregroundMgr);
+            if (!getApplicationContext().getResources().getBoolean(R.bool.alarmwakeup)){
+                unregisterReceiver(schedulerTicker);
+            }
         } catch (IllegalArgumentException e) {
             //There is no API to check if a broadcast receiver already is registered. Since Aware.java is shared accross plugins, the receiver is only registered on the client, not the plugins.
         }
