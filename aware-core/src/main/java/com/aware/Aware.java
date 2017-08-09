@@ -19,6 +19,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.SyncInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -2457,6 +2458,15 @@ public class Aware extends Service {
                 }
             }
         }
+    }
+
+    /**
+     * Checks if a specific sync adapter is enabled or not
+     * @param authority
+     * @return
+     */
+    public static boolean isSyncEnabled(Context context, String authority) {
+        return ContentResolver.getSyncAutomatically(Aware.getAWAREAccount(context), authority);
     }
 
     /**

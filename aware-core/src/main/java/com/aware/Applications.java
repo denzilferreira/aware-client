@@ -10,6 +10,7 @@ import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -24,6 +25,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.WakefulBroadcastReceiver;
@@ -33,6 +35,7 @@ import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 
+import com.aware.providers.Accelerometer_Provider;
 import com.aware.providers.Applications_Provider;
 import com.aware.providers.Applications_Provider.Applications_Crashes;
 import com.aware.providers.Applications_Provider.Applications_Foreground;
@@ -381,12 +384,31 @@ public class Applications extends AccessibilityService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (!Aware.isSyncEnabled(this, Applications_Provider.getAuthority(this)) && Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), true);
+            ContentResolver.addPeriodicSync(
+                    Aware.getAWAREAccount(this),
+                    Applications_Provider.getAuthority(this),
+                    Bundle.EMPTY,
+                    Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
+            );
+        }
+
         return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), false);
+            ContentResolver.removePeriodicSync(
+                    Aware.getAWAREAccount(this),
+                    Applications_Provider.getAuthority(this),
+                    Bundle.EMPTY
+            );
+        }
 
         Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
     }
@@ -521,8 +543,6 @@ public class Applications extends AccessibilityService {
     /**
      * Applications background service
      * - Updates the current running sync_applications statistics
-     * - Uploads data to the webservice
-     *
      * @author df
      */
     public static class BackgroundService extends IntentService {

@@ -242,15 +242,6 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         registerReceiver(dataLabeler, filter);
 
         if (Aware.DEBUG) Log.d(TAG, "Accelerometer service created!");
-
-        ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Accelerometer_Provider.getAuthority(this), 1);
-        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Accelerometer_Provider.getAuthority(this), true);
-        ContentResolver.addPeriodicSync(
-                Aware.getAWAREAccount(this),
-                Accelerometer_Provider.getAuthority(this),
-                Bundle.EMPTY,
-                Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
-        );
     }
 
     @Override
@@ -264,12 +255,14 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
         unregisterReceiver(dataLabeler);
 
-        ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Accelerometer_Provider.getAuthority(this), 0);
-        ContentResolver.removePeriodicSync(
-                Aware.getAWAREAccount(this),
-                Accelerometer_Provider.getAuthority(this),
-                Bundle.EMPTY
-        );
+        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Accelerometer_Provider.getAuthority(this), false);
+            ContentResolver.removePeriodicSync(
+                    Aware.getAWAREAccount(this),
+                    Accelerometer_Provider.getAuthority(this),
+                    Bundle.EMPTY
+            );
+        }
 
         if (Aware.DEBUG) Log.d(TAG, "Accelerometer service terminated...");
     }
@@ -317,6 +310,16 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
                 LAST_SAVE = System.currentTimeMillis();
 
                 if (Aware.DEBUG) Log.d(TAG, "Accelerometer service active: " + FREQUENCY + "ms");
+
+                if (!Aware.isSyncEnabled(this, Accelerometer_Provider.getAuthority(this)) && Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+                    ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Accelerometer_Provider.getAuthority(this), true);
+                    ContentResolver.addPeriodicSync(
+                            Aware.getAWAREAccount(this),
+                            Accelerometer_Provider.getAuthority(this),
+                            Bundle.EMPTY,
+                            Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
+                    );
+                }
             }
         }
 
