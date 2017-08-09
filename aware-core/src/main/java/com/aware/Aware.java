@@ -13,6 +13,7 @@ import android.app.Service;
 import android.app.UiModeManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -55,6 +56,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.aware.providers.Accelerometer_Provider;
 import com.aware.providers.Aware_Provider;
 import com.aware.providers.Aware_Provider.Aware_Device;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
@@ -339,26 +341,15 @@ public class Aware extends Service {
 
     private final SchedulerTicker schedulerTicker = new SchedulerTicker();
     public class SchedulerTicker extends BroadcastReceiver {
-        long last_time = 0;
-        // This is a static context, so we can't get the app resources here.  Hardcode for the
-        // time being.
-         long interval_ms = 60000;
-         @Override
-         public void onReceive(Context context, Intent intent) {
-             //Executed every 1-minute. OS will send this tickle automatically
-             if (intent.getAction().equals(Intent.ACTION_TIME_TICK)) {
-                 long ts = System.currentTimeMillis();
-                 // Subtract 30s.  The ticker only is every minute anyway, this gives us some
-                 // slack in case the interval is slightly less than 60000ms.
-                 if (ts > last_time + interval_ms - 30000) {
-                     last_time = ts;
-                     Intent scheduler = new Intent(context, Scheduler.class);
-                     scheduler.setAction(Scheduler.ACTION_AWARE_SCHEDULER_CHECK);
-                     context.startService(scheduler);
-                 }
-             }
-         }
-     }
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(Intent.ACTION_TIME_TICK)) { //Executed every 1-minute. OS will send this tickle automatically
+                Intent scheduler = new Intent(context, Scheduler.class);
+                scheduler.setAction(Scheduler.ACTION_AWARE_SCHEDULER_CHECK);
+                context.startService(scheduler);
+            }
+        }
+    }
 
     private class AsyncPing extends AsyncTask<Void, Void, Boolean> {
         @Override
@@ -2092,19 +2083,18 @@ public class Aware extends Service {
 
     /**
      * BroadcastReceiver that monitors for AWARE framework actions:
-     * - ACTION_AWARE_SYNC_DATA = upload data to remote webservice server.
-     * - ACTION_AWARE_CLEAR_DATA = clears local device's AWARE modules databases.
-     *
+     * Aware#ACTION_AWARE_SYNC_DATA: upload data to remote webservice server.
+     * Aware#ACTION_AWARE_CLEAR_DATA: clears local device's AWARE modules databases.
+     * Aware#ACTION_AWARE_ACTION_QUIT_STUDY: quits a study
      * @author denzil
      */
-    private static final Aware_Broadcaster aware_BR = new Aware_Broadcaster();
-
     public static class Aware_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
 
             if (!(context.getPackageName().equals("com.aware.phone") || context.getApplicationContext().getResources().getBoolean(R.bool.standalone)))
                 return;
+
             //We are only synching the device information, study compliance and overall framework execution logs.
             String[] DATABASE_TABLES = new String[]{Aware_Provider.DATABASE_TABLES[0], Aware_Provider.DATABASE_TABLES[3], Aware_Provider.DATABASE_TABLES[4]};
             String[] TABLES_FIELDS = new String[]{Aware_Provider.TABLES_FIELDS[0], Aware_Provider.TABLES_FIELDS[3], Aware_Provider.TABLES_FIELDS[4]};
@@ -2146,7 +2136,6 @@ public class Aware extends Service {
      * Checks if we have access to the storage of the device. Turns off AWARE when we don't, turns it back on when available again.
      */
     private static final Storage_Broadcaster storage_BR = new Storage_Broadcaster();
-
     public static class Storage_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {

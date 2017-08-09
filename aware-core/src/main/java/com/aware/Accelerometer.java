@@ -117,7 +117,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         }
 
         long TS = System.currentTimeMillis();
-        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY/1000)
+        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY / 1000)
             return;
         if (LAST_VALUES != null && THRESHOLD > 0 && Math.abs(event.values[0] - LAST_VALUES[0]) < THRESHOLD
                 && Math.abs(event.values[1] - LAST_VALUES[1]) < THRESHOLD
@@ -242,6 +242,15 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         registerReceiver(dataLabeler, filter);
 
         if (Aware.DEBUG) Log.d(TAG, "Accelerometer service created!");
+
+        ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Accelerometer_Provider.getAuthority(this), 1);
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Accelerometer_Provider.getAuthority(this), true);
+        ContentResolver.addPeriodicSync(
+                Aware.getAWAREAccount(this),
+                Accelerometer_Provider.getAuthority(this),
+                Bundle.EMPTY,
+                Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
+        );
     }
 
     @Override
@@ -254,6 +263,13 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         wakeLock.release();
 
         unregisterReceiver(dataLabeler);
+
+        ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Accelerometer_Provider.getAuthority(this), 0);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                Accelerometer_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
 
         if (Aware.DEBUG) Log.d(TAG, "Accelerometer service terminated...");
     }
@@ -287,7 +303,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
                 if (FREQUENCY != new_frequency
                         || THRESHOLD != new_threshold
-                        || ENFORCE_FREQUENCY != new_enforce_frequency){
+                        || ENFORCE_FREQUENCY != new_enforce_frequency) {
 
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mAccelerometer);

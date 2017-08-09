@@ -284,6 +284,15 @@ public class Accelerometer_Provider extends ContentProvider {
         return count;
     }
 
+    /**
+     * Returns the provider authority that is dynamic
+     * @return
+     */
+    public static String getAuthority(Context context) {
+        AUTHORITY = context.getPackageName() + ".provider.accelerometer";
+        return AUTHORITY;
+    }
+
     @Override
     public boolean onCreate() {
         AUTHORITY = getContext().getPackageName() + ".provider.accelerometer";

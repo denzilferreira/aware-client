@@ -71,15 +71,15 @@ public class ESM_Provider extends ContentProvider {
     public static final String[] DATABASE_TABLES = {"esms"};
     public static final String[] TABLES_FIELDS = {
             ESM_Data._ID + " integer primary key autoincrement,"
-            + ESM_Data.TIMESTAMP + " real default 0,"
-            + ESM_Data.DEVICE_ID + " text default '',"
-            + ESM_Data.JSON + " text default '',"
-            + ESM_Data.STATUS + " integer default 0,"
-            + ESM_Data.EXPIRATION_THRESHOLD + " integer default 0,"
-            + ESM_Data.NOTIFICATION_TIMEOUT + " integer default 0,"
-            + ESM_Data.ANSWER_TIMESTAMP + " real default 0,"
-            + ESM_Data.ANSWER + " text default '',"
-            + ESM_Data.TRIGGER + " text default ''"
+                    + ESM_Data.TIMESTAMP + " real default 0,"
+                    + ESM_Data.DEVICE_ID + " text default '',"
+                    + ESM_Data.JSON + " text default '',"
+                    + ESM_Data.STATUS + " integer default 0,"
+                    + ESM_Data.EXPIRATION_THRESHOLD + " integer default 0,"
+                    + ESM_Data.NOTIFICATION_TIMEOUT + " integer default 0,"
+                    + ESM_Data.ANSWER_TIMESTAMP + " real default 0,"
+                    + ESM_Data.ANSWER + " text default '',"
+                    + ESM_Data.TRIGGER + " text default ''"
     };
 
     private UriMatcher sUriMatcher = null;
@@ -168,6 +168,15 @@ public class ESM_Provider extends ContentProvider {
         }
     }
 
+    /**
+     * Returns the provider authority that is dynamic
+     * @return
+     */
+    public static String getAuthority(Context context) {
+        AUTHORITY = context.getPackageName() + ".provider.esm";
+        return AUTHORITY;
+    }
+
     @Override
     public boolean onCreate() {
         AUTHORITY = getContext().getPackageName() + ".provider.esm";
@@ -228,7 +237,7 @@ public class ESM_Provider extends ContentProvider {
      */
     @Override
     public synchronized int update(Uri uri, ContentValues values, String selection,
-                      String[] selectionArgs) {
+                                   String[] selectionArgs) {
 
         initialiseDatabase();
 

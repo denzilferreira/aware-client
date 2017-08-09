@@ -170,6 +170,15 @@ public class Processor_Provider extends ContentProvider {
         }
     }
 
+    /**
+     * Returns the provider authority that is dynamic
+     * @return
+     */
+    public static String getAuthority(Context context) {
+        AUTHORITY = context.getPackageName() + ".provider.processor";
+        return AUTHORITY;
+    }
+
     @Override
     public boolean onCreate() {
         AUTHORITY = getContext().getPackageName() + ".provider.processor";
@@ -239,7 +248,7 @@ public class Processor_Provider extends ContentProvider {
      */
     @Override
     public synchronized int update(Uri uri, ContentValues values, String selection,
-                      String[] selectionArgs) {
+                                   String[] selectionArgs) {
 
         initialiseDatabase();
 

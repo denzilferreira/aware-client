@@ -330,6 +330,15 @@ public class Applications_Provider extends ContentProvider {
         }
     }
 
+    /**
+     * Returns the provider authority that is dynamic
+     * @return
+     */
+    public static String getAuthority(Context context) {
+        AUTHORITY = context.getPackageName() + ".provider.applications";
+        return AUTHORITY;
+    }
+
     @Override
     public boolean onCreate() {
         AUTHORITY = getContext().getPackageName() + ".provider.applications";
