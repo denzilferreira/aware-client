@@ -605,6 +605,9 @@ public class Aware_Join_Study extends Aware_Activity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        if (active_plugins == null) return;
+
         Cursor qry = Aware.getStudy(this, study_url);
         if (qry != null && qry.moveToFirst()) {
             if (active_plugins.size() == 0) {
