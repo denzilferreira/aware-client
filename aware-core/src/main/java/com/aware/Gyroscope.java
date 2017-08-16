@@ -2,6 +2,7 @@
 package com.aware;
 
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -15,7 +16,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Binder;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -259,6 +260,15 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
 
         unregisterReceiver(dataLabeler);
 
+        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Gyroscope_Provider.getAuthority(this), false);
+            ContentResolver.removePeriodicSync(
+                    Aware.getAWAREAccount(this),
+                    Gyroscope_Provider.getAuthority(this),
+                    Bundle.EMPTY
+            );
+        }
+
         if (Aware.DEBUG) Log.d(TAG, "Gyroscope service terminated...");
     }
 
@@ -308,6 +318,17 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
             }
 
             if (Aware.DEBUG) Log.d(TAG, "Gyroscope service active: " + FREQUENCY + "ms");
+
+            if (!Aware.isSyncEnabled(this, Gyroscope_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+                ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Gyroscope_Provider.getAuthority(this), 1);
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Gyroscope_Provider.getAuthority(this), true);
+                ContentResolver.addPeriodicSync(
+                        Aware.getAWAREAccount(this),
+                        Gyroscope_Provider.getAuthority(this),
+                        Bundle.EMPTY,
+                        Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
+                );
+            }
         }
 
         return START_STICKY;

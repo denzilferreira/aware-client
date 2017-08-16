@@ -1,17 +1,12 @@
 
 package com.aware;
 
-import android.accounts.Account;
-import android.app.Service;
-import android.content.AbstractThreadedSyncAdapter;
 import android.content.BroadcastReceiver;
-import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SyncResult;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
@@ -19,22 +14,18 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.aware.providers.Accelerometer_Provider;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Data;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Sensor;
 import com.aware.utils.Aware_Sensor;
-import com.aware.utils.WebserviceHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -255,9 +246,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
         unregisterReceiver(dataLabeler);
 
-        //Aware.isStudy(this) &&
-        if ( (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
-            ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Accelerometer_Provider.getAuthority(this), 0);
+        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
             ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Accelerometer_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
@@ -275,7 +264,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
         if (PERMISSIONS_OK) {
             if (mAccelerometer == null) {
-                if (Aware.DEBUG) Log.w(TAG, "This device does not have an sync_accelerometer!");
+                if (Aware.DEBUG) Log.w(TAG, "This device does not have an accelerometer!");
                 Aware.setSetting(this, Aware_Preferences.STATUS_ACCELEROMETER, false);
                 stopSelf();
             } else {
@@ -313,8 +302,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
                 if (Aware.DEBUG) Log.d(TAG, "Accelerometer service active: " + FREQUENCY + "ms");
 
-                //&& Aware.isStudy(this)
-                if (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+                if (!Aware.isSyncEnabled(this, Accelerometer_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
                     ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Accelerometer_Provider.getAuthority(this), 1);
                     ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Accelerometer_Provider.getAuthority(this), true);
                     ContentResolver.addPeriodicSync(

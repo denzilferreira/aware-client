@@ -439,7 +439,7 @@
 
         </PreferenceScreen>
         <PreferenceScreen
-            android:icon="@drawable/ic_action_linear_acceleration"
+            android:icon="@drawable/ic_action_linear_accelerometer"
             android:key="linear_accelerometer"
             android:summary="Acceleration, w/o gravity (m/s^2)"
             android:title="Linear accelerometer">

@@ -2,18 +2,15 @@
 package com.aware;
 
 import android.Manifest;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
-import android.os.Binder;
-import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.PermissionChecker;
 import android.telephony.CellLocation;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
@@ -28,7 +25,6 @@ import com.aware.providers.Telephony_Provider.CDMA_Data;
 import com.aware.providers.Telephony_Provider.GSM_Data;
 import com.aware.providers.Telephony_Provider.GSM_Neighbors_Data;
 import com.aware.providers.Telephony_Provider.Telephony_Data;
-import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 import com.aware.utils.Encrypter;
 
@@ -105,6 +101,17 @@ public class Telephony extends Aware_Sensor {
             telephonyManager.listen(telephonyState, PhoneStateListener.LISTEN_CELL_LOCATION | PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
 
             if (Aware.DEBUG) Log.d(TAG, "Telephony service active...");
+
+            if (!Aware.isSyncEnabled(this, Telephony_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+                ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Telephony_Provider.getAuthority(this), 1);
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Telephony_Provider.getAuthority(this), true);
+                ContentResolver.addPeriodicSync(
+                        Aware.getAWAREAccount(this),
+                        Telephony_Provider.getAuthority(this),
+                        Bundle.EMPTY,
+                        Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
+                );
+            }
         }
 
         return START_STICKY;
@@ -115,6 +122,15 @@ public class Telephony extends Aware_Sensor {
         super.onDestroy();
 
         telephonyManager.listen(telephonyState, PhoneStateListener.LISTEN_NONE);
+
+        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Telephony_Provider.getAuthority(this), false);
+            ContentResolver.removePeriodicSync(
+                    Aware.getAWAREAccount(this),
+                    Telephony_Provider.getAuthority(this),
+                    Bundle.EMPTY
+            );
+        }
 
         if (Aware.DEBUG) Log.d(TAG, "Telephony service terminated...");
     }

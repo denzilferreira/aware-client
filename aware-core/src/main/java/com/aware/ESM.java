@@ -4,25 +4,22 @@ package com.aware;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.aware.providers.ESM_Provider;
 import com.aware.providers.ESM_Provider.ESM_Data;
 import com.aware.ui.ESM_Queue;
-import com.aware.ui.PermissionsHandler;
 import com.aware.ui.esms.ESMFactory;
 import com.aware.ui.esms.ESM_Question;
 import com.aware.utils.Aware_Sensor;
@@ -222,6 +219,15 @@ public class ESM extends Aware_Sensor {
     public void onDestroy() {
         super.onDestroy();
 
+        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), ESM_Provider.getAuthority(this), false);
+            ContentResolver.removePeriodicSync(
+                    Aware.getAWAREAccount(this),
+                    ESM_Provider.getAuthority(this),
+                    Bundle.EMPTY
+            );
+        }
+
         if (Aware.DEBUG) Log.d(TAG, "ESM service terminated...");
     }
 
@@ -241,6 +247,17 @@ public class ESM extends Aware_Sensor {
 
             if (DEBUG)
                 Log.d(TAG, "ESM service active... Queue = " + ESM_Queue.getQueueSize(getApplicationContext()));
+
+            if (!Aware.isSyncEnabled(this, ESM_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+                ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), ESM_Provider.getAuthority(this), 1);
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), ESM_Provider.getAuthority(this), true);
+                ContentResolver.addPeriodicSync(
+                        Aware.getAWAREAccount(this),
+                        ESM_Provider.getAuthority(this),
+                        Bundle.EMPTY,
+                        Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
+                );
+            }
         }
 
         return START_STICKY;

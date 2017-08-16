@@ -3,9 +3,6 @@ package com.aware;
 
 import android.Manifest;
 import android.app.AlarmManager;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -13,30 +10,24 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
-import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.PermissionChecker;
 import android.util.Log;
 
 import com.aware.providers.Bluetooth_Provider;
 import com.aware.providers.Bluetooth_Provider.Bluetooth_Data;
 import com.aware.providers.Bluetooth_Provider.Bluetooth_Sensor;
-import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 import com.aware.utils.Encrypter;
 
@@ -179,6 +170,17 @@ public class Bluetooth extends Aware_Sensor {
 
                 if (Aware.DEBUG) Log.d(TAG, "Bluetooth service active: " + FREQUENCY + "s");
             }
+
+            if (!Aware.isSyncEnabled(this, Bluetooth_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+                ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Bluetooth_Provider.getAuthority(this), 1);
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Bluetooth_Provider.getAuthority(this), true);
+                ContentResolver.addPeriodicSync(
+                        Aware.getAWAREAccount(this),
+                        Bluetooth_Provider.getAuthority(this),
+                        Bundle.EMPTY,
+                        Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
+                );
+            }
         }
 
         return START_STICKY;
@@ -191,6 +193,15 @@ public class Bluetooth extends Aware_Sensor {
         unregisterReceiver(bluetoothMonitor);
         alarmManager.cancel(bluetoothScan);
         notificationManager.cancel(123);
+
+        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Bluetooth_Provider.getAuthority(this), false);
+            ContentResolver.removePeriodicSync(
+                    Aware.getAWAREAccount(this),
+                    Bluetooth_Provider.getAuthority(this),
+                    Bundle.EMPTY
+            );
+        }
 
         if (Aware.DEBUG) Log.d(TAG, "Bluetooth service terminated...");
     }

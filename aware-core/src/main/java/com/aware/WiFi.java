@@ -6,28 +6,24 @@ import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.Binder;
-import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.PermissionChecker;
 import android.util.Log;
 
 import com.aware.providers.WiFi_Provider;
 import com.aware.providers.WiFi_Provider.WiFi_Data;
 import com.aware.providers.WiFi_Provider.WiFi_Sensor;
-import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 import com.aware.utils.Encrypter;
 
@@ -35,7 +31,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * WiFi Module. Scans and returns surrounding WiFi AccessPoints devices information and RSSI dB values.
@@ -123,6 +118,17 @@ public class WiFi extends Aware_Sensor {
 
                 if (Aware.DEBUG) Log.d(TAG, "WiFi service active...");
             }
+
+            if (!Aware.isSyncEnabled(this, WiFi_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+                ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), WiFi_Provider.getAuthority(this), 1);
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), WiFi_Provider.getAuthority(this), true);
+                ContentResolver.addPeriodicSync(
+                        Aware.getAWAREAccount(this),
+                        WiFi_Provider.getAuthority(this),
+                        Bundle.EMPTY,
+                        Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
+                );
+            }
         }
 
         return START_STICKY;
@@ -134,6 +140,15 @@ public class WiFi extends Aware_Sensor {
 
         if (wifiMonitor != null) unregisterReceiver(wifiMonitor);
         if (wifiScan != null) alarmManager.cancel(wifiScan);
+
+        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), WiFi_Provider.getAuthority(this), false);
+            ContentResolver.removePeriodicSync(
+                    Aware.getAWAREAccount(this),
+                    WiFi_Provider.getAuthority(this),
+                    Bundle.EMPTY
+            );
+        }
 
         if (Aware.DEBUG) Log.d(TAG, "WiFi service terminated...");
     }
