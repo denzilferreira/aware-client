@@ -76,7 +76,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -2427,22 +2430,44 @@ public class Aware extends Service {
     }
 
     public static void startPlugins(Context context) {
-        if (context.getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || context.getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
-            ArrayList<String> active_plugins = new ArrayList<>();
-            Cursor enabled_plugins = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
-            if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
-                do {
-                    String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-                    active_plugins.add(package_name);
-                } while (enabled_plugins.moveToNext());
-            }
-            if (enabled_plugins != null && !enabled_plugins.isClosed())
-                enabled_plugins.close();
-
-            if (active_plugins.size() > 0) {
-                for (String package_name : active_plugins) {
-                    startPlugin(context, package_name);
+        try {
+            if (context.getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || context.getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+                ArrayList<String> active_plugins = new ArrayList<>();
+                Cursor enabled_plugins = context.getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_STATUS + "=" + Aware_Plugin.STATUS_PLUGIN_ON, null, null);
+                if (enabled_plugins != null && enabled_plugins.moveToFirst()) {
+                    do {
+                        String package_name = enabled_plugins.getString(enabled_plugins.getColumnIndex(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+                        active_plugins.add(package_name);
+                    } while (enabled_plugins.moveToNext());
                 }
+                if (enabled_plugins != null && !enabled_plugins.isClosed())
+                    enabled_plugins.close();
+
+                if (active_plugins.size() > 0) {
+                    for (String package_name : active_plugins) {
+                        startPlugin(context, package_name);
+                    }
+                }
+            }
+        }
+        catch (Exception e) {
+            // Write to file
+            File logFile = new File("sdcard/log_aware.file");
+            if (!logFile.exists()) {
+                try {
+                    logFile.createNewFile();
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
+                }
+            }
+            try {
+                //BufferedWriter for performance, true to set append to file flag
+                BufferedWriter buf = new BufferedWriter(new FileWriter(logFile, true));
+                buf.append("text");
+                buf.newLine();
+                buf.close();
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
             }
         }
     }
