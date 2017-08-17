@@ -687,7 +687,7 @@ public class Aware extends Service {
                 startPlugins(getApplicationContext());
             }
 
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
+            if (Aware.isStudy(this)) {
                 int frequency_webservice = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_WEBSERVICE));
                 if (frequency_webservice == 0) {
                     if (DEBUG)
