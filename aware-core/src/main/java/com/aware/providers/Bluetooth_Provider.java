@@ -95,18 +95,18 @@ public class Bluetooth_Provider extends ContentProvider {
     public static final String[] TABLES_FIELDS = {
             // device
             Bluetooth_Sensor._ID + " integer primary key autoincrement,"
-            + Bluetooth_Sensor.TIMESTAMP + " real default 0,"
-            + Bluetooth_Sensor.DEVICE_ID + " text default '',"
-            + Bluetooth_Sensor.BT_ADDRESS + " text default '',"
-            + Bluetooth_Sensor.BT_NAME + " text default ''",
+                    + Bluetooth_Sensor.TIMESTAMP + " real default 0,"
+                    + Bluetooth_Sensor.DEVICE_ID + " text default '',"
+                    + Bluetooth_Sensor.BT_ADDRESS + " text default '',"
+                    + Bluetooth_Sensor.BT_NAME + " text default ''",
             // data
             Bluetooth_Data._ID + " integer primary key autoincrement,"
-            + Bluetooth_Data.TIMESTAMP + " real default 0,"
-            + Bluetooth_Data.DEVICE_ID + " text default '',"
-            + Bluetooth_Data.BT_ADDRESS + " text default '',"
-            + Bluetooth_Data.BT_NAME + " text default '',"
-            + Bluetooth_Data.BT_RSSI + " integer default 0,"
-            + Bluetooth_Data.BT_LABEL + " text default ''"
+                    + Bluetooth_Data.TIMESTAMP + " real default 0,"
+                    + Bluetooth_Data.DEVICE_ID + " text default '',"
+                    + Bluetooth_Data.BT_ADDRESS + " text default '',"
+                    + Bluetooth_Data.BT_NAME + " text default '',"
+                    + Bluetooth_Data.BT_RSSI + " integer default 0,"
+                    + Bluetooth_Data.BT_LABEL + " text default ''"
     };
 
     private UriMatcher sUriMatcher = null;
@@ -219,6 +219,15 @@ public class Bluetooth_Provider extends ContentProvider {
         }
     }
 
+    /**
+     * Returns the provider authority that is dynamic
+     * @return
+     */
+    public static String getAuthority(Context context) {
+        AUTHORITY = context.getPackageName() + ".provider.bluetooth";
+        return AUTHORITY;
+    }
+
     @Override
     public boolean onCreate() {
         AUTHORITY = getContext().getPackageName() + ".provider.bluetooth";
@@ -300,7 +309,7 @@ public class Bluetooth_Provider extends ContentProvider {
      */
     @Override
     public synchronized int update(Uri uri, ContentValues values, String selection,
-                      String[] selectionArgs) {
+                                   String[] selectionArgs) {
 
         initialiseDatabase();
 

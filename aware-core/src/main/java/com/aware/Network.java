@@ -3,11 +3,11 @@ package com.aware;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.location.LocationManager;
@@ -15,9 +15,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
-import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.content.ContextCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
@@ -25,7 +24,6 @@ import android.util.Log;
 
 import com.aware.providers.Network_Provider;
 import com.aware.providers.Network_Provider.Network_Data;
-import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 
 /**
@@ -492,6 +490,15 @@ public class Network extends Aware_Sensor {
         unregisterReceiver(networkMonitor);
         teleManager.listen(phoneListener, PhoneStateListener.LISTEN_NONE);
 
+        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Network_Provider.getAuthority(this), false);
+            ContentResolver.removePeriodicSync(
+                    Aware.getAWAREAccount(this),
+                    Network_Provider.getAuthority(this),
+                    Bundle.EMPTY
+            );
+        }
+
         if (Aware.DEBUG) Log.d(TAG, "Network service terminated...");
     }
 
@@ -504,6 +511,17 @@ public class Network extends Aware_Sensor {
             Aware.setSetting(this, Aware_Preferences.STATUS_NETWORK_EVENTS, true);
 
             if (Aware.DEBUG) Log.d(TAG, "Network service active...");
+
+            if (!Aware.isSyncEnabled(this, Network_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+                ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Network_Provider.getAuthority(this), 1);
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Network_Provider.getAuthority(this), true);
+                ContentResolver.addPeriodicSync(
+                        Aware.getAWAREAccount(this),
+                        Network_Provider.getAuthority(this),
+                        Bundle.EMPTY,
+                        Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
+                );
+            }
         }
 
         return START_STICKY;

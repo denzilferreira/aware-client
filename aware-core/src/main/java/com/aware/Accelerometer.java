@@ -2,6 +2,7 @@
 package com.aware;
 
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -13,9 +14,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Binder;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -58,7 +58,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     private static boolean ENFORCE_FREQUENCY = false;
 
     /**
-     * Broadcasted event: new accelerometer values
+     * Broadcasted event: new sync_accelerometer values
      * extra: context (ContentValues)
      * extra: sensor (ContentValues)
      */
@@ -108,7 +108,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         }
 
         long TS = System.currentTimeMillis();
-        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY/1000)
+        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY / 1000)
             return;
         if (LAST_VALUES != null && THRESHOLD > 0 && Math.abs(event.values[0] - LAST_VALUES[0]) < THRESHOLD
                 && Math.abs(event.values[1] - LAST_VALUES[1]) < THRESHOLD
@@ -232,10 +232,6 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         filter.addAction(ACTION_AWARE_ACCELEROMETER_LABEL);
         registerReceiver(dataLabeler, filter);
 
-        DATABASE_TABLES = Accelerometer_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Accelerometer_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Accelerometer_Sensor.CONTENT_URI, Accelerometer_Data.CONTENT_URI};
-
         if (Aware.DEBUG) Log.d(TAG, "Accelerometer service created!");
     }
 
@@ -249,6 +245,15 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         wakeLock.release();
 
         unregisterReceiver(dataLabeler);
+
+        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Accelerometer_Provider.getAuthority(this), false);
+            ContentResolver.removePeriodicSync(
+                    Aware.getAWAREAccount(this),
+                    Accelerometer_Provider.getAuthority(this),
+                    Bundle.EMPTY
+            );
+        }
 
         if (Aware.DEBUG) Log.d(TAG, "Accelerometer service terminated...");
     }
@@ -282,7 +287,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
                 if (FREQUENCY != new_frequency
                         || THRESHOLD != new_threshold
-                        || ENFORCE_FREQUENCY != new_enforce_frequency){
+                        || ENFORCE_FREQUENCY != new_enforce_frequency) {
 
                     sensorHandler.removeCallbacksAndMessages(null);
                     mSensorManager.unregisterListener(this, mAccelerometer);
@@ -296,6 +301,17 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
                 LAST_SAVE = System.currentTimeMillis();
 
                 if (Aware.DEBUG) Log.d(TAG, "Accelerometer service active: " + FREQUENCY + "ms");
+
+                if (!Aware.isSyncEnabled(this, Accelerometer_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+                    ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Accelerometer_Provider.getAuthority(this), 1);
+                    ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Accelerometer_Provider.getAuthority(this), true);
+                    ContentResolver.addPeriodicSync(
+                            Aware.getAWAREAccount(this),
+                            Accelerometer_Provider.getAuthority(this),
+                            Bundle.EMPTY,
+                            Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
+                    );
+                }
             }
         }
 

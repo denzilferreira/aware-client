@@ -10,6 +10,7 @@ import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -24,6 +25,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.WakefulBroadcastReceiver;
@@ -52,7 +54,7 @@ import java.util.List;
  * Service that logs application usage on the device.
  * Updates every time the user changes application or accesses a sub activity on the screen.
  * - ACTION_AWARE_APPLICATIONS_FOREGROUND: new application on the screen
- * - ACTION_AWARE_APPLICATIONS_HISTORY: applications running was just updated
+ * - ACTION_AWARE_APPLICATIONS_HISTORY: sync_applications running was just updated
  * - ACTION_AWARE_APPLICATIONS_NOTIFICATIONS: new notification received
  * - ACTION_AWARE_APPLICATIONS_CRASHES: an application crashed, error and ANR conditions
  *
@@ -122,7 +124,7 @@ public class Applications extends AccessibilityService {
         if (event.getPackageName() == null) return;
 
         if (!Aware.isServiceRunning(getApplicationContext(), Aware.class)) {
-            Intent aware = new Intent(this, Aware.class);
+            Intent aware = new Intent(getApplicationContext(), Aware.class);
             startService(aware);
         }
 
@@ -341,6 +343,17 @@ public class Applications extends AccessibilityService {
             info.packageNames = null;
             this.setServiceInfo(info);
         }
+
+        if (!Aware.isSyncEnabled(this, Applications_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+            ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), 1);
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), true);
+            ContentResolver.addPeriodicSync(
+                    Aware.getAWAREAccount(this),
+                    Applications_Provider.getAuthority(this),
+                    Bundle.EMPTY,
+                    Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
+            );
+        }
     }
 
     @Override
@@ -376,6 +389,15 @@ public class Applications extends AccessibilityService {
         //notify the user
         Applications.isAccessibilityServiceActive(getApplicationContext());
 
+        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), false);
+            ContentResolver.removePeriodicSync(
+                    Aware.getAWAREAccount(this),
+                    Applications_Provider.getAuthority(this),
+                    Bundle.EMPTY
+            );
+        }
+
         return super.onUnbind(intent);
     }
 
@@ -387,7 +409,6 @@ public class Applications extends AccessibilityService {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
         Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
     }
 
@@ -520,9 +541,7 @@ public class Applications extends AccessibilityService {
 
     /**
      * Applications background service
-     * - Updates the current running applications statistics
-     * - Uploads data to the webservice
-     *
+     * - Updates the current running sync_applications statistics
      * @author df
      */
     public static class BackgroundService extends IntentService {
@@ -539,7 +558,7 @@ public class Applications extends AccessibilityService {
                     Log.d(TAG, "Removed scheduler: " + SCHEDULER_APPLICATIONS_BACKGROUND);
             }
 
-            //Updating list of running applications/services
+            //Updating list of running sync_applications/services
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && intent.getAction().equals(ACTION_AWARE_APPLICATIONS_HISTORY)) {
 
                 ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
@@ -548,7 +567,7 @@ public class Applications extends AccessibilityService {
 
                 if (runningApps == null) return;
 
-                if (DEBUG) Log.d(TAG, "Running " + runningApps.size() + " applications");
+                if (DEBUG) Log.d(TAG, "Running " + runningApps.size() + " sync_applications");
 
                 for (RunningAppProcessInfo app : runningApps) {
                     try {
@@ -613,7 +632,7 @@ public class Applications extends AccessibilityService {
                     }
                 }
 
-                //Close open applications that are not running anymore
+                //Close open sync_applications that are not running anymore
                 try {
                     Cursor appsOpened = getContentResolver().query(Applications_History.CONTENT_URI, null, Applications_History.END_TIMESTAMP + "=0", null, null);
                     if (appsOpened != null && appsOpened.moveToFirst()) {
@@ -642,7 +661,7 @@ public class Applications extends AccessibilityService {
         }
 
         /**
-         * Check if the application on the database, exists on the running applications
+         * Check if the application on the database, exists on the running sync_applications
          *
          * @param {@link List}<RunningAppProcessInfo> runningApps
          * @param {@link Cursor} row

@@ -36,7 +36,7 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
     /**
      * Authority of content provider
      */
-    public static String AUTHORITY = "com.aware.provider.accelerometer.linear";
+    public static String AUTHORITY = "com.aware.provider.sync_accelerometer.linear";
 
     // ContentProvider query paths
     private static final int ACCEL_DEV = 1;
@@ -292,6 +292,15 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
         getContext().getContentResolver().notifyChange(uri, null);
 
         return count;
+    }
+
+    /**
+     * Returns the provider authority that is dynamic
+     * @return
+     */
+    public static String getAuthority(Context context) {
+        AUTHORITY = context.getPackageName() + ".provider.accelerometer.linear";
+        return AUTHORITY;
     }
 
     @Override

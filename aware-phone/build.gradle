@@ -2,15 +2,15 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion compile_sdk
+    buildToolsVersion build_tools
 
     defaultConfig {
         applicationId "com.aware.phone"
         versionCode version_code
         versionName version_readable
-        targetSdkVersion 25
-        minSdkVersion 11 //Android 2.3.3
+        targetSdkVersion target_sdk
+        minSdkVersion minimum_sdk //Android 4.0+
     }
 
     signingConfigs {
@@ -41,7 +41,7 @@ if (System.getenv("storeFile") != null && System.getenv("storePassword") != null
 }
 
 dependencies {
-    implementation project(':aware-core')
+    api project(':aware-core')
     implementation "com.android.support:cardview-v7:$support_libs"
     implementation "com.android.support:design:$support_libs"
     implementation "com.android.support:gridlayout-v7:$support_libs"

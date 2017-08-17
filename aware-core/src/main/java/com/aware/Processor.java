@@ -1,23 +1,22 @@
 
 package com.aware;
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
-import android.os.Binder;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.aware.providers.Processor_Provider;
 import com.aware.providers.Processor_Provider.Processor_Data;
-import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 
 import java.io.BufferedReader;
@@ -143,6 +142,9 @@ public class Processor extends Aware_Sensor {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 Log.d(TAG, "Processor service is not allowed by Google, buuuu. Disabling sensor...");
+
+                Toast.makeText(getApplicationContext(), "Google has disabled processor sensor: Android N (7+).", Toast.LENGTH_LONG).show();
+
                 Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_PROCESSOR, false);
                 Aware.stopProcessor(getApplicationContext());
                 stopSelf();
@@ -168,6 +170,17 @@ public class Processor extends Aware_Sensor {
             }
 
             if (Aware.DEBUG) Log.d(TAG, "Processor service active: " + FREQUENCY + "s");
+
+            if (!Aware.isSyncEnabled(this, Processor_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+                ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Processor_Provider.getAuthority(this), 1);
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Processor_Provider.getAuthority(this), true);
+                ContentResolver.addPeriodicSync(
+                        Aware.getAWAREAccount(this),
+                        Processor_Provider.getAuthority(this),
+                        Bundle.EMPTY,
+                        Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
+                );
+            }
         }
 
         return START_STICKY;
@@ -178,6 +191,15 @@ public class Processor extends Aware_Sensor {
         super.onDestroy();
 
         mHandler.removeCallbacks(mRunnable);
+
+        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Processor_Provider.getAuthority(this), false);
+            ContentResolver.removePeriodicSync(
+                    Aware.getAWAREAccount(this),
+                    Processor_Provider.getAuthority(this),
+                    Bundle.EMPTY
+            );
+        }
 
         if (Aware.DEBUG) Log.d(TAG, "Processor service terminated...");
     }
