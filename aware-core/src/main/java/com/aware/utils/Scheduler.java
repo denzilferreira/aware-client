@@ -125,7 +125,7 @@ public class Scheduler extends Aware_Sensor {
             if (context.getResources().getBoolean(R.bool.standalone))
                 is_global = false;
 
-            if (schedule.getRandom().length() != 0) {
+            if (schedule.getRandom().length() != 0 && schedule.getTimer() == -1) {
 
                 JSONObject random = schedule.getRandom();
 
@@ -182,15 +182,10 @@ public class Scheduler extends Aware_Sensor {
                         schedule.setScheduleID(original_id + "_random_" + r);
                     }
 
-                    ContentValues data = new ContentValues();
-                    data.put(Scheduler_Provider.Scheduler_Data.TIMESTAMP, System.currentTimeMillis());
-                    data.put(Scheduler_Provider.Scheduler_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                    data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID, schedule.getScheduleID());
-                    data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE, schedule.build().toString());
-                    data.put(Scheduler_Provider.Scheduler_Data.PACKAGE_NAME, (is_global) ? "com.aware.phone" : context.getPackageName());
-
-                    Log.d(Scheduler.TAG, "Random schedule: " + data.toString() + "\n");
-                    context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
+                    Log.d(Scheduler.TAG, "Random schedule: " + schedule.getScheduleID() + "\n");
+                    // Recursively call saveSchedule.  This does not end up here again, because
+                    // now there is a timer set.
+                    saveSchedule(context, schedule);
                 }
             } else {
                 ContentValues data = new ContentValues();
@@ -239,7 +234,7 @@ public class Scheduler extends Aware_Sensor {
      */
     public static void saveSchedule(Context context, Schedule schedule, String package_name) {
         try {
-            if (schedule.getRandom().length() != 0) {
+            if (schedule.getRandom().length() != 0 && schedule.getTimer() == -1) {
 
                 JSONObject random = schedule.getRandom();
 
@@ -297,15 +292,10 @@ public class Scheduler extends Aware_Sensor {
                         schedule.setScheduleID(original_id + "_random_" + r);
                     }
 
-                    ContentValues data = new ContentValues();
-                    data.put(Scheduler_Provider.Scheduler_Data.TIMESTAMP, System.currentTimeMillis());
-                    data.put(Scheduler_Provider.Scheduler_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                    data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID, schedule.getScheduleID());
-                    data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE, schedule.build().toString());
-                    data.put(Scheduler_Provider.Scheduler_Data.PACKAGE_NAME, package_name);
-
-                    Log.d(Scheduler.TAG, "Random schedule: " + data.toString() + "\n");
-                    context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
+                    Log.d(Scheduler.TAG, "Random schedule: " + schedule.getScheduleID() + "\n");
+                    // Recursively call saveSchedule.  This does not end up here again, because
+                    // now there is a timer set.
+                    saveSchedule(context, schedule, package_name);
                 }
             } else {
                 ContentValues data = new ContentValues();
