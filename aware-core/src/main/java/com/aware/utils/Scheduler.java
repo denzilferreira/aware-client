@@ -27,6 +27,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -1594,7 +1597,20 @@ public class Scheduler extends Aware_Sensor {
         //String seed = "hJYAe7cV";
         ArrayList<Long> randomList = new ArrayList<>();
         random_seed = String.format("%s-%d-%d", random_seed, start.get(Calendar.YEAR), start.get(Calendar.DAY_OF_YEAR));
-        Random rng = new Random(random_seed.hashCode());
+        long random_seed_int = 13;
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(random_seed.getBytes("UTF-8"));
+            byte[] digest = md.digest();
+            random_seed_int = (((((((digest[0]<<8  + digest[1])<<8  + digest[2])<<8 + digest[3])<<8)
+                               + digest[4]<<8) + digest[5]<<8) + digest[6]<<8) + digest[7];
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        Random rng = new Random(random_seed_int);
 
         long totalInterval = end.getTimeInMillis() - start.getTimeInMillis();
         long minDifferenceMillis = interval_minutes * 60 * 1000;
