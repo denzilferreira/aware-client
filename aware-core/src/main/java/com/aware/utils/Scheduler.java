@@ -1170,7 +1170,7 @@ public class Scheduler extends Aware_Sensor {
             Log.i(TAG, "Time now is: " + now.getTime().toString());
 
             try {
-                Log.i(TAG, "Scheduler info: " + schedule.build().toString(5));
+                Log.i(TAG, "Scheduler info: id="+schedule.getScheduleID() +" schedule=" + schedule.build().toString());
             } catch (JSONException e) {
                 e.printStackTrace();
             }

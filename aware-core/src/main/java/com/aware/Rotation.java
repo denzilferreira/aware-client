@@ -146,7 +146,7 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
         rotData.putExtra(EXTRA_DATA, rowData);
         sendBroadcast(rotData);
 
-        if (Aware.DEBUG) Log.d(TAG, "Rotation:" + rowData.toString());
+        //if (Aware.DEBUG) Log.d(TAG, "Rotation:" + rowData.toString());
 
         if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;

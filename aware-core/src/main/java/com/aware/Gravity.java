@@ -142,7 +142,7 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
         gravityData.putExtra(EXTRA_DATA, rowData);
         sendBroadcast(gravityData);
 
-        if (Aware.DEBUG) Log.d(TAG, "Gravity:" + rowData.toString());
+        //if (Aware.DEBUG) Log.d(TAG, "Gravity:" + rowData.toString());
 
         if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;

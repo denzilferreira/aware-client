@@ -140,7 +140,7 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
         accelData.putExtra(EXTRA_DATA, rowData);
         sendBroadcast(accelData);
 
-        if (Aware.DEBUG) Log.d(TAG, "Linear-sync_accelerometer:" + rowData.toString());
+        //if (Aware.DEBUG) Log.d(TAG, "Linear-sync_accelerometer:" + rowData.toString());
 
         if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;

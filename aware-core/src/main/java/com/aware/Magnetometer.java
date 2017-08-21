@@ -126,7 +126,7 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
         magnetoData.putExtra(EXTRA_DATA, rowData);
         sendBroadcast(magnetoData);
 
-        if (Aware.DEBUG) Log.d(TAG, "Magnetometer:" + rowData.toString());
+        //if (Aware.DEBUG) Log.d(TAG, "Magnetometer:" + rowData.toString());
 
         if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;

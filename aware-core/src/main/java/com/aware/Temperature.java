@@ -121,7 +121,7 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
         temperatureData.putExtra(EXTRA_DATA, rowData);
         sendBroadcast(temperatureData);
 
-        if (Aware.DEBUG) Log.d(TAG, "Temperature:" + rowData.toString());
+        //if (Aware.DEBUG) Log.d(TAG, "Temperature:" + rowData.toString());
 
         if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;

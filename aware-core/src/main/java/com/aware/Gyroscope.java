@@ -143,7 +143,7 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
         gyroData.putExtra(EXTRA_DATA, rowData);
         sendBroadcast(gyroData);
 
-        if (Aware.DEBUG) Log.d(TAG, "Gyroscope:" + rowData.toString());
+        //if (Aware.DEBUG) Log.d(TAG, "Gyroscope:" + rowData.toString());
 
         if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;

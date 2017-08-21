@@ -134,7 +134,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         accelData.putExtra(EXTRA_DATA, rowData);
         sendBroadcast(accelData);
 
-        if (Aware.DEBUG) Log.d(TAG, "Accelerometer: " + rowData.toString());
+        //if (Aware.DEBUG) Log.d(TAG, "Accelerometer: " + rowData.toString());
 
         if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;

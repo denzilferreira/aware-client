@@ -123,7 +123,7 @@ public class Light extends Aware_Sensor implements SensorEventListener {
         lightData.putExtra(EXTRA_DATA, rowData);
         sendBroadcast(lightData);
 
-        if (Aware.DEBUG) Log.d(TAG, "Light:" + rowData.toString());
+        //if (Aware.DEBUG) Log.d(TAG, "Light:" + rowData.toString());
 
         if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;
