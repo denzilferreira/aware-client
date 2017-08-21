@@ -2,4 +2,5 @@
 <resources>
     <item name="study_check_interval_min" type="integer" format="integer">10</item>
     <item name="keep_alive_interval_min" type="integer" format="integer">30</item>
+    <item name="alarm_wakeup_interval_min" type="integer" format="integer">1</item>
 </resources>
