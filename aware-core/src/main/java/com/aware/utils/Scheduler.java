@@ -27,12 +27,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Locale;
+import java.util.Random;
 
 public class Scheduler extends Aware_Sensor {
 
@@ -123,7 +128,7 @@ public class Scheduler extends Aware_Sensor {
             if (context.getResources().getBoolean(R.bool.standalone))
                 is_global = false;
 
-            if (schedule.getRandom().length() != 0) {
+            if (schedule.getRandom().length() != 0 && schedule.getTimer() == -1) {
 
                 JSONObject random = schedule.getRandom();
 
@@ -135,36 +140,35 @@ public class Scheduler extends Aware_Sensor {
                 int latest = schedule.getDailyLatest();
 
                 start.set(Calendar.HOUR_OF_DAY, earliest);
-                start.set(Calendar.MINUTE, start.get(Calendar.MINUTE));
-                start.set(Calendar.SECOND, start.get(Calendar.SECOND));
-                start.set(Calendar.MILLISECOND, start.get(Calendar.MILLISECOND));
+                start.set(Calendar.MINUTE, 0);
+                start.set(Calendar.SECOND, 0);
+                start.set(Calendar.MILLISECOND, 0);
 
                 end.set(Calendar.HOUR_OF_DAY, latest);
                 end.set(Calendar.MINUTE, 59);
                 end.set(Calendar.SECOND, 59);
                 end.set(Calendar.MILLISECOND, 999);
 
-                if (now.get(Calendar.HOUR_OF_DAY) > earliest) { //earliest today is earlier today, let's assign randoms for the rest of today
-                    start.set(Calendar.HOUR_OF_DAY, now.get(Calendar.HOUR_OF_DAY));
-                    start.add(Calendar.MINUTE, 15); //schedule randomly 15 minutes from now->latest
-
-                    Log.d(TAG, "Random times set for today between " + start.getTime().toString() + " and " + end.getTime().toString());
+                String original_id = schedule.getScheduleID();
+                String random_seed = original_id;
+                random_seed += "-" + Aware.getSetting(context, Aware_Preferences.DEVICE_ID);
+                // Get the random events for today
+                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), random_seed);
+                // Remove events that are in the past
+                Iterator<Long> iter = randoms.iterator();
+                while(iter.hasNext()) {
+                    if (iter.next() < now.getTimeInMillis() + 2*1000) {
+                        iter.remove();
+                    }
                 }
-
-                if (now.get(Calendar.HOUR_OF_DAY) > latest) { //too late to schedule them today, schedule for the next day starting at the earliest hour onwards
+                Log.d(TAG, "Random times for today between " + start.getTime().toString() + " and " + end.getTime().toString() + ":  "+randoms.size() + " left");
+                // If we have no events left today, reschedule for tomorrow instead.
+                if (randoms.size() <= 0) {
                     start.add(Calendar.DAY_OF_YEAR, 1);
-                    start.set(Calendar.HOUR_OF_DAY, earliest);
-                    start.set(Calendar.MINUTE, 0);
-                    start.set(Calendar.SECOND, 0);
-                    start.set(Calendar.MILLISECOND, 0);
-
                     end.add(Calendar.DAY_OF_YEAR, 1);
-
+                    randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), random_seed);
                     Log.d(TAG, "Random times set for tomorrow between " + start.getTime().toString() + " and " + end.getTime().toString());
                 }
-
-                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
-                String original_id = schedule.getScheduleID();
 
                 long max = getLastRandom(randoms);
                 for (Long r : randoms) {
@@ -181,15 +185,10 @@ public class Scheduler extends Aware_Sensor {
                         schedule.setScheduleID(original_id + "_random_" + r);
                     }
 
-                    ContentValues data = new ContentValues();
-                    data.put(Scheduler_Provider.Scheduler_Data.TIMESTAMP, System.currentTimeMillis());
-                    data.put(Scheduler_Provider.Scheduler_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                    data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID, schedule.getScheduleID());
-                    data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE, schedule.build().toString());
-                    data.put(Scheduler_Provider.Scheduler_Data.PACKAGE_NAME, (is_global) ? "com.aware.phone" : context.getPackageName());
-
-                    Log.d(Scheduler.TAG, "Random schedule: " + data.toString() + "\n");
-                    context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
+                    Log.d(Scheduler.TAG, "Random schedule: " + schedule.getScheduleID() + "\n");
+                    // Recursively call saveSchedule.  This does not end up here again, because
+                    // now there is a timer set.
+                    saveSchedule(context, schedule);
                 }
             } else {
                 ContentValues data = new ContentValues();
@@ -238,7 +237,7 @@ public class Scheduler extends Aware_Sensor {
      */
     public static void saveSchedule(Context context, Schedule schedule, String package_name) {
         try {
-            if (schedule.getRandom().length() != 0) {
+            if (schedule.getRandom().length() != 0 && schedule.getTimer() == -1) {
 
                 JSONObject random = schedule.getRandom();
 
@@ -250,37 +249,35 @@ public class Scheduler extends Aware_Sensor {
                 int latest = schedule.getDailyLatest();
 
                 start.set(Calendar.HOUR_OF_DAY, earliest);
-                start.set(Calendar.MINUTE, start.get(Calendar.MINUTE));
-                start.set(Calendar.SECOND, start.get(Calendar.SECOND));
-                start.set(Calendar.MILLISECOND, start.get(Calendar.MILLISECOND));
+                start.set(Calendar.MINUTE, 0);
+                start.set(Calendar.SECOND, 0);
+                start.set(Calendar.MILLISECOND, 0);
 
                 end.set(Calendar.HOUR_OF_DAY, latest);
                 end.set(Calendar.MINUTE, 59);
                 end.set(Calendar.SECOND, 59);
                 end.set(Calendar.MILLISECOND, 999);
 
-                if (now.get(Calendar.HOUR_OF_DAY) > earliest) { //earliest today is earlier today, let's assign randoms for the rest of today
-                    start.set(Calendar.HOUR_OF_DAY, now.get(Calendar.HOUR_OF_DAY));
-                    start.add(Calendar.MINUTE, 15); //schedule randomly 15 minutes from now->latest
-
-                    Log.d(TAG, "Random times set for today between " + start.getTime().toString() + " and " + end.getTime().toString());
+                String original_id = schedule.getScheduleID();
+                String random_seed = original_id;
+                random_seed += "-" + Aware.getSetting(context, Aware_Preferences.DEVICE_ID);
+                // Get the random events for today
+                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), random_seed);
+                // Remove events that are in the past
+                Iterator<Long> iter = randoms.iterator();
+                while(iter.hasNext()) {
+                    if (iter.next() < now.getTimeInMillis() + 2*1000) {
+                        iter.remove();
+                    }
                 }
-
-                //too late to schedule them today, schedule for the next day
-                if (now.get(Calendar.HOUR_OF_DAY) > latest) {
+                Log.d(TAG, "Random times for today between " + start.getTime().toString() + " and " + end.getTime().toString() + ":  "+randoms.size() + " left");
+                // If we have no events left today, reschedule for tomorrow instead.
+                if (randoms.size() <= 0) {
                     start.add(Calendar.DAY_OF_YEAR, 1);
-                    start.set(Calendar.HOUR_OF_DAY, earliest);
-                    start.set(Calendar.MINUTE, 0);
-                    start.set(Calendar.SECOND, 0);
-                    start.set(Calendar.MILLISECOND, 0);
-
                     end.add(Calendar.DAY_OF_YEAR, 1);
-
+                    randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), random_seed);
                     Log.d(TAG, "Random times set for tomorrow between " + start.getTime().toString() + " and " + end.getTime().toString());
                 }
-
-                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
-                String original_id = schedule.getScheduleID();
 
                 long max = getLastRandom(randoms);
 
@@ -298,15 +295,10 @@ public class Scheduler extends Aware_Sensor {
                         schedule.setScheduleID(original_id + "_random_" + r);
                     }
 
-                    ContentValues data = new ContentValues();
-                    data.put(Scheduler_Provider.Scheduler_Data.TIMESTAMP, System.currentTimeMillis());
-                    data.put(Scheduler_Provider.Scheduler_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                    data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID, schedule.getScheduleID());
-                    data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE, schedule.build().toString());
-                    data.put(Scheduler_Provider.Scheduler_Data.PACKAGE_NAME, package_name);
-
-                    Log.d(Scheduler.TAG, "Random schedule: " + data.toString() + "\n");
-                    context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
+                    Log.d(Scheduler.TAG, "Random schedule: " + schedule.getScheduleID() + "\n");
+                    // Recursively call saveSchedule.  This does not end up here again, because
+                    // now there is a timer set.
+                    saveSchedule(context, schedule, package_name);
                 }
             } else {
                 ContentValues data = new ContentValues();
@@ -367,8 +359,10 @@ public class Scheduler extends Aware_Sensor {
 
             Log.d(TAG, "Random times set for tomorrow between " + start.getTime().toString() + " and " + end.getTime().toString());
 
-            ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
             String original_id = schedule.getScheduleID();
+            String random_seed = original_id;
+            random_seed += "-" + Aware.getSetting(context, Aware_Preferences.DEVICE_ID);
+            ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), random_seed);
 
             long max = getLastRandom(randoms);
 
@@ -1599,8 +1593,24 @@ public class Scheduler extends Aware_Sensor {
      * @param interval_minutes how much time is set between timestamps, in minutes
      * @return ArrayList<Long> of timestamps between interval
      */
-    public static ArrayList<Long> random_times(Calendar start, Calendar end, int amount, int interval_minutes) {
+    public static ArrayList<Long> random_times(Calendar start, Calendar end, int amount, int interval_minutes, String random_seed) {
+        //String seed = "hJYAe7cV";
         ArrayList<Long> randomList = new ArrayList<>();
+        random_seed = String.format("%s-%d-%d", random_seed, start.get(Calendar.YEAR), start.get(Calendar.DAY_OF_YEAR));
+        long random_seed_int = 13;
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(random_seed.getBytes("UTF-8"));
+            byte[] digest = md.digest();
+            random_seed_int = (((((((digest[0]<<8  + digest[1])<<8  + digest[2])<<8 + digest[3])<<8)
+                               + digest[4]<<8) + digest[5]<<8) + digest[6]<<8) + digest[7];
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        Random rng = new Random(random_seed_int);
 
         long totalInterval = end.getTimeInMillis() - start.getTimeInMillis();
         long minDifferenceMillis = interval_minutes * 60 * 1000;
@@ -1608,7 +1618,7 @@ public class Scheduler extends Aware_Sensor {
 
         // Create random intervals without the minimum interval.
         while (randomList.size() < amount) {
-            long random = start.getTimeInMillis() + (long) (Math.random() * effectiveInterval);
+            long random = start.getTimeInMillis() + (long) (rng.nextDouble() * effectiveInterval);
             randomList.add(random);
         }
         // Sort and add the minimum intervals between all events.
