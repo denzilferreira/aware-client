@@ -12,13 +12,11 @@
             android:summary="%s"
             android:title="AWARE Device ID" />
         <EditTextPreference
-            android:defaultValue=""
             android:key="device_label"
             android:persistent="true"
             android:summary="%s"
             android:title="Device label" />
         <EditTextPreference
-            android:defaultValue=""
             android:key="aware_version"
             android:persistent="true"
             android:selectable="false"
@@ -50,7 +48,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_accelerometer"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_accelerometer"
@@ -89,13 +86,13 @@
                 android:title="Application usage" />
 
             <EditTextPreference
-                android:defaultValue="1"
+                android:defaultValue="0"
                 android:dependency="status_applications"
                 android:inputType="number"
                 android:key="frequency_applications"
                 android:persistent="true"
-                android:summary="X minute(s)"
-                android:title="Background applications" />
+                android:summary="Update every X minute(s). 0 to disable."
+                android:title="Background processes" />
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -142,7 +139,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_barometer"
                 android:entries="@array/low_frequency_readable"
                 android:entryValues="@array/low_frequency_values"
                 android:key="frequency_barometer"
@@ -254,7 +250,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_gravity"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_gravity"
@@ -294,7 +289,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_gyroscope"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_gyroscope"
@@ -412,7 +406,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_light"
                 android:entries="@array/low_frequency_readable"
                 android:entryValues="@array/low_frequency_values"
                 android:key="frequency_light"
@@ -452,7 +445,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_linear_accelerometer"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_linear_accelerometer"
@@ -521,7 +513,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_magnetometer"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_magnetometer"
@@ -603,7 +594,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_proximity"
                 android:entries="@array/low_frequency_readable"
                 android:entryValues="@array/low_frequency_values"
                 android:key="frequency_proximity"
@@ -643,7 +633,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_rotation"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_rotation"
@@ -711,7 +700,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_temperature"
                 android:entries="@array/low_frequency_readable"
                 android:entryValues="@array/low_frequency_values"
                 android:key="frequency_temperature"

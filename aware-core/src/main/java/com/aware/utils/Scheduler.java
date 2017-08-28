@@ -1,7 +1,5 @@
 package com.aware.utils;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentValues;
@@ -13,7 +11,6 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
@@ -1013,7 +1010,7 @@ public class Scheduler extends Aware_Sensor {
             if (DEBUG) Log.d(TAG, "Checking for scheduled tasks: " + getPackageName());
 
             String standalone = "";
-            if (getResources().getBoolean(R.bool.standalone)) {
+            if (getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
                 standalone = " OR " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE 'com.aware.phone'";
             }
 
@@ -1573,7 +1570,7 @@ public class Scheduler extends Aware_Sensor {
                 ContentValues data = new ContentValues();
                 data.put(Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED, System.currentTimeMillis());
 
-                if (getResources().getBoolean(R.bool.standalone)) {
+                if (getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
                     getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "' OR " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE 'com.aware.phone'", null);
                 } else {
                     getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null);

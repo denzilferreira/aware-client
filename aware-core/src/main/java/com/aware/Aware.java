@@ -5,7 +5,6 @@ import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.ActivityManager;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -294,7 +293,6 @@ public class Aware extends Service {
     }
 
     private final Foreground_Priority foregroundMgr = new Foreground_Priority();
-
     public class Foreground_Priority extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -321,21 +319,21 @@ public class Aware extends Service {
             PendingIntent onSync = PendingIntent.getBroadcast(this, 0, sync, 0);
 
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
+            mBuilder.setPriority(NotificationCompat.PRIORITY_LOW);
             mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
             mBuilder.setContentTitle(getApplicationContext().getResources().getString(R.string.foreground_notification_title));
             mBuilder.setContentText(getApplicationContext().getResources().getString(R.string.foreground_notification_text));
             mBuilder.setOngoing(true);
             mBuilder.setOnlyAlertOnce(true);
             mBuilder.setContentIntent(onTap);
+            mBuilder.setChannelId("AWARE");
+            mBuilder.setDefaults(~NotificationCompat.DEFAULT_ALL); //muted notification
 
             if (Aware.isStudy(this)) {
                 mBuilder.addAction(R.drawable.ic_stat_aware_sync, getApplicationContext().getResources().getString(R.string.foreground_notification_sync_text), onSync);
             }
 
-            Notification not = mBuilder.build();
-            not.defaults = 0;
-
-            startForeground(Aware.AWARE_FOREGROUND_SERVICE, not);
+            startForeground(Aware.AWARE_FOREGROUND_SERVICE, mBuilder.build());
         } else {
             stopForeground(true);
         }
@@ -376,7 +374,7 @@ public class Aware extends Service {
             try {
                 PackageInfo package_info = getPackageManager().getPackageInfo(getPackageName(), 0);
                 device_ping.put("package_name", package_info.packageName);
-                if (package_info.packageName.equals("com.aware.phone") || getResources().getBoolean(R.bool.standalone)) {
+                if (package_info.packageName.equals("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
                     device_ping.put("package_version_code", String.valueOf(package_info.versionCode));
                     device_ping.put("package_version_name", String.valueOf(package_info.versionName));
                 }
@@ -466,7 +464,7 @@ public class Aware extends Service {
                     }
 
                     //Ignored by standalone apps. They handle their own sensors, so server settings do not apply.
-                    if (getPackageName().equals("com.aware.phone") || !getResources().getBoolean(R.bool.standalone)) {
+                    if (getPackageName().equals("com.aware.phone") || !getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
                         if (study.getString("config").equalsIgnoreCase("[]")) {
                             Aware.tweakSettings(getApplicationContext(), new JSONArray(study.getString("config")));
                         } else if (!study.getString("config").equalsIgnoreCase("[]")) {
