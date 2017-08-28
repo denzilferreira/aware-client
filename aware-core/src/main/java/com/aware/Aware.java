@@ -643,7 +643,7 @@ public class Aware extends Service {
             }
 
             //only the client and self-contained apps need to run the keep alive. Plugins are handled by them.
-            if (getApplicationContext().getPackageName().equals("com.aware.phone") || getResources().getBoolean(R.bool.standalone)) {
+            if (getApplicationContext().getPackageName().equals("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
                 try {
                     Scheduler.Schedule watchdog = Scheduler.getSchedule(this, SCHEDULE_KEEP_ALIVE);
                     if (watchdog == null) {
@@ -661,7 +661,7 @@ public class Aware extends Service {
             }
 
             //Set compliance checks if on a study
-            if ((getPackageName().equals("com.aware.phone") || getResources().getBoolean(R.bool.standalone)) && isStudy(getApplicationContext())) {
+            if ((getPackageName().equals("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) && isStudy(getApplicationContext())) {
                 try {
                     Scheduler.Schedule compliance = Scheduler.getSchedule(this, Aware.SCHEDULE_STUDY_COMPLIANCE);
                     if (compliance == null) {
