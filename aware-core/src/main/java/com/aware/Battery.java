@@ -116,13 +116,25 @@ public class Battery extends Aware_Sensor {
      *
      * @author df
      */
-    public static class Battery_Broadcaster extends BroadcastReceiver {
+    public class Battery_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(Intent.ACTION_BATTERY_CHANGED)) {
-
                 Bundle extras = intent.getExtras();
                 if (extras == null) return;
+
+                boolean changed = false;
+                Cursor lastBattery = context.getContentResolver().query(Battery_Data.CONTENT_URI, null, null, null, Battery_Data.TIMESTAMP + " DESC LIMIT 1");
+                if (lastBattery != null && lastBattery.moveToFirst()) {
+                    changed = (extras.getInt(BatteryManager.EXTRA_LEVEL) != lastBattery.getInt(lastBattery.getColumnIndex(Battery_Data.LEVEL)))
+                            &&
+                                (extras.getInt(BatteryManager.EXTRA_PLUGGED) != lastBattery.getInt(lastBattery.getColumnIndex(Battery_Data.PLUG_ADAPTOR)))
+                            &&
+                                (extras.getInt(BatteryManager.EXTRA_STATUS) != lastBattery.getInt(lastBattery.getColumnIndex(Battery_Data.STATUS)));
+                }
+                if (lastBattery != null) lastBattery.close();
+
+                if (!changed) return;
 
                 ContentValues rowData = new ContentValues();
                 rowData.put(Battery_Data.TIMESTAMP, System.currentTimeMillis());
@@ -137,8 +149,8 @@ public class Battery extends Aware_Sensor {
                 rowData.put(Battery_Data.TECHNOLOGY, extras.getString(BatteryManager.EXTRA_TECHNOLOGY));
 
                 try {
-                    if (Aware.DEBUG) Log.d(TAG, "Battery: " + rowData.toString());
                     context.getContentResolver().insert(Battery_Data.CONTENT_URI, rowData);
+                    if (awareSensor != null) awareSensor.onBatteryChanged(rowData);
                 } catch (SQLiteException e) {
                     if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                 } catch (SQLException e) {
@@ -170,7 +182,6 @@ public class Battery extends Aware_Sensor {
 
             if (intent.getAction().equals(Intent.ACTION_POWER_CONNECTED)) {
                 Cursor lastBattery = context.getContentResolver().query(Battery_Data.CONTENT_URI, null, null, null, Battery_Data.TIMESTAMP + " DESC LIMIT 1");
-
                 Cursor lastDischarge = context.getContentResolver().query(Battery_Discharges.CONTENT_URI, null, Battery_Discharges.END_TIMESTAMP + "=0", null, Battery_Discharges.TIMESTAMP + " DESC LIMIT 1");
                 if (lastDischarge != null && lastDischarge.moveToFirst()) {
                     if (lastBattery != null && lastBattery.moveToFirst()) {
@@ -194,11 +205,12 @@ public class Battery extends Aware_Sensor {
                 if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_BATTERY_CHARGING);
                 Intent battChanged = new Intent(ACTION_AWARE_BATTERY_CHARGING);
                 context.sendBroadcast(battChanged);
+
+                if (awareSensor != null) awareSensor.onBatteryCharging();
             }
 
             if (intent.getAction().equals(Intent.ACTION_POWER_DISCONNECTED)) {
                 Cursor lastBattery = context.getContentResolver().query(Battery_Data.CONTENT_URI, null, null, null, Battery_Data.TIMESTAMP + " DESC LIMIT 1");
-
                 Cursor lastCharge = context.getContentResolver().query(Battery_Charges.CONTENT_URI, null, Battery_Charges.END_TIMESTAMP + "=0", null, Battery_Charges.TIMESTAMP + " DESC LIMIT 1");
                 if (lastCharge != null && lastCharge.moveToFirst()) {
                     if (lastBattery != null && lastBattery.moveToFirst()) {
@@ -222,10 +234,15 @@ public class Battery extends Aware_Sensor {
                 if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_BATTERY_DISCHARGING);
                 Intent battChanged = new Intent(ACTION_AWARE_BATTERY_DISCHARGING);
                 context.sendBroadcast(battChanged);
+
+                if (awareSensor != null) awareSensor.onBatteryDischarging();
             }
 
             if (intent.getAction().equals(Intent.ACTION_BATTERY_LOW)) {
                 if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_BATTERY_LOW);
+
+                if (awareSensor != null) awareSensor.onBatteryLow();
+
                 Intent battChanged = new Intent(ACTION_AWARE_BATTERY_LOW);
                 context.sendBroadcast(battChanged);
             }
@@ -246,8 +263,8 @@ public class Battery extends Aware_Sensor {
                     rowData.put(Battery_Data.TECHNOLOGY, lastBattery.getString(lastBattery.getColumnIndex(Battery_Data.TECHNOLOGY)));
 
                     try {
-                        if (Aware.DEBUG) Log.d(TAG, "Battery:" + rowData.toString());
                         context.getContentResolver().insert(Battery_Data.CONTENT_URI, rowData);
+                        if (awareSensor != null) awareSensor.onPhoneShutdown();
                     } catch (SQLiteException e) {
                         if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                     } catch (SQLException e) {
@@ -277,8 +294,8 @@ public class Battery extends Aware_Sensor {
                     rowData.put(Battery_Data.TECHNOLOGY, lastBattery.getString(lastBattery.getColumnIndex(Battery_Data.TECHNOLOGY)));
 
                     try {
-                        if (Aware.DEBUG) Log.d(TAG, "Battery:" + rowData.toString());
                         context.getContentResolver().insert(Battery_Data.CONTENT_URI, rowData);
+                        if (awareSensor != null) awareSensor.onPhoneReboot();
                     } catch (SQLiteException e) {
                         if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                     } catch (SQLException e) {
@@ -294,7 +311,23 @@ public class Battery extends Aware_Sensor {
         }
     }
 
-    private static final Battery_Broadcaster batteryMonitor = new Battery_Broadcaster();
+    private final Battery_Broadcaster batteryMonitor = new Battery_Broadcaster();
+
+    public static Battery.AWARESensorObserver awareSensor;
+
+    public interface AWARESensorObserver {
+        void onBatteryChanged(ContentValues data);
+
+        void onPhoneReboot();
+
+        void onPhoneShutdown();
+
+        void onBatteryLow();
+
+        void onBatteryCharging();
+
+        void onBatteryDischarging();
+    }
 
     /**
      * Activity-Service binder
@@ -339,6 +372,7 @@ public class Battery extends Aware_Sensor {
         filter.addAction(Intent.ACTION_REBOOT);
         filter.addAction(Intent.ACTION_POWER_CONNECTED);
         filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
+
         registerReceiver(batteryMonitor, filter);
 
         if (Aware.DEBUG) Log.d(TAG, "Battery service created!");

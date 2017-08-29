@@ -9,18 +9,24 @@ import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -31,6 +37,8 @@ import com.aware.providers.Bluetooth_Provider.Bluetooth_Sensor;
 import com.aware.utils.Aware_Sensor;
 import com.aware.utils.Encrypter;
 
+import java.util.HashMap;
+
 /**
  * Bluetooth Module. For now, scans and returns surrounding bluetooth devices and RSSI dB values.
  *
@@ -40,8 +48,8 @@ public class Bluetooth extends Aware_Sensor {
 
     private static String TAG = "AWARE::Bluetooth";
 
-    private static AlarmManager alarmManager = null;
-    private static PendingIntent bluetoothScan = null;
+    private AlarmManager alarmManager = null;
+    private PendingIntent bluetoothScan = null;
     private static long scanTimestamp = 0;
     private static int FREQUENCY = -1;
 
@@ -54,17 +62,20 @@ public class Bluetooth extends Aware_Sensor {
      * Broadcasted event: new bluetooth device detected
      */
     public static final String ACTION_AWARE_BLUETOOTH_NEW_DEVICE = "ACTION_AWARE_BLUETOOTH_NEW_DEVICE";
+    public static final String ACTION_AWARE_BLUETOOTH_NEW_DEVICE_BLE = "ACTION_AWARE_BLUETOOTH_NEW_DEVICE_BLE";
     public static final String EXTRA_DEVICE = "extra_device";
 
     /**
      * Broadcasted event: bluetooth scan started
      */
     public static final String ACTION_AWARE_BLUETOOTH_SCAN_STARTED = "ACTION_AWARE_BLUETOOTH_SCAN_STARTED";
+    public static final String ACTION_AWARE_BLUETOOTH_BLE_SCAN_STARTED = "ACTION_AWARE_BLUETOOTH_BLE_SCAN_STARTED";
 
     /**
      * Broadcasted event: bluetooth scan ended
      */
     public static final String ACTION_AWARE_BLUETOOTH_SCAN_ENDED = "ACTION_AWARE_BLUETOOTH_SCAN_ENDED";
+    public static final String ACTION_AWARE_BLUETOOTH_BLE_SCAN_ENDED = "ACTION_AWARE_BLUETOOTH_BLE_SCAN_ENDED";
 
     /**
      * Broadcast receiving event: request a bluetooth scan
@@ -83,6 +94,14 @@ public class Bluetooth extends Aware_Sensor {
 
     private static NotificationManager notificationManager = null;
     private static Intent enableBT = null;
+
+    private boolean BLE_SUPPORT = false;
+
+    private Handler mBLEHandler;
+
+    private ScanSettings scanSettings;
+    private boolean isBLEScanning = false;
+    private HashMap<String, BluetoothDevice> discoveredBLE = new HashMap<String, BluetoothDevice>();
 
     /**
      * Get an instance for the Bluetooth Service
@@ -120,16 +139,31 @@ public class Bluetooth extends Aware_Sensor {
         REQUIRED_PERMISSIONS.add(Manifest.permission.BLUETOOTH_ADMIN);
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_COARSE_LOCATION); //we need this permission for BT scanning to work
 
-        bluetoothAdapter  = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2)? ((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter() : BluetoothAdapter.getDefaultAdapter();
-        if(bluetoothAdapter == null) {
+        bluetoothAdapter = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) ? ((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter() : BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter == null) {
             stopSelf();
             return;
         }
+
+        //Check if the device can do BLE scans.
+        if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))
+            BLE_SUPPORT = true;
 
         enableBT = new Intent(this, Bluetooth.class);
         enableBT.putExtra("action", ACTION_AWARE_ENABLE_BT);
 
         if (Aware.DEBUG) Log.d(TAG, "Bluetooth service created!");
+    }
+
+    public static Bluetooth.AWARESensorObserver awareSensor;
+
+    public interface AWARESensorObserver {
+        void onBluetoothDetected(ContentValues data);
+        void onBluetoothBLEDetected(ContentValues data);
+        void onScanStarted();
+        void onScanEnded();
+        void onBLEScanStarted();
+        void onBLEScanEnded();
     }
 
     @Override
@@ -138,7 +172,8 @@ public class Bluetooth extends Aware_Sensor {
 
         if (PERMISSIONS_OK) {
             if (intent != null && intent.hasExtra("action") && intent.getStringExtra("action").equalsIgnoreCase(ACTION_AWARE_ENABLE_BT)) {
-                bluetoothAdapter.enable();
+                Intent enableBT = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivity(enableBT);
             }
 
             if (!bluetoothAdapter.isEnabled()) {
@@ -161,14 +196,25 @@ public class Bluetooth extends Aware_Sensor {
                 if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BLUETOOTH))) {
                     alarmManager.cancel(bluetoothScan);
                     alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
-                            System.currentTimeMillis() + 1000,
-                            Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BLUETOOTH)) * 1000,
+                            System.currentTimeMillis() + Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BLUETOOTH)) * 1000,
+                            Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BLUETOOTH)) * 2 * 1000,
                             bluetoothScan);
 
                     FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BLUETOOTH));
                 }
-
                 if (Aware.DEBUG) Log.d(TAG, "Bluetooth service active: " + FREQUENCY + "s");
+
+                if (BLE_SUPPORT) {
+                    if (mBLEHandler == null)
+                        mBLEHandler = new Handler();
+
+                    if (scanSettings == null) {
+                        scanSettings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_POWER).build();
+                    }
+
+                    if (!isBLEScanning)
+                        mBLEHandler.post(scanRunnable);
+                }
             }
 
             if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE).length() >= 0 && !Aware.isSyncEnabled(this, Bluetooth_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
@@ -185,6 +231,69 @@ public class Bluetooth extends Aware_Sensor {
 
         return START_STICKY;
     }
+
+    private Runnable scanRunnable = new Runnable() {
+        @Override
+        public void run() {
+            BluetoothLeScanner scanner = bluetoothAdapter.getBluetoothLeScanner();
+            if (isBLEScanning) {
+                scanner.stopScan(scanCallback);
+                if (awareSensor != null) awareSensor.onBLEScanEnded();
+                if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_BLUETOOTH_BLE_SCAN_ENDED);
+                Intent scanEnd = new Intent(ACTION_AWARE_BLUETOOTH_BLE_SCAN_ENDED);
+                sendBroadcast(scanEnd);
+
+                discoveredBLE.clear();
+
+            } else {
+                scanner.startScan(null, scanSettings, scanCallback);
+                if (awareSensor != null) awareSensor.onBLEScanStarted();
+                if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_BLUETOOTH_BLE_SCAN_STARTED);
+                Intent scanStart = new Intent(ACTION_AWARE_BLUETOOTH_BLE_SCAN_STARTED);
+                sendBroadcast(scanStart);
+            }
+
+            isBLEScanning = !isBLEScanning;
+            mBLEHandler.postDelayed(this, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BLUETOOTH)) / 2 * 1000);
+        }
+    };
+
+    private final ScanCallback scanCallback = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            super.onScanResult(callbackType, result);
+            BluetoothDevice bluetoothDevice = result.getDevice();
+            if (discoveredBLE.containsKey(bluetoothDevice.getAddress())) return;
+
+            discoveredBLE.put(bluetoothDevice.getAddress(), bluetoothDevice);
+
+            ContentValues rowData = new ContentValues();
+            rowData.put(Bluetooth_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+            rowData.put(Bluetooth_Data.TIMESTAMP, System.currentTimeMillis());
+            rowData.put(Bluetooth_Data.BT_ADDRESS, Encrypter.hashMac(getApplicationContext(), bluetoothDevice.getAddress()));
+            rowData.put(Bluetooth_Data.BT_NAME, Encrypter.hashSsid(getApplicationContext(), bluetoothDevice.getName()));
+            rowData.put(Bluetooth_Data.BT_RSSI, result.getRssi());
+            rowData.put(Bluetooth_Data.BT_LABEL, scanTimestamp);
+
+            try {
+                getContentResolver().insert(Bluetooth_Data.CONTENT_URI, rowData);
+
+                if (awareSensor != null) awareSensor.onBluetoothBLEDetected(rowData);
+
+            } catch (SQLiteException e) {
+                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+            } catch (SQLException e) {
+                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+            }
+
+            if (Aware.DEBUG)
+                Log.d(Aware.TAG, ACTION_AWARE_BLUETOOTH_NEW_DEVICE_BLE + ": " + rowData.toString());
+
+            Intent detectedBT = new Intent(ACTION_AWARE_BLUETOOTH_NEW_DEVICE_BLE);
+            detectedBT.putExtra(EXTRA_DEVICE, rowData);
+            sendBroadcast(detectedBT);
+        }
+    };
 
     @Override
     public void onDestroy() {
@@ -221,18 +330,17 @@ public class Bluetooth extends Aware_Sensor {
      *
      * @author denzil
      */
-    public static class Bluetooth_Broadcaster extends BroadcastReceiver {
-
+    public class Bluetooth_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-
             if (intent.getAction().equals(BluetoothDevice.ACTION_FOUND)) {
                 Bundle extras = intent.getExtras();
                 if (extras == null) return;
 
                 BluetoothDevice btDevice = extras.getParcelable(BluetoothDevice.EXTRA_DEVICE);
                 if (btDevice == null) {
-                    if (Aware.DEBUG) Log.d(TAG, "No Bluetooth device was discovered during the scan");
+                    if (Aware.DEBUG)
+                        Log.d(TAG, "No Bluetooth device was discovered during the scan");
                     return;
                 }
 
@@ -248,6 +356,9 @@ public class Bluetooth extends Aware_Sensor {
 
                 try {
                     context.getContentResolver().insert(Bluetooth_Data.CONTENT_URI, rowData);
+
+                    if (awareSensor != null) awareSensor.onBluetoothDetected(rowData);
+
                 } catch (SQLiteException e) {
                     if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                 } catch (SQLException e) {
@@ -263,12 +374,14 @@ public class Bluetooth extends Aware_Sensor {
             }
 
             if (intent.getAction().equals(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)) {
+                if (awareSensor != null) awareSensor.onScanEnded();
                 if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_BLUETOOTH_SCAN_ENDED);
                 Intent scanEnd = new Intent(ACTION_AWARE_BLUETOOTH_SCAN_ENDED);
                 context.sendBroadcast(scanEnd);
             }
 
             if (intent.getAction().equals(BluetoothAdapter.ACTION_DISCOVERY_STARTED)) {
+                if (awareSensor != null) awareSensor.onScanStarted();
                 scanTimestamp = System.currentTimeMillis();
                 if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_BLUETOOTH_SCAN_STARTED);
                 Intent scanStart = new Intent(ACTION_AWARE_BLUETOOTH_SCAN_STARTED);
@@ -276,17 +389,19 @@ public class Bluetooth extends Aware_Sensor {
             }
 
             if (intent.getAction().equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
-                if(intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1)
-                        == BluetoothAdapter.STATE_OFF){
+                if (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1)
+                        == BluetoothAdapter.STATE_OFF) {
                     notifyMissingBluetooth(context.getApplicationContext(), false);
 
-                }else if(intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1)
-                        == BluetoothAdapter.STATE_ON){
+                } else if (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1)
+                        == BluetoothAdapter.STATE_ON) {
                     notifyMissingBluetooth(context.getApplicationContext(), true);
                 }
             }
 
             if (intent.getAction().equals(ACTION_AWARE_BLUETOOTH_REQUEST_SCAN)) {
+                //interrupt ongoing scans
+                if (bluetoothAdapter.isDiscovering()) bluetoothAdapter.cancelDiscovery();
                 if (!bluetoothAdapter.isDiscovering()) {
                     if (bluetoothAdapter.isEnabled()) {
                         bluetoothAdapter.startDiscovery();
@@ -312,7 +427,7 @@ public class Bluetooth extends Aware_Sensor {
         }
     }
 
-    private static final Bluetooth_Broadcaster bluetoothMonitor = new Bluetooth_Broadcaster();
+    private final Bluetooth_Broadcaster bluetoothMonitor = new Bluetooth_Broadcaster();
 
     private void save_bluetooth_device(BluetoothAdapter btAdapter) {
         if (btAdapter == null) return;
@@ -329,7 +444,7 @@ public class Bluetooth extends Aware_Sensor {
 
             if (Aware.DEBUG) Log.d(TAG, "Bluetooth local information: " + rowData.toString());
         }
-        if (sensorBT != null && ! sensorBT.isClosed()) sensorBT.close();
+        if (sensorBT != null && !sensorBT.isClosed()) sensorBT.close();
     }
 
     private static void notifyMissingBluetooth(Context c, boolean dismiss) {

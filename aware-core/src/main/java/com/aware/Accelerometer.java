@@ -140,6 +140,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
                     @Override
                     public void run() {
                         getContentResolver().bulkInsert(Accelerometer_Data.CONTENT_URI, data_buffer);
+
                         Intent accelData = new Intent(ACTION_AWARE_ACCELEROMETER);
                         sendBroadcast(accelData);
                     }
@@ -152,8 +153,6 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         }
         data_values.clear();
         LAST_SAVE = TS;
-
-        if (Aware.DEBUG) Log.d(TAG, "Accelerometer Hz: " + getFrequency(getApplicationContext()));
     }
 
     public static AWARESensorObserver awareSensor;

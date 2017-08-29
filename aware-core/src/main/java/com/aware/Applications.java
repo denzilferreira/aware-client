@@ -310,7 +310,7 @@ public class Applications extends AccessibilityService {
         }
 
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS).length() == 0) {
-            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS, 1);
+            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS, 0);
         }
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP && Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS)) > 0) {
@@ -332,7 +332,7 @@ public class Applications extends AccessibilityService {
                 }
 
                 if (DEBUG)
-                    Log.d(TAG, "Checking background apps every " + backgroundApps.getInterval() + " minutes");
+                    Log.d(TAG, "Checking background services every " + backgroundApps.getInterval() + " minutes");
 
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -340,6 +340,8 @@ public class Applications extends AccessibilityService {
         } else {
             Scheduler.removeSchedule(getApplicationContext(), SCHEDULER_APPLICATIONS_BACKGROUND);
             Aware.startScheduler(this);
+
+            if (DEBUG) Log.d(TAG, "Checking background services is not possible starting Android 5+");
         }
 
         Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
