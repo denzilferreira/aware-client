@@ -122,6 +122,9 @@ public class Communication extends Aware_Sensor {
 
                                 try {
                                     getContentResolver().insert(Calls_Data.CONTENT_URI, received);
+
+                                    if (awareSensor != null) awareSensor.onCall(received);
+
                                 } catch (SQLiteException e) {
                                     if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                                 } catch (SQLException e) {
@@ -146,6 +149,9 @@ public class Communication extends Aware_Sensor {
                                 missed.put(Calls_Data.TRACE, Encrypter.hashPhone(getApplicationContext(), lastCall.getString(lastCall.getColumnIndex(Calls.NUMBER))));
                                 try {
                                     getContentResolver().insert(Calls_Data.CONTENT_URI, missed);
+
+                                    if (awareSensor != null) awareSensor.onCall(missed);
+
                                 } catch (SQLiteException e) {
                                     if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                                 } catch (SQLException e) {
@@ -169,6 +175,9 @@ public class Communication extends Aware_Sensor {
                                 outgoing.put(Calls_Data.TRACE, Encrypter.hashPhone(getApplicationContext(), lastCall.getString(lastCall.getColumnIndex(Calls.NUMBER))));
                                 try {
                                     getContentResolver().insert(Calls_Data.CONTENT_URI, outgoing);
+
+                                    if (awareSensor != null) awareSensor.onCall(outgoing);
+
                                 } catch (SQLiteException e) {
                                     if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                                 } catch (SQLException e) {
@@ -216,6 +225,9 @@ public class Communication extends Aware_Sensor {
 
                                 try {
                                     getContentResolver().insert(Messages_Data.CONTENT_URI, inbox);
+
+                                    if (awareSensor != null) awareSensor.onMessage(inbox);
+
                                 } catch (SQLiteException e) {
                                     if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                                 } catch (SQLException e) {
@@ -239,6 +251,9 @@ public class Communication extends Aware_Sensor {
 
                                 try {
                                     getContentResolver().insert(Messages_Data.CONTENT_URI, sent);
+
+                                    if (awareSensor != null) awareSensor.onMessage(sent);
+
                                 } catch (SQLiteException e) {
                                     if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                                 } catch (SQLException e) {
@@ -273,20 +288,38 @@ public class Communication extends Aware_Sensor {
                         if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_CALL_RINGING);
                         Intent callRinging = new Intent(ACTION_AWARE_CALL_RINGING);
                         sendBroadcast(callRinging);
+
+                        if (awareSensor != null) awareSensor.onRinging();
+
                         break;
                     case TelephonyManager.CALL_STATE_OFFHOOK:
                         if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_USER_IN_CALL);
                         Intent inCall = new Intent(ACTION_AWARE_USER_IN_CALL);
                         sendBroadcast(inCall);
+
+                        if (awareSensor != null) awareSensor.onBusy();
+
                         break;
                     case TelephonyManager.CALL_STATE_IDLE:
                         if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_USER_NOT_IN_CALL);
                         Intent userFree = new Intent(ACTION_AWARE_USER_NOT_IN_CALL);
                         sendBroadcast(userFree);
+
+                        if (awareSensor != null) awareSensor.onFree();
+
                         break;
                 }
             }
         }
+    }
+
+    public static Communication.AWARESensorObserver awareSensor;
+    public interface AWARESensorObserver {
+        void onCall(ContentValues data);
+        void onMessage(ContentValues data);
+        void onRinging();
+        void onBusy();
+        void onFree();
     }
 
     @Override

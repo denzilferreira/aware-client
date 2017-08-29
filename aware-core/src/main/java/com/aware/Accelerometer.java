@@ -155,7 +155,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         LAST_SAVE = TS;
     }
 
-    public static AWARESensorObserver awareSensor;
+    public static Accelerometer.AWARESensorObserver awareSensor;
     public interface AWARESensorObserver {
         void onAccelerometerChanged(ContentValues data);
     }
