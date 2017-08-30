@@ -15,7 +15,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -66,9 +65,6 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
      * ContentProvider: MagnetometerProvider
      */
     public static final String ACTION_AWARE_MAGNETOMETER = "ACTION_AWARE_MAGNETOMETER";
-    public static final String EXTRA_DATA = "data";
-    public static final String EXTRA_SENSOR = "sensor";
-
     public static final String ACTION_AWARE_MAGNETOMETER_LABEL = "ACTION_AWARE_MAGNETOMETER_LABEL";
     public static final String EXTRA_LABEL = "label";
 
@@ -119,25 +115,29 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
         rowData.put(Magnetometer_Data.ACCURACY, event.accuracy);
         rowData.put(Magnetometer_Data.LABEL, LABEL);
 
+        if (awareSensor!= null) awareSensor.onMagnetometerChanged(rowData);
+
         data_values.add(rowData);
         LAST_TS = TS;
-
-        Intent magnetoData = new Intent(ACTION_AWARE_MAGNETOMETER);
-        magnetoData.putExtra(EXTRA_DATA, rowData);
-        sendBroadcast(magnetoData);
-
-        //if (Aware.DEBUG) Log.d(TAG, "Magnetometer:" + rowData.toString());
 
         if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;
         }
 
-        ContentValues[] data_buffer = new ContentValues[data_values.size()];
+        final ContentValues[] data_buffer = new ContentValues[data_values.size()];
         data_values.toArray(data_buffer);
 
         try {
             if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true")) {
-                new AsyncStore().execute(data_buffer);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        getContentResolver().bulkInsert(Magnetometer_Provider.Magnetometer_Data.CONTENT_URI, data_buffer);
+
+                        Intent newData = new Intent(ACTION_AWARE_MAGNETOMETER);
+                        sendBroadcast(newData);
+                    }
+                }).run();
             }
         } catch (SQLiteException e) {
             if (Aware.DEBUG) Log.d(TAG, e.getMessage());
@@ -148,15 +148,9 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
         LAST_SAVE = TS;
     }
 
-    /**
-     * Database I/O on different thread
-     */
-    private class AsyncStore extends AsyncTask<ContentValues[], Void, Void> {
-        @Override
-        protected Void doInBackground(ContentValues[]... data) {
-            getContentResolver().bulkInsert(Magnetometer_Data.CONTENT_URI, data[0]);
-            return null;
-        }
+    public static Magnetometer.AWARESensorObserver awareSensor;
+    public interface AWARESensorObserver {
+        void onMagnetometerChanged(ContentValues data);
     }
 
     /**
@@ -192,10 +186,6 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
             rowData.put(Magnetometer_Sensor.VERSION, sensor.getVersion());
 
             getContentResolver().insert(Magnetometer_Sensor.CONTENT_URI, rowData);
-
-            Intent magneto_dev = new Intent(ACTION_AWARE_MAGNETOMETER);
-            magneto_dev.putExtra(EXTRA_SENSOR, rowData);
-            sendBroadcast(magneto_dev);
 
             if (Aware.DEBUG) Log.d(TAG, "Magnetometer sensor: " + rowData.toString());
         }

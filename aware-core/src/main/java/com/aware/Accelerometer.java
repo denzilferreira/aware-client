@@ -90,6 +90,9 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
                             @Override
                             public void run() {
                                 getContentResolver().bulkInsert(Accelerometer_Data.CONTENT_URI, data_buffer);
+
+                                Intent accelData = new Intent(ACTION_AWARE_ACCELEROMETER);
+                                sendBroadcast(accelData);
                             }
                         }).run();
                     }

@@ -172,9 +172,6 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
 
             getContentResolver().insert(Barometer_Sensor.CONTENT_URI, rowData);
 
-            Intent pressureDev = new Intent(ACTION_AWARE_BAROMETER);
-            sendBroadcast(pressureDev);
-
             if (Aware.DEBUG) Log.d(TAG, "Barometer sensor info: " + rowData.toString());
         }
         if (sensorInfo != null && !sensorInfo.isClosed()) sensorInfo.close();

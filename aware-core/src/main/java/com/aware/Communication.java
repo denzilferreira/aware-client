@@ -276,7 +276,6 @@ public class Communication extends Aware_Sensor {
     }
 
     private PhoneState phoneState = new PhoneState();
-
     private class PhoneState extends PhoneStateListener {
         @Override
         public void onCallStateChanged(int state, String incomingNumber) {
@@ -289,7 +288,7 @@ public class Communication extends Aware_Sensor {
                         Intent callRinging = new Intent(ACTION_AWARE_CALL_RINGING);
                         sendBroadcast(callRinging);
 
-                        if (awareSensor != null) awareSensor.onRinging();
+                        if (awareSensor != null) awareSensor.onRinging(incomingNumber);
 
                         break;
                     case TelephonyManager.CALL_STATE_OFFHOOK:
@@ -297,7 +296,7 @@ public class Communication extends Aware_Sensor {
                         Intent inCall = new Intent(ACTION_AWARE_USER_IN_CALL);
                         sendBroadcast(inCall);
 
-                        if (awareSensor != null) awareSensor.onBusy();
+                        if (awareSensor != null) awareSensor.onBusy(incomingNumber);
 
                         break;
                     case TelephonyManager.CALL_STATE_IDLE:
@@ -305,7 +304,7 @@ public class Communication extends Aware_Sensor {
                         Intent userFree = new Intent(ACTION_AWARE_USER_NOT_IN_CALL);
                         sendBroadcast(userFree);
 
-                        if (awareSensor != null) awareSensor.onFree();
+                        if (awareSensor != null) awareSensor.onFree(incomingNumber);
 
                         break;
                 }
@@ -315,11 +314,35 @@ public class Communication extends Aware_Sensor {
 
     public static Communication.AWARESensorObserver awareSensor;
     public interface AWARESensorObserver {
+        /**
+         * Callback when a call event is recorded (received, made, missed)
+         * @param data
+         */
         void onCall(ContentValues data);
+
+        /**
+         * Callback when a text message event is recorded (received, sent)
+         * @param data
+         */
         void onMessage(ContentValues data);
-        void onRinging();
-        void onBusy();
-        void onFree();
+
+        /**
+         * Callback when the phone is ringing
+         * @param number
+         */
+        void onRinging(String number);
+
+        /**
+         * Callback when the user answered and is busy with a call
+         * @param number
+         */
+        void onBusy(String number);
+
+        /**
+         * Callback when the user hangup an ongoing call and is now free
+         * @param number
+         */
+        void onFree(String number);
     }
 
     @Override

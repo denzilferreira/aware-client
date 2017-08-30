@@ -15,7 +15,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -67,9 +66,6 @@ public class Light extends Aware_Sensor implements SensorEventListener {
      * ContentProvider: LightProvider
      */
     public static final String ACTION_AWARE_LIGHT = "ACTION_AWARE_LIGHT";
-    public static final String EXTRA_DATA = "data";
-    public static final String EXTRA_SENSOR = "sensor";
-
     public static final String ACTION_AWARE_LIGHT_LABEL = "ACTION_AWARE_LIGHT_LABEL";
     public static final String EXTRA_LABEL = "label";
 
@@ -116,25 +112,29 @@ public class Light extends Aware_Sensor implements SensorEventListener {
         rowData.put(Light_Data.ACCURACY, event.accuracy);
         rowData.put(Light_Data.LABEL, LABEL);
 
+        if (awareSensor != null) awareSensor.onLightChanged(rowData);
+
         data_values.add(rowData);
         LAST_TS = TS;
-
-        Intent lightData = new Intent(ACTION_AWARE_LIGHT);
-        lightData.putExtra(EXTRA_DATA, rowData);
-        sendBroadcast(lightData);
-
-        //if (Aware.DEBUG) Log.d(TAG, "Light:" + rowData.toString());
 
         if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;
         }
 
-        ContentValues[] data_buffer = new ContentValues[data_values.size()];
+        final ContentValues[] data_buffer = new ContentValues[data_values.size()];
         data_values.toArray(data_buffer);
 
         try {
             if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true")) {
-                new AsyncStore().execute(data_buffer);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        getContentResolver().bulkInsert(Light_Provider.Light_Data.CONTENT_URI, data_buffer);
+
+                        Intent newData = new Intent(ACTION_AWARE_LIGHT);
+                        sendBroadcast(newData);
+                    }
+                }).run();
             }
         } catch (SQLiteException e) {
             if (Aware.DEBUG) Log.d(TAG, e.getMessage());
@@ -145,15 +145,9 @@ public class Light extends Aware_Sensor implements SensorEventListener {
         LAST_SAVE = TS;
     }
 
-    /**
-     * Database I/O on different thread
-     */
-    private class AsyncStore extends AsyncTask<ContentValues[], Void, Void> {
-        @Override
-        protected Void doInBackground(ContentValues[]... data) {
-            getContentResolver().bulkInsert(Light_Data.CONTENT_URI, data[0]);
-            return null;
-        }
+    public static Light.AWARESensorObserver awareSensor;
+    public interface AWARESensorObserver {
+        void onLightChanged(ContentValues data);
     }
 
     /**
@@ -189,10 +183,6 @@ public class Light extends Aware_Sensor implements SensorEventListener {
             rowData.put(Light_Sensor.VERSION, sensor.getVersion());
 
             getContentResolver().insert(Light_Sensor.CONTENT_URI, rowData);
-
-            Intent light_dev = new Intent(ACTION_AWARE_LIGHT);
-            light_dev.putExtra(EXTRA_SENSOR, rowData);
-            sendBroadcast(light_dev);
 
             if (Aware.DEBUG) Log.d(TAG, "Light sensor info: " + rowData.toString());
         }
