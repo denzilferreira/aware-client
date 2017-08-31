@@ -190,7 +190,6 @@
 
             <EditTextPreference
                 android:defaultValue="60"
-                android:dependency="status_bluetooth"
                 android:inputType="number"
                 android:key="frequency_bluetooth"
                 android:persistent="true"
@@ -203,12 +202,6 @@
             android:summary="Communication usage (calls/messages)"
             android:title="Communication">
 
-            <CheckBoxPreference
-                android:defaultValue="false"
-                android:key="status_communication_events"
-                android:persistent="true"
-                android:summary="User in call, not in call"
-                android:title="User availability" />
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_calls"
@@ -490,14 +483,6 @@
                 android:summary="Wi-Fi &amp; mobile network traffic (bytes,packets)"
                 android:title="Network traffic" />
 
-            <EditTextPreference
-                android:defaultValue="60"
-                android:inputType="number"
-                android:key="frequency_network_traffic"
-                android:persistent="true"
-                android:summary="Every X seconds"
-                android:title="Traffic update frequency" />
-
         </PreferenceScreen>
         <PreferenceScreen
             android:icon="@drawable/ic_action_magnetometer"
@@ -552,7 +537,6 @@
 
             <EditTextPreference
                 android:defaultValue="10"
-                android:dependency="status_processor"
                 android:inputType="number"
                 android:key="frequency_processor"
                 android:persistent="true"
@@ -571,14 +555,6 @@
                 android:persistent="true"
                 android:title="Active" />
 
-            <EditTextPreference
-                android:defaultValue="3600"
-                android:dependency="status_timezone"
-                android:inputType="number"
-                android:key="frequency_timezone"
-                android:persistent="true"
-                android:summary="Every X seconds"
-                android:title="Update frequency" />
         </PreferenceScreen>
         <PreferenceScreen
             android:icon="@drawable/ic_action_proximity"
@@ -752,7 +728,6 @@
 
             <EditTextPreference
                 android:defaultValue="60"
-                android:dependency="status_wifi"
                 android:inputType="number"
                 android:key="frequency_wifi"
                 android:persistent="true"

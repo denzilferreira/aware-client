@@ -96,6 +96,14 @@ public class WiFi extends Aware_Sensor {
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_COARSE_LOCATION);
     }
 
+    public static WiFi.AWARESensorObserver awareSensor;
+    public interface AWARESensorObserver {
+        void onWiFiAPDetected(ContentValues data);
+        void onWiFiDisabled();
+        void onWiFiScanStarted();
+        void onWiFiScanEnded();
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
@@ -239,18 +247,21 @@ public class WiFi extends Aware_Sensor {
 
                 try {
                     mContext.getContentResolver().insert(WiFi_Data.CONTENT_URI, rowData);
+
+                    if (awareSensor != null) awareSensor.onWiFiAPDetected(rowData);
+
+                    if (Aware.DEBUG)
+                        Log.d(TAG, ACTION_AWARE_WIFI_NEW_DEVICE + ": " + rowData.toString());
+
+                    Intent detectedAP = new Intent(ACTION_AWARE_WIFI_NEW_DEVICE);
+                    detectedAP.putExtra(EXTRA_DATA, rowData);
+                    mContext.sendBroadcast(detectedAP);
+
                 } catch (SQLiteException e) {
                     if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                 } catch (SQLException e) {
                     if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                 }
-
-                if (Aware.DEBUG)
-                    Log.d(TAG, ACTION_AWARE_WIFI_NEW_DEVICE + ": " + rowData.toString());
-
-                Intent detectedAP = new Intent(ACTION_AWARE_WIFI_NEW_DEVICE);
-                detectedAP.putExtra(EXTRA_DATA, rowData);
-                mContext.sendBroadcast(detectedAP);
             }
 
             if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_WIFI_SCAN_ENDED);
@@ -285,6 +296,9 @@ public class WiFi extends Aware_Sensor {
                     Intent scanStart = new Intent(ACTION_AWARE_WIFI_SCAN_STARTED);
                     sendBroadcast(scanStart);
                     wifiManager.startScan();
+
+                    if (awareSensor != null) awareSensor.onWiFiScanStarted();
+
                 } else {
                     if (Aware.DEBUG) {
                         Log.d(WiFi.TAG, "WiFi is off");
@@ -296,6 +310,8 @@ public class WiFi extends Aware_Sensor {
                     rowData.put(WiFi_Data.LABEL, "disabled");
 
                     getContentResolver().insert(WiFi_Data.CONTENT_URI, rowData);
+
+                    if (awareSensor!=null) awareSensor.onWiFiDisabled();
                 }
             }
 
@@ -311,6 +327,7 @@ public class WiFi extends Aware_Sensor {
                 executor.submit(scanResults);
                 executor.shutdown();
 
+                if (awareSensor != null) awareSensor.onWiFiScanEnded();
             }
         }
     }

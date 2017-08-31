@@ -159,8 +159,20 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
     public static Mqtt.AWARESensorObserver awareSensor;
     public interface AWARESensorObserver {
+        /**
+         * Connected successfully to the server
+         */
         void onConnected();
+
+        /**
+         * Disconnected from the server
+         */
         void onDisconnected();
+
+        /**
+         * New message received from the server
+         * @param data
+         */
         void onMessage(ContentValues data);
     }
 

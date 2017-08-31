@@ -15,7 +15,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -66,9 +65,6 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
      * ContentProvider: Temperature_Provider
      */
     public static final String ACTION_AWARE_TEMPERATURE = "ACTION_AWARE_TEMPERATURE";
-    public static final String EXTRA_DATA = "data";
-    public static final String EXTRA_SENSOR = "sensor";
-
     public static final String ACTION_AWARE_TEMPERATURE_LABEL = "ACTION_AWARE_TEMPERATURE_LABEL";
     public static final String EXTRA_LABEL = "label";
 
@@ -114,25 +110,29 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
         rowData.put(Temperature_Data.ACCURACY, event.accuracy);
         rowData.put(Temperature_Data.LABEL, LABEL);
 
+        if(awareSensor != null) awareSensor.onTemperatureChanged(rowData);
+
         data_values.add(rowData);
         LAST_TS = TS;
-
-        Intent temperatureData = new Intent(ACTION_AWARE_TEMPERATURE);
-        temperatureData.putExtra(EXTRA_DATA, rowData);
-        sendBroadcast(temperatureData);
-
-        //if (Aware.DEBUG) Log.d(TAG, "Temperature:" + rowData.toString());
 
         if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;
         }
 
-        ContentValues[] data_buffer = new ContentValues[data_values.size()];
+        final ContentValues[] data_buffer = new ContentValues[data_values.size()];
         data_values.toArray(data_buffer);
 
         try {
             if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true")) {
-                new AsyncStore().execute(data_buffer);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        getContentResolver().bulkInsert(Temperature_Provider.Temperature_Data.CONTENT_URI, data_buffer);
+
+                        Intent accelData = new Intent(ACTION_AWARE_TEMPERATURE);
+                        sendBroadcast(accelData);
+                    }
+                }).run();
             }
         } catch (SQLiteException e) {
             if (Aware.DEBUG) Log.d(TAG, e.getMessage());
@@ -143,15 +143,9 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
         LAST_SAVE = TS;
     }
 
-    /**
-     * Database I/O on different thread
-     */
-    private class AsyncStore extends AsyncTask<ContentValues[], Void, Void> {
-        @Override
-        protected Void doInBackground(ContentValues[]... data) {
-            getContentResolver().bulkInsert(Temperature_Data.CONTENT_URI, data[0]);
-            return null;
-        }
+    public static Temperature.AWARESensorObserver awareSensor;
+    public interface AWARESensorObserver {
+        void onTemperatureChanged(ContentValues data);
     }
 
     /**
@@ -188,10 +182,6 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
 
             getContentResolver().insert(Temperature_Sensor.CONTENT_URI, rowData);
             if (Aware.DEBUG) Log.d(TAG, "Temperature sensor info: " + rowData.toString());
-
-            Intent temp = new Intent(ACTION_AWARE_TEMPERATURE);
-            temp.putExtra(EXTRA_SENSOR, rowData);
-            sendBroadcast(temp);
         }
         if (sensorInfo != null && !sensorInfo.isClosed()) sensorInfo.close();
     }

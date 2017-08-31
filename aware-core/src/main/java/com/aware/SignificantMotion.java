@@ -50,6 +50,12 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
     public static final String ACTION_AWARE_SIGNIFICANT_MOTION_START = "ACTION_AWARE_SIGNIFICANT_MOTION_START";
     public static final String ACTION_AWARE_SIGNIFICANT_MOTION_END = "ACTION_AWARE_SIGNIFICANT_MOTION_END";
 
+    public static SignificantMotion.AWARESensorObserver awareSensor;
+    public interface AWARESensorObserver {
+        void onSignificantMotionStart();
+        void onSignificantMotionEnd();
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -87,10 +93,11 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
                 Intent sigmotion = new Intent();
                 if (CURRENT_SIGMOTION_STATE) {
                     sigmotion.setAction(ACTION_AWARE_SIGNIFICANT_MOTION_START);
+                    if (awareSensor != null) awareSensor.onSignificantMotionStart();
                 } else {
                     sigmotion.setAction(ACTION_AWARE_SIGNIFICANT_MOTION_END);
+                    if (awareSensor != null) awareSensor.onSignificantMotionEnd();
                 }
-
                 sendBroadcast(sigmotion);
             }
         };

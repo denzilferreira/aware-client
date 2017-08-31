@@ -4,7 +4,6 @@ package com.aware;
 import android.Manifest;
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
@@ -43,9 +42,8 @@ public class Telephony extends Aware_Sensor {
 
     private static String TAG = "AWARE::Telephony";
 
-    private static TelephonyManager telephonyManager = null;
-    private static TelephonyState telephonyState = new TelephonyState();
-    private static Context mContext = null;
+    private TelephonyManager telephonyManager = null;
+    private TelephonyState telephonyState = new TelephonyState();
     private static SignalStrength lastSignalStrength = null;
 
     /**
@@ -73,12 +71,18 @@ public class Telephony extends Aware_Sensor {
         return null;
     }
 
+    public static Telephony.AWARESensorObserver awareSensor;
+
+    public interface AWARESensorObserver {
+        void onSignalStrengthChanged(SignalStrength strength);
+        void onCellChanged(CellLocation cellLocation);
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
 
         telephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-        mContext = getApplicationContext();
 
         DATABASE_TABLES = Telephony_Provider.DATABASE_TABLES;
         TABLES_FIELDS = Telephony_Provider.TABLES_FIELDS;
@@ -143,11 +147,14 @@ public class Telephony extends Aware_Sensor {
      *
      * @author df
      */
-    public static class TelephonyState extends PhoneStateListener {
+    public class TelephonyState extends PhoneStateListener {
 
         @Override
         public void onSignalStrengthsChanged(SignalStrength signalStrength) {
             super.onSignalStrengthsChanged(signalStrength);
+
+            if (awareSensor != null) awareSensor.onSignalStrengthChanged(signalStrength);
+
             lastSignalStrength = signalStrength;
         }
 
@@ -155,9 +162,11 @@ public class Telephony extends Aware_Sensor {
         public void onCellLocationChanged(CellLocation location) {
             super.onCellLocationChanged(location);
 
+            if (awareSensor != null) awareSensor.onCellChanged(location);
+
             if (lastSignalStrength == null) return;
 
-            String device_id = Aware.getSetting(mContext, Aware_Preferences.DEVICE_ID);
+            String device_id = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
 
             if (location instanceof GsmCellLocation) {
                 GsmCellLocation loc = (GsmCellLocation) location;
@@ -174,10 +183,10 @@ public class Telephony extends Aware_Sensor {
                 rowData.put(GSM_Data.GSM_BER, lastSignalStrength.getGsmBitErrorRate());
 
                 try {
-                    mContext.getContentResolver().insert(GSM_Data.CONTENT_URI, rowData);
+                    getContentResolver().insert(GSM_Data.CONTENT_URI, rowData);
 
                     Intent newGSM = new Intent(Telephony.ACTION_AWARE_GSM_TOWER);
-                    mContext.sendBroadcast(newGSM);
+                    sendBroadcast(newGSM);
 
                     if (Aware.DEBUG) Log.d(TAG, "GSM tower:" + rowData.toString());
                 } catch (SQLiteException e) {
@@ -198,10 +207,10 @@ public class Telephony extends Aware_Sensor {
                         rowData.put(GSM_Neighbors_Data.SIGNAL_STRENGTH, neighbor.getRssi());
 
                         try {
-                            mContext.getContentResolver().insert(GSM_Neighbors_Data.CONTENT_URI, rowData);
+                            getContentResolver().insert(GSM_Neighbors_Data.CONTENT_URI, rowData);
 
                             Intent newGSMNeighbor = new Intent(Telephony.ACTION_AWARE_GSM_TOWER_NEIGHBOR);
-                            mContext.sendBroadcast(newGSMNeighbor);
+                            sendBroadcast(newGSMNeighbor);
 
                             if (Aware.DEBUG) Log.d(TAG, "GSM tower neighbor:" + rowData.toString());
                         } catch (SQLiteException e) {
@@ -232,10 +241,10 @@ public class Telephony extends Aware_Sensor {
                 rowData.put(CDMA_Data.EVDO_SNR, lastSignalStrength.getEvdoSnr());
 
                 try {
-                    mContext.getContentResolver().insert(CDMA_Data.CONTENT_URI, rowData);
+                    getContentResolver().insert(CDMA_Data.CONTENT_URI, rowData);
 
                     Intent newCDMA = new Intent(Telephony.ACTION_AWARE_CDMA_TOWER);
-                    mContext.sendBroadcast(newCDMA);
+                    sendBroadcast(newCDMA);
 
                     if (Aware.DEBUG) Log.d(TAG, "CDMA tower:" + rowData.toString());
                 } catch (SQLiteException e) {
@@ -251,9 +260,9 @@ public class Telephony extends Aware_Sensor {
             rowData.put(Telephony_Data.TIMESTAMP, timestamp);
             rowData.put(Telephony_Data.DEVICE_ID, device_id);
             rowData.put(Telephony_Data.DATA_ENABLED, telephonyManager.getDataState());
-            rowData.put(Telephony_Data.IMEI_MEID_ESN, Encrypter.hash(mContext, telephonyManager.getDeviceId()));
+            rowData.put(Telephony_Data.IMEI_MEID_ESN, Encrypter.hash(getApplicationContext(), telephonyManager.getDeviceId()));
             rowData.put(Telephony_Data.SOFTWARE_VERSION, telephonyManager.getDeviceSoftwareVersion());
-            rowData.put(Telephony_Data.LINE_NUMBER, Encrypter.hashPhone(mContext, telephonyManager.getLine1Number()));
+            rowData.put(Telephony_Data.LINE_NUMBER, Encrypter.hashPhone(getApplicationContext(), telephonyManager.getLine1Number()));
             rowData.put(Telephony_Data.NETWORK_COUNTRY_ISO_MCC, telephonyManager.getNetworkCountryIso());
             rowData.put(Telephony_Data.NETWORK_OPERATOR_CODE, telephonyManager.getNetworkOperator());
             rowData.put(Telephony_Data.NETWORK_OPERATOR_NAME, telephonyManager.getNetworkOperatorName());
@@ -262,14 +271,14 @@ public class Telephony extends Aware_Sensor {
             rowData.put(Telephony_Data.SIM_STATE, telephonyManager.getSimState());
             rowData.put(Telephony_Data.SIM_OPERATOR_CODE, telephonyManager.getSimOperator());
             rowData.put(Telephony_Data.SIM_OPERATOR_NAME, telephonyManager.getSimOperatorName());
-            rowData.put(Telephony_Data.SIM_SERIAL, Encrypter.hash(mContext, telephonyManager.getSimSerialNumber()));
-            rowData.put(Telephony_Data.SUBSCRIBER_ID, Encrypter.hash(mContext, telephonyManager.getSubscriberId()));
+            rowData.put(Telephony_Data.SIM_SERIAL, Encrypter.hash(getApplicationContext(), telephonyManager.getSimSerialNumber()));
+            rowData.put(Telephony_Data.SUBSCRIBER_ID, Encrypter.hash(getApplicationContext(), telephonyManager.getSubscriberId()));
 
             try {
-                mContext.getContentResolver().insert(Telephony_Data.CONTENT_URI, rowData);
+                getContentResolver().insert(Telephony_Data.CONTENT_URI, rowData);
 
                 Intent newTelephony = new Intent(Telephony.ACTION_AWARE_TELEPHONY);
-                mContext.sendBroadcast(newTelephony);
+                sendBroadcast(newTelephony);
 
                 if (Aware.DEBUG) Log.d(TAG, "Telephony:" + rowData.toString());
             } catch (SQLiteException e) {

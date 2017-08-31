@@ -75,6 +75,14 @@ public class Screen extends Aware_Sensor {
         return null;
     }
 
+    public static Screen.AWARESensorObserver awareSensor;
+    public interface AWARESensorObserver {
+        void onScreenOn();
+        void onScreenOff();
+        void onScreenLocked();
+        void onScreenUnlocked();
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -133,7 +141,7 @@ public class Screen extends Aware_Sensor {
         return START_STICKY;
     }
 
-    public static class ScreenMonitor extends BroadcastReceiver {
+    public class ScreenMonitor extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
 
@@ -144,6 +152,9 @@ public class Screen extends Aware_Sensor {
                 rowData.put(Screen_Data.SCREEN_STATUS, Screen.STATUS_SCREEN_ON);
                 try {
                     context.getContentResolver().insert(Screen_Data.CONTENT_URI, rowData);
+
+                    if (awareSensor != null) awareSensor.onScreenOn();
+
                 } catch (SQLiteException e) {
                     if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                 } catch (SQLException e) {
@@ -162,6 +173,9 @@ public class Screen extends Aware_Sensor {
                 rowData.put(Screen_Data.SCREEN_STATUS, Screen.STATUS_SCREEN_OFF);
                 try {
                     context.getContentResolver().insert(Screen_Data.CONTENT_URI, rowData);
+
+                    if (awareSensor != null) awareSensor.onScreenOff();
+
                 } catch (SQLiteException e) {
                     if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                 } catch (SQLException e) {
@@ -181,6 +195,9 @@ public class Screen extends Aware_Sensor {
                     rowData.put(Screen_Data.SCREEN_STATUS, Screen.STATUS_SCREEN_LOCKED);
                     try {
                         context.getContentResolver().insert(Screen_Data.CONTENT_URI, rowData);
+
+                        if (awareSensor != null) awareSensor.onScreenLocked();
+
                     } catch (SQLiteException e) {
                         if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                     } catch (SQLException e) {
@@ -199,6 +216,9 @@ public class Screen extends Aware_Sensor {
                 rowData.put(Screen_Data.SCREEN_STATUS, Screen.STATUS_SCREEN_UNLOCKED);
                 try {
                     context.getContentResolver().insert(Screen_Data.CONTENT_URI, rowData);
+
+                    if (awareSensor != null) awareSensor.onScreenUnlocked();
+
                 } catch (SQLiteException e) {
                     if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                 } catch (SQLException e) {
@@ -212,5 +232,5 @@ public class Screen extends Aware_Sensor {
         }
     }
 
-    private static final ScreenMonitor screenMonitor = new ScreenMonitor();
+    private final ScreenMonitor screenMonitor = new ScreenMonitor();
 }

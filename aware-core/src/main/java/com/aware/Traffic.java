@@ -9,6 +9,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.aware.providers.Traffic_Provider;
@@ -35,7 +37,7 @@ public class Traffic extends Aware_Sensor {
     public static final int NETWORK_TYPE_MOBILE = 1;
     public static final int NETWORK_TYPE_WIFI = 2;
 
-    private static int FREQUENCY = -1;
+    private TelephonyManager telephonyManager;
 
     private static Handler mHandler = new Handler();
     private final Runnable mRunnable = new Runnable() {
@@ -62,6 +64,10 @@ public class Traffic extends Aware_Sensor {
             wifi.put(Traffic_Data.SENT_PACKETS, d_wifiTxPackets);
             getContentResolver().insert(Traffic_Data.CONTENT_URI, wifi);
 
+            if (awareSensor!= null) awareSensor.onWiFiTraffic(wifi);
+
+            if (Aware.DEBUG) Log.d(TAG, "Wifi:" + wifi.toString());
+
             ContentValues network = new ContentValues();
             network.put(Traffic_Data.TIMESTAMP, System.currentTimeMillis());
             network.put(Traffic_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
@@ -72,13 +78,11 @@ public class Traffic extends Aware_Sensor {
             network.put(Traffic_Data.SENT_PACKETS, d_mobileTxPackets);
             getContentResolver().insert(Traffic_Data.CONTENT_URI, network);
 
+            if (awareSensor!= null) awareSensor.onNetworkTraffic(network);
+            if (Aware.DEBUG) Log.d(TAG, "Network: " + network.toString());
+
             Intent traffic = new Intent(ACTION_AWARE_NETWORK_TRAFFIC);
             sendBroadcast(traffic);
-
-            if (Aware.DEBUG) {
-                Log.d(TAG, "Mobile RX-bytes: " + d_mobileRxBytes + " TX-bytes: " + d_mobileTxBytes + " RxPack: " + d_mobileRxPackets + " TxPack: " + d_mobileTxPackets);
-                Log.d(TAG, "Wifi RX-bytes: " + d_wifiRxBytes + " TX-bytes: " + d_wifiTxBytes + " RxPack: " + d_wifiRxPackets + " TxPack: " + d_wifiTxPackets);
-            }
 
             //refresh old values
             //mobile
@@ -91,32 +95,38 @@ public class Traffic extends Aware_Sensor {
             wifiTxBytes = TrafficStats.getTotalTxBytes() - mobileTxBytes;
             wifiRxPackets = TrafficStats.getTotalRxPackets() - mobileRxPackets;
             wifiTxPackets = TrafficStats.getTotalTxPackets() - mobileTxPackets;
-
-            mHandler.postDelayed(mRunnable, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC)) * 1000);
         }
     };
 
     //All stats
-    private static long startTotalRxBytes = 0;
-    private static long startTotalRxPackets = 0;
-    private static long startTotalTxBytes = 0;
-    private static long startTotalTxPackets = 0;
+    private long startTotalRxBytes = 0;
+    private long startTotalRxPackets = 0;
+    private long startTotalTxBytes = 0;
+    private long startTotalTxPackets = 0;
 
     //Mobile stats
-    private static long mobileRxBytes = 0;
-    private static long mobileTxBytes = 0;
-    private static long mobileRxPackets = 0;
-    private static long mobileTxPackets = 0;
+    private long mobileRxBytes = 0;
+    private long mobileTxBytes = 0;
+    private long mobileRxPackets = 0;
+    private long mobileTxPackets = 0;
 
     //WiFi stats
-    private static long wifiRxBytes = 0;
-    private static long wifiTxBytes = 0;
-    private static long wifiRxPackets = 0;
-    private static long wifiTxPackets = 0;
+    private long wifiRxBytes = 0;
+    private long wifiTxBytes = 0;
+    private long wifiRxPackets = 0;
+    private long wifiTxPackets = 0;
 
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    public static Traffic.AWARESensorObserver awareSensor;
+
+    public interface AWARESensorObserver {
+        void onNetworkTraffic(ContentValues data);
+        void onWiFiTraffic(ContentValues data);
+        void onIdleTraffic();
     }
 
     @Override
@@ -140,59 +150,83 @@ public class Traffic extends Aware_Sensor {
         super.onStartCommand(intent, flags, startId);
 
         if (PERMISSIONS_OK) {
+
             if (startTotalRxBytes == TrafficStats.UNSUPPORTED) {
                 Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_NETWORK_TRAFFIC, false);
-                if (Aware.DEBUG)
-                    Log.d(TAG, "Device doesn't support traffic statistics! Disabling sensor...");
-                stopSelf();
+                if (Aware.DEBUG) Log.d(TAG, "Device doesn't support traffic statistics! Disabling sensor...");
+                Aware.stopTraffic(this);
+
             } else {
+
                 DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
                 Aware.setSetting(this, Aware_Preferences.STATUS_NETWORK_TRAFFIC, true);
 
-                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC).length() == 0) {
-                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC, 60);
-                }
+                if (telephonyManager == null)
+                    telephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 
-                if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC))) {
-                    mobileRxBytes = TrafficStats.getMobileRxBytes();
-                    mobileTxBytes = TrafficStats.getMobileTxBytes();
-                    mobileRxPackets = TrafficStats.getMobileRxPackets();
-                    mobileTxPackets = TrafficStats.getMobileTxPackets();
+                telephonyManager.listen(networkTrafficObserver, PhoneStateListener.LISTEN_DATA_ACTIVITY);
 
-                    wifiRxBytes = startTotalRxBytes - mobileRxBytes;
-                    wifiTxBytes = startTotalTxBytes - mobileTxBytes;
-                    wifiRxPackets = startTotalRxPackets - mobileRxPackets;
-                    wifiTxPackets = startTotalTxPackets - mobileTxPackets;
+                if (mobileRxBytes == 0) mobileRxBytes = TrafficStats.getMobileRxBytes();
+                if (mobileTxBytes == 0) mobileTxBytes = TrafficStats.getMobileTxBytes();
+                if (mobileRxPackets == 0) mobileRxPackets = TrafficStats.getMobileRxPackets();
+                if (mobileTxPackets == 0) mobileTxPackets = TrafficStats.getMobileTxPackets();
 
-                    mHandler.removeCallbacks(mRunnable);
-                    mHandler.post(mRunnable);
-
-                    FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_NETWORK_TRAFFIC));
-                }
+                if (wifiRxBytes == 0) wifiRxBytes = startTotalRxBytes - mobileRxBytes;
+                if (wifiTxBytes == 0) wifiTxBytes = startTotalTxBytes - mobileTxBytes;
+                if (wifiRxPackets == 0) wifiRxPackets = startTotalRxPackets - mobileRxPackets;
+                if (wifiTxPackets == 0) wifiTxPackets = startTotalTxPackets - mobileTxPackets;
 
                 if (Aware.DEBUG) Log.d(TAG, "Traffic service active...");
-            }
 
-            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE).length() >= 0 && !Aware.isSyncEnabled(this, Traffic_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
-                ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Traffic_Provider.getAuthority(this), 1);
-                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Traffic_Provider.getAuthority(this), true);
-                ContentResolver.addPeriodicSync(
-                        Aware.getAWAREAccount(this),
-                        Traffic_Provider.getAuthority(this),
-                        Bundle.EMPTY,
-                        Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
-                );
+                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE).length() >= 0 && !Aware.isSyncEnabled(this, Traffic_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+                    ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Traffic_Provider.getAuthority(this), 1);
+                    ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Traffic_Provider.getAuthority(this), true);
+                    ContentResolver.addPeriodicSync(
+                            Aware.getAWAREAccount(this),
+                            Traffic_Provider.getAuthority(this),
+                            Bundle.EMPTY,
+                            Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
+                    );
+                }
             }
         }
 
         return START_STICKY;
     }
 
+    private NetworkTrafficObserver networkTrafficObserver = new NetworkTrafficObserver();
+
+    public class NetworkTrafficObserver extends PhoneStateListener {
+        @Override
+        public void onDataActivity(int direction) {
+            super.onDataActivity(direction);
+
+            switch (direction) {
+                case TelephonyManager.DATA_ACTIVITY_IN:
+                    //update stats
+                    mHandler.post(mRunnable);
+                    break;
+                case TelephonyManager.DATA_ACTIVITY_OUT:
+                    //update stats
+                    mHandler.post(mRunnable);
+                    break;
+                case TelephonyManager.DATA_ACTIVITY_INOUT:
+                    //update stats
+                    mHandler.post(mRunnable);
+                    break;
+                case TelephonyManager.DATA_ACTIVITY_NONE:
+                    //no-op.
+                    if (awareSensor!= null) awareSensor.onIdleTraffic();
+                    break;
+            }
+        }
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
 
-        mHandler.removeCallbacks(mRunnable);
+        telephonyManager.listen(networkTrafficObserver, PhoneStateListener.LISTEN_NONE);
 
         if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
             ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Traffic_Provider.getAuthority(this), false);

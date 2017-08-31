@@ -91,6 +91,9 @@ public class Processor extends Aware_Sensor {
 
             try {
                 getContentResolver().insert(Processor_Data.CONTENT_URI, rowData);
+
+                if(awareSensor!= null) awareSensor.onChanged(rowData);
+
             } catch (SQLiteException e) {
                 if (Aware.DEBUG) Log.d(TAG, e.getMessage());
             } catch (SQLException e) {
@@ -105,11 +108,15 @@ public class Processor extends Aware_Sensor {
             if (idle_percentage <= 10) {
                 Intent stressed = new Intent(ACTION_AWARE_PROCESSOR_STRESSED);
                 sendBroadcast(stressed);
+
+                if (awareSensor!= null) awareSensor.onOverloaded();
             }
 
             if (idle_percentage >= 90) {
                 Intent relaxed = new Intent(ACTION_AWARE_PROCESSOR_RELAXED);
                 sendBroadcast(relaxed);
+
+                if (awareSensor!= null) awareSensor.onIdle();
             }
 
             mHandler.postDelayed(mRunnable, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR)) * 1000);
@@ -121,6 +128,25 @@ public class Processor extends Aware_Sensor {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    public static Processor.AWARESensorObserver awareSensor;
+    public interface AWARESensorObserver {
+        /**
+         * CPU load is >=90%
+         */
+        void onOverloaded();
+
+        /**
+         * CPU load is <=10%
+         */
+        void onIdle();
+
+        /**
+         * CPU load updated
+         * @param data
+         */
+        void onChanged(ContentValues data);
     }
 
     @Override

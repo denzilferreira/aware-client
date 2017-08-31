@@ -281,65 +281,69 @@ public class Communication extends Aware_Sensor {
         public void onCallStateChanged(int state, String incomingNumber) {
             super.onCallStateChanged(state, incomingNumber);
 
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_COMMUNICATION_EVENTS).equals("true")) {
-                switch (state) {
-                    case TelephonyManager.CALL_STATE_RINGING:
-                        if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_CALL_RINGING);
-                        Intent callRinging = new Intent(ACTION_AWARE_CALL_RINGING);
-                        sendBroadcast(callRinging);
+            switch (state) {
+                case TelephonyManager.CALL_STATE_RINGING:
+                    if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_CALL_RINGING);
+                    Intent callRinging = new Intent(ACTION_AWARE_CALL_RINGING);
+                    sendBroadcast(callRinging);
 
-                        if (awareSensor != null) awareSensor.onRinging(incomingNumber);
+                    if (awareSensor != null) awareSensor.onRinging(incomingNumber);
 
-                        break;
-                    case TelephonyManager.CALL_STATE_OFFHOOK:
-                        if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_USER_IN_CALL);
-                        Intent inCall = new Intent(ACTION_AWARE_USER_IN_CALL);
-                        sendBroadcast(inCall);
+                    break;
+                case TelephonyManager.CALL_STATE_OFFHOOK:
+                    if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_USER_IN_CALL);
+                    Intent inCall = new Intent(ACTION_AWARE_USER_IN_CALL);
+                    sendBroadcast(inCall);
 
-                        if (awareSensor != null) awareSensor.onBusy(incomingNumber);
+                    if (awareSensor != null) awareSensor.onBusy(incomingNumber);
 
-                        break;
-                    case TelephonyManager.CALL_STATE_IDLE:
-                        if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_USER_NOT_IN_CALL);
-                        Intent userFree = new Intent(ACTION_AWARE_USER_NOT_IN_CALL);
-                        sendBroadcast(userFree);
+                    break;
+                case TelephonyManager.CALL_STATE_IDLE:
+                    if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_USER_NOT_IN_CALL);
+                    Intent userFree = new Intent(ACTION_AWARE_USER_NOT_IN_CALL);
+                    sendBroadcast(userFree);
 
-                        if (awareSensor != null) awareSensor.onFree(incomingNumber);
+                    if (awareSensor != null) awareSensor.onFree(incomingNumber);
 
-                        break;
-                }
+                    break;
             }
         }
     }
 
     public static Communication.AWARESensorObserver awareSensor;
+
     public interface AWARESensorObserver {
         /**
          * Callback when a call event is recorded (received, made, missed)
+         *
          * @param data
          */
         void onCall(ContentValues data);
 
         /**
          * Callback when a text message event is recorded (received, sent)
+         *
          * @param data
          */
         void onMessage(ContentValues data);
 
         /**
          * Callback when the phone is ringing
+         *
          * @param number
          */
         void onRinging(String number);
 
         /**
          * Callback when the user answered and is busy with a call
+         *
          * @param number
          */
         void onBusy(String number);
 
         /**
          * Callback when the user hangup an ongoing call and is now free
+         *
          * @param number
          */
         void onFree(String number);
@@ -379,6 +383,7 @@ public class Communication extends Aware_Sensor {
             DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
             if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_CALLS).equals("true")) {
                 getContentResolver().registerContentObserver(Calls.CONTENT_URI, true, callsObs);
+                telephonyManager.listen(phoneState, PhoneStateListener.LISTEN_CALL_STATE);
             } else {
                 getContentResolver().unregisterContentObserver(callsObs);
             }
@@ -387,12 +392,6 @@ public class Communication extends Aware_Sensor {
                 getContentResolver().registerContentObserver(MESSAGES_CONTENT_URI, true, msgsObs);
             } else {
                 getContentResolver().unregisterContentObserver(msgsObs);
-            }
-
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_COMMUNICATION_EVENTS).equals("true")) {
-                telephonyManager.listen(phoneState, PhoneStateListener.LISTEN_CALL_STATE);
-            } else {
-                telephonyManager.listen(phoneState, PhoneStateListener.LISTEN_NONE);
             }
 
             if (Aware.DEBUG) Log.d(TAG, TAG + " service active...");
