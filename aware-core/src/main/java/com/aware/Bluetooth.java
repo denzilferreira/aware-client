@@ -303,6 +303,8 @@ public class Bluetooth extends Aware_Sensor {
 
         unregisterReceiver(bluetoothMonitor);
 
+        bluetoothAdapter.cancelDiscovery();
+        bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
         mBLEHandler.removeCallbacks(scanRunnable);
         mBLEHandler.removeCallbacksAndMessages(null);
 
