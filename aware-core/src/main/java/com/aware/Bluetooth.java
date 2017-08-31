@@ -48,8 +48,9 @@ public class Bluetooth extends Aware_Sensor {
 
     private static String TAG = "AWARE::Bluetooth";
 
-    private AlarmManager alarmManager = null;
-    private PendingIntent bluetoothScan = null;
+    private static AlarmManager alarmManager = null;
+    private static PendingIntent bluetoothScan = null;
+
     private static long scanTimestamp = 0;
     private static int FREQUENCY = -1;
 
@@ -164,6 +165,7 @@ public class Bluetooth extends Aware_Sensor {
         void onScanEnded();
         void onBLEScanStarted();
         void onBLEScanEnded();
+        void onBluetoothDisabled();
     }
 
     @Override
@@ -300,6 +302,10 @@ public class Bluetooth extends Aware_Sensor {
         super.onDestroy();
 
         unregisterReceiver(bluetoothMonitor);
+
+        mBLEHandler.removeCallbacks(scanRunnable);
+        mBLEHandler.removeCallbacksAndMessages(null);
+
         alarmManager.cancel(bluetoothScan);
         notificationManager.cancel(123);
 
@@ -416,6 +422,9 @@ public class Bluetooth extends Aware_Sensor {
                         rowData.put(Bluetooth_Data.BT_LABEL, "disabled");
                         try {
                             context.getContentResolver().insert(Bluetooth_Data.CONTENT_URI, rowData);
+
+                            if (awareSensor != null) awareSensor.onBluetoothDisabled();
+
                         } catch (SQLiteException e) {
                             if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                         } catch (SQLException e) {
@@ -428,7 +437,6 @@ public class Bluetooth extends Aware_Sensor {
     }
 
     private final Bluetooth_Broadcaster bluetoothMonitor = new Bluetooth_Broadcaster();
-
     private void save_bluetooth_device(BluetoothAdapter btAdapter) {
         if (btAdapter == null) return;
 
