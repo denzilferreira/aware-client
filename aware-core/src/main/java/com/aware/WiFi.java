@@ -13,7 +13,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
-import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -87,16 +86,18 @@ public class WiFi extends Aware_Sensor {
         backgroundService.setAction(ACTION_AWARE_WIFI_REQUEST_SCAN);
         wifiScan = PendingIntent.getService(this, 0, backgroundService, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        DATABASE_TABLES = WiFi_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = WiFi_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{WiFi_Data.CONTENT_URI, WiFi_Sensor.CONTENT_URI};
-
         REQUIRED_PERMISSIONS.add(Manifest.permission.CHANGE_WIFI_STATE);
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_WIFI_STATE);
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_COARSE_LOCATION);
     }
 
-    public static WiFi.AWARESensorObserver awareSensor;
+    private static WiFi.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(WiFi.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static WiFi.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
     public interface AWARESensorObserver {
         void onWiFiAPDetected(ContentValues data);
         void onWiFiDisabled();

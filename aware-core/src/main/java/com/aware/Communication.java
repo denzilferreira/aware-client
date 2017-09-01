@@ -310,7 +310,13 @@ public class Communication extends Aware_Sensor {
         }
     }
 
-    public static Communication.AWARESensorObserver awareSensor;
+    private static Communication.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Communication.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Communication.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
 
     public interface AWARESensorObserver {
         /**
@@ -362,10 +368,6 @@ public class Communication extends Aware_Sensor {
 
         callsObs = new CallsObserver(new Handler());
         msgsObs = new MessagesObserver(new Handler());
-
-        DATABASE_TABLES = Communication_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Communication_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Calls_Data.CONTENT_URI, Messages_Data.CONTENT_URI};
 
         REQUIRED_PERMISSIONS.add(Manifest.permission.READ_CONTACTS);
         REQUIRED_PERMISSIONS.add(Manifest.permission.READ_PHONE_STATE);

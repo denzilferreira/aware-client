@@ -160,14 +160,6 @@
             android:name="com.aware.Installations"
             android:exported="true" />
         <service
-            android:name="com.aware.utils.WebserviceHelper"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="ACTION_AWARE_WEBSERVICE_SYNC_TABLE" />
-                <action android:name="ACTION_AWARE_WEBSERVICE_CLEAR_TABLE" />
-            </intent-filter>
-        </service>
-        <service
             android:name="com.aware.utils.DownloadPluginService"
             android:exported="true" />
         <service

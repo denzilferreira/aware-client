@@ -14,7 +14,6 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -23,12 +22,10 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.WakefulBroadcastReceiver;
 import android.support.v4.view.accessibility.AccessibilityEventCompat;
 import android.support.v4.view.accessibility.AccessibilityManagerCompat;
 import android.util.Log;
@@ -43,7 +40,6 @@ import com.aware.providers.Applications_Provider.Applications_Notifications;
 import com.aware.providers.Keyboard_Provider;
 import com.aware.utils.Encrypter;
 import com.aware.utils.Scheduler;
-import com.aware.utils.WebserviceHelper;
 
 import org.json.JSONException;
 
@@ -300,11 +296,6 @@ public class Applications extends AccessibilityService {
         //This makes sure that plugins and apps can check if the accessibility service is active
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, true);
 
-        IntentFilter webservices = new IntentFilter();
-        webservices.addAction(Aware.ACTION_AWARE_SYNC_DATA);
-        webservices.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
-        registerReceiver(awareMonitor, webservices);
-
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FOREGROUND_PRIORITY).equals("true")) {
             sendBroadcast(new Intent(Aware.ACTION_AWARE_PRIORITY_FOREGROUND));
         }
@@ -360,13 +351,6 @@ public class Applications extends AccessibilityService {
 
     @Override
     public void onInterrupt() {
-        if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
-            try {
-                if (awareMonitor != null) unregisterReceiver(awareMonitor);
-            } catch (IllegalArgumentException e) {
-            }
-        }
-
         Scheduler.removeSchedule(this, SCHEDULER_APPLICATIONS_BACKGROUND);
         Aware.startScheduler(this);
 
@@ -375,18 +359,9 @@ public class Applications extends AccessibilityService {
 
     @Override
     public boolean onUnbind(Intent intent) {
-        if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
-            try {
-                if (awareMonitor != null) unregisterReceiver(awareMonitor);
-            } catch (IllegalArgumentException e) {
-            }
-        }
 
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, false);
-
         Scheduler.removeSchedule(this, SCHEDULER_APPLICATIONS_BACKGROUND);
-
-        Log.d(TAG, "Accessibility Service has been unbound...");
 
         //notify the user
         Applications.isAccessibilityServiceActive(getApplicationContext());
@@ -399,6 +374,8 @@ public class Applications extends AccessibilityService {
                     Bundle.EMPTY
             );
         }
+
+        Log.d(TAG, "Accessibility Service has been unbound...");
 
         return super.onUnbind(intent);
     }
@@ -414,7 +391,14 @@ public class Applications extends AccessibilityService {
         Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
     }
 
-    public static Applications.AWARESensorObserver awareSensor;
+    private static Applications.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Applications.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Applications.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
+
     public interface AWARESensorObserver {
         /**
          * Callback when the foreground application changed
@@ -520,51 +504,6 @@ public class Applications extends AccessibilityService {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Received AWARE broadcasts
-     * - ACTION_AWARE_SYNC_DATA
-     * - ACTION_AWARE_CLEAR_DATA
-     *
-     * @author df
-     */
-    private static final Applications_Broadcaster awareMonitor = new Applications_Broadcaster();
-    public static class Applications_Broadcaster extends WakefulBroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-
-            String[] DATABASE_TABLES = Applications_Provider.DATABASE_TABLES;
-            String[] TABLES_FIELDS = Applications_Provider.TABLES_FIELDS;
-            Uri[] CONTEXT_URIS = new Uri[]{Applications_Foreground.CONTENT_URI, Applications_History.CONTENT_URI, Applications_Notifications.CONTENT_URI, Applications_Crashes.CONTENT_URI};
-
-            if (Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true") && intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA)) {
-                for (int i = 0; i < DATABASE_TABLES.length; i++) {
-                    Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
-                    webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
-                    webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
-                    webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, TABLES_FIELDS[i]);
-                    webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, CONTEXT_URIS[i].toString());
-                    startWakefulService(context, webserviceHelper);
-                }
-            }
-
-            if (intent.getAction().equals(Aware.ACTION_AWARE_CLEAR_DATA)) {
-                for (int i = 0; i < DATABASE_TABLES.length; i++) {
-                    //Clear locally
-                    context.getContentResolver().delete(CONTEXT_URIS[i], null, null);
-                    if (DEBUG) Log.d(TAG, "Cleared " + CONTEXT_URIS[i].toString());
-
-                    //Clear remotely
-                    if (Aware.getSetting(context.getApplicationContext(), Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
-                        Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
-                        webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_CLEAR_TABLE);
-                        webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
-                        startWakefulService(context, webserviceHelper);
-                    }
-                }
-            }
-        }
     }
 
     /**

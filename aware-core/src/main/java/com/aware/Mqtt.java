@@ -157,7 +157,13 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         }
     }
 
-    public static Mqtt.AWARESensorObserver awareSensor;
+    private static Mqtt.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Mqtt.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Mqtt.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
     public interface AWARESensorObserver {
         /**
          * Connected successfully to the server
@@ -337,10 +343,6 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        DATABASE_TABLES = Mqtt_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Mqtt_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Mqtt_Messages.CONTENT_URI, Mqtt_Subscriptions.CONTENT_URI};
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Mqtt.ACTION_AWARE_MQTT_TOPIC_SUBSCRIBE);

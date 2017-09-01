@@ -14,7 +14,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -131,7 +130,13 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
         LAST_SAVE = TS;
     }
 
-    public static Barometer.AWARESensorObserver awareSensor;
+    private static Barometer.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Barometer.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Barometer.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
     public interface AWARESensorObserver {
         void onBarometerChanged(ContentValues data);
     }
@@ -193,10 +198,6 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
         wakeLock.acquire();
 
         sensorHandler = new Handler(sensorThread.getLooper());
-
-        DATABASE_TABLES = Barometer_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Barometer_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Barometer_Sensor.CONTENT_URI, Barometer_Data.CONTENT_URI};
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_BAROMETER_LABEL);

@@ -10,7 +10,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -205,10 +204,6 @@ public class ESM extends Aware_Sensor {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        DATABASE_TABLES = ESM_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = ESM_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{ESM_Data.CONTENT_URI};
 
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 

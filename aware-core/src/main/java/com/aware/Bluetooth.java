@@ -23,7 +23,6 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -121,10 +120,6 @@ public class Bluetooth extends Aware_Sensor {
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
-        DATABASE_TABLES = Bluetooth_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Bluetooth_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Bluetooth_Sensor.CONTENT_URI, Bluetooth_Data.CONTENT_URI};
-
         IntentFilter filter = new IntentFilter();
         filter.addAction(Bluetooth.ACTION_AWARE_BLUETOOTH_REQUEST_SCAN);
         filter.addAction(BluetoothDevice.ACTION_FOUND);
@@ -156,7 +151,13 @@ public class Bluetooth extends Aware_Sensor {
         if (Aware.DEBUG) Log.d(TAG, "Bluetooth service created!");
     }
 
-    public static Bluetooth.AWARESensorObserver awareSensor;
+    private static Bluetooth.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Bluetooth.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Bluetooth.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
 
     public interface AWARESensorObserver {
         void onBluetoothDetected(ContentValues data);

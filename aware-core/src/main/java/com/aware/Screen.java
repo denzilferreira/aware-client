@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -75,7 +74,13 @@ public class Screen extends Aware_Sensor {
         return null;
     }
 
-    public static Screen.AWARESensorObserver awareSensor;
+    private static Screen.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Screen.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Screen.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
     public interface AWARESensorObserver {
         void onScreenOn();
         void onScreenOff();
@@ -86,10 +91,6 @@ public class Screen extends Aware_Sensor {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        DATABASE_TABLES = Screen_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Screen_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Screen_Data.CONTENT_URI};
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_SCREEN_ON);

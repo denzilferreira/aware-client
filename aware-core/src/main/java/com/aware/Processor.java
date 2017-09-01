@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -130,7 +129,13 @@ public class Processor extends Aware_Sensor {
         return null;
     }
 
-    public static Processor.AWARESensorObserver awareSensor;
+    private static Processor.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Processor.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Processor.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
     public interface AWARESensorObserver {
         /**
          * CPU load is >=90%
@@ -152,10 +157,6 @@ public class Processor extends Aware_Sensor {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        DATABASE_TABLES = Processor_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Processor_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Processor_Data.CONTENT_URI};
 
         if (Aware.DEBUG) Log.d(TAG, "Processor service created");
     }

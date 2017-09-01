@@ -14,7 +14,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -143,7 +142,13 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
         LAST_SAVE = TS;
     }
 
-    public static Temperature.AWARESensorObserver awareSensor;
+    private static Temperature.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Temperature.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Temperature.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
     public interface AWARESensorObserver {
         void onTemperatureChanged(ContentValues data);
     }
@@ -201,10 +206,6 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
         wakeLock.acquire();
 
         sensorHandler = new Handler(sensorThread.getLooper());
-
-        DATABASE_TABLES = Temperature_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Temperature_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Temperature_Sensor.CONTENT_URI, Temperature_Data.CONTENT_URI};
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_TEMPERATURE_LABEL);

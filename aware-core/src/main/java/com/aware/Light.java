@@ -14,7 +14,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -145,7 +144,13 @@ public class Light extends Aware_Sensor implements SensorEventListener {
         LAST_SAVE = TS;
     }
 
-    public static Light.AWARESensorObserver awareSensor;
+    private static Light.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Light.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Light.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
     public interface AWARESensorObserver {
         void onLightChanged(ContentValues data);
     }
@@ -204,10 +209,6 @@ public class Light extends Aware_Sensor implements SensorEventListener {
         wakeLock.acquire();
 
         sensorHandler = new Handler(sensorThread.getLooper());
-
-        DATABASE_TABLES = Light_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Light_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Light_Sensor.CONTENT_URI, Light_Data.CONTENT_URI};
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_LIGHT_LABEL);

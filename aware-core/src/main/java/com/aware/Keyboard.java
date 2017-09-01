@@ -2,7 +2,6 @@ package com.aware;
 
 import android.content.ContentResolver;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -24,10 +23,6 @@ public class Keyboard extends Aware_Sensor {
         super.onCreate();
 
         TAG = "AWARE::Keyboard";
-
-        DATABASE_TABLES = Keyboard_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Keyboard_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Keyboard_Provider.Keyboard_Data.CONTENT_URI};
 
         if (Aware.DEBUG) Log.d(TAG, "Keyboard service created!");
     }

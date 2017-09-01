@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -36,7 +35,13 @@ public class Timezone extends Aware_Sensor {
     public static final String ACTION_AWARE_TIMEZONE = "ACTION_AWARE_TIMEZONE";
     public static final String EXTRA_DATA = "data";
 
-    public static Timezone.AWARESensorObserver awareSensor;
+    private static Timezone.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Timezone.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Timezone.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
     public interface AWARESensorObserver {
         void onTimezoneChanged(ContentValues data);
     }
@@ -51,10 +56,6 @@ public class Timezone extends Aware_Sensor {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        DATABASE_TABLES = TimeZone_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = TimeZone_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{TimeZone_Data.CONTENT_URI};
 
         CONTEXT_PRODUCER = new ContextProducer() {
             @Override

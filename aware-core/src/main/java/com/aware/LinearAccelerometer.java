@@ -14,7 +14,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -170,7 +169,13 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
         LAST_SAVE = TS;
     }
 
-    public static LinearAccelerometer.AWARESensorObserver awareSensor;
+    private static LinearAccelerometer.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(LinearAccelerometer.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static LinearAccelerometer.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
     public interface AWARESensorObserver {
         void onLinearAccelChanged(ContentValues data);
     }
@@ -229,10 +234,6 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
         wakeLock.acquire();
 
         sensorHandler = new Handler(sensorThread.getLooper());
-
-        DATABASE_TABLES = Linear_Accelerometer_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Linear_Accelerometer_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Linear_Accelerometer_Sensor.CONTENT_URI, Linear_Accelerometer_Data.CONTENT_URI};
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_LINEAR_LABEL);

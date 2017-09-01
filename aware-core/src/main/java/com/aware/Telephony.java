@@ -7,7 +7,6 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.telephony.CellLocation;
@@ -71,7 +70,13 @@ public class Telephony extends Aware_Sensor {
         return null;
     }
 
-    public static Telephony.AWARESensorObserver awareSensor;
+    private static Telephony.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Telephony.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Telephony.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
 
     public interface AWARESensorObserver {
         void onSignalStrengthChanged(SignalStrength strength);
@@ -83,10 +88,6 @@ public class Telephony extends Aware_Sensor {
         super.onCreate();
 
         telephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-
-        DATABASE_TABLES = Telephony_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Telephony_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Telephony_Data.CONTENT_URI, GSM_Data.CONTENT_URI, GSM_Neighbors_Data.CONTENT_URI, CDMA_Data.CONTENT_URI};
 
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_COARSE_LOCATION); //needed to get the cell towers positions
         REQUIRED_PERMISSIONS.add(Manifest.permission.READ_PHONE_STATE); //needed for tracking signal strength

@@ -7,7 +7,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -50,7 +49,13 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
     public static final String ACTION_AWARE_SIGNIFICANT_MOTION_START = "ACTION_AWARE_SIGNIFICANT_MOTION_START";
     public static final String ACTION_AWARE_SIGNIFICANT_MOTION_END = "ACTION_AWARE_SIGNIFICANT_MOTION_END";
 
-    public static SignificantMotion.AWARESensorObserver awareSensor;
+    private static SignificantMotion.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(SignificantMotion.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static SignificantMotion.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
     public interface AWARESensorObserver {
         void onSignificantMotionStart();
         void onSignificantMotionEnd();
@@ -73,10 +78,6 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
         wakeLock.acquire();
 
         sensorHandler = new Handler(sensorThread.getLooper());
-
-        DATABASE_TABLES = Significant_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Significant_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Significant_Provider.Significant_Data.CONTENT_URI};
 
         CONTEXT_PRODUCER = new ContextProducer() {
             @Override

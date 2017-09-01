@@ -69,7 +69,6 @@ import com.aware.utils.PluginsManager;
 import com.aware.utils.SSLManager;
 import com.aware.utils.Scheduler;
 import com.aware.utils.StudyUtils;
-import com.aware.utils.WebserviceHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -2102,8 +2101,6 @@ public class Aware extends Service {
 
     /**
      * BroadcastReceiver that monitors for AWARE framework actions:
-     * Aware#ACTION_AWARE_SYNC_DATA: upload data to remote webservice server.
-     * Aware#ACTION_AWARE_CLEAR_DATA: clears local device's AWARE modules databases.
      * Aware#ACTION_AWARE_ACTION_QUIT_STUDY: quits a study
      * @author denzil
      */
@@ -2113,37 +2110,6 @@ public class Aware extends Service {
 
             if (!(context.getPackageName().equals("com.aware.phone") || context.getApplicationContext().getResources().getBoolean(R.bool.standalone)))
                 return;
-
-            //We are only synching the device information, study compliance and overall framework execution logs.
-            String[] DATABASE_TABLES = new String[]{Aware_Provider.DATABASE_TABLES[0], Aware_Provider.DATABASE_TABLES[3], Aware_Provider.DATABASE_TABLES[4]};
-            String[] TABLES_FIELDS = new String[]{Aware_Provider.TABLES_FIELDS[0], Aware_Provider.TABLES_FIELDS[3], Aware_Provider.TABLES_FIELDS[4]};
-            Uri[] CONTEXT_URIS = new Uri[]{Aware_Device.CONTENT_URI, Aware_Provider.Aware_Studies.CONTENT_URI, Aware_Provider.Aware_Log.CONTENT_URI};
-
-            if (intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA) && Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
-                for (int i = 0; i < DATABASE_TABLES.length; i++) {
-                    Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
-                    webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
-                    webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
-                    webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, TABLES_FIELDS[i]);
-                    webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, CONTEXT_URIS[i].toString());
-                    context.startService(webserviceHelper);
-                }
-            }
-
-            if (intent.getAction().equals(Aware.ACTION_AWARE_CLEAR_DATA)) {
-                for (int i = 0; i < DATABASE_TABLES.length; i++) {
-                    context.getContentResolver().delete(Aware_Provider.Aware_Device.CONTENT_URI, null, null);
-                    if (Aware.DEBUG) Log.d(TAG, "Cleared " + CONTEXT_URIS[i]);
-
-                    //Clear remotely if webservices are active
-                    if (Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
-                        Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
-                        webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_CLEAR_TABLE);
-                        webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
-                        context.startService(webserviceHelper);
-                    }
-                }
-            }
 
             if (intent.getAction().equals(Aware.ACTION_QUIT_STUDY)) {
                 Aware.reset(context);

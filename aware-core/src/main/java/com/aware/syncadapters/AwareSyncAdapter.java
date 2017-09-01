@@ -6,7 +6,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -29,7 +28,6 @@ import com.aware.providers.Aware_Provider;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
 import com.aware.utils.SSLManager;
-import com.aware.utils.WebserviceHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;

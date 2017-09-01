@@ -13,7 +13,6 @@ import android.database.sqlite.SQLiteException;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -157,7 +156,13 @@ public class Network extends Aware_Sensor {
     private static LocationManager locationManager = null; //tracks gps status
     private static TelephonyManager teleManager = null; //tracks phone network availability
 
-    public static Network.AWARESensorObserver awareSensor;
+    private static Network.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Network.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Network.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
     public interface AWARESensorObserver {
         void onInternetON();
         void onInternetOFF();
@@ -524,10 +529,6 @@ public class Network extends Aware_Sensor {
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         connManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
         teleManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-
-        DATABASE_TABLES = Network_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Network_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Network_Data.CONTENT_URI};
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);

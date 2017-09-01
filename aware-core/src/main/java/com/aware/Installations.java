@@ -96,10 +96,6 @@ public class Installations extends Aware_Sensor {
     public void onCreate() {
         super.onCreate();
 
-        DATABASE_TABLES = Installations_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Installations_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Installations_Data.CONTENT_URI};
-
         CONTEXT_PRODUCER = new Aware_Sensor.ContextProducer() {
             @Override
             public void onContext() {

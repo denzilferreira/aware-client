@@ -14,7 +14,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -137,7 +136,13 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
         LAST_SAVE = TS;
     }
 
-    public static Proximity.AWARESensorObserver awareSensor;
+    private static Proximity.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Proximity.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Proximity.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
     public interface AWARESensorObserver {
         void onProximityChanged(ContentValues data);
     }
@@ -198,10 +203,6 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
         wakeLock.acquire();
 
         sensorHandler = new Handler(sensorThread.getLooper());
-
-        DATABASE_TABLES = Proximity_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Proximity_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Proximity_Sensor.CONTENT_URI, Proximity_Data.CONTENT_URI};
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_PROXIMITY_LABEL);

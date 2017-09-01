@@ -5,7 +5,6 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.net.TrafficStats;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -121,7 +120,13 @@ public class Traffic extends Aware_Sensor {
         return null;
     }
 
-    public static Traffic.AWARESensorObserver awareSensor;
+    private static Traffic.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Traffic.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Traffic.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
 
     public interface AWARESensorObserver {
         void onNetworkTraffic(ContentValues data);
@@ -137,10 +142,6 @@ public class Traffic extends Aware_Sensor {
         startTotalTxBytes = TrafficStats.getTotalTxBytes();
         startTotalRxPackets = TrafficStats.getTotalRxPackets();
         startTotalTxPackets = TrafficStats.getTotalTxPackets();
-
-        DATABASE_TABLES = Traffic_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Traffic_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Traffic_Data.CONTENT_URI};
 
         if (Aware.DEBUG) Log.d(TAG, "Traffic service created!");
     }

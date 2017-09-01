@@ -10,7 +10,6 @@ import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -197,7 +196,13 @@ public class Locations extends Aware_Sensor implements LocationListener {
         return d;
     }
 
-    public static Locations.AWARESensorObserver awareSensor;
+    private static Locations.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Locations.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Locations.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
     public interface AWARESensorObserver {
         void onLocationChanged(ContentValues data);
     }
@@ -260,10 +265,6 @@ public class Locations extends Aware_Sensor implements LocationListener {
         super.onCreate();
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-
-        DATABASE_TABLES = Locations_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Locations_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Locations_Data.CONTENT_URI};
 
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_FINE_LOCATION);

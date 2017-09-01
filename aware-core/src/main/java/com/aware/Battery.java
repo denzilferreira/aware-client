@@ -10,7 +10,6 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
-import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.Bundle;
@@ -313,7 +312,13 @@ public class Battery extends Aware_Sensor {
 
     private final Battery_Broadcaster batteryMonitor = new Battery_Broadcaster();
 
-    public static Battery.AWARESensorObserver awareSensor;
+    private static Battery.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Battery.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Battery.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
 
     public interface AWARESensorObserver {
         void onBatteryChanged(ContentValues data);
@@ -360,10 +365,6 @@ public class Battery extends Aware_Sensor {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        DATABASE_TABLES = Battery_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Battery_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Battery_Data.CONTENT_URI, Battery_Discharges.CONTENT_URI, Battery_Charges.CONTENT_URI};
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_BATTERY_CHANGED);

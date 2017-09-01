@@ -14,7 +14,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -172,7 +171,13 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
         LAST_SAVE = TS;
     }
 
-    public static Gravity.AWARESensorObserver awareSensor;
+    private static Gravity.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Gravity.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Gravity.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
     public interface AWARESensorObserver {
         void onGravityChanged(ContentValues data);
     }
@@ -231,10 +236,6 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
         wakeLock.acquire();
 
         sensorHandler = new Handler(sensorThread.getLooper());
-
-        DATABASE_TABLES = Gravity_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Gravity_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Gravity_Sensor.CONTENT_URI, Gravity_Data.CONTENT_URI};
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_GRAVITY_LABEL);

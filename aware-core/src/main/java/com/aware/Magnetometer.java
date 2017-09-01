@@ -14,7 +14,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -148,7 +147,13 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
         LAST_SAVE = TS;
     }
 
-    public static Magnetometer.AWARESensorObserver awareSensor;
+    private static Magnetometer.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Magnetometer.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Magnetometer.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
     public interface AWARESensorObserver {
         void onMagnetometerChanged(ContentValues data);
     }
@@ -198,10 +203,6 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         mMagnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-
-        DATABASE_TABLES = Magnetometer_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Magnetometer_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Magnetometer_Sensor.CONTENT_URI, Magnetometer_Data.CONTENT_URI};
 
         sensorThread = new HandlerThread(TAG);
         sensorThread.start();

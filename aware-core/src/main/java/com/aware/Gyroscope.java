@@ -14,7 +14,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -175,7 +174,13 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
         LAST_SAVE = TS;
     }
 
-    public static Gyroscope.AWARESensorObserver awareSensor;
+    private static Gyroscope.AWARESensorObserver awareSensor;
+    public static void setSensorObserver(Gyroscope.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+    public static Gyroscope.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
     public interface AWARESensorObserver {
         void onGyroscopeChanged(ContentValues data);
     }
@@ -240,10 +245,6 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
         wakeLock.acquire();
 
         sensorHandler = new Handler(sensorThread.getLooper());
-
-        DATABASE_TABLES = Gyroscope_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Gyroscope_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Gyroscope_Sensor.CONTENT_URI, Gyroscope_Data.CONTENT_URI};
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_GYROSCOPE_LABEL);
