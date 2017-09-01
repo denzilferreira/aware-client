@@ -230,12 +230,12 @@ public class Aware_Join_Study extends Aware_Activity {
                                 @Override
                                 public void onDismiss(DialogInterface dialogInterface) {
                                     //Sync to server the studies statuses
-                                    Intent webserviceHelper = new Intent(getApplicationContext(), WebserviceHelper.class);
-                                    webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
-                                    webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, Aware_Provider.DATABASE_TABLES[3]);
-                                    webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, Aware_Provider.TABLES_FIELDS[3]);
-                                    webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, Aware_Provider.Aware_Studies.CONTENT_URI.toString());
-                                    startService(webserviceHelper);
+//                                    Intent webserviceHelper = new Intent(getApplicationContext(), WebserviceHelper.class);
+//                                    webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
+//                                    webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, Aware_Provider.DATABASE_TABLES[3]);
+//                                    webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, Aware_Provider.TABLES_FIELDS[3]);
+//                                    webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, Aware_Provider.Aware_Studies.CONTENT_URI.toString());
+//                                    startService(webserviceHelper);
                                 }
                             })
                             .show();
