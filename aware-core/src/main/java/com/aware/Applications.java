@@ -119,7 +119,7 @@ public class Applications extends AccessibilityService {
     public void onAccessibilityEvent(AccessibilityEvent event) {
         if (event.getPackageName() == null) return;
 
-        if (!Aware.isServiceRunning(getApplicationContext(), Aware.class)) {
+        if (!Aware.IS_CORE_RUNNING) {
             Intent aware = new Intent(getApplicationContext(), Aware.class);
             startService(aware);
         }

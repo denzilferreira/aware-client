@@ -97,7 +97,7 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
         Aware.debug(mContext, "STUDY-SYNC");
 
         //Restores core AWARE service in case it get's killed
-        if (!Aware.isServiceRunning(mContext, Aware.class)) {
+        if (!Aware.IS_CORE_RUNNING) {
             Intent aware = new Intent(mContext, Aware.class);
             mContext.startService(aware);
         }

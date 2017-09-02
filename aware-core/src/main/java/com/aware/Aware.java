@@ -108,6 +108,11 @@ public class Aware extends Service {
     public static String TAG = "AWARE";
 
     /**
+     * Used to check if the core library is running or not inside individual plugins
+     */
+    public static boolean IS_CORE_RUNNING = false;
+
+    /**
      * Broadcasted event: awareContext device information is available
      */
     public static final String ACTION_AWARE_DEVICE_INFORMATION = "ACTION_AWARE_DEVICE_INFORMATION";
@@ -270,6 +275,8 @@ public class Aware extends Service {
             getApplicationContext().sendBroadcast(new Intent(Aware.ACTION_AWARE_PRIORITY_FOREGROUND));
 
         if (Aware.DEBUG) Log.d(TAG, "AWARE framework is created!");
+
+        IS_CORE_RUNNING = true;
 
         aware_account = getAWAREAccount(this);
     }
@@ -1789,6 +1796,8 @@ public class Aware extends Service {
     public void onDestroy() {
         super.onDestroy();
 
+        IS_CORE_RUNNING = false;
+
         try {
             //unregisterReceiver(aware_BR);
             unregisterReceiver(storage_BR);
@@ -2217,21 +2226,15 @@ public class Aware extends Service {
         }
     }
 
-    /**
-     * Check whether a service is running or not
-     *
-     * @param serviceClass
-     * @return
-     */
-    public static boolean isServiceRunning(Context context, Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
-    }
+//    public static boolean isServiceRunning(Context context, Class<?> serviceClass) {
+//        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+//        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+//            if (serviceClass.getName().equals(service.service.getClassName())) {
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
 
     private static void complianceStatus(Context context) {
         ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(CONNECTIVITY_SERVICE);

@@ -98,7 +98,7 @@ public class Aware_Plugin extends Service {
             PERMISSIONS_OK = true;
 
             //Restores core AWARE service in case it get's killed
-            if (!Aware.isServiceRunning(getApplicationContext(), Aware.class)) {
+            if (!Aware.IS_CORE_RUNNING) {
                 Intent aware = new Intent(getApplicationContext(), Aware.class);
                 startService(aware);
             }
