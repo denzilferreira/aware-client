@@ -1,6 +1,6 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 project.ext {
-    mqtt_libs = (System.getenv("mqtt_libs") as String ?: "1.1.0")
+    mqtt_libs = (System.getenv("mqtt_libs") as String ?: "1.2.0")
     ion_libs = (System.getenv("ion_libs") as String ?: "2.+")
     support_libs = (System.getenv("support_libs") as String ?: "26.0.2")
     google_libs = (System.getenv("google_libs") ?: "11.2.0")
