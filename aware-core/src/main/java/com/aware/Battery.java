@@ -126,9 +126,9 @@ public class Battery extends Aware_Sensor {
                 Cursor lastBattery = context.getContentResolver().query(Battery_Data.CONTENT_URI, null, null, null, Battery_Data.TIMESTAMP + " DESC LIMIT 1");
                 if (lastBattery != null && lastBattery.moveToFirst()) {
                     changed = (extras.getInt(BatteryManager.EXTRA_LEVEL) != lastBattery.getInt(lastBattery.getColumnIndex(Battery_Data.LEVEL)))
-                            &&
+                            ||
                                 (extras.getInt(BatteryManager.EXTRA_PLUGGED) != lastBattery.getInt(lastBattery.getColumnIndex(Battery_Data.PLUG_ADAPTOR)))
-                            &&
+                            ||
                                 (extras.getInt(BatteryManager.EXTRA_STATUS) != lastBattery.getInt(lastBattery.getColumnIndex(Battery_Data.STATUS)));
                 }
                 if (lastBattery != null) lastBattery.close();
