@@ -149,6 +149,224 @@
             </intent-filter>
         </receiver>
 
+        <!-- AWARE sync adapter services -->
+        <service
+            android:name="com.aware.syncadapters.Accelerometer_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_accelerometer" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Applications_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_applications" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Aware_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_aware_device" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Barometer_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_barometer" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Battery_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_battery" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Bluetooth_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_bluetooth" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Communications_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_communications" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.ESM_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_esms" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Gravity_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_gravity" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Gyroscope_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_gyroscope" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Installations_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_installations" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Keyboard_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_keyboard" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Light_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_light" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.LinearAccelerometer_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_linear_accelerometer" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Locations_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_locations" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Magnetometer_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_magnetometer" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Network_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_network" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Processor_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_processor" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Proximity_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_proximity" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Rotation_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_rotation" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Screen_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_screen" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Significant_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_significant" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Telephony_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_telephony" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Temperature_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_temperature" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Timezone_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_timezones" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Traffic_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_traffic" />
+        </service>
+        <service
+            android:name="com.aware.syncadapters.Wifi_Sync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_wifi" />
+        </service>
+
     </application>
 
 </manifest>

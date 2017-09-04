@@ -91,15 +91,7 @@ public class Aware_Sensor extends Service {
             permissions.putExtra(PermissionsHandler.EXTRA_REDIRECT_SERVICE, getPackageName() + "/" + getClass().getName()); //restarts plugin once permissions are accepted
             startActivity(permissions);
         } else {
-
             PERMISSIONS_OK = true;
-
-            //Restores core AWARE service in case it get's killed
-            if (!Aware.IS_CORE_RUNNING) {
-                Intent aware = new Intent(getApplicationContext(), Aware.class);
-                startService(aware);
-            }
-
             if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                 SSLManager.handleUrl(getApplicationContext(), Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER), true);
             }
