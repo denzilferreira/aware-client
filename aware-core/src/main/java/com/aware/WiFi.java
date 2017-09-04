@@ -130,7 +130,6 @@ public class WiFi extends Aware_Sensor {
 
             if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE).length() >= 0 && !Aware.isSyncEnabled(this, WiFi_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), WiFi_Provider.getAuthority(this), 1);
-                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), WiFi_Provider.getAuthority(this), true);
                 ContentResolver.addPeriodicSync(
                         Aware.getAWAREAccount(this),
                         WiFi_Provider.getAuthority(this),
@@ -147,11 +146,10 @@ public class WiFi extends Aware_Sensor {
     public void onDestroy() {
         super.onDestroy();
 
-        if (wifiMonitor != null) unregisterReceiver(wifiMonitor);
+        unregisterReceiver(wifiMonitor);
         if (wifiScan != null) alarmManager.cancel(wifiScan);
 
         if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), WiFi_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
                     WiFi_Provider.getAuthority(this),
@@ -167,7 +165,7 @@ public class WiFi extends Aware_Sensor {
         return null;
     }
 
-    public static class WiFiMonitor extends BroadcastReceiver {
+    public class WiFiMonitor extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
@@ -177,7 +175,7 @@ public class WiFi extends Aware_Sensor {
             }
         }
     }
-    private static final WiFiMonitor wifiMonitor = new WiFiMonitor();
+    private final WiFiMonitor wifiMonitor = new WiFiMonitor();
 
     /**
      * Asynchronously get the AP we are currently connected to.

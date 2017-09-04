@@ -321,9 +321,6 @@ public class Aware extends Service {
             Intent aware = new Intent(this, Aware.class);
             PendingIntent onTap = PendingIntent.getService(this, 0, aware, 0);
 
-            Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
-            PendingIntent onSync = PendingIntent.getBroadcast(this, 0, sync, 0);
-
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
             mBuilder.setPriority(NotificationCompat.PRIORITY_LOW);
             mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
@@ -334,10 +331,6 @@ public class Aware extends Service {
             mBuilder.setContentIntent(onTap);
             mBuilder.setChannelId("AWARE");
             mBuilder.setDefaults(~NotificationCompat.DEFAULT_ALL); //muted notification
-
-            if (Aware.isStudy(this)) {
-                mBuilder.addAction(R.drawable.ic_stat_aware_sync, getApplicationContext().getResources().getString(R.string.foreground_notification_sync_text), onSync);
-            }
 
             startForeground(Aware.AWARE_FOREGROUND_SERVICE, mBuilder.build());
         } else {
@@ -703,39 +696,9 @@ public class Aware extends Service {
                 startPlugins(getApplicationContext());
             }
 
-//            if (Aware.isStudy(this) && getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
-//                int frequency_webservice = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_WEBSERVICE));
-//                if (frequency_webservice == 0) {
-//                    if (DEBUG)
-//                        Log.d(TAG, "Data sync is disabled.");
-//
-//                    Scheduler.removeSchedule(getApplicationContext(), SCHEDULE_SYNC_DATA);
-//
-//                } else {
-//                    try {
-//                        Scheduler.Schedule sync = Scheduler.getSchedule(this, SCHEDULE_SYNC_DATA);
-//                        if (sync == null || sync.getInterval() != frequency_webservice) { //Set the sync schedule for the first time or if changed
-//                            Scheduler.Schedule schedule = new Scheduler.Schedule(SCHEDULE_SYNC_DATA)
-//                                    .setActionType(Scheduler.ACTION_TYPE_BROADCAST)
-//                                    .setActionIntentAction(Aware.ACTION_AWARE_SYNC_DATA)
-//                                    .setInterval(frequency_webservice);
-//
-//                            Scheduler.saveSchedule(getApplicationContext(), schedule);
-//                            Aware.startScheduler(this);
-//
-//                            if (DEBUG) {
-//                                Log.d(TAG, "Data sync every " + schedule.getInterval() + " minute(s)");
-//                            }
-//                        }
-//                    } catch (JSONException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }
-
             if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE).length() >= 0 && !Aware.isSyncEnabled(this, Aware_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Aware_Provider.getAuthority(this), 1);
-                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Aware_Provider.getAuthority(this), true);
+
                 ContentResolver.addPeriodicSync(
                         Aware.getAWAREAccount(this),
                         Aware_Provider.getAuthority(this),
