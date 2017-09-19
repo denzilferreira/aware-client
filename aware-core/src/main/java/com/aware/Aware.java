@@ -288,14 +288,20 @@ public class Aware extends Service {
      * @return
      */
     public static Account getAWAREAccount(Context context) {
-        if (aware_account == null) {
-            aware_account = new Account(Aware_Accounts.Aware_Account.AWARE_ACCOUNT, Aware_Accounts.Aware_Account.AWARE_ACCOUNT_TYPE);
+        AccountManager accountManager = (AccountManager) context.getSystemService(ACCOUNT_SERVICE);
+        Account[] accounts = accountManager.getAccountsByType(Aware_Accounts.Aware_Account.AWARE_ACCOUNT_TYPE);
+        if (accounts.length > 0) {
+            aware_account = accounts[0];
+            return aware_account;
+        } else {
+            if (aware_account == null) {
+                aware_account = new Account(Aware_Accounts.Aware_Account.AWARE_ACCOUNT, Aware_Accounts.Aware_Account.AWARE_ACCOUNT_TYPE);
 
-            AccountManager accountManager = (AccountManager) context.getSystemService(ACCOUNT_SERVICE);
-            if (accountManager.getAccountsByType(Aware_Accounts.Aware_Account.AWARE_ACCOUNT_TYPE).length == 0)
-                accountManager.addAccountExplicitly(aware_account, null, null);
+                if (accountManager.getAccountsByType(Aware_Accounts.Aware_Account.AWARE_ACCOUNT_TYPE).length == 0)
+                    accountManager.addAccountExplicitly(aware_account, null, null);
+            }
+            return aware_account;
         }
-        return aware_account;
     }
 
     private final Foreground_Priority foregroundMgr = new Foreground_Priority();
