@@ -225,6 +225,8 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
     public void onCreate() {
         super.onCreate();
 
+        AUTHORITY = Gravity_Provider.getAuthority(this);
+
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         mGravity = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
 

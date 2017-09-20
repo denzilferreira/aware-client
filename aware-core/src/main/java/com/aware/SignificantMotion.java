@@ -65,6 +65,8 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
     public void onCreate() {
         super.onCreate();
 
+        AUTHORITY = Significant_Provider.getAuthority(this);
+
         DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);

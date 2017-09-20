@@ -3,6 +3,7 @@ package com.aware;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -10,11 +11,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.aware.providers.ESM_Provider;
 import com.aware.providers.ESM_Provider.ESM_Data;
@@ -204,6 +207,8 @@ public class ESM extends Aware_Sensor {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        AUTHORITY = ESM_Provider.getAuthority(this);
 
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
@@ -518,6 +523,9 @@ public class ESM extends Aware_Sensor {
                         if (Aware.DEBUG) Log.d(TAG, "ESM Queue is done!");
                         Intent esm_done = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
                         context.sendBroadcast(esm_done);
+
+                        //Check if there is a app integration
+                        processAppIntegration(context);
                     }
                 }
 
@@ -556,6 +564,28 @@ public class ESM extends Aware_Sensor {
                     context.sendBroadcast(esm_done);
                 }
             }
+        }
+    }
+
+    private static void processAppIntegration(Context context) {
+        try {
+            ESM_Question esm = null;
+            Cursor last_esm = context.getContentResolver().query(ESM_Data.CONTENT_URI, null, ESM_Data.STATUS + "=" + ESM.STATUS_ANSWERED, null, ESM_Data.TIMESTAMP + " DESC LIMIT 1");
+            if (last_esm != null && last_esm.moveToFirst()) {
+                JSONObject esm_question = new JSONObject(last_esm.getString(last_esm.getColumnIndex(ESM_Data.JSON)));
+                esm = new ESMFactory().getESM(esm_question.getInt(ESM_Question.esm_type), esm_question, last_esm.getInt(last_esm.getColumnIndex(ESM_Data._ID)));
+            }
+            if (last_esm != null && !last_esm.isClosed()) last_esm.close();
+
+            if (esm != null && esm.getAppIntegration().length() > 0) {
+                try {
+                    context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(esm.getAppIntegration())));
+                } catch (ActivityNotFoundException e) {
+                    Toast.makeText(context, "No application to handle: " + esm.getAppIntegration(), Toast.LENGTH_LONG).show();
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 

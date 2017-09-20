@@ -526,6 +526,8 @@ public class Network extends Aware_Sensor {
     public void onCreate() {
         super.onCreate();
 
+        AUTHORITY = Network_Provider.getAuthority(this);
+
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         connManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
         teleManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);

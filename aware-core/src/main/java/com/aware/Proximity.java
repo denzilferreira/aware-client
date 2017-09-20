@@ -190,6 +190,8 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
     public void onCreate() {
         super.onCreate();
 
+        AUTHORITY = Proximity_Provider.getAuthority(this);
+
         TAG = "AWARE::Proximity";
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);

@@ -87,6 +87,8 @@ public class Telephony extends Aware_Sensor {
     public void onCreate() {
         super.onCreate();
 
+        AUTHORITY = Telephony_Provider.getAuthority(this);
+
         telephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_COARSE_LOCATION); //needed to get the cell towers positions

@@ -223,6 +223,8 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
     public void onCreate() {
         super.onCreate();
 
+        AUTHORITY = Linear_Accelerometer_Provider.getAuthority(this);
+
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         mLinearAccelerator = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 

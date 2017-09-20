@@ -231,6 +231,8 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
     public void onCreate() {
         super.onCreate();
 
+        AUTHORITY = Rotation_Provider.getAuthority(this);
+
         TAG = "Aware::Rotation";
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);

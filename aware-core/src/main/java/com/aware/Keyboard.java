@@ -22,6 +22,8 @@ public class Keyboard extends Aware_Sensor {
     public void onCreate() {
         super.onCreate();
 
+        AUTHORITY = Keyboard_Provider.getAuthority(this);
+
         TAG = "AWARE::Keyboard";
 
         if (Aware.DEBUG) Log.d(TAG, "Keyboard service created!");

@@ -233,6 +233,8 @@ public class Aware extends Service {
      */
     private static Account aware_account;
 
+    public String AUTHORITY = "";
+
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -241,6 +243,8 @@ public class Aware extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        AUTHORITY = Aware_Provider.getAuthority(this);
 
         IntentFilter storage = new IntentFilter();
         storage.addAction(Intent.ACTION_MEDIA_MOUNTED);
@@ -254,6 +258,11 @@ public class Aware extends Service {
         boot.addAction(Intent.ACTION_REBOOT);
         boot.addAction(Intent.ACTION_BATTERY_CHANGED);
         registerReceiver(awareBoot, boot);
+
+        IntentFilter awareActions = new IntentFilter();
+        awareActions.addAction(Aware.ACTION_AWARE_SYNC_DATA);
+        awareActions.addAction(Aware.ACTION_QUIT_STUDY);
+        registerReceiver(aware_BR, awareActions);
 
         IntentFilter foreground = new IntentFilter();
         foreground.addAction(Aware.ACTION_AWARE_PRIORITY_FOREGROUND);
@@ -1768,7 +1777,7 @@ public class Aware extends Service {
         IS_CORE_RUNNING = false;
 
         try {
-            //unregisterReceiver(aware_BR);
+            unregisterReceiver(aware_BR);
             unregisterReceiver(storage_BR);
             unregisterReceiver(awareBoot);
             unregisterReceiver(foregroundMgr);
@@ -2080,8 +2089,10 @@ public class Aware extends Service {
     /**
      * BroadcastReceiver that monitors for AWARE framework actions:
      * Aware#ACTION_AWARE_ACTION_QUIT_STUDY: quits a study
+     * Aware#ACTION_AWARE_SYNC_DATA: send the data remotely
      * @author denzil
      */
+    private static final Aware_Broadcaster aware_BR = new Aware_Broadcaster();
     public static class Aware_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -2091,6 +2102,12 @@ public class Aware extends Service {
 
             if (intent.getAction().equals(Aware.ACTION_QUIT_STUDY)) {
                 Aware.reset(context);
+            }
+            if (intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA)) {
+                Bundle sync = new Bundle();
+                sync.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+                sync.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+                ContentResolver.requestSync(Aware.getAWAREAccount(context), Aware_Provider.getAuthority(context), sync);
             }
         }
     }
@@ -2119,7 +2136,6 @@ public class Aware extends Service {
      * Checks if we still have the accessibility services active or not
      */
     private static final AwareBoot awareBoot = new AwareBoot();
-
     public static class AwareBoot extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {

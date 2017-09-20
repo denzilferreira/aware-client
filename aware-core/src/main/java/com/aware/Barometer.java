@@ -186,6 +186,8 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
     public void onCreate() {
         super.onCreate();
 
+        AUTHORITY = Barometer_Provider.getAuthority(this);
+
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
         mPressure = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);

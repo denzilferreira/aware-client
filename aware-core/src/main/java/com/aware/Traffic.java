@@ -138,6 +138,8 @@ public class Traffic extends Aware_Sensor {
     public void onCreate() {
         super.onCreate();
 
+        AUTHORITY = Traffic_Provider.getAuthority(this);
+
         startTotalRxBytes = TrafficStats.getTotalRxBytes();
         startTotalTxBytes = TrafficStats.getTotalTxBytes();
         startTotalRxPackets = TrafficStats.getTotalRxPackets();

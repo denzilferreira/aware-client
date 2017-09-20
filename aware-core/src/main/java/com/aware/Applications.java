@@ -14,6 +14,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -26,6 +27,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.WakefulBroadcastReceiver;
 import android.support.v4.view.accessibility.AccessibilityEventCompat;
 import android.support.v4.view.accessibility.AccessibilityManagerCompat;
 import android.util.Log;
@@ -88,6 +90,8 @@ public class Applications extends AccessibilityService {
     public static final int ACCESSIBILITY_NOTIFICATION_ID = 42;
 
     private static final String SCHEDULER_APPLICATIONS_BACKGROUND = "SCHEDULER_APPLICATIONS_BACKGROUND";
+
+    public String AUTHORITY = "";
 
     /**
      * Given a package name, get application label in the default language of the device
@@ -283,6 +287,8 @@ public class Applications extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
 
+        AUTHORITY = Applications_Provider.getAuthority(this);
+
         Aware.debug(this, "created: " + getClass().getName() + " package: " + getPackageName());
 
         Intent aware = new Intent(this, Aware.class);
@@ -295,6 +301,10 @@ public class Applications extends AccessibilityService {
 
         //This makes sure that plugins and apps can check if the accessibility service is active
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, true);
+
+        IntentFilter webservices = new IntentFilter();
+        webservices.addAction(Aware.ACTION_AWARE_SYNC_DATA);
+        registerReceiver(awareMonitor, webservices);
 
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FOREGROUND_PRIORITY).equals("true")) {
             sendBroadcast(new Intent(Aware.ACTION_AWARE_PRIORITY_FOREGROUND));
@@ -349,6 +359,13 @@ public class Applications extends AccessibilityService {
 
     @Override
     public void onInterrupt() {
+        if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
+            try {
+                if (awareMonitor != null) unregisterReceiver(awareMonitor);
+            } catch (IllegalArgumentException e) {
+            }
+        }
+
         Scheduler.removeSchedule(this, SCHEDULER_APPLICATIONS_BACKGROUND);
         Aware.startScheduler(this);
 
@@ -357,6 +374,13 @@ public class Applications extends AccessibilityService {
 
     @Override
     public boolean onUnbind(Intent intent) {
+
+        if (Aware.getSetting(getApplicationContext(), Applications.STATUS_AWARE_ACCESSIBILITY).equals("true")) {
+            try {
+                if (awareMonitor != null) unregisterReceiver(awareMonitor);
+            } catch (IllegalArgumentException e) {
+            }
+        }
 
         Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, false);
         Scheduler.removeSchedule(this, SCHEDULER_APPLICATIONS_BACKGROUND);
@@ -375,6 +399,25 @@ public class Applications extends AccessibilityService {
         Log.d(TAG, "Accessibility Service has been unbound...");
 
         return super.onUnbind(intent);
+    }
+
+    /**
+     * Received AWARE broadcasts
+     * - ACTION_AWARE_SYNC_DATA
+     *
+     * @author df
+     */
+    private final ContextBroadcaster awareMonitor = new ContextBroadcaster();
+    public class ContextBroadcaster extends WakefulBroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA) && AUTHORITY.length() > 0) {
+                Bundle sync = new Bundle();
+                sync.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+                sync.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+                ContentResolver.requestSync(Aware.getAWAREAccount(context), AUTHORITY, sync);
+            }
+        }
     }
 
     @Override

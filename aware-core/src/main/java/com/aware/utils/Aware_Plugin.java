@@ -3,10 +3,12 @@ package com.aware.utils;
 
 import android.Manifest;
 import android.app.Service;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.content.PermissionChecker;
 import android.support.v4.content.WakefulBroadcastReceiver;
@@ -60,6 +62,11 @@ public class Aware_Plugin extends Service {
      */
     public boolean PERMISSIONS_OK = true;
 
+    /**
+     * Integration with sync adapters
+     */
+    public String AUTHORITY = "";
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -68,6 +75,7 @@ public class Aware_Plugin extends Service {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Aware.ACTION_AWARE_CURRENT_CONTEXT);
         filter.addAction(Aware.ACTION_AWARE_STOP_PLUGINS);
+        filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
         registerReceiver(contextBroadcaster, filter);
 
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
@@ -136,11 +144,8 @@ public class Aware_Plugin extends Service {
     /**
      * AWARE Context Broadcaster<br/>
      * - ACTION_AWARE_CURRENT_CONTEXT: returns current plugin's context
-     * - ACTION_AWARE_WEBSERVICE: push content provider data remotely
-     * - ACTION_AWARE_CLEAN_DATABASES: clears local and remote database
-     * - ACTION_AWARE_STOP_SENSORS: stops this plugin
-     * - ACTION_AWARE_SPACE_MAINTENANCE: clears old data from content providers
-     *
+     * - ACTION_AWARE_STOP_PLUGINS: stops this plugin
+     * - ACTION_AWARE_SYNC_DATA: sends the data to the server
      * @author denzil
      */
     public class ContextBroadcaster extends WakefulBroadcastReceiver {
@@ -159,6 +164,12 @@ public class Aware_Plugin extends Service {
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }
+            }
+            if (intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA) && AUTHORITY.length() > 0) {
+                Bundle sync = new Bundle();
+                sync.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+                sync.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+                ContentResolver.requestSync(Aware.getAWAREAccount(context), AUTHORITY, sync);
             }
         }
     }

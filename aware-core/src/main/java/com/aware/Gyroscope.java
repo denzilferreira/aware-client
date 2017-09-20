@@ -232,6 +232,8 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
     public void onCreate() {
         super.onCreate();
 
+        AUTHORITY = Gyroscope_Provider.getAuthority(this);
+
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
         mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);

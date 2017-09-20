@@ -366,6 +366,8 @@ public class Battery extends Aware_Sensor {
     public void onCreate() {
         super.onCreate();
 
+        AUTHORITY = Battery_Provider.getAuthority(this);
+
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_BATTERY_CHANGED);
         filter.addAction(Intent.ACTION_BATTERY_LOW);

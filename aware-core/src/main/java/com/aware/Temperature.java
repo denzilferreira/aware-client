@@ -196,6 +196,8 @@ public class Temperature extends Aware_Sensor implements SensorEventListener {
     public void onCreate() {
         super.onCreate();
 
+        AUTHORITY = Temperature_Provider.getAuthority(this);
+
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
         sensorThread = new HandlerThread(TAG);

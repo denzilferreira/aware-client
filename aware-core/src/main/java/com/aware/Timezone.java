@@ -57,6 +57,8 @@ public class Timezone extends Aware_Sensor {
     public void onCreate() {
         super.onCreate();
 
+        AUTHORITY = TimeZone_Provider.getAuthority(this);
+
         CONTEXT_PRODUCER = new ContextProducer() {
             @Override
             public void onContext() {
