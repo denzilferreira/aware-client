@@ -257,6 +257,7 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
         unregisterReceiver(dataLabeler);
 
         if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Linear_Accelerometer_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
                     Linear_Accelerometer_Provider.getAuthority(this),
@@ -313,6 +314,7 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
 
                 if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE).length() >= 0 && !Aware.isSyncEnabled(this, Linear_Accelerometer_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
                     ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Linear_Accelerometer_Provider.getAuthority(this), 1);
+                    ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Linear_Accelerometer_Provider.getAuthority(this), true);
                     ContentResolver.addPeriodicSync(
                             Aware.getAWAREAccount(this),
                             Linear_Accelerometer_Provider.getAuthority(this),
