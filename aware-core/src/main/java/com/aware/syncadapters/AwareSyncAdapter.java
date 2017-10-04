@@ -297,7 +297,8 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
                     long synched = lastSynched.getLong(lastSynched.getColumnIndex(Aware_Provider.Aware_Log.LOG_TIMESTAMP));
                     sync = (System.currentTimeMillis()-synched >= Integer.parseInt(Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK)) * 60 * 60 * 1000);
                     lastSynched.close();
-                }
+                } else
+                    return true; //first time, never synched, we force a 3G sync so we have an elapsed > x hours
             }
             return sync;
         }

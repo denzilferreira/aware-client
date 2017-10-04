@@ -517,6 +517,9 @@ public class ESM extends Aware_Sensor {
                     //Check if there is a flow to follow
                     processFlow(context, intent.getStringExtra(EXTRA_ANSWER));
 
+                    //Check if there is a app integration
+                    processAppIntegration(context);
+
                     if (ESM_Queue.getQueueSize(context) > 0) {
                         Intent intent_ESM = new Intent(context, ESM_Queue.class);
                         intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -525,9 +528,6 @@ public class ESM extends Aware_Sensor {
                         if (Aware.DEBUG) Log.d(TAG, "ESM Queue is done!");
                         Intent esm_done = new Intent(ESM.ACTION_AWARE_ESM_QUEUE_COMPLETE);
                         context.sendBroadcast(esm_done);
-
-                        //Check if there is a app integration
-                        processAppIntegration(context);
                     }
                 }
 
@@ -581,7 +581,10 @@ public class ESM extends Aware_Sensor {
 
             if (esm != null && esm.getAppIntegration().length() > 0) {
                 try {
-                    context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(esm.getAppIntegration())));
+                    Intent integration = new Intent(Intent.ACTION_VIEW);
+                    integration.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    integration.setData(Uri.parse(esm.getAppIntegration()));
+                    context.startActivity(integration);
                 } catch (ActivityNotFoundException e) {
                     Toast.makeText(context, "No application to handle: " + esm.getAppIntegration(), Toast.LENGTH_LONG).show();
                 }

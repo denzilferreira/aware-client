@@ -222,76 +222,77 @@ public class TestESM implements AwareTest {
     private void testESMS(Context context) {
         ESMFactory factory = new ESMFactory();
         try {
-            ESM_Freetext esmFreetext = new ESM_Freetext();
-            esmFreetext.setTitle("Freetext")
-                    .setTrigger("test")
-                    .setReplaceQueue(true)
-                    .setSubmitButton("OK")
-                    .setInstructions("Freetext ESM");
-
-            ESM_Checkbox esmCheckbox = new ESM_Checkbox();
-            esmCheckbox.addCheck("Check 1")
-                    .addCheck("Check 2")
-                    .addCheck("Other")
-                    .setTitle("Checkbox")
-                    .setTrigger("test")
-                    .setSubmitButton("OK")
-                    .setInstructions("Checkbox ESM");
-
-            ESM_Likert esmLikert = new ESM_Likert();
-            esmLikert.setLikertMax(7)
-                    .setLikertMaxLabel("Great")
-                    .setLikertMinLabel("Poor")
-                    .setLikertStep(1)
-                    .setTitle("Likert 3")
-                    .setInstructions("Likert ESM")
-                    .setTrigger("test")
-                    .setSubmitButton("OK");
-
-            ESM_QuickAnswer esmQuickAnswer = new ESM_QuickAnswer();
-            esmQuickAnswer.addQuickAnswer("Yes")
-                    .addQuickAnswer("No")
-                    .setTrigger("test")
-                    .setInstructions("Quick Answers ESM");
-
-            ESM_Radio esmRadio = new ESM_Radio();
-            esmRadio.addRadio("Radio 1")
-                    .addRadio("Radio 2")
-                    .setTitle("Radios")
-                    .setInstructions("Radios ESM")
-                    .setSubmitButton("OK");
-
-            ESM_Scale esmScale = new ESM_Scale();
-            esmScale.setScaleMax(100)
-                    .setScaleMin(0)
-                    .setScaleStart(50)
-                    .setScaleMaxLabel("Perfect")
-                    .setScaleMinLabel("Poor")
-                    .setScaleStep(10)
-                    .setTitle("Scale")
-                    .setInstructions("Scale ESM")
-                    .setSubmitButton("OK");
-
-            ESM_DateTime esmDate = new ESM_DateTime();
-            esmDate.setTitle("Date and Time")
-                    .setTrigger("AWARE Test")
-                    .setInstructions("Specify date and time")
-                    .setSubmitButton("OK");
+//            ESM_Freetext esmFreetext = new ESM_Freetext();
+//            esmFreetext.setTitle("Freetext")
+//                    .setTrigger("test")
+//                    .setReplaceQueue(true)
+//                    .setSubmitButton("OK")
+//                    .setInstructions("Freetext ESM");
+//
+//            ESM_Checkbox esmCheckbox = new ESM_Checkbox();
+//            esmCheckbox.addCheck("Check 1")
+//                    .addCheck("Check 2")
+//                    .addCheck("Other")
+//                    .setTitle("Checkbox")
+//                    .setTrigger("test")
+//                    .setSubmitButton("OK")
+//                    .setInstructions("Checkbox ESM");
+//
+//            ESM_Likert esmLikert = new ESM_Likert();
+//            esmLikert.setLikertMax(7)
+//                    .setLikertMaxLabel("Great")
+//                    .setLikertMinLabel("Poor")
+//                    .setLikertStep(1)
+//                    .setTitle("Likert 3")
+//                    .setInstructions("Likert ESM")
+//                    .setTrigger("test")
+//                    .setSubmitButton("OK");
+//
+//            ESM_QuickAnswer esmQuickAnswer = new ESM_QuickAnswer();
+//            esmQuickAnswer.addQuickAnswer("Yes")
+//                    .addQuickAnswer("No")
+//                    .setTrigger("test")
+//                    .setInstructions("Quick Answers ESM");
+//
+//            ESM_Radio esmRadio = new ESM_Radio();
+//            esmRadio.addRadio("Radio 1")
+//                    .addRadio("Radio 2")
+//                    .setTitle("Radios")
+//                    .setInstructions("Radios ESM")
+//                    .setSubmitButton("OK");
+//
+//            ESM_Scale esmScale = new ESM_Scale();
+//            esmScale.setScaleMax(100)
+//                    .setScaleMin(0)
+//                    .setScaleStart(50)
+//                    .setScaleMaxLabel("Perfect")
+//                    .setScaleMinLabel("Poor")
+//                    .setScaleStep(10)
+//                    .setTitle("Scale")
+//                    .setInstructions("Scale ESM")
+//                    .setSubmitButton("OK");
+//
+//            ESM_DateTime esmDate = new ESM_DateTime();
+//            esmDate.setTitle("Date and Time")
+//                    .setTrigger("AWARE Test")
+//                    .setInstructions("Specify date and time")
+//                    .setSubmitButton("OK");
 
             ESM_PAM esmPAM = new ESM_PAM();
             esmPAM.setTitle("PAM")
                     .setInstructions("Pick the closest to how you feel right now.")
                     .setSubmitButton("OK")
-                    .setTrigger("AWARE Test");
+                    .setTrigger("AWARE Test")
+                    .setAppIntegration("fourtwentystudy://");
 
-            factory.addESM(esmFreetext);
-            factory.addESM(esmCheckbox);
-            factory.addESM(esmLikert);
-            factory.addESM(esmQuickAnswer);
-            factory.addESM(esmRadio);
-            factory.addESM(esmScale);
+//            factory.addESM(esmFreetext);
+//            factory.addESM(esmCheckbox);
+//            factory.addESM(esmLikert);
+//            factory.addESM(esmQuickAnswer);
+//            factory.addESM(esmRadio);
+//            factory.addESM(esmScale);
             factory.addESM(esmPAM);
-            factory.addESM(esmDate);
+            //factory.addESM(esmDate);
 
             ESM.queueESM(context, factory.build());
 //            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
