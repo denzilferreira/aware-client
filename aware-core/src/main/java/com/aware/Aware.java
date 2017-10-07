@@ -302,15 +302,13 @@ public class Aware extends Service {
         if (accounts.length > 0) {
             aware_account = accounts[0];
             return aware_account;
-        } else {
-            if (aware_account == null) {
-                aware_account = new Account(Aware_Accounts.Aware_Account.AWARE_ACCOUNT, Aware_Accounts.Aware_Account.AWARE_ACCOUNT_TYPE);
-
-                if (accountManager.getAccountsByType(Aware_Accounts.Aware_Account.AWARE_ACCOUNT_TYPE).length == 0)
-                    accountManager.addAccountExplicitly(aware_account, null, null);
-            }
-            return aware_account;
         }
+        if (aware_account == null) {
+            aware_account = new Account(Aware_Accounts.Aware_Account.AWARE_ACCOUNT, Aware_Accounts.Aware_Account.AWARE_ACCOUNT_TYPE);
+            accountManager.setAccountVisibility(aware_account, AccountManager.PACKAGE_NAME_KEY_LEGACY_VISIBLE, AccountManager.VISIBILITY_VISIBLE);
+            accountManager.addAccountExplicitly(aware_account, null, null);
+        }
+        return aware_account;
     }
 
     private final Foreground_Priority foregroundMgr = new Foreground_Priority();
