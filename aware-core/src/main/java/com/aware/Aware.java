@@ -305,7 +305,9 @@ public class Aware extends Service {
         }
         if (aware_account == null) {
             aware_account = new Account(Aware_Accounts.Aware_Account.AWARE_ACCOUNT, Aware_Accounts.Aware_Account.AWARE_ACCOUNT_TYPE);
-            accountManager.setAccountVisibility(aware_account, AccountManager.PACKAGE_NAME_KEY_LEGACY_VISIBLE, AccountManager.VISIBILITY_VISIBLE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                accountManager.setAccountVisibility(aware_account, AccountManager.PACKAGE_NAME_KEY_LEGACY_VISIBLE, AccountManager.VISIBILITY_VISIBLE);
+            }
             accountManager.addAccountExplicitly(aware_account, null, null);
         }
         return aware_account;
