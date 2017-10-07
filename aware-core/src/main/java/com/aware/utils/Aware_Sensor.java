@@ -77,6 +77,7 @@ public class Aware_Sensor extends Service {
         registerReceiver(contextBroadcaster, filter);
 
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.GET_ACCOUNTS);
 
         Log.d(Aware.TAG, "created: " + getClass().getName() + " package: " + getPackageName());
     }

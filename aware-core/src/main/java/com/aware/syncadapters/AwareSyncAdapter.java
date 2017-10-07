@@ -93,9 +93,6 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
      */
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
-
-        Aware.debug(mContext, "STUDY-SYNC");
-
         //Restores core AWARE service in case it get's killed
         if (!Aware.IS_CORE_RUNNING) {
             Intent aware = new Intent(mContext, Aware.class);
@@ -135,6 +132,8 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
             if (Aware.DEBUG) Log.d(Aware.TAG, "Sync data only over Wi-Fi. Will try again later...");
             return;
         }
+
+        Aware.debug(mContext, "STUDY-SYNC");
 
         String protocol = web_server.substring(0, web_server.indexOf(":"));
         boolean web_service_simple = Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SIMPLE).equals("true");
