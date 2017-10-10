@@ -5,25 +5,19 @@ package com.aware.utils;
  */
 
 import android.app.IntentService;
-import android.app.NotificationManager;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.security.KeyChain;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
-import com.aware.R;
 import com.aware.providers.Aware_Provider;
 
 import org.json.JSONArray;
@@ -31,11 +25,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;

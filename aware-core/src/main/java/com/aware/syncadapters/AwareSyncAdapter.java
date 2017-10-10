@@ -229,6 +229,9 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
             PendingIntent clickIntent = PendingIntent.getActivity(mContext, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
             mBuilder.setContentIntent(clickIntent);
 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_ID);
+
             try {
                 notManager.notify(id, mBuilder.build());
             } catch (NullPointerException e) {

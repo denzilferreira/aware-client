@@ -13,6 +13,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
@@ -412,6 +413,9 @@ public class ESM extends Aware_Sensor {
         mBuilder.setUsesChronometer(true);
         mBuilder.setOnlyAlertOnce(notifyOnce);
         mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_ID);
 
         Intent intent_ESM = new Intent(context, ESM_Queue.class);
         intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

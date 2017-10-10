@@ -103,6 +103,9 @@ public class DownloadPluginService extends IntentService {
                 mBuilder.setProgress(0, 0, true);
                 mBuilder.setAutoCancel(true);
 
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                    mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_ID);
+
                 final int notID = new Random(System.currentTimeMillis()).nextInt();
                 notManager.notify(notID, mBuilder.build());
 

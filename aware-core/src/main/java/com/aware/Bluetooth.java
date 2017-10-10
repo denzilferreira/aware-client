@@ -472,6 +472,9 @@ public class Bluetooth extends Aware_Sensor {
                     .setAutoCancel(true)
                     .setContentIntent(PendingIntent.getService(c, 123, enableBT, PendingIntent.FLAG_UPDATE_CURRENT));
 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                builder.setChannelId(Aware.AWARE_NOTIFICATION_ID);
+
             try {
                 notificationManager.notify(123, builder.build());
             } catch (NullPointerException e) {

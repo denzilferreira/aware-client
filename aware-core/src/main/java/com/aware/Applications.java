@@ -537,11 +537,15 @@ public class Applications extends AccessibilityService {
             mBuilder.setOnlyAlertOnce(true); //notify the user only once
             mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_ID);
+
             Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
             accessibilitySettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
             PendingIntent clickIntent = PendingIntent.getActivity(c, 0, accessibilitySettings, PendingIntent.FLAG_UPDATE_CURRENT);
             mBuilder.setContentIntent(clickIntent);
+
             NotificationManager notManager = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
             notManager.notify(Applications.ACCESSIBILITY_NOTIFICATION_ID, mBuilder.build());
             return false;
