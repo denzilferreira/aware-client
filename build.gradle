@@ -7,7 +7,7 @@ project.ext {
     version_code = (System.getenv("aware_revision") as Integer ?: 700)
     version_readable = "4.0." + version_code + "." + (System.getenv("aware_label") as String ?: "selfie")
     compile_sdk = (System.getenv("compile_sdk") as Integer ?: 26)
-    target_sdk = (System.getenv("target_sdk") as Integer ?: 26)
+    target_sdk = (System.getenv("target_sdk") as Integer ?: 25)
     minimum_sdk = (System.getenv("minimum_sdk") as Integer ?: 14) //Android 4.0+
     build_tools = (System.getenv("build_tools") ?: "26.0.2")
 }

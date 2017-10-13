@@ -62,6 +62,8 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     private static final ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
     private static final Hashtable<String, Integer> optionalSensors = new Hashtable<>();
 
+    private Aware.AndroidPackageMonitor packageMonitor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -112,6 +114,14 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
             Intent aware = new Intent(this, Aware.class);
             startService(aware);
         }
+
+//        IntentFilter awarePackages = new IntentFilter();
+//        awarePackages.addAction(Intent.ACTION_PACKAGE_ADDED);
+//        awarePackages.addAction(Intent.ACTION_PACKAGE_REMOVED);
+//
+//        packageMonitor = new Aware.AndroidPackageMonitor();
+//
+//        registerReceiver(packageMonitor, awarePackages);
     }
 
     @Override
@@ -405,6 +415,12 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     protected void onPause() {
         super.onPause();
         if (prefs != null) prefs.unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        //unregisterReceiver(packageMonitor);
     }
 
     private class AsyncPing extends AsyncTask<Void, Void, Boolean> {
