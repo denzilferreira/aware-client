@@ -821,15 +821,13 @@
                 android:summary="Sync only over Wi-Fi"
                 android:title="Wi-Fi only" />
 
-            <ListPreference
+            <EditTextPreference
                 android:defaultValue="0"
                 android:dependency="webservice_wifi_only"
-                android:entries="@array/fallback_network_readable"
-                android:entryValues="@array/fallback_network_values"
                 android:key="fallback_network"
                 android:persistent="true"
-                android:summary="Fallback to 3G"
-                android:title="Fallback to 3G" />
+                android:summary="%s"
+                android:title="Fallback to 3G after x hours" />
 
             <CheckBoxPreference
                 android:defaultValue="false"

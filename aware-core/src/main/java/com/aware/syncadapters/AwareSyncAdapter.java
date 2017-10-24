@@ -293,10 +293,12 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
             if (sync) return sync;
 
             //Fallback to 3G if no wifi for x hours
+            Log.d(Aware.TAG, "Checking forced sync over 3G...");
             if (Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).length() > 0 && !Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).equals("0")) {
                 Cursor lastSynched = mContext.getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE 'STUDY-SYNC'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
                 if (lastSynched != null && lastSynched.moveToFirst()) {
                     long synched = lastSynched.getLong(lastSynched.getColumnIndex(Aware_Provider.Aware_Log.LOG_TIMESTAMP));
+                    Log.d(Aware.TAG, "Last sync: " + synched + " elapsed: " + (System.currentTimeMillis()-synched) + " force: " +(System.currentTimeMillis()-synched >= Integer.parseInt(Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK)) * 60 * 60 * 1000));
                     sync = (System.currentTimeMillis()-synched >= Integer.parseInt(Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK)) * 60 * 60 * 1000);
                     lastSynched.close();
                 } else
