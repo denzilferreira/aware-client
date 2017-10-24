@@ -110,6 +110,7 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private void offloadData(Context context, String database_table, String web_server, String table_fields, Uri CONTENT_URI) {
+
         //Fixed: not part of a study, do nothing
         if (web_server.length() == 0 || web_server.equalsIgnoreCase("https://api.awareframework.com/index.php")) {
             return;
@@ -129,11 +130,13 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
 
         //Do we need WiFi?
         if (!isWifiNeededAndConnected()) {
-            if (Aware.DEBUG) Log.d(Aware.TAG, "Sync data only over Wi-Fi. Will try again later...");
-            return;
+            if (!isForce3G(database_table)) {
+                if (Aware.DEBUG) Log.d(Aware.TAG, "Sync data only over Wi-Fi. Will try again later...");
+                return;
+            }
         }
 
-        Aware.debug(mContext, "STUDY-SYNC");
+        Aware.debug(mContext, "STUDY-SYNC: " + database_table);
 
         String protocol = web_server.substring(0, web_server.indexOf(":"));
         boolean web_service_simple = Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SIMPLE).equals("true");
@@ -283,32 +286,38 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
 
+    /**
+     * Check the current connection is WiFi and we are connected
+     * @return
+     */
     public boolean isWifiNeededAndConnected() {
         if (Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_WIFI_ONLY).equals("true")) {
             ConnectivityManager connManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo activeNetwork = connManager.getActiveNetworkInfo();
-            boolean sync = (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected());
-
-            //we are connected to WiFi, we are done here.
-            if (sync) return sync;
-
-            //Fallback to 3G if no wifi for x hours
-            Log.d(Aware.TAG, "Checking forced sync over 3G...");
-            if (Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).length() > 0 && !Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).equals("0")) {
-                Cursor lastSynched = mContext.getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE 'STUDY-SYNC'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
-                if (lastSynched != null && lastSynched.moveToFirst()) {
-                    long synched = lastSynched.getLong(lastSynched.getColumnIndex(Aware_Provider.Aware_Log.LOG_TIMESTAMP));
-                    Log.d(Aware.TAG, "Last sync: " + synched + " elapsed: " + (System.currentTimeMillis()-synched) + " force: " +(System.currentTimeMillis()-synched >= Integer.parseInt(Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK)) * 60 * 60 * 1000));
-                    sync = (System.currentTimeMillis()-synched >= Integer.parseInt(Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK)) * 60 * 60 * 1000);
-                    lastSynched.close();
-                } else
-                    return true; //first time, never synched, we force a 3G sync so we have an elapsed > x hours
-            }
-            return sync;
+            return (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected());
         }
         return true;
     }
 
+    /**
+     * Fallback to 3G if no wifi for x hours
+     */
+    public boolean isForce3G(String database_table) {
+        if (Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).length() > 0 && !Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).equals("0")) {
+            Cursor lastSynched = mContext.getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE 'STUDY-SYNC: "+ database_table + "'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
+            if (lastSynched != null && lastSynched.moveToFirst()) {
+                long synched = lastSynched.getLong(lastSynched.getColumnIndex(Aware_Provider.Aware_Log.LOG_TIMESTAMP));
+
+                Log.d(Aware.TAG, "Checking forced sync over 3G...");
+                Log.d(Aware.TAG, "Last sync: " + synched + " elapsed: " + (System.currentTimeMillis()-synched) + " force: " +(System.currentTimeMillis()-synched >= Integer.parseInt(Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK)) * 60 * 60 * 1000));
+
+                lastSynched.close();
+                return (System.currentTimeMillis()-synched >= Integer.parseInt(Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK)) * 60 * 60 * 1000);
+            } else
+                return true; //first time synching.
+        }
+        return false;
+    }
 
     private String createRemoteTable(String DEVICE_ID, String TABLES_FIELDS, Boolean WEBSERVICE_SIMPLE, String protocol, Context mContext, String WEBSERVER, String DATABASE_TABLE) {
         //Check first if we have database table remotely, otherwise create it!
