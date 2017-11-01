@@ -1627,6 +1627,39 @@ public class Scheduler extends Aware_Sensor {
         return randomList;
     }
 
+    /**
+     * Given a timeframe, a number of random at a minimum interval in between, returns a list of possible timestamps in milliseconds
+     *
+     * @param start
+     * @param end
+     * @param amount
+     * @param interval_minutes
+     * @return ArrayList<Long> of timestamps between interval
+     */
+    public static ArrayList<Long> random_times(Calendar start, Calendar end, int amount, int interval_minutes) {
+        ArrayList<Long> randomList = new ArrayList<>();
+
+        Random rng = new Random();
+        long totalInterval = end.getTimeInMillis() - start.getTimeInMillis();
+        long minDifferenceMillis = interval_minutes * 60 * 1000;
+        long effectiveInterval = totalInterval - minDifferenceMillis*(amount-1);
+
+        // Create random intervals without the minimum interval.
+        while (randomList.size() < amount) {
+            long random = start.getTimeInMillis() + (long) (rng.nextDouble() * effectiveInterval);
+            randomList.add(random);
+        }
+        // Sort and add the minimum intervals between all events.
+        Collections.sort(randomList);
+        for(int i=0 ; i<randomList.size(); i++) {
+            randomList.set(i, randomList.get(i) + i*minDifferenceMillis);
+        }
+
+        return randomList;
+    }
+
+
+
     @Override
     public IBinder onBind(Intent intent) {
         return null;
