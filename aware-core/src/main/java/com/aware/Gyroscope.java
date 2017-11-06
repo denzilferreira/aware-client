@@ -267,7 +267,7 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
 
         unregisterReceiver(dataLabeler);
 
-        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+        if (Aware.isStudy(this) && Aware.isSyncEnabled(this, Gyroscope_Provider.getAuthority(this))) {
             ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Gyroscope_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
@@ -326,7 +326,7 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
 
             if (Aware.DEBUG) Log.d(TAG, "Gyroscope service active: " + FREQUENCY + "ms");
 
-            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE).length() >= 0 && !Aware.isSyncEnabled(this, Gyroscope_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+            if (!Aware.isSyncEnabled(this, Gyroscope_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Gyroscope_Provider.getAuthority(this), 1);
                 ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Gyroscope_Provider.getAuthority(this), true);
                 ContentResolver.addPeriodicSync(

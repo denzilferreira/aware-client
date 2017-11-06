@@ -129,7 +129,7 @@ public class Installations extends Aware_Sensor {
 
             if (Aware.DEBUG) Log.d(TAG, "Installations service active...");
 
-            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE).length() >= 0 && !Aware.isSyncEnabled(this, Installations_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+            if (!Aware.isSyncEnabled(this, Installations_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Installations_Provider.getAuthority(this), 1);
                 ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Installations_Provider.getAuthority(this), true);
                 ContentResolver.addPeriodicSync(
@@ -150,7 +150,7 @@ public class Installations extends Aware_Sensor {
 
         unregisterReceiver(installationsMonitor);
 
-        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+        if (Aware.isStudy(this) && Aware.isSyncEnabled(this, Installations_Provider.getAuthority(this))) {
             ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Installations_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),

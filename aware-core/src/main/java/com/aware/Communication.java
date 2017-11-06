@@ -400,7 +400,7 @@ public class Communication extends Aware_Sensor {
 
             if (Aware.DEBUG) Log.d(TAG, TAG + " service active...");
 
-            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE).length() >= 0 && !Aware.isSyncEnabled(this, Communication_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+            if (!Aware.isSyncEnabled(this, Communication_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Communication_Provider.getAuthority(this), 1);
                 ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Communication_Provider.getAuthority(this), true);
                 ContentResolver.addPeriodicSync(
@@ -423,7 +423,7 @@ public class Communication extends Aware_Sensor {
         getContentResolver().unregisterContentObserver(msgsObs);
         telephonyManager.listen(phoneState, PhoneStateListener.LISTEN_NONE);
 
-        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+        if (Aware.isStudy(this) && Aware.isSyncEnabled(this, Communication_Provider.getAuthority(this))) {
             ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Communication_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),

@@ -220,7 +220,7 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
 
         unregisterReceiver(dataLabeler);
 
-        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+        if (Aware.isSyncEnabled(this, Barometer_Provider.getAuthority(this)) && Aware.isStudy(this)) {
             ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Barometer_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
@@ -277,7 +277,7 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
 
                 if (Aware.DEBUG) Log.d(TAG, "Barometer service active: " + FREQUENCY + "ms");
 
-                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE).length() >= 0 && !Aware.isSyncEnabled(this, Barometer_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+                if (!Aware.isSyncEnabled(this, Barometer_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                     ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Barometer_Provider.getAuthority(this), 1);
                     ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Barometer_Provider.getAuthority(this), true);
                     ContentResolver.addPeriodicSync(

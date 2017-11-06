@@ -347,7 +347,7 @@ public class Applications extends AccessibilityService {
 
         Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
 
-        if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE).length() >= 0 && !Aware.isSyncEnabled(this, Applications_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+        if (!Aware.isSyncEnabled(this, Applications_Provider.getAuthority(this)) && Aware.isStudy(this)) {
             ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), 1);
             ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), true);
             ContentResolver.addPeriodicSync(
@@ -390,7 +390,7 @@ public class Applications extends AccessibilityService {
         //notify the user
         Applications.isAccessibilityServiceActive(getApplicationContext());
 
-        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
+        if (Aware.isStudy(this) && Aware.isSyncEnabled(this, Applications_Provider.getAuthority(this))) {
             ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
