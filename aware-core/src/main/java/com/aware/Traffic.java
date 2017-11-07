@@ -12,7 +12,6 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-import com.aware.providers.TimeZone_Provider;
 import com.aware.providers.Traffic_Provider;
 import com.aware.providers.Traffic_Provider.Traffic_Data;
 import com.aware.utils.Aware_Sensor;
@@ -182,7 +181,7 @@ public class Traffic extends Aware_Sensor {
 
                 if (Aware.DEBUG) Log.d(TAG, "Traffic service active...");
 
-                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE).length() >= 0 && !Aware.isSyncEnabled(this, Traffic_Provider.getAuthority(this)) && Aware.isStudy(this) && getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+                if (!Aware.isSyncEnabled(this, Traffic_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                     ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Traffic_Provider.getAuthority(this), 1);
                     ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Traffic_Provider.getAuthority(this), true);
                     ContentResolver.addPeriodicSync(
@@ -232,8 +231,8 @@ public class Traffic extends Aware_Sensor {
 
         telephonyManager.listen(networkTrafficObserver, PhoneStateListener.LISTEN_NONE);
 
-        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), TimeZone_Provider.getAuthority(this), false);
+        if (Aware.isStudy(this) && Aware.isSyncEnabled(this, Traffic_Provider.getAuthority(this))) {
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Traffic_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
                     Traffic_Provider.getAuthority(this),

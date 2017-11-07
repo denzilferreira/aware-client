@@ -294,6 +294,8 @@ public class Applications extends AccessibilityService {
         Intent aware = new Intent(this, Aware.class);
         startService(aware);
 
+        Aware.startScheduler(this);
+
         DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
         TAG = Aware.getSetting(this, Aware_Preferences.DEBUG_TAG);
 
@@ -341,7 +343,6 @@ public class Applications extends AccessibilityService {
         } else {
             Scheduler.removeSchedule(getApplicationContext(), SCHEDULER_APPLICATIONS_BACKGROUND);
             Aware.startScheduler(this);
-
             if (DEBUG) Log.d(TAG, "Checking background services is not possible starting Android 5+");
         }
 
