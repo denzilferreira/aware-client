@@ -15,11 +15,25 @@
         android:label="Write to AWARE&apos;s Context data"
         android:protectionLevel="normal" />
 
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
-    <uses-feature android:name="android.hardware.camera.front" android:required="false" />
-    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
-    <uses-feature android:name="android.hardware.telephony" android:required="false" />
-    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+    <uses-feature
+        android:name="android.hardware.camera.front"
+        android:required="false" />
+
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="false" />
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -60,7 +74,6 @@
             android:theme="@style/Theme.Aware">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
@@ -116,10 +129,8 @@
             android:theme="@style/Theme.Aware">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
                 <data android:scheme="aware" />
                 <data android:scheme="aware-ssl" />
             </intent-filter>
@@ -156,7 +167,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_accelerometer" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_accelerometer" />
         </service>
         <service
             android:name="com.aware.syncadapters.Applications_Sync"
@@ -164,7 +177,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_applications" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_applications" />
         </service>
         <service
             android:name="com.aware.syncadapters.Aware_Sync"
@@ -172,7 +187,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_aware_device" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_aware_device" />
         </service>
         <service
             android:name="com.aware.syncadapters.Barometer_Sync"
@@ -180,7 +197,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_barometer" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_barometer" />
         </service>
         <service
             android:name="com.aware.syncadapters.Battery_Sync"
@@ -188,7 +207,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_battery" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_battery" />
         </service>
         <service
             android:name="com.aware.syncadapters.Bluetooth_Sync"
@@ -196,7 +217,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_bluetooth" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_bluetooth" />
         </service>
         <service
             android:name="com.aware.syncadapters.Communications_Sync"
@@ -204,7 +227,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_communications" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_communications" />
         </service>
         <service
             android:name="com.aware.syncadapters.ESM_Sync"
@@ -212,7 +237,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_esms" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_esms" />
         </service>
         <service
             android:name="com.aware.syncadapters.Gravity_Sync"
@@ -220,7 +247,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_gravity" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_gravity" />
         </service>
         <service
             android:name="com.aware.syncadapters.Gyroscope_Sync"
@@ -228,7 +257,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_gyroscope" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_gyroscope" />
         </service>
         <service
             android:name="com.aware.syncadapters.Installations_Sync"
@@ -236,7 +267,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_installations" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_installations" />
         </service>
         <service
             android:name="com.aware.syncadapters.Keyboard_Sync"
@@ -244,7 +277,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_keyboard" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_keyboard" />
         </service>
         <service
             android:name="com.aware.syncadapters.Light_Sync"
@@ -252,7 +287,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_light" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_light" />
         </service>
         <service
             android:name="com.aware.syncadapters.LinearAccelerometer_Sync"
@@ -260,7 +297,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_linear_accelerometer" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_linear_accelerometer" />
         </service>
         <service
             android:name="com.aware.syncadapters.Locations_Sync"
@@ -268,7 +307,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_locations" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_locations" />
         </service>
         <service
             android:name="com.aware.syncadapters.Magnetometer_Sync"
@@ -276,7 +317,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_magnetometer" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_magnetometer" />
         </service>
         <service
             android:name="com.aware.syncadapters.Network_Sync"
@@ -284,7 +327,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_network" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_network" />
         </service>
         <service
             android:name="com.aware.syncadapters.Processor_Sync"
@@ -292,7 +337,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_processor" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_processor" />
         </service>
         <service
             android:name="com.aware.syncadapters.Proximity_Sync"
@@ -300,7 +347,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_proximity" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_proximity" />
         </service>
         <service
             android:name="com.aware.syncadapters.Rotation_Sync"
@@ -308,7 +357,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_rotation" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_rotation" />
         </service>
         <service
             android:name="com.aware.syncadapters.Screen_Sync"
@@ -316,7 +367,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_screen" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_screen" />
         </service>
         <service
             android:name="com.aware.syncadapters.Significant_Sync"
@@ -324,7 +377,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_significant" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_significant" />
         </service>
         <service
             android:name="com.aware.syncadapters.Telephony_Sync"
@@ -332,7 +387,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_telephony" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_telephony" />
         </service>
         <service
             android:name="com.aware.syncadapters.Temperature_Sync"
@@ -340,7 +397,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_temperature" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_temperature" />
         </service>
         <service
             android:name="com.aware.syncadapters.Timezone_Sync"
@@ -348,7 +407,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_timezones" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_timezones" />
         </service>
         <service
             android:name="com.aware.syncadapters.Traffic_Sync"
@@ -356,7 +417,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_traffic" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_traffic" />
         </service>
         <service
             android:name="com.aware.syncadapters.Wifi_Sync"
@@ -364,7 +427,9 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_wifi" />
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_wifi" />
         </service>
 
     </application>
