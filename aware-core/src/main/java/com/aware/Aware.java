@@ -2488,7 +2488,11 @@ public class Aware extends Service {
      * @returns
      */
     public static boolean isSyncEnabled(Context context, String authority) {
-        return (ContentResolver.getSyncAutomatically(Aware.getAWAREAccount(context), authority) || ContentResolver.getIsSyncable(Aware.getAWAREAccount(context), authority)>0);
+        Account aware = Aware.getAWAREAccount(context);
+        boolean isSynchable = ContentResolver.getSyncAutomatically(aware, authority);
+        boolean isMasterSyncEnabled = ContentResolver.getMasterSyncAutomatically();
+        if(Aware.DEBUG) Log.d(Aware.TAG, "Sync-Adapter Authority: " + authority + " syncable: " + isSynchable + " global: " + isMasterSyncEnabled);
+        return isSynchable && isMasterSyncEnabled;
     }
 
     /**
