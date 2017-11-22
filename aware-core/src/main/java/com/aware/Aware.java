@@ -1749,7 +1749,9 @@ public class Aware extends Service {
                         for (int i = 0; i < sensors.length(); i++) {
                             try {
                                 JSONObject sensor_config = sensors.getJSONObject(i);
-                                Aware.setSetting(getApplicationContext(), sensor_config.getString("setting"), sensor_config.get("value"), "com.aware.phone");
+                                String package_name = "com.aware.phone";
+                                if (getApplicationContext().getResources().getBoolean(R.bool.standalone)) package_name = getApplicationContext().getPackageName();
+                                Aware.setSetting(getApplicationContext(), sensor_config.getString("setting"), sensor_config.get("value"), package_name);
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
@@ -1767,6 +1769,7 @@ public class Aware extends Service {
                                 JSONArray plugin_settings = plugin_config.getJSONArray("settings");
                                 for (int j = 0; j < plugin_settings.length(); j++) {
                                     JSONObject plugin_setting = plugin_settings.getJSONObject(j);
+                                    if (getApplicationContext().getResources().getBoolean(R.bool.standalone)) package_name = getApplicationContext().getPackageName();
                                     Aware.setSetting(getApplicationContext(), plugin_setting.getString("setting"), plugin_setting.get("value"), package_name);
                                 }
                             } catch (JSONException e) {
