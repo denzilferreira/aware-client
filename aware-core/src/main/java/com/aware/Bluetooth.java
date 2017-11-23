@@ -307,21 +307,25 @@ public class Bluetooth extends Aware_Sensor {
 
         unregisterReceiver(bluetoothMonitor);
 
-        bluetoothAdapter.cancelDiscovery();
-        bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
-        mBLEHandler.removeCallbacks(scanRunnable);
-        mBLEHandler.removeCallbacksAndMessages(null);
+        if (bluetoothAdapter != null) {
 
-        alarmManager.cancel(bluetoothScan);
-        notificationManager.cancel(123);
+            bluetoothAdapter.cancelDiscovery();
+            bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
 
-        if (Aware.isStudy(this) && Aware.isSyncEnabled(this, Bluetooth_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Bluetooth_Provider.getAuthority(this), false);
-            ContentResolver.removePeriodicSync(
-                    Aware.getAWAREAccount(this),
-                    Bluetooth_Provider.getAuthority(this),
-                    Bundle.EMPTY
-            );
+            mBLEHandler.removeCallbacks(scanRunnable);
+            mBLEHandler.removeCallbacksAndMessages(null);
+
+            alarmManager.cancel(bluetoothScan);
+            notificationManager.cancel(123);
+
+            if (Aware.isStudy(this) && Aware.isSyncEnabled(this, Bluetooth_Provider.getAuthority(this))) {
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Bluetooth_Provider.getAuthority(this), false);
+                ContentResolver.removePeriodicSync(
+                        Aware.getAWAREAccount(this),
+                        Bluetooth_Provider.getAuthority(this),
+                        Bundle.EMPTY
+                );
+            }
         }
 
         if (Aware.DEBUG) Log.d(TAG, "Bluetooth service terminated...");
