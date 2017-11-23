@@ -181,21 +181,22 @@ public class Bluetooth extends Aware_Sensor {
                 startActivity(enableBT);
             }
 
-            if (!bluetoothAdapter.isEnabled()) {
-                notifyMissingBluetooth(getApplicationContext(), false);
-            }
-
-            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-            Aware.setSetting(this, Aware_Preferences.STATUS_BLUETOOTH, true);
-
-            if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_BLUETOOTH).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.FREQUENCY_BLUETOOTH, 60);
-            }
-
             if (bluetoothAdapter == null) {
                 if (Aware.DEBUG) Log.w(TAG, "No bluetooth is detected on this device");
                 stopSelf();
             } else {
+
+                if (!bluetoothAdapter.isEnabled()) {
+                    notifyMissingBluetooth(getApplicationContext(), false);
+                }
+
+                DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+                Aware.setSetting(this, Aware_Preferences.STATUS_BLUETOOTH, true);
+
+                if (Aware.getSetting(this, Aware_Preferences.FREQUENCY_BLUETOOTH).length() == 0) {
+                    Aware.setSetting(this, Aware_Preferences.FREQUENCY_BLUETOOTH, 60);
+                }
+
                 save_bluetooth_device(bluetoothAdapter);
 
                 if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BLUETOOTH))) {
