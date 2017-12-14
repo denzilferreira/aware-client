@@ -242,24 +242,27 @@ public class Bluetooth extends Aware_Sensor {
         @Override
         public void run() {
             BluetoothLeScanner scanner = bluetoothAdapter.getBluetoothLeScanner();
-            if (isBLEScanning) {
-                scanner.stopScan(scanCallback);
-                if (awareSensor != null) awareSensor.onBLEScanEnded();
-                if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_BLUETOOTH_BLE_SCAN_ENDED);
-                Intent scanEnd = new Intent(ACTION_AWARE_BLUETOOTH_BLE_SCAN_ENDED);
-                sendBroadcast(scanEnd);
+            if (scanner != null) {
+                if (isBLEScanning) {
+                    scanner.stopScan(scanCallback);
+                    if (awareSensor != null) awareSensor.onBLEScanEnded();
+                    if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_BLUETOOTH_BLE_SCAN_ENDED);
+                    Intent scanEnd = new Intent(ACTION_AWARE_BLUETOOTH_BLE_SCAN_ENDED);
+                    sendBroadcast(scanEnd);
 
-                discoveredBLE.clear();
+                    discoveredBLE.clear();
 
-            } else {
-                scanner.startScan(null, scanSettings, scanCallback);
-                if (awareSensor != null) awareSensor.onBLEScanStarted();
-                if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_BLUETOOTH_BLE_SCAN_STARTED);
-                Intent scanStart = new Intent(ACTION_AWARE_BLUETOOTH_BLE_SCAN_STARTED);
-                sendBroadcast(scanStart);
+                } else {
+                    scanner.startScan(null, scanSettings, scanCallback);
+                    if (awareSensor != null) awareSensor.onBLEScanStarted();
+                    if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_BLUETOOTH_BLE_SCAN_STARTED);
+                    Intent scanStart = new Intent(ACTION_AWARE_BLUETOOTH_BLE_SCAN_STARTED);
+                    sendBroadcast(scanStart);
+                }
+
+                isBLEScanning = !isBLEScanning;
             }
-
-            isBLEScanning = !isBLEScanning;
+            //This will try again later if the scanner is null too.
             mBLEHandler.postDelayed(this, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BLUETOOTH)) / 2 * 1000);
         }
     };

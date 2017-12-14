@@ -166,12 +166,15 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
                 boolean allow_table_maintenance = isTableAllowedForMaintenance(database_table);
 
                 if (Aware.DEBUG) {
+                    if (latest == null) {
+                        Log.d(Aware.TAG, "Unable to reach the server to retrieve latest... Will try again later.");
+                        return;
+                    }
+
                     Log.d(Aware.TAG, "Table: " + database_table + " exists: " + (response != null && response.length() == 0));
-                    if (!latest.equals("[]")) Log.d(Aware.TAG, "Latest synched record: " + latest);
-                    if (study_condition.length() > 0)
-                        Log.d(Aware.TAG, "Resume from: " + study_condition);
-                    if (total_records > 0)
-                        Log.d(Aware.TAG, "Rows to sync: " + total_records);
+                    Log.d(Aware.TAG, "Latest synched record: " + latest);
+                    if (study_condition.length() > 0) Log.d(Aware.TAG, "Resume from: " + study_condition);
+                    if (total_records > 0) Log.d(Aware.TAG, "Rows to sync: " + total_records);
                 }
 
                 // If we have records to sync
@@ -190,8 +193,13 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
 
                         Cursor sync_data = getSyncData(remoteLatestData, CONTENT_URI, study_condition, columnsStr, uploaded_records, context, MAX_POST_SIZE);
                         lastSynced = syncBatch(sync_data, database_table, device_id, context, protocol, web_server, DEBUG);
-
-                        if (lastSynced > 0) removeFrom = lastSynced;
+                        if (lastSynced == 0) {
+                            removeFrom = 0;
+                            Log.d(Aware.TAG, "Connection to server interrupted. Will try again later.");
+                            break;
+                        } else {
+                            removeFrom = lastSynced;
+                        }
 
                         uploaded_records += MAX_POST_SIZE;
                     }
@@ -357,7 +365,7 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
         request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
 
         //check the latest entry in remote database
-        String latest = "[]";
+        String latest = null;
         // Default aware has this condition as TRUE and does the /latest call.
         // Only if WEBSERVICE_REMOVE_DATA is true can we safely do this, and
         // we also require WEBSERVICE_SIMPLE so that we can remove data while
@@ -368,13 +376,12 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
                 try {
                     latest = new Https(SSLManager.getHTTPS(mContext, WEBSERVER)).dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
                 } catch (FileNotFoundException e) {
-                    return "[]";
+                    return null;
                 }
             } else {
                 latest = new Http().dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
             }
         }
-        if (latest == null) return "[]";
         return latest;
     }
 
