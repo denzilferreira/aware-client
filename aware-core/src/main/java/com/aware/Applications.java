@@ -23,6 +23,7 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -31,6 +32,7 @@ import android.support.v4.content.WakefulBroadcastReceiver;
 import android.support.v4.view.accessibility.AccessibilityEventCompat;
 import android.support.v4.view.accessibility.AccessibilityManagerCompat;
 import android.util.Log;
+import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 
@@ -281,7 +283,64 @@ public class Applications extends AccessibilityService {
             Intent keyboard_data = new Intent(Keyboard.ACTION_AWARE_KEYBOARD);
             sendBroadcast(keyboard_data);
         }
+
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_TOUCH).equals("true")) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+                Intent overlayPermission = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                overlayPermission.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                overlayPermission.setData(Uri.parse("package:" + getPackageName()));
+                startActivity(overlayPermission);
+            }
+
+            if (event.getEventType() == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
+                Log.d(Aware.TAG, "Scrolled:" + event.toString());
+            }
+
+//            if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+//                final WindowManager windowManager = (WindowManager) getApplicationContext().getSystemService(WINDOW_SERVICE);
+//                WindowManager.LayoutParams overlayParams = new WindowManager.LayoutParams(
+//                        WindowManager.LayoutParams.MATCH_PARENT,
+//                        WindowManager.LayoutParams.MATCH_PARENT,
+//                        WindowManager.LayoutParams.TYPE_PRIORITY_PHONE,
+//                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+//                                | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+//                                | WindowManager.LayoutParams.FLAG_FULLSCREEN,
+//                        PixelFormat.TRANSLUCENT
+//                );
+//                overlayParams.gravity = Gravity.TOP | Gravity.START;
+//                if (touchOverlay == null) {
+//                    touchOverlay = new View(getApplicationContext());
+//                    touchOverlay.setClickable(true);
+//                    touchOverlay.setFocusable(false);
+//                    touchOverlay.setFocusableInTouchMode(false);
+//                    touchOverlay.setLongClickable(false);
+//                    touchOverlay.setOnDragListener(new View.OnDragListener() {
+//                        @Override
+//                        public boolean onDrag(View v, DragEvent event) {
+//                            return false;
+//                        }
+//                    });
+//                    touchOverlay.setOnTouchListener(new View.OnTouchListener() {
+//                        @Override
+//                        public boolean onTouch(View v, MotionEvent event) {
+//                            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+//                                v.performClick();
+//                                touchOverlay.performClick();
+//                            }
+//
+//                            Log.d(Aware.TAG, "Motion:" + event);
+//                            return false;
+//                        }
+//                    });
+//
+//                    touchOverlay.setLayoutParams(overlayParams);
+//                    windowManager.addView(touchOverlay, overlayParams);
+//                }
+//            }
+        }
     }
+
+    private View touchOverlay;
 
     @Override
     protected void onServiceConnected() {
@@ -344,20 +403,30 @@ public class Applications extends AccessibilityService {
             } else {
                 Scheduler.removeSchedule(getApplicationContext(), SCHEDULER_APPLICATIONS_BACKGROUND);
                 Aware.startScheduler(this);
-                if (DEBUG) Log.d(TAG, "Checking background services is not possible starting Android 5+");
+                if (DEBUG)
+                    Log.d(TAG, "Checking background services is not possible starting Android 5+");
             }
 
             Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
 
             if (!Aware.isSyncEnabled(this, Applications_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), 1);
-                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), true);
+                //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), true);
                 ContentResolver.addPeriodicSync(
                         Aware.getAWAREAccount(this),
                         Applications_Provider.getAuthority(this),
                         Bundle.EMPTY,
                         Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
                 );
+            }
+
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_TOUCH).equals("true")) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+                    Intent overlayPermission = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                    overlayPermission.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    overlayPermission.setData(Uri.parse("package:" + getPackageName()));
+                    startActivity(overlayPermission);
+                }
             }
         }
     }
@@ -394,7 +463,7 @@ public class Applications extends AccessibilityService {
         Applications.isAccessibilityServiceActive(getApplicationContext());
 
         if (Aware.isStudy(this) && Aware.isSyncEnabled(this, Applications_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), false);
+            //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
                     Applications_Provider.getAuthority(this),
@@ -414,6 +483,7 @@ public class Applications extends AccessibilityService {
      * @author df
      */
     private final ContextBroadcaster awareMonitor = new ContextBroadcaster();
+
     public class ContextBroadcaster extends WakefulBroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -438,9 +508,11 @@ public class Applications extends AccessibilityService {
     }
 
     private static Applications.AWARESensorObserver awareSensor;
+
     public static void setSensorObserver(Applications.AWARESensorObserver observer) {
         awareSensor = observer;
     }
+
     public static Applications.AWARESensorObserver getSensorObserver() {
         return awareSensor;
     }
@@ -448,24 +520,28 @@ public class Applications extends AccessibilityService {
     public interface AWARESensorObserver {
         /**
          * Callback when the foreground application changed
+         *
          * @param data
          */
         void onForeground(ContentValues data);
 
         /**
          * Callback when a notification is triggered
+         *
          * @param data
          */
         void onNotification(ContentValues data);
 
         /**
          * Callback when an application crashed
+         *
          * @param data
          */
         void onCrash(ContentValues data);
 
         /**
          * Callback upon keyboard input changed
+         *
          * @param data
          */
         void onKeyboard(ContentValues data);
@@ -473,6 +549,7 @@ public class Applications extends AccessibilityService {
         /**
          * NOTE: Not compatible with Lollipop 5+
          * Callback when background services changed
+         *
          * @param data
          */
         void onBackground(ContentValues data);
@@ -559,6 +636,7 @@ public class Applications extends AccessibilityService {
     /**
      * Applications background service
      * - Updates the current running sync_applications statistics
+     *
      * @author df
      */
     public static class BackgroundService extends IntentService {

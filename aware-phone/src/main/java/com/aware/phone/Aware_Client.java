@@ -346,13 +346,16 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                 e.printStackTrace();
             }
 
-            //Check if AWARE is active on the accessibility services
+            //Check if AWARE is active on the accessibility services. Android Wear doesn't support accessibility services (no API yet...)
             if (!Aware.is_watch(this)) {
                 Applications.isAccessibilityServiceActive(this);
             }
 
-            prefs.registerOnSharedPreferenceChangeListener(this);
+            //Check if AWARE is allowed to run on Doze
+            Aware.isBatteryOptimizationIgnored(this, getPackageName());
 
+            prefs.registerOnSharedPreferenceChangeListener(this);
+            
             new SettingsSync().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, //use all cores available to process UI faster
                     findPreference(Aware_Preferences.DEVICE_ID),
                     findPreference(Aware_Preferences.DEVICE_LABEL),
@@ -408,11 +411,9 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                     findPreference(Aware_Preferences.WEBSERVICE_SIMPLE),
                     findPreference(Aware_Preferences.WEBSERVICE_REMOVE_DATA),
                     findPreference(Aware_Preferences.DEBUG_DB_SLOW),
-                    findPreference(Aware_Preferences.FOREGROUND_PRIORITY)
+                    findPreference(Aware_Preferences.FOREGROUND_PRIORITY),
+                    findPreference(Aware_Preferences.STATUS_TOUCH)
             );
-
-            //Ask the user to add AWARE to the battery optimization ignored settings
-            Aware.isBatteryOptimizationIgnored(getApplicationContext(), getPackageName());
         }
     }
 

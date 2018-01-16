@@ -376,7 +376,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
             if (!Aware.isSyncEnabled(this, Mqtt_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Mqtt_Provider.getAuthority(this), 1);
-                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Mqtt_Provider.getAuthority(this), true);
+                //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Mqtt_Provider.getAuthority(this), true);
                 ContentResolver.addPeriodicSync(
                         Aware.getAWAREAccount(this),
                         Mqtt_Provider.getAuthority(this),
@@ -407,7 +407,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         }
 
         if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Mqtt_Provider.getAuthority(this), false);
+            //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Mqtt_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
                     Mqtt_Provider.getAuthority(this),

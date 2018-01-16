@@ -110,7 +110,7 @@ public class Screen extends Aware_Sensor {
         unregisterReceiver(screenMonitor);
 
         if (Aware.isStudy(this) && Aware.isSyncEnabled(this, Screen_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Screen_Provider.getAuthority(this), false);
+            //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Screen_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
                     Screen_Provider.getAuthority(this),
@@ -131,7 +131,7 @@ public class Screen extends Aware_Sensor {
 
             if (!Aware.isSyncEnabled(this, Screen_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Screen_Provider.getAuthority(this), 1);
-                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Screen_Provider.getAuthority(this), true);
+                //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Screen_Provider.getAuthority(this), true);
                 ContentResolver.addPeriodicSync(
                         Aware.getAWAREAccount(this),
                         Screen_Provider.getAuthority(this),

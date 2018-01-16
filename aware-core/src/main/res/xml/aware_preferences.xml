@@ -645,7 +645,14 @@
                 android:key="status_screen"
                 android:persistent="true"
                 android:summary="Capture screen events (on, off, locked, unlocked)"
-                android:title="Active" />
+                android:title="Screen usage" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_touch"
+                android:persistent="true"
+                android:summary="Capture touch, and gestures events"
+                android:title="Screen interaction" />
 
         </PreferenceScreen>
         <PreferenceScreen

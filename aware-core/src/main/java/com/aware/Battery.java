@@ -387,7 +387,7 @@ public class Battery extends Aware_Sensor {
         unregisterReceiver(batteryMonitor);
 
         if (Aware.isSyncEnabled(this, Battery_Provider.getAuthority(this)) && Aware.isStudy(this)) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Battery_Provider.getAuthority(this), false);
+            //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Battery_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
                     Battery_Provider.getAuthority(this),
@@ -410,7 +410,7 @@ public class Battery extends Aware_Sensor {
 
             if (!Aware.isSyncEnabled(this, Battery_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Battery_Provider.getAuthority(this), 1);
-                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Battery_Provider.getAuthority(this), true);
+                //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Battery_Provider.getAuthority(this), true);
                 ContentResolver.addPeriodicSync(
                         Aware.getAWAREAccount(this),
                         Battery_Provider.getAuthority(this),

@@ -282,7 +282,7 @@ public class Locations extends Aware_Sensor implements LocationListener {
         locationManager.removeGpsStatusListener(gps_status_listener);
 
         if (Aware.isStudy(this) && Aware.isSyncEnabled(this, Locations_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Locations_Provider.getAuthority(this), false);
+            //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Locations_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
                     Locations_Provider.getAuthority(this),
@@ -410,7 +410,7 @@ public class Locations extends Aware_Sensor implements LocationListener {
 
             if (!Aware.isSyncEnabled(this, Locations_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Locations_Provider.getAuthority(this), 1);
-                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Locations_Provider.getAuthority(this), true);
+                //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Locations_Provider.getAuthority(this), true);
                 ContentResolver.addPeriodicSync(
                         Aware.getAWAREAccount(this),
                         Locations_Provider.getAuthority(this),

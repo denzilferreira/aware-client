@@ -132,7 +132,7 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
 
             if (!Aware.isSyncEnabled(this, Significant_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Significant_Provider.getAuthority(this), 1);
-                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Significant_Provider.getAuthority(this), true);
+                //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Significant_Provider.getAuthority(this), true);
                 ContentResolver.addPeriodicSync(
                         Aware.getAWAREAccount(this),
                         Significant_Provider.getAuthority(this),
@@ -156,7 +156,7 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
         wakeLock.release();
 
         if (Aware.isStudy(this) && Aware.isSyncEnabled(this, Significant_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Significant_Provider.getAuthority(this), false);
+            //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Significant_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
                     Significant_Provider.getAuthority(this),

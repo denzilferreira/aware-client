@@ -635,4 +635,9 @@ public class Aware_Preferences {
      * Fallback to network sync after xh have elapsed without WiFi synching
      */
     public static final String WEBSERVICE_FALLBACK_NETWORK = "fallback_network";
+
+    /**
+     * Log touch and gesture events
+     */
+    public static final String STATUS_TOUCH = "status_touch";
 }

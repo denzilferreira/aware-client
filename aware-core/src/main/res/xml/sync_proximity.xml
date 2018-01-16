@@ -3,6 +3,6 @@
     android:accountType="com.awareframework"
     android:allowParallelSyncs="true"
     android:contentAuthority="com.aware.provider.proximity"
-    android:isAlwaysSyncable="true"
+    android:isAlwaysSyncable="false"
     android:supportsUploading="true"
-    android:userVisible="true" />
+    android:userVisible="false" />

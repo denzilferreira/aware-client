@@ -34,7 +34,7 @@ public class Keyboard extends Aware_Sensor {
         super.onDestroy();
 
         if (Aware.isStudy(this) && Aware.isSyncEnabled(this, Keyboard_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Keyboard_Provider.getAuthority(this), false);
+            //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Keyboard_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
                     Keyboard_Provider.getAuthority(this),
@@ -55,7 +55,7 @@ public class Keyboard extends Aware_Sensor {
 
             if (!Aware.isSyncEnabled(this, Keyboard_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Keyboard_Provider.getAuthority(this), 1);
-                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Keyboard_Provider.getAuthority(this), true);
+                //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Keyboard_Provider.getAuthority(this), true);
                 ContentResolver.addPeriodicSync(
                         Aware.getAWAREAccount(this),
                         Keyboard_Provider.getAuthority(this),
