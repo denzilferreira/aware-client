@@ -23,6 +23,8 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
+import android.graphics.Color;
+import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -32,7 +34,9 @@ import android.support.v4.content.WakefulBroadcastReceiver;
 import android.support.v4.view.accessibility.AccessibilityEventCompat;
 import android.support.v4.view.accessibility.AccessibilityManagerCompat;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 
@@ -296,51 +300,63 @@ public class Applications extends AccessibilityService {
                 Log.d(Aware.TAG, "Scrolled:" + event.toString());
             }
 
-//            if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
-//                final WindowManager windowManager = (WindowManager) getApplicationContext().getSystemService(WINDOW_SERVICE);
-//                WindowManager.LayoutParams overlayParams = new WindowManager.LayoutParams(
-//                        WindowManager.LayoutParams.MATCH_PARENT,
-//                        WindowManager.LayoutParams.MATCH_PARENT,
-//                        WindowManager.LayoutParams.TYPE_PRIORITY_PHONE,
-//                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-//                                | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-//                                | WindowManager.LayoutParams.FLAG_FULLSCREEN,
-//                        PixelFormat.TRANSLUCENT
-//                );
-//                overlayParams.gravity = Gravity.TOP | Gravity.START;
-//                if (touchOverlay == null) {
-//                    touchOverlay = new View(getApplicationContext());
-//                    touchOverlay.setClickable(true);
-//                    touchOverlay.setFocusable(false);
-//                    touchOverlay.setFocusableInTouchMode(false);
-//                    touchOverlay.setLongClickable(false);
-//                    touchOverlay.setOnDragListener(new View.OnDragListener() {
-//                        @Override
-//                        public boolean onDrag(View v, DragEvent event) {
-//                            return false;
-//                        }
-//                    });
-//                    touchOverlay.setOnTouchListener(new View.OnTouchListener() {
-//                        @Override
-//                        public boolean onTouch(View v, MotionEvent event) {
-//                            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-//                                v.performClick();
-//                                touchOverlay.performClick();
-//                            }
-//
-//                            Log.d(Aware.TAG, "Motion:" + event);
-//                            return false;
-//                        }
-//                    });
-//
-//                    touchOverlay.setLayoutParams(overlayParams);
-//                    windowManager.addView(touchOverlay, overlayParams);
-//                }
-//            }
+            if (event.getEventType() == AccessibilityEvent.TYPE_VIEW_CLICKED) {
+                Log.d(Aware.TAG, "Clicked:" + event.toString());
+            }
+
+            if (event.getEventType() == AccessibilityEvent.TYPE_VIEW_LONG_CLICKED) {
+                Log.d(Aware.TAG, "Long clicked:" + event.toString());
+            }
+
+            if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+                WindowManager windowManager = (WindowManager) getApplicationContext().getSystemService(WINDOW_SERVICE);
+                WindowManager.LayoutParams overlayParams = new WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        WindowManager.LayoutParams.TYPE_TOAST,
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                        PixelFormat.TRANSLUCENT
+                );
+
+                //Position overlay on top and left/right most section of the screen, making it 1 pixel size
+                overlayParams.gravity = android.view.Gravity.TOP | android.view.Gravity.START;
+                overlayParams.width = 1;
+                overlayParams.height = 1;
+
+                if (touchOverlay != null) {
+                    windowManager.removeView(touchOverlay);
+                    windowManager.addView(touchOverlay, overlayParams);
+                } else {
+                    touchOverlay = new View(getApplicationContext());
+                    touchOverlay.setBackgroundColor(Color.RED);
+                    touchOverlay.setAlpha(.5f);
+                    touchOverlay.setClickable(false);
+                    touchOverlay.setFocusable(false);
+                    touchOverlay.setFocusableInTouchMode(false);
+                    touchOverlay.setLongClickable(false);
+                    touchOverlay.setOnTouchListener(new View.OnTouchListener() {
+                        @Override
+                        public boolean onTouch(View v, MotionEvent event) {
+                            Log.d(Aware.TAG, "Motion: " + event);
+                            return false;
+                        }
+                    });
+
+                    touchOverlay.setLayoutParams(overlayParams);
+                    windowManager.addView(touchOverlay, overlayParams);
+                }
+
+                //String root_id = "android:id/content";
+                //AccessibilityNodeInfo root = event.getSource();
+                //if (root != null) {
+                //    List<AccessibilityNodeInfo> parentView = root.findAccessibilityNodeInfosByViewId(root_id);
+                //    Log.d(Aware.TAG, "Parent:" + parentView.toString());
+                //}
+            }
         }
     }
 
-    private View touchOverlay;
+    private static View touchOverlay;
 
     @Override
     protected void onServiceConnected() {
