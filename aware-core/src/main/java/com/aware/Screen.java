@@ -49,6 +49,11 @@ public class Screen extends Aware_Sensor {
      */
     public static final String ACTION_AWARE_SCREEN_UNLOCKED = "ACTION_AWARE_SCREEN_UNLOCKED";
 
+    public static final String ACTION_AWARE_TOUCH_CLICKED = "ACTION_AWARE_TOUCH_CLICKED";
+    public static final String ACTION_AWARE_TOUCH_LONG_CLICKED = "ACTION_AWARE_TOUCH_LONG_CLICKED";
+    public static final String ACTION_AWARE_TOUCH_SCROLLED_UP = "ACTION_AWARE_TOUCH_SCROLLED_UP";
+    public static final String ACTION_AWARE_TOUCH_SCROLLED_DOWN = "ACTION_AWARE_TOUCH_SCROLLED_DOWN";
+
     /**
      * Screen status: OFF = 0
      */
@@ -128,6 +133,11 @@ public class Screen extends Aware_Sensor {
             DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
             Aware.setSetting(this, Aware_Preferences.STATUS_SCREEN, true);
             if (Aware.DEBUG) Log.d(TAG, "Screen service active...");
+
+            //We can only get the touch events if accessibility service is enabled.
+            if (Aware.getSetting(this, Aware_Preferences.STATUS_TOUCH).equals("true")) {
+                Applications.isAccessibilityServiceActive(this);
+            }
 
             if (!Aware.isSyncEnabled(this, Screen_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Screen_Provider.getAuthority(this), 1);

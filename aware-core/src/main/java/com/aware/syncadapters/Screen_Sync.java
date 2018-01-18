@@ -27,7 +27,8 @@ public class Screen_Sync extends Service {
                         Screen_Provider.DATABASE_TABLES,
                         Screen_Provider.TABLES_FIELDS,
                         new Uri[]{
-                                Screen_Provider.Screen_Data.CONTENT_URI
+                                Screen_Provider.Screen_Data.CONTENT_URI,
+                                Screen_Provider.Screen_Touch.CONTENT_URI
                         });
             }
         }
