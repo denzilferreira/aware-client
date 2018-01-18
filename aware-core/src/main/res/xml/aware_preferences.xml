@@ -651,7 +651,7 @@
                 android:defaultValue="false"
                 android:key="status_touch"
                 android:persistent="true"
-                android:summary="Capture touch, and gestures events"
+                android:summary="Capture clicks, long clicks and scroll up/down events"
                 android:title="Screen interaction" />
 
         </PreferenceScreen>

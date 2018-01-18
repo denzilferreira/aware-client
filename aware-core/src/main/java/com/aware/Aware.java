@@ -500,14 +500,15 @@ public class Aware extends Service {
                     }
 
                     //Ignored by standalone apps. They handle their own sensors, so server settings do not apply.
-                    if (getPackageName().equals("com.aware.phone") || !getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+                    //Denzil: Modified for flexibility for standalone apps. You can now modify the settings on the dashboard too for standalones.
+                    //if (getPackageName().equals("com.aware.phone") || !getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
                         if (study.getString("config").equalsIgnoreCase("[]")) {
                             Aware.tweakSettings(getApplicationContext(), new JSONArray(study.getString("config")));
                         } else if (!study.getString("config").equalsIgnoreCase("[]")) {
                             JSONObject configJSON = new JSONObject(study.getString("config"));
                             Aware.tweakSettings(getApplicationContext(), new JSONArray().put(configJSON));
                         }
-                    }
+                    //}
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

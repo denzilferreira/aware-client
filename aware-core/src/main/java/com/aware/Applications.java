@@ -23,7 +23,6 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -32,7 +31,6 @@ import android.support.v4.content.WakefulBroadcastReceiver;
 import android.support.v4.view.accessibility.AccessibilityEventCompat;
 import android.support.v4.view.accessibility.AccessibilityManagerCompat;
 import android.util.Log;
-import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 
@@ -42,6 +40,7 @@ import com.aware.providers.Applications_Provider.Applications_Foreground;
 import com.aware.providers.Applications_Provider.Applications_History;
 import com.aware.providers.Applications_Provider.Applications_Notifications;
 import com.aware.providers.Keyboard_Provider;
+import com.aware.providers.Screen_Provider;
 import com.aware.utils.Encrypter;
 import com.aware.utils.Scheduler;
 
@@ -285,62 +284,99 @@ public class Applications extends AccessibilityService {
         }
 
         if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_TOUCH).equals("true")) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-                Intent overlayPermission = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-                overlayPermission.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                overlayPermission.setData(Uri.parse("package:" + getPackageName()));
-                startActivity(overlayPermission);
-            }
-
             if (event.getEventType() == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
-                Log.d(Aware.TAG, "Scrolled:" + event.toString());
+                if (event.getFromIndex() == 0) last_scroll_index = 0;
+
+                if (last_scroll_index > 0) {
+                    if (event.getFromIndex() < last_scroll_index) {
+
+                        ContentValues touch = new ContentValues();
+                        touch.put(Screen_Provider.Screen_Touch.TIMESTAMP, System.currentTimeMillis());
+                        touch.put(Screen_Provider.Screen_Touch.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                        touch.put(Screen_Provider.Screen_Touch.TOUCH_APP, event.getPackageName().toString());
+                        touch.put(Screen_Provider.Screen_Touch.TOUCH_ACTION, Screen.ACTION_AWARE_TOUCH_SCROLLED_UP);
+                        touch.put(Screen_Provider.Screen_Touch.TOUCH_INDEX_ITEMS, event.getItemCount());
+                        touch.put(Screen_Provider.Screen_Touch.TOUCH_FROM_INDEX, event.getFromIndex());
+                        touch.put(Screen_Provider.Screen_Touch.TOUCH_TO_INDEX, event.getToIndex());
+
+                        if (awareSensor != null) awareSensor.onTouch(touch);
+
+                        getContentResolver().insert(Screen_Provider.Screen_Touch.CONTENT_URI, touch);
+
+                        if (DEBUG) Log.d(TAG, "Touch: " + touch.toString());
+
+                        Intent touch_data = new Intent(Screen.ACTION_AWARE_TOUCH_SCROLLED_UP);
+                        sendBroadcast(touch_data);
+
+                    } else if (event.getFromIndex() > last_scroll_index) {
+
+                        ContentValues touch = new ContentValues();
+                        touch.put(Screen_Provider.Screen_Touch.TIMESTAMP, System.currentTimeMillis());
+                        touch.put(Screen_Provider.Screen_Touch.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                        touch.put(Screen_Provider.Screen_Touch.TOUCH_APP, event.getPackageName().toString());
+                        touch.put(Screen_Provider.Screen_Touch.TOUCH_ACTION, Screen.ACTION_AWARE_TOUCH_SCROLLED_DOWN);
+                        touch.put(Screen_Provider.Screen_Touch.TOUCH_INDEX_ITEMS, event.getItemCount());
+                        touch.put(Screen_Provider.Screen_Touch.TOUCH_FROM_INDEX, event.getFromIndex());
+                        touch.put(Screen_Provider.Screen_Touch.TOUCH_TO_INDEX, event.getToIndex());
+
+                        if (awareSensor != null) awareSensor.onTouch(touch);
+
+                        getContentResolver().insert(Screen_Provider.Screen_Touch.CONTENT_URI, touch);
+
+                        if (DEBUG) Log.d(TAG, "Touch: " + touch.toString());
+
+                        Intent touch_data = new Intent(Screen.ACTION_AWARE_TOUCH_SCROLLED_DOWN);
+                        sendBroadcast(touch_data);
+
+                    }
+                }
+                last_scroll_index = event.getFromIndex();
             }
 
-//            if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
-//                final WindowManager windowManager = (WindowManager) getApplicationContext().getSystemService(WINDOW_SERVICE);
-//                WindowManager.LayoutParams overlayParams = new WindowManager.LayoutParams(
-//                        WindowManager.LayoutParams.MATCH_PARENT,
-//                        WindowManager.LayoutParams.MATCH_PARENT,
-//                        WindowManager.LayoutParams.TYPE_PRIORITY_PHONE,
-//                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-//                                | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-//                                | WindowManager.LayoutParams.FLAG_FULLSCREEN,
-//                        PixelFormat.TRANSLUCENT
-//                );
-//                overlayParams.gravity = Gravity.TOP | Gravity.START;
-//                if (touchOverlay == null) {
-//                    touchOverlay = new View(getApplicationContext());
-//                    touchOverlay.setClickable(true);
-//                    touchOverlay.setFocusable(false);
-//                    touchOverlay.setFocusableInTouchMode(false);
-//                    touchOverlay.setLongClickable(false);
-//                    touchOverlay.setOnDragListener(new View.OnDragListener() {
-//                        @Override
-//                        public boolean onDrag(View v, DragEvent event) {
-//                            return false;
-//                        }
-//                    });
-//                    touchOverlay.setOnTouchListener(new View.OnTouchListener() {
-//                        @Override
-//                        public boolean onTouch(View v, MotionEvent event) {
-//                            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-//                                v.performClick();
-//                                touchOverlay.performClick();
-//                            }
-//
-//                            Log.d(Aware.TAG, "Motion:" + event);
-//                            return false;
-//                        }
-//                    });
-//
-//                    touchOverlay.setLayoutParams(overlayParams);
-//                    windowManager.addView(touchOverlay, overlayParams);
-//                }
-//            }
+            if (event.getEventType() == AccessibilityEvent.TYPE_VIEW_CLICKED) {
+                ContentValues touch = new ContentValues();
+                touch.put(Screen_Provider.Screen_Touch.TIMESTAMP, System.currentTimeMillis());
+                touch.put(Screen_Provider.Screen_Touch.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                touch.put(Screen_Provider.Screen_Touch.TOUCH_APP, event.getPackageName().toString());
+                touch.put(Screen_Provider.Screen_Touch.TOUCH_ACTION, Screen.ACTION_AWARE_TOUCH_CLICKED);
+                touch.put(Screen_Provider.Screen_Touch.TOUCH_ACTION_TEXT, event.getText().toString());
+                touch.put(Screen_Provider.Screen_Touch.TOUCH_INDEX_ITEMS, event.getItemCount());
+                touch.put(Screen_Provider.Screen_Touch.TOUCH_FROM_INDEX, event.getFromIndex());
+                touch.put(Screen_Provider.Screen_Touch.TOUCH_TO_INDEX, event.getToIndex());
+
+                if (awareSensor != null) awareSensor.onTouch(touch);
+
+                getContentResolver().insert(Screen_Provider.Screen_Touch.CONTENT_URI, touch);
+
+                if (DEBUG) Log.d(TAG, "Touch: " + touch.toString());
+
+                Intent touch_data = new Intent(Screen.ACTION_AWARE_TOUCH_CLICKED);
+                sendBroadcast(touch_data);
+            }
+
+            if (event.getEventType() == AccessibilityEvent.TYPE_VIEW_LONG_CLICKED) {
+                ContentValues touch = new ContentValues();
+                touch.put(Screen_Provider.Screen_Touch.TIMESTAMP, System.currentTimeMillis());
+                touch.put(Screen_Provider.Screen_Touch.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                touch.put(Screen_Provider.Screen_Touch.TOUCH_APP, event.getPackageName().toString());
+                touch.put(Screen_Provider.Screen_Touch.TOUCH_ACTION, Screen.ACTION_AWARE_TOUCH_LONG_CLICKED);
+                touch.put(Screen_Provider.Screen_Touch.TOUCH_ACTION_TEXT, event.getText().toString());
+                touch.put(Screen_Provider.Screen_Touch.TOUCH_INDEX_ITEMS, event.getItemCount());
+                touch.put(Screen_Provider.Screen_Touch.TOUCH_FROM_INDEX, event.getFromIndex());
+                touch.put(Screen_Provider.Screen_Touch.TOUCH_TO_INDEX, event.getToIndex());
+
+                if (awareSensor != null) awareSensor.onTouch(touch);
+
+                getContentResolver().insert(Screen_Provider.Screen_Touch.CONTENT_URI, touch);
+
+                if (DEBUG) Log.d(TAG, "Touch: " + touch.toString());
+
+                Intent touch_data = new Intent(Screen.ACTION_AWARE_TOUCH_LONG_CLICKED);
+                sendBroadcast(touch_data);
+            }
         }
     }
-
-    private View touchOverlay;
+    private int last_scroll_index = 0;
 
     @Override
     protected void onServiceConnected() {
@@ -418,15 +454,6 @@ public class Applications extends AccessibilityService {
                         Bundle.EMPTY,
                         Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
                 );
-            }
-
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_TOUCH).equals("true")) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-                    Intent overlayPermission = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-                    overlayPermission.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    overlayPermission.setData(Uri.parse("package:" + getPackageName()));
-                    startActivity(overlayPermission);
-                }
             }
         }
     }
@@ -553,6 +580,12 @@ public class Applications extends AccessibilityService {
          * @param data
          */
         void onBackground(ContentValues data);
+
+        /**
+         * Callback upon touch input changed
+         * @param data
+         */
+        void onTouch(ContentValues data);
     }
 
     private synchronized static boolean isAccessibilityEnabled(Context context) {
