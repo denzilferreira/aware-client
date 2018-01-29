@@ -354,14 +354,14 @@ public class Aware extends Service {
             Intent aware = new Intent(this, Aware.class);
             PendingIntent onTap = PendingIntent.getService(this, 0, aware, 0);
 
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, Aware.AWARE_NOTIFICATION_ID);
             mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
             mBuilder.setContentTitle(getApplicationContext().getResources().getString(R.string.foreground_notification_title));
             mBuilder.setContentText(getApplicationContext().getResources().getString(R.string.foreground_notification_text));
             mBuilder.setOngoing(true);
             mBuilder.setOnlyAlertOnce(true);
             mBuilder.setContentIntent(onTap);
-            mBuilder.setDefaults(~NotificationCompat.DEFAULT_ALL); //muted notification
+            mBuilder.setPriority(NotificationCompat.PRIORITY_MIN);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_ID);
@@ -438,7 +438,7 @@ public class Aware extends Service {
         }
 
         if (!is_ignored) {
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, Aware.AWARE_NOTIFICATION_ID);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_recharge);
             mBuilder.setContentTitle(context.getApplicationContext().getResources().getString(R.string.aware_activate_battery_optimize_ignore_title));
             mBuilder.setContentText(context.getApplicationContext().getResources().getString(R.string.aware_activate_battery_optimize_ignore));
@@ -767,7 +767,7 @@ public class Aware extends Service {
                 if (batt != null && batt.getExtras() != null) {
                     Bundle extras = batt.getExtras();
                     if (extras.getInt(BatteryManager.EXTRA_LEVEL) <= 15 && extras.getInt(BatteryManager.EXTRA_STATUS) != BatteryManager.BATTERY_STATUS_CHARGING) {
-                        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context.getApplicationContext());
+                        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context.getApplicationContext(), Aware.AWARE_NOTIFICATION_ID);
                         mBuilder.setSmallIcon(R.drawable.ic_stat_aware_recharge);
                         mBuilder.setContentTitle(context.getApplicationContext().getResources().getString(R.string.app_name));
                         mBuilder.setContentText(context.getApplicationContext().getText(R.string.aware_battery_recharge));

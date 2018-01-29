@@ -96,7 +96,7 @@ public class DownloadPluginService extends IntentService {
 
                 String package_url = study_host + json_package.getString("package_path") + json_package.getString("package_name");
 
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext(), Aware.AWARE_NOTIFICATION_ID);
                 mBuilder.setSmallIcon(R.drawable.ic_action_aware_plugins);
                 mBuilder.setContentTitle("AWARE Plugin");
                 mBuilder.setContentText(((is_update) ? "Updating " : "Downloading ") + json_package.getString("title"));

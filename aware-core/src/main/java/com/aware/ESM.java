@@ -404,7 +404,7 @@ public class ESM extends Aware_Sensor {
      */
     public static void notifyESM(Context context, boolean notifyOnce) {
 
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, Aware.AWARE_NOTIFICATION_ID);
         mBuilder.setSmallIcon(R.drawable.ic_stat_aware_esm);
         mBuilder.setContentTitle(context.getResources().getText(R.string.aware_esm_questions_title));
         mBuilder.setContentText(context.getResources().getText(R.string.aware_esm_questions));

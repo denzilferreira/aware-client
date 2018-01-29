@@ -228,7 +228,7 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
 
     private void notifyUser(Context mContext, String message, boolean dismiss, boolean indetermined, int id) {
         if (!dismiss) {
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(mContext);
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(mContext, Aware.AWARE_NOTIFICATION_ID);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_sync);
             mBuilder.setContentTitle(mContext.getResources().getString(R.string.app_name));
             mBuilder.setContentText(message);
@@ -284,13 +284,13 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
         }
 
         if (availableRam <= 1.0)
-            return 1000;
+            return 500;
         else if (availableRam <= 2.0)
-            return 3000;
+            return 1500;
         else if (availableRam <= 4.0)
-            return 10000;
+            return 5000;
         else
-            return 20000;
+            return 10000;
     }
 
 

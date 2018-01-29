@@ -471,7 +471,7 @@ public class Bluetooth extends Aware_Sensor {
     private static void notifyMissingBluetooth(Context c, boolean dismiss) {
         if (!dismiss) {
             //Remind the user that we need Bluetooth on for data collection
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(c)
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(c, Aware.AWARE_NOTIFICATION_ID)
                     .setSmallIcon(R.drawable.ic_stat_aware_accessibility)
                     .setContentTitle("AWARE: Bluetooth needed")
                     .setContentText("Tap to enable Bluetooth for nearby scanning.")

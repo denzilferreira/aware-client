@@ -637,7 +637,7 @@ public class Applications extends AccessibilityService {
      */
     public synchronized static boolean isAccessibilityServiceActive(Context c) {
         if (!isAccessibilityEnabled(c)) {
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c);
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c, Aware.AWARE_NOTIFICATION_ID);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_accessibility);
             mBuilder.setContentTitle(c.getResources().getString(R.string.aware_activate_accessibility_title));
             mBuilder.setContentText(c.getResources().getString(R.string.aware_activate_accessibility));

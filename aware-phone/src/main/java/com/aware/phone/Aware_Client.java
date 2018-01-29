@@ -3,12 +3,15 @@ package com.aware.phone;
 
 import android.Manifest;
 import android.app.Dialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
@@ -67,6 +70,17 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //Android 8 specific: create a notification channel for AWARE
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager not_manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            NotificationChannel aware_channel = new NotificationChannel(Aware.AWARE_NOTIFICATION_ID, getResources().getString(com.aware.R.string.app_name), NotificationManager.IMPORTANCE_DEFAULT);
+            aware_channel.setDescription(getResources().getString(com.aware.R.string.aware_description));
+            aware_channel.enableLights(true);
+            aware_channel.setLightColor(Color.BLUE);
+            aware_channel.enableVibration(true);
+            not_manager.createNotificationChannel(aware_channel);
+        }
 
         prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
 
