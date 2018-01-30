@@ -560,8 +560,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
             } else {
                 if (Aware.DEBUG) Log.d(TAG, "MQTT Client failed to connect... Parameters used: " + options.toString());
-                if (Aware.DEBUG) Log.d(TAG, "Disabling MQTT...");
-                Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_MQTT, false);
+                if (Aware.DEBUG) Log.d(TAG, "Disabling MQTT temporarily...");
                 Aware.stopMQTT(getApplicationContext());
             }
         }
