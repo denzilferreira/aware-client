@@ -127,6 +127,8 @@ public class DownloadPluginService extends IntentService {
                     //Fix for known-bug on <= JellyBean (4.x)
                     System.setProperty("http.keepAlive", "false");
 
+                    Ion.getDefault(getApplicationContext()).getConscryptMiddleware().enable(false);
+
                     Ion.getDefault(getApplicationContext())
                             .getHttpClient()
                             .getSSLSocketMiddleware().setTrustManagers(trustManagerFactory.getTrustManagers());
@@ -135,6 +137,7 @@ public class DownloadPluginService extends IntentService {
                             .getSSLSocketMiddleware().setSSLContext(sslContext);
                 }
 
+                Ion.getDefault(getApplicationContext()).getConscryptMiddleware().enable(false);
                 Ion.with(getApplicationContext()).load(package_url).noCache()
                         .write(new File(Environment.getExternalStoragePublicDirectory("AWARE/plugins/" + json_package.getString("package_name")).toString()))
                         .setCallback(new FutureCallback<File>() {

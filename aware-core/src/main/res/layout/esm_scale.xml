@@ -1,53 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/LinearLayout1"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:minWidth="300dip"
-    android:orientation="vertical" >
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <TextView
         android:id="@+id/esm_title"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
         android:padding="16dp"
-        android:textStyle="normal|bold"
-        android:textSize="18sp" />
+        android:textSize="18sp"
+        android:textStyle="normal|bold" />
 
     <TextView
         android:id="@+id/esm_instructions"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:padding="10dp"/>
+        android:layout_below="@id/esm_title"
+        android:padding="10dp" />
 
     <TextView
         android:id="@+id/esm_slider_value"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="0"
         android:layout_below="@+id/esm_instructions"
-        android:textAlignment="center" />
+        android:gravity="center_horizontal"
+        android:text="0"
+        android:textAlignment="center"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <SeekBar
         android:id="@+id/esm_scale"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/esm_slider_value"
         android:layout_centerHorizontal="true"
         android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_below="@+id/esm_slider_value" />
+        android:layout_marginRight="10dp" />
 
     <LinearLayout
         android:id="@+id/LinearLayout1"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/esm_scale" >
+        android:layout_below="@+id/esm_scale"
+        android:layout_weight="1">
 
         <TextView
             android:id="@+id/esm_min"
@@ -55,8 +51,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="left"
-            android:paddingLeft="12dp"
             android:paddingBottom="2dp"
+            android:paddingLeft="12dp"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
         <TextView
@@ -65,34 +61,37 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="right"
-            android:paddingRight="12dp"
             android:paddingBottom="2dp"
+            android:paddingRight="12dp"
             android:textAppearance="?android:attr/textAppearanceSmall" />
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/esm_buttons_controls"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/LinearLayout1"
+        android:layout_alignParentBottom="true"
+        android:paddingBottom="10dp"
         android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingBottom="10dp">
+        android:paddingRight="10dp">
 
         <Button
             android:id="@+id/esm_cancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:layout_gravity="bottom"
             android:text="Cancel" />
 
         <Button
             android:id="@+id/esm_submit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
             android:layout_weight="2"
             android:gravity="center_vertical|center_horizontal"
             android:text="Button" />
     </LinearLayout>
 
-</LinearLayout>
+</RelativeLayout>

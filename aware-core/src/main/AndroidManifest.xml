@@ -34,8 +34,7 @@
             android:excludeFromRecents="true"
             android:exported="true"
             android:launchMode="singleTop"
-            android:noHistory="true"
-            android:theme="@style/Theme.AppCompat.Translucent" />
+            android:noHistory="true" />
 
         <activity
             android:name="com.aware.ui.PermissionsHandler"

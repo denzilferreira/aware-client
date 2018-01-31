@@ -180,6 +180,35 @@ public class ESM extends Aware_Sensor {
     public static final int TYPE_ESM_NUMBER = 9;
 
     /**
+     * ESM that shows the user a webpage
+     */
+    public static final int TYPE_ESM_WEB = 10;
+    /**
+     * ESM that asks the user to pick a date
+     */
+    public static final int TYPE_ESM_DATE = 11;
+    /**
+     * ESM that asks the user to choose a time
+     */
+    public static final int TYPE_ESM_TIME = 12;
+    /**
+     * ESM that asks the user to choose a time with a clock
+     */
+    public static final int TYPE_ESM_CLOCK = 13;
+    /**
+     * ESM that asks the user to take a picture
+     */
+    public static final int TYPE_ESM_PICTURE = 14;
+    /**
+     * ESM that asks the user to make an audio recording
+     */
+    public static final int TYPE_ESM_AUDIO = 15;
+    /**
+     * ESM that asks the user to make a video recording
+     */
+    public static final int TYPE_ESM_VIDEO = 16;
+
+    /**
      * Required String extra for displaying an ESM. It should contain the JSON string that defines the ESM dialog.
      * Examples:<p>
      * Free text: [{'esm':{'esm_type':1,'esm_title':'ESM Freetext','esm_instructions':'The user can answer an open ended question.','esm_submit':'Next','esm_expiration_threshold':20,'esm_trigger':'esm trigger example'}}]
@@ -506,8 +535,10 @@ public class ESM extends Aware_Sensor {
             //only the client or standalone apps handle ESM statuses
             if (context.getPackageName().equalsIgnoreCase("com.aware.phone") || context.getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
 
-                if (context.getPackageName().equalsIgnoreCase("com.aware.phone")) Log.d(ESM.TAG, "AWARE client will handle ESM");
-                if (context.getResources().getBoolean(R.bool.standalone)) Log.d(ESM.TAG, context.getPackageName() + " will handle ESM");
+                if (context.getPackageName().equalsIgnoreCase("com.aware.phone"))
+                    Log.d(ESM.TAG, "AWARE client will handle ESM");
+                if (context.getResources().getBoolean(R.bool.standalone))
+                    Log.d(ESM.TAG, context.getPackageName() + " will handle ESM");
 
                 if (intent.getAction().equals(ESM.ACTION_AWARE_TRY_ESM)) {
                     queueESM(context, intent.getStringExtra(ESM.EXTRA_ESM), true);
