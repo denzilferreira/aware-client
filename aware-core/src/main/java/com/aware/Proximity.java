@@ -226,7 +226,7 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
         unregisterReceiver(dataLabeler);
 
         if (Aware.isStudy(this) && Aware.isSyncEnabled(this, Proximity_Provider.getAuthority(this))) {
-            //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Proximity_Provider.getAuthority(this), false);
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Proximity_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
                     Proximity_Provider.getAuthority(this),
@@ -285,7 +285,7 @@ public class Proximity extends Aware_Sensor implements SensorEventListener {
 
             if (!Aware.isSyncEnabled(this, Proximity_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Proximity_Provider.getAuthority(this), 1);
-                //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Proximity_Provider.getAuthority(this), true);
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Proximity_Provider.getAuthority(this), true);
                 ContentResolver.addPeriodicSync(
                         Aware.getAWAREAccount(this),
                         Proximity_Provider.getAuthority(this),

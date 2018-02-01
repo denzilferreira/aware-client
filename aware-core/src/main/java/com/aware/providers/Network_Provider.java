@@ -11,15 +11,12 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
-import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
-import java.io.File;
 import java.util.HashMap;
 
 /**
@@ -114,7 +111,7 @@ public class Network_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 
@@ -151,8 +148,7 @@ public class Network_Provider extends ContentProvider {
                 if (network_id > 0) {
                     Uri networkUri = ContentUris.withAppendedId(
                             Network_Data.CONTENT_URI, network_id);
-                    getContext().getContentResolver()
-                            .notifyChange(networkUri, null);
+                    getContext().getContentResolver().notifyChange(networkUri, null, false);
                     return networkUri;
                 }
                 database.endTransaction();
@@ -252,7 +248,7 @@ public class Network_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 }

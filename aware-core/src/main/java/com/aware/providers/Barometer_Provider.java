@@ -156,7 +156,7 @@ public class Barometer_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 
@@ -195,7 +195,7 @@ public class Barometer_Provider extends ContentProvider {
                 if (accel_id > 0) {
                     Uri accelUri = ContentUris.withAppendedId(
                             Barometer_Sensor.CONTENT_URI, accel_id);
-                    getContext().getContentResolver().notifyChange(accelUri, null);
+                    getContext().getContentResolver().notifyChange(accelUri, null, false);
                     database.setTransactionSuccessful();
                     database.endTransaction();
                     return accelUri;
@@ -208,8 +208,7 @@ public class Barometer_Provider extends ContentProvider {
                 if (accelData_id > 0) {
                     Uri accelDataUri = ContentUris.withAppendedId(
                             Barometer_Data.CONTENT_URI, accelData_id);
-                    getContext().getContentResolver().notifyChange(accelDataUri,
-                            null);
+                    getContext().getContentResolver().notifyChange(accelDataUri,null, false);
                     database.setTransactionSuccessful();
                     database.endTransaction();
                     return accelDataUri;
@@ -276,7 +275,7 @@ public class Barometer_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
 
         return count;
     }
@@ -396,7 +395,7 @@ public class Barometer_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 }

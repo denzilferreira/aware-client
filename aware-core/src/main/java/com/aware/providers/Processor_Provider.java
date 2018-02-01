@@ -11,15 +11,12 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
-import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
-import java.io.File;
 import java.util.HashMap;
 
 /**
@@ -121,7 +118,7 @@ public class Processor_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 
@@ -158,8 +155,7 @@ public class Processor_Provider extends ContentProvider {
                 if (processor_id > 0) {
                     Uri processorUri = ContentUris.withAppendedId(
                             Processor_Data.CONTENT_URI, processor_id);
-                    getContext().getContentResolver().notifyChange(processorUri,
-                            null);
+                    getContext().getContentResolver().notifyChange(processorUri,null, false);
                     return processorUri;
                 }
                 database.endTransaction();
@@ -268,7 +264,7 @@ public class Processor_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 }

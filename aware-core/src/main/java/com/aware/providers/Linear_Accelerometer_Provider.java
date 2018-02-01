@@ -11,16 +11,13 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Accelerometer;
 import com.aware.Aware;
-import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
-import java.io.File;
 import java.util.HashMap;
 
 /**
@@ -170,7 +167,7 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 
@@ -210,7 +207,7 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
                 if (accel_id > 0) {
                     Uri accelUri = ContentUris.withAppendedId(
                             Linear_Accelerometer_Sensor.CONTENT_URI, accel_id);
-                    getContext().getContentResolver().notifyChange(accelUri, null);
+                    getContext().getContentResolver().notifyChange(accelUri, null, false);
                     return accelUri;
                 }
                 database.endTransaction();
@@ -223,8 +220,7 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
                 if (accelData_id > 0) {
                     Uri accelDataUri = ContentUris.withAppendedId(
                             Linear_Accelerometer_Data.CONTENT_URI, accelData_id);
-                    getContext().getContentResolver().notifyChange(accelDataUri,
-                            null);
+                    getContext().getContentResolver().notifyChange(accelDataUri, null, false);
                     return accelDataUri;
                 }
                 database.endTransaction();
@@ -289,7 +285,7 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
 
         return count;
     }
@@ -427,7 +423,7 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 }

@@ -11,15 +11,12 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
-import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
-import java.io.File;
 import java.util.HashMap;
 
 /**
@@ -152,7 +149,7 @@ public class Bluetooth_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 
@@ -193,8 +190,7 @@ public class Bluetooth_Provider extends ContentProvider {
                 if (rowId > 0) {
                     Uri bluetoothUri = ContentUris.withAppendedId(
                             Bluetooth_Sensor.CONTENT_URI, rowId);
-                    getContext().getContentResolver().notifyChange(bluetoothUri,
-                            null);
+                    getContext().getContentResolver().notifyChange(bluetoothUri,null,false);
                     return bluetoothUri;
                 }
                 database.endTransaction();
@@ -207,8 +203,7 @@ public class Bluetooth_Provider extends ContentProvider {
                 if (btId > 0) {
                     Uri bluetoothUri = ContentUris.withAppendedId(
                             Bluetooth_Data.CONTENT_URI, btId);
-                    getContext().getContentResolver().notifyChange(bluetoothUri,
-                            null);
+                    getContext().getContentResolver().notifyChange(bluetoothUri,null,false);
                     return bluetoothUri;
                 }
                 database.endTransaction();
@@ -221,6 +216,7 @@ public class Bluetooth_Provider extends ContentProvider {
 
     /**
      * Returns the provider authority that is dynamic
+     *
      * @return
      */
     public static String getAuthority(Context context) {
@@ -333,7 +329,7 @@ public class Bluetooth_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 }

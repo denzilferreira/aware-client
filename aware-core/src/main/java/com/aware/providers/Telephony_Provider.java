@@ -11,15 +11,12 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
-import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
-import java.io.File;
 import java.util.HashMap;
 
 /**
@@ -267,7 +264,7 @@ public class Telephony_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 
@@ -316,7 +313,7 @@ public class Telephony_Provider extends ContentProvider {
                 if (tele_id > 0) {
                     Uri tele_uri = ContentUris.withAppendedId(
                             Telephony_Data.CONTENT_URI, tele_id);
-                    getContext().getContentResolver().notifyChange(tele_uri, null);
+                    getContext().getContentResolver().notifyChange(tele_uri, null, false);
                     return tele_uri;
                 }
                 database.endTransaction();
@@ -329,7 +326,7 @@ public class Telephony_Provider extends ContentProvider {
                 if (gsm_id > 0) {
                     Uri gsm_uri = ContentUris.withAppendedId(GSM_Data.CONTENT_URI,
                             gsm_id);
-                    getContext().getContentResolver().notifyChange(gsm_uri, null);
+                    getContext().getContentResolver().notifyChange(gsm_uri, null, false);
                     return gsm_uri;
                 }
                 database.endTransaction();
@@ -342,8 +339,7 @@ public class Telephony_Provider extends ContentProvider {
                 if (neighbor_id > 0) {
                     Uri neighbor_uri = ContentUris.withAppendedId(
                             GSM_Neighbors_Data.CONTENT_URI, neighbor_id);
-                    getContext().getContentResolver().notifyChange(neighbor_uri,
-                            null);
+                    getContext().getContentResolver().notifyChange(neighbor_uri,null, false);
                     return neighbor_uri;
                 }
                 database.endTransaction();
@@ -356,7 +352,7 @@ public class Telephony_Provider extends ContentProvider {
                 if (cdma_id > 0) {
                     Uri cdma_uri = ContentUris.withAppendedId(
                             CDMA_Data.CONTENT_URI, cdma_id);
-                    getContext().getContentResolver().notifyChange(cdma_uri, null);
+                    getContext().getContentResolver().notifyChange(cdma_uri, null, false);
                     return cdma_uri;
                 }
                 database.endTransaction();
@@ -554,7 +550,7 @@ public class Telephony_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 }

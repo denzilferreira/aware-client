@@ -3,6 +3,6 @@
     android:accountType="com.awareframework"
     android:allowParallelSyncs="true"
     android:contentAuthority="com.aware.provider.accelerometer"
-    android:isAlwaysSyncable="false"
+    android:isAlwaysSyncable="true"
     android:supportsUploading="true"
     android:userVisible="false" />

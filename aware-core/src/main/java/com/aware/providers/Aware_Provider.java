@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
-import android.database.sqlite.SQLiteCantOpenDatabaseException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
@@ -269,7 +268,7 @@ public class Aware_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
 
         return count;
     }
@@ -321,7 +320,7 @@ public class Aware_Provider extends ContentProvider {
                 if (dev_id > 0) {
                     Uri devUri = ContentUris.withAppendedId(
                             Aware_Device.CONTENT_URI, dev_id);
-                    getContext().getContentResolver().notifyChange(devUri, null);
+                    getContext().getContentResolver().notifyChange(devUri, null, false);
                     database.setTransactionSuccessful();
                     database.endTransaction();
                     return devUri;
@@ -333,7 +332,7 @@ public class Aware_Provider extends ContentProvider {
                 if (sett_id > 0) {
                     Uri settUri = ContentUris.withAppendedId(
                             Aware_Settings.CONTENT_URI, sett_id);
-                    getContext().getContentResolver().notifyChange(settUri, null);
+                    getContext().getContentResolver().notifyChange(settUri, null, false);
                     database.setTransactionSuccessful();
                     database.endTransaction();
                     return settUri;
@@ -344,7 +343,7 @@ public class Aware_Provider extends ContentProvider {
                 long plug_id = database.insertWithOnConflict(DATABASE_TABLES[2], Aware_Plugins.PLUGIN_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
                 if (plug_id > 0) {
                     Uri settUri = ContentUris.withAppendedId(Aware_Plugins.CONTENT_URI, plug_id);
-                    getContext().getContentResolver().notifyChange(settUri, null);
+                    getContext().getContentResolver().notifyChange(settUri, null, false);
                     database.setTransactionSuccessful();
                     database.endTransaction();
                     return settUri;
@@ -355,7 +354,7 @@ public class Aware_Provider extends ContentProvider {
                 long study_id = database.insertWithOnConflict(DATABASE_TABLES[3], Aware_Studies.STUDY_DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
                 if (study_id > 0) {
                     Uri settUri = ContentUris.withAppendedId(Aware_Studies.CONTENT_URI, study_id);
-                    getContext().getContentResolver().notifyChange(settUri, null);
+                    getContext().getContentResolver().notifyChange(settUri, null, false);
                     database.setTransactionSuccessful();
                     database.endTransaction();
                     return settUri;
@@ -366,7 +365,7 @@ public class Aware_Provider extends ContentProvider {
                 long log_id = database.insertWithOnConflict(DATABASE_TABLES[4], Aware_Log.LOG_DEVICE_ID, values, SQLiteDatabase.CONFLICT_IGNORE);
                 if (log_id > 0) {
                     Uri settUri = ContentUris.withAppendedId(Aware_Log.CONTENT_URI, log_id);
-                    getContext().getContentResolver().notifyChange(settUri, null);
+                    getContext().getContentResolver().notifyChange(settUri, null, false);
                     database.setTransactionSuccessful();
                     database.endTransaction();
                     return settUri;
@@ -543,7 +542,7 @@ public class Aware_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
 
         return count;
     }

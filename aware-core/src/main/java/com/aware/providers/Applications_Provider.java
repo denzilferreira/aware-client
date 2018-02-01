@@ -11,15 +11,12 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
-import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
-import java.io.File;
 import java.util.HashMap;
 
 /**
@@ -240,7 +237,7 @@ public class Applications_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
 
         return count;
     }
@@ -286,7 +283,7 @@ public class Applications_Provider extends ContentProvider {
                 long foreground_id = database.insertWithOnConflict(DATABASE_TABLES[0], Applications_Foreground.APPLICATION_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
                 if (foreground_id > 0) {
                     Uri foregroundUri = ContentUris.withAppendedId(Applications_Foreground.CONTENT_URI, foreground_id);
-                    getContext().getContentResolver().notifyChange(foregroundUri, null);
+                    getContext().getContentResolver().notifyChange(foregroundUri, null, false);
                     database.setTransactionSuccessful();
                     database.endTransaction();
                     return foregroundUri;
@@ -297,7 +294,7 @@ public class Applications_Provider extends ContentProvider {
                 long applications_id = database.insertWithOnConflict(DATABASE_TABLES[1], Applications_History.PACKAGE_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
                 if (applications_id > 0) {
                     Uri applicationsUri = ContentUris.withAppendedId(Applications_History.CONTENT_URI, applications_id);
-                    getContext().getContentResolver().notifyChange(applicationsUri, null);
+                    getContext().getContentResolver().notifyChange(applicationsUri, null, false);
                     database.setTransactionSuccessful();
                     database.endTransaction();
                     return applicationsUri;
@@ -307,7 +304,7 @@ public class Applications_Provider extends ContentProvider {
                 long notifications_id = database.insertWithOnConflict(DATABASE_TABLES[2], Applications_Notifications.PACKAGE_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
                 if (notifications_id > 0) {
                     Uri notificationsUri = ContentUris.withAppendedId(Applications_Notifications.CONTENT_URI, notifications_id);
-                    getContext().getContentResolver().notifyChange(notificationsUri, null);
+                    getContext().getContentResolver().notifyChange(notificationsUri, null, false);
                     database.setTransactionSuccessful();
                     database.endTransaction();
                     return notificationsUri;
@@ -318,7 +315,7 @@ public class Applications_Provider extends ContentProvider {
                 long error_id = database.insertWithOnConflict(DATABASE_TABLES[3], Applications_Crashes.PACKAGE_NAME, values, SQLiteDatabase.CONFLICT_IGNORE);
                 if (error_id > 0) {
                     Uri errorsUri = ContentUris.withAppendedId(Applications_Crashes.CONTENT_URI, error_id);
-                    getContext().getContentResolver().notifyChange(errorsUri, null);
+                    getContext().getContentResolver().notifyChange(errorsUri, null, false);
                     database.setTransactionSuccessful();
                     database.endTransaction();
                     return errorsUri;
@@ -512,7 +509,7 @@ public class Applications_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 }

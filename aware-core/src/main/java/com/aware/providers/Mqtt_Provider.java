@@ -11,15 +11,12 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
-import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
-import java.io.File;
 import java.util.HashMap;
 
 /**
@@ -138,7 +135,7 @@ public class Mqtt_Provider extends ContentProvider {
 		database.setTransactionSuccessful();
 		database.endTransaction();
 
-		getContext().getContentResolver().notifyChange(uri, null);
+		getContext().getContentResolver().notifyChange(uri, null, false);
 		return count;
 	}
 
@@ -179,7 +176,7 @@ public class Mqtt_Provider extends ContentProvider {
 			if (mqtt_id > 0) {
 				Uri mqttUri = ContentUris.withAppendedId(
 						Mqtt_Messages.CONTENT_URI, mqtt_id);
-				getContext().getContentResolver().notifyChange(mqttUri, null);
+				getContext().getContentResolver().notifyChange(mqttUri, null, false);
 				return mqttUri;
 			}
             database.endTransaction();
@@ -192,8 +189,7 @@ public class Mqtt_Provider extends ContentProvider {
 			if (mqtt_sub_id > 0) {
 				Uri mqttSubUri = ContentUris.withAppendedId(
 						Mqtt_Subscriptions.CONTENT_URI, mqtt_sub_id);
-				getContext().getContentResolver()
-						.notifyChange(mqttSubUri, null);
+				getContext().getContentResolver().notifyChange(mqttSubUri, null, false);
 				return mqttSubUri;
 			}
             database.endTransaction();
@@ -310,7 +306,7 @@ public class Mqtt_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-		getContext().getContentResolver().notifyChange(uri, null);
+		getContext().getContentResolver().notifyChange(uri, null, false);
 		return count;
 	}
 }

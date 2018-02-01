@@ -736,7 +736,7 @@ public class Aware extends Service {
 
             if (!Aware.isSyncEnabled(this, Aware_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Aware_Provider.getAuthority(this), 1);
-                //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Aware_Provider.getAuthority(this), true);
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Aware_Provider.getAuthority(this), true);
                 ContentResolver.addPeriodicSync(
                         Aware.getAWAREAccount(this),
                         Aware_Provider.getAuthority(this),

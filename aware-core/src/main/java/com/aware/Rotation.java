@@ -267,7 +267,7 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
         unregisterReceiver(dataLabeler);
 
         if (Aware.isStudy(this) && Aware.isSyncEnabled(this, Rotation_Provider.getAuthority(this))) {
-            //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Rotation_Provider.getAuthority(this), false);
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Rotation_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
                     Rotation_Provider.getAuthority(this),
@@ -324,7 +324,7 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
 
             if (!Aware.isSyncEnabled(this, Rotation_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Rotation_Provider.getAuthority(this), 1);
-                //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Rotation_Provider.getAuthority(this), true);
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Rotation_Provider.getAuthority(this), true);
                 ContentResolver.addPeriodicSync(
                         Aware.getAWAREAccount(this),
                         Rotation_Provider.getAuthority(this),

@@ -442,7 +442,7 @@ public class Applications extends AccessibilityService {
 
             if (!Aware.isSyncEnabled(this, Applications_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), 1);
-                //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), true);
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), true);
                 ContentResolver.addPeriodicSync(
                         Aware.getAWAREAccount(this),
                         Applications_Provider.getAuthority(this),
@@ -485,7 +485,7 @@ public class Applications extends AccessibilityService {
         Applications.isAccessibilityServiceActive(getApplicationContext());
 
         if (Aware.isStudy(this) && Aware.isSyncEnabled(this, Applications_Provider.getAuthority(this))) {
-            //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), false);
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
                     Applications_Provider.getAuthority(this),

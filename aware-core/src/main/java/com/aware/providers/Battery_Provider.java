@@ -11,15 +11,12 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
-import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
-import java.io.File;
 import java.util.HashMap;
 
 /**
@@ -186,7 +183,7 @@ public class Battery_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 
@@ -229,7 +226,7 @@ public class Battery_Provider extends ContentProvider {
                 database.endTransaction();
                 if (battery_id > 0) {
                     Uri batteryUri = ContentUris.withAppendedId(Battery_Data.CONTENT_URI, battery_id);
-                    getContext().getContentResolver().notifyChange(batteryUri, null);
+                    getContext().getContentResolver().notifyChange(batteryUri, null, false);
                     return batteryUri;
                 }
                 database.endTransaction();
@@ -241,8 +238,7 @@ public class Battery_Provider extends ContentProvider {
                 if (battery_d_id > 0) {
                     Uri batteryUri = ContentUris.withAppendedId(
                             Battery_Discharges.CONTENT_URI, battery_d_id);
-                    getContext().getContentResolver()
-                            .notifyChange(batteryUri, null);
+                    getContext().getContentResolver().notifyChange(batteryUri, null, false);
                     return batteryUri;
                 }
                 database.endTransaction();
@@ -255,8 +251,7 @@ public class Battery_Provider extends ContentProvider {
                 if (battery_c_id > 0) {
                     Uri batteryUri = ContentUris.withAppendedId(
                             Battery_Charges.CONTENT_URI, battery_c_id);
-                    getContext().getContentResolver()
-                            .notifyChange(batteryUri, null);
+                    getContext().getContentResolver().notifyChange(batteryUri, null, false);
                     return batteryUri;
                 }
                 database.endTransaction();
@@ -414,7 +409,7 @@ public class Battery_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 }

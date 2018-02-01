@@ -221,7 +221,7 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
         unregisterReceiver(dataLabeler);
 
         if (Aware.isSyncEnabled(this, Barometer_Provider.getAuthority(this)) && Aware.isStudy(this)) {
-            //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Barometer_Provider.getAuthority(this), false);
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Barometer_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
                     Barometer_Provider.getAuthority(this),
@@ -279,7 +279,7 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
 
                 if (!Aware.isSyncEnabled(this, Barometer_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                     ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Barometer_Provider.getAuthority(this), 1);
-                    //ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Barometer_Provider.getAuthority(this), true);
+                    ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Barometer_Provider.getAuthority(this), true);
                     ContentResolver.addPeriodicSync(
                             Aware.getAWAREAccount(this),
                             Barometer_Provider.getAuthority(this),

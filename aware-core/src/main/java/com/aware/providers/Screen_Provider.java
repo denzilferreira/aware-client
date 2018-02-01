@@ -141,7 +141,7 @@ public class Screen_Provider extends ContentProvider {
 
         database.setTransactionSuccessful();
         database.endTransaction();
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 
@@ -182,7 +182,7 @@ public class Screen_Provider extends ContentProvider {
                 if (screen_id > 0) {
                     Uri screenUri = ContentUris.withAppendedId(
                             Screen_Data.CONTENT_URI, screen_id);
-                    getContext().getContentResolver().notifyChange(screenUri, null);
+                    getContext().getContentResolver().notifyChange(screenUri, null, false);
                     return screenUri;
                 }
                 database.endTransaction();
@@ -194,7 +194,7 @@ public class Screen_Provider extends ContentProvider {
                 if (touch_id > 0) {
                     Uri screenUri = ContentUris.withAppendedId(
                             Screen_Touch.CONTENT_URI, touch_id);
-                    getContext().getContentResolver().notifyChange(screenUri, null);
+                    getContext().getContentResolver().notifyChange(screenUri, null, false);
                     return screenUri;
                 }
                 database.endTransaction();
@@ -308,7 +308,7 @@ public class Screen_Provider extends ContentProvider {
 
         database.setTransactionSuccessful();
         database.endTransaction();
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 }
