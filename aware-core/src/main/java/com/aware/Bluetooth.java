@@ -97,7 +97,7 @@ public class Bluetooth extends Aware_Sensor {
 
     private boolean BLE_SUPPORT = false;
 
-    private Handler mBLEHandler;
+    private static Handler mBLEHandler;
 
     private ScanSettings scanSettings;
     private boolean isBLEScanning = false;
@@ -217,9 +217,6 @@ public class Bluetooth extends Aware_Sensor {
                     if (scanSettings == null) {
                         scanSettings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_POWER).build();
                     }
-
-                    if (!isBLEScanning)
-                        mBLEHandler.post(scanRunnable);
                 }
             }
 
@@ -259,7 +256,6 @@ public class Bluetooth extends Aware_Sensor {
         public void run() {
             BluetoothLeScanner scanner = bluetoothAdapter.getBluetoothLeScanner();
             if (scanner != null && isBLEScanning) {
-                mBLEHandler.postDelayed(scanRunnable, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_BLUETOOTH)) * 1000);
                 scanner.stopScan(scanCallback);
                 if (awareSensor != null) awareSensor.onBLEScanEnded();
                 if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_BLUETOOTH_BLE_SCAN_ENDED);
@@ -401,6 +397,9 @@ public class Bluetooth extends Aware_Sensor {
                 if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_BLUETOOTH_SCAN_ENDED);
                 Intent scanEnd = new Intent(ACTION_AWARE_BLUETOOTH_SCAN_ENDED);
                 context.sendBroadcast(scanEnd);
+
+                // Start BLE scanning when normal BT scanning is finished
+                mBLEHandler.post(scanRunnable);
             }
 
             if (intent.getAction().equals(BluetoothAdapter.ACTION_DISCOVERY_STARTED)) {
