@@ -2,34 +2,23 @@ package com.aware.tests;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
-import com.aware.ESM;
-import com.aware.providers.Scheduler_Provider;
-import com.aware.ui.ESM_Queue;
-import com.aware.ui.esms.ESMFactory;
-import com.aware.ui.esms.ESM_Freetext;
-import com.aware.ui.esms.ESM_Question;
 import com.aware.utils.Scheduler;
-
-import org.json.JSONException;
 
 public class TestActivity extends Activity {
 
     int REQUEST_STORAGE = 1;
 
-    Button button_ESMNotification, scheduler_timer, button_delete_schedules;
+    Button button_ESMNotification, scheduler_timer, button_delete_schedules, button_jenkins;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +51,15 @@ public class TestActivity extends Activity {
             public void onClick(View v) {
                 Scheduler.clearSchedules(getApplicationContext());
                 Toast.makeText(getApplicationContext(), "Cleared!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        button_jenkins = findViewById(R.id.btn_jenkins);
+        button_jenkins.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                TestJenkins jenkins = new TestJenkins();
+                jenkins.test(getApplicationContext());
             }
         });
 

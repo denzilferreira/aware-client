@@ -10,7 +10,35 @@ android {
         versionCode version_code
         versionName version_readable
         targetSdkVersion target_sdk
-        minSdkVersion minimum_sdk //Android 4.0+
+        minSdkVersion minimum_sdk
+
+        resValue "string", "provider_accelerometer", applicationId + ".provider.accelerometer"
+        resValue "string", "provider_applications", applicationId + ".provider.applications"
+        resValue "string", "provider_aware", applicationId + ".provider.aware"
+        resValue "string", "provider_barometer", applicationId + ".provider.barometer"
+        resValue "string", "provider_battery", applicationId + ".provider.battery"
+        resValue "string", "provider_bluetooth", applicationId + ".provider.bluetooth"
+        resValue "string", "provider_communication", applicationId + ".provider.communication"
+        resValue "string", "provider_esm", applicationId + ".provider.esm"
+        resValue "string", "provider_gravity", applicationId + ".provider.gravity"
+        resValue "string", "provider_gyroscope", applicationId + ".provider.gyroscope"
+        resValue "string", "provider_installations", applicationId + ".provider.installations"
+        resValue "string", "provider_keyboard", applicationId + ".provider.keyboard"
+        resValue "string", "provider_light", applicationId + ".provider.light"
+        resValue "string", "provider_linear_accelerometer", applicationId + ".provider.accelerometer.linear"
+        resValue "string", "provider_locations", applicationId + ".provider.locations"
+        resValue "string", "provider_magnetometer", applicationId + ".provider.magnetometer"
+        resValue "string", "provider_network", applicationId + ".provider.network"
+        resValue "string", "provider_processor", applicationId + ".provider.processor"
+        resValue "string", "provider_proximity", applicationId + ".provider.proximity"
+        resValue "string", "provider_rotation", applicationId + ".provider.rotation"
+        resValue "string", "provider_screen", applicationId + ".provider.screen"
+        resValue "string", "provider_significant", applicationId + ".provider.significant"
+        resValue "string", "provider_telephony", applicationId + ".provider.telephony"
+        resValue "string", "provider_temperature", applicationId + ".provider.temperature"
+        resValue "string", "provider_timezones", applicationId + ".provider.timezone"
+        resValue "string", "provider_traffic", applicationId + ".provider.traffic"
+        resValue "string", "provider_wifi", applicationId + ".provider.wifi"
     }
 
     signingConfigs {
@@ -44,8 +72,6 @@ dependencies {
     api project(':aware-core')
     implementation "com.android.support:cardview-v7:$support_libs"
     implementation "com.android.support:design:$support_libs"
-    implementation "com.android.support:gridlayout-v7:$support_libs"
-    implementation "com.android.support:appcompat-v7:$support_libs"
     implementation "me.dm7.barcodescanner:zbar:1.8.4"
 }
 

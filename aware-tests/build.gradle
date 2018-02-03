@@ -25,6 +25,6 @@ android {
 
 dependencies {
     api project(':aware-core')
-    implementation "com.android.support:appcompat-v7:$support_libs"
     implementation "com.android.support:gridlayout-v7:$support_libs"
+    implementation "com.android.support:appcompat-v7:$support_libs"
 }
