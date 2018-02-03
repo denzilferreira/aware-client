@@ -464,6 +464,8 @@
                 android:resource="@xml/provider_paths" />
         </provider>
 
+        <!-- Core Sync-Adapters -->
+
         <service
             android:name="com.aware.syncadapters.Accelerometer_Sync"
             android:exported="true">

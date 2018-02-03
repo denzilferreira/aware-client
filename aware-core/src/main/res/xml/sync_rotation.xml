@@ -2,7 +2,7 @@
 <sync-adapter xmlns:android="http://schemas.android.com/apk/res/android"
     android:accountType="com.awareframework"
     android:allowParallelSyncs="true"
-    android:contentAuthority="com.aware.provider.rotation"
+    android:contentAuthority="@string/provider_rotation"
     android:isAlwaysSyncable="true"
     android:supportsUploading="true"
-    android:userVisible="false" />
+    android:userVisible="true" />
