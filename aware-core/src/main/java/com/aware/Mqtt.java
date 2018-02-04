@@ -148,6 +148,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
     public void connectionLost(Throwable throwable) {
         if (awareSensor != null) awareSensor.onDisconnected();
         if (Aware.DEBUG) Log.d(TAG, "MQTT: Connection lost to server...");
+        if (Aware.DEBUG) Log.d(TAG, "Disabling MQTT temporarily...");
+        Aware.stopMQTT(getApplicationContext());
     }
 
     private static Mqtt.AWARESensorObserver awareSensor;
@@ -360,8 +362,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                 Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, true);
 
                 if (MQTT_CLIENT != null && MQTT_CLIENT.isConnected()) {
-                    if (DEBUG)
-                        Log.d(TAG, "MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
+                    if (DEBUG) Log.d(TAG, "MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
                 } else {
                     initializeMQTT();
                 }
@@ -392,8 +393,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
             try {
                 MQTT_MESSAGES_PERSISTENCE.close();
                 MQTT_CLIENT.disconnect();
-                if (Aware.DEBUG)
-                    Log.e(TAG, "Disconnected by demand successfully from the server...");
+                if (Aware.DEBUG) Log.e(TAG, "Disconnected by demand successfully from the server...");
             } catch (MqttException e) {
                 if (Aware.DEBUG) Log.e(TAG, e.getMessage());
             }
@@ -560,7 +560,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
             } else {
                 if (Aware.DEBUG) Log.d(TAG, "MQTT Client failed to connect... Parameters used: " + options.toString());
-                if (Aware.DEBUG) Log.d(TAG, "Disabling MQTT temporarily...");
+                if (Aware.DEBUG) Log.d(TAG, "Disabling MQTT...");
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_MQTT, false);
                 Aware.stopMQTT(getApplicationContext());
             }
         }
