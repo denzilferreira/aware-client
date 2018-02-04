@@ -9,6 +9,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SyncRequest;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
@@ -249,7 +250,7 @@ public class ESM extends Aware_Sensor {
     public void onDestroy() {
         super.onDestroy();
 
-        if (Aware.isStudy(this) && Aware.isSyncEnabled(this, ESM_Provider.getAuthority(this))) {
+        if (Aware.isSyncEnabled(this, ESM_Provider.getAuthority(this))) {
             ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), ESM_Provider.getAuthority(this), false);
             ContentResolver.removePeriodicSync(
                     Aware.getAWAREAccount(this),
@@ -281,12 +282,12 @@ public class ESM extends Aware_Sensor {
             if (!Aware.isSyncEnabled(this, ESM_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), ESM_Provider.getAuthority(this), 1);
                 ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), ESM_Provider.getAuthority(this), true);
-                ContentResolver.addPeriodicSync(
-                        Aware.getAWAREAccount(this),
-                        ESM_Provider.getAuthority(this),
-                        Bundle.EMPTY,
-                        Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
-                );
+                long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
+                SyncRequest request = new SyncRequest.Builder()
+                        .syncPeriodic(frequency, frequency/3)
+                        .setSyncAdapter(Aware.getAWAREAccount(this), ESM_Provider.getAuthority(this))
+                        .setExtras(new Bundle()).build();
+                ContentResolver.requestSync(request);
             }
         }
 

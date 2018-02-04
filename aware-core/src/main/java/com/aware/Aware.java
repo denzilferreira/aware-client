@@ -17,7 +17,9 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.PeriodicSync;
 import android.content.SharedPreferences;
+import android.content.SyncRequest;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -737,12 +739,12 @@ public class Aware extends Service {
             if (!Aware.isSyncEnabled(this, Aware_Provider.getAuthority(this)) && Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Aware_Provider.getAuthority(this), 1);
                 ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Aware_Provider.getAuthority(this), true);
-                ContentResolver.addPeriodicSync(
-                        Aware.getAWAREAccount(this),
-                        Aware_Provider.getAuthority(this),
-                        Bundle.EMPTY,
-                        Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
-                );
+                long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
+                SyncRequest request = new SyncRequest.Builder()
+                        .syncPeriodic(frequency, frequency/3)
+                        .setSyncAdapter(Aware.getAWAREAccount(this), Aware_Provider.getAuthority(this))
+                        .setExtras(new Bundle()).build();
+                ContentResolver.requestSync(request);
             }
 
         } else { //storage is not available, stop plugins and sensors
@@ -2492,7 +2494,12 @@ public class Aware extends Service {
         Account aware = Aware.getAWAREAccount(context);
         boolean isSynchable = ContentResolver.getSyncAutomatically(aware, authority);
         boolean isMasterSyncEnabled = ContentResolver.getMasterSyncAutomatically();
-        if(Aware.DEBUG) Log.d(Aware.TAG, "Sync-Adapter Authority: " + authority + " syncable: " + isSynchable + " global: " + isMasterSyncEnabled);
+        List<PeriodicSync> periodicSyncs = ContentResolver.getPeriodicSyncs(aware, authority);
+
+        if(Aware.DEBUG) Log.d(Aware.TAG, "Sync-Adapter Authority: " + authority + " syncable: " + isSynchable + " global: " + isMasterSyncEnabled + " Periodic: " + !periodicSyncs.isEmpty());
+        for(PeriodicSync p: periodicSyncs) {
+            if(Aware.DEBUG) Log.d(Aware.TAG, "Every: " + p.period/60 + " minutes");
+        }
         return isSynchable && isMasterSyncEnabled;
     }
 
