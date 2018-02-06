@@ -69,6 +69,7 @@ public class Aware_Sensor extends Service {
     public void onCreate() {
         super.onCreate();
 
+
         //Register Context Broadcaster
         IntentFilter filter = new IntentFilter();
         filter.addAction(Aware.ACTION_AWARE_CURRENT_CONTEXT);
