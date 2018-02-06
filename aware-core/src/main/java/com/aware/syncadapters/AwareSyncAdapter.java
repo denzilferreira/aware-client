@@ -381,6 +381,9 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
             } else {
                 latest = new Http().dataPOST(WEBSERVER + "/" + DATABASE_TABLE + "/latest", request, true);
             }
+        } else {
+            // Simplified API - no remote server contacting
+            latest = "[]";
         }
         return latest;
     }
