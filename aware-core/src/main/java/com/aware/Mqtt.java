@@ -2,7 +2,6 @@
 package com.aware;
 
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -12,7 +11,6 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -142,7 +140,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
      */
     public static final String EXTRA_MESSAGE = "message";
 
-    private static MqttClient MQTT_CLIENT = null;
+    public static MqttClient MQTT_CLIENT;
 
     @Override
     public void connectionLost(Throwable throwable) {
@@ -367,17 +365,6 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                     initializeMQTT();
                 }
             }
-
-            if (!Aware.isSyncEnabled(this, Mqtt_Provider.getAuthority(this)) && Aware.isStudy(this)) {
-                ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Mqtt_Provider.getAuthority(this), 1);
-                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Mqtt_Provider.getAuthority(this), true);
-                ContentResolver.addPeriodicSync(
-                        Aware.getAWAREAccount(this),
-                        Mqtt_Provider.getAuthority(this),
-                        Bundle.EMPTY,
-                        Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60
-                );
-            }
         }
 
         return START_STICKY;
@@ -397,15 +384,6 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
             } catch (MqttException e) {
                 if (Aware.DEBUG) Log.e(TAG, e.getMessage());
             }
-        }
-
-        if (Aware.isStudy(this) && (getApplicationContext().getPackageName().equalsIgnoreCase("com.aware.phone") || getApplicationContext().getResources().getBoolean(R.bool.standalone))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Mqtt_Provider.getAuthority(this), false);
-            ContentResolver.removePeriodicSync(
-                    Aware.getAWAREAccount(this),
-                    Mqtt_Provider.getAuthority(this),
-                    Bundle.EMPTY
-            );
         }
 
         if (Aware.DEBUG) Log.d(TAG, "MQTT service terminated...");
