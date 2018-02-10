@@ -315,10 +315,14 @@ public class Bluetooth extends Aware_Sensor {
         if (bluetoothAdapter != null) {
 
             bluetoothAdapter.cancelDiscovery();
-            bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
+            if (BLE_SUPPORT) {
+                bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
+            }
 
-            mBLEHandler.removeCallbacks(scanRunnable);
-            mBLEHandler.removeCallbacksAndMessages(null);
+            if (mBLEHandler != null) {
+                mBLEHandler.removeCallbacks(scanRunnable);
+                mBLEHandler.removeCallbacksAndMessages(null);
+            }
 
             alarmManager.cancel(bluetoothScan);
             notificationManager.cancel(123);
@@ -401,6 +405,7 @@ public class Bluetooth extends Aware_Sensor {
                 context.sendBroadcast(scanEnd);
 
                 // Start BLE scanning when normal BT scanning is finished
+                if (mBLEHandler == null) mBLEHandler = new Handler();
                 mBLEHandler.post(scanRunnable);
             }
 

@@ -463,6 +463,7 @@ public class SSLManager {
         File host_credentials = new File(root_folder.toString(), server);
         if (host_credentials.exists()) {
             File[] certs = host_credentials.listFiles();
+            if (certs == null) return null;
             for (File crt : certs) {
                 if (crt.getName().equals("server.crt")) return new FileInputStream(crt);
             }
