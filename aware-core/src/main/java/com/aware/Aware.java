@@ -2492,15 +2492,16 @@ public class Aware extends Service {
      */
     public static boolean isSyncEnabled(Context context, String authority) {
         Account aware = Aware.getAWAREAccount(context);
-        boolean isSynchable = ContentResolver.getSyncAutomatically(aware, authority);
+        boolean isAutoSynchable = ContentResolver.getSyncAutomatically(aware, authority);
+        boolean isSynchable = (ContentResolver.getIsSyncable(aware, authority) > 0);
         boolean isMasterSyncEnabled = ContentResolver.getMasterSyncAutomatically();
         List<PeriodicSync> periodicSyncs = ContentResolver.getPeriodicSyncs(aware, authority);
 
-        if(Aware.DEBUG) Log.d(Aware.TAG, "Sync-Adapter Authority: " + authority + " syncable: " + isSynchable + " global: " + isMasterSyncEnabled + " Periodic: " + !periodicSyncs.isEmpty());
+        if(Aware.DEBUG) Log.d(Aware.TAG, "Sync-Adapter Authority: " + authority + " syncable: " + isSynchable + " auto: " + isAutoSynchable + " Periodic: " + !periodicSyncs.isEmpty() + " global: " + isMasterSyncEnabled);
         for(PeriodicSync p: periodicSyncs) {
             if(Aware.DEBUG) Log.d(Aware.TAG, "Every: " + p.period/60 + " minutes");
         }
-        return isSynchable && isMasterSyncEnabled;
+        return isSynchable && isAutoSynchable && isMasterSyncEnabled;
     }
 
     /**
