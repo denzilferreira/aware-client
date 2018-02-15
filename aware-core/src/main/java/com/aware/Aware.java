@@ -175,6 +175,11 @@ public class Aware extends Service {
     public static final String ACTION_QUIT_STUDY = "ACTION_QUIT_STUDY";
 
     /**
+     * Broadcasted when joined study successfully
+     */
+    public static final String ACTION_JOINED_STUDY = "ACTION_JOINED_STUDY";
+
+    /**
      * Used by the AWARE watchdog
      */
     private static final String ACTION_AWARE_KEEP_ALIVE = "ACTION_AWARE_KEEP_ALIVE";
@@ -1788,6 +1793,9 @@ public class Aware extends Service {
                         for (String p : active_plugins) {
                             Aware.startPlugin(getApplicationContext(), p);
                         }
+
+                        //Let others know that we just joined a study
+                        sendBroadcast(new Intent(Aware.ACTION_JOINED_STUDY));
 
                         //Start engine
                         Intent aware = new Intent(getApplicationContext(), Aware.class);
