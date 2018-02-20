@@ -128,8 +128,8 @@ public class Battery extends Aware_Sensor {
                 Cursor lastBattery = context.getContentResolver().query(Battery_Data.CONTENT_URI, null, null, null, Battery_Data.TIMESTAMP + " DESC LIMIT 1");
                 if (lastBattery != null && lastBattery.moveToFirst()) {
                     changed = (extras.getInt(BatteryManager.EXTRA_LEVEL) != lastBattery.getInt(lastBattery.getColumnIndex(Battery_Data.LEVEL))) ||
-                                (extras.getInt(BatteryManager.EXTRA_PLUGGED) != lastBattery.getInt(lastBattery.getColumnIndex(Battery_Data.PLUG_ADAPTOR))) ||
-                                (extras.getInt(BatteryManager.EXTRA_STATUS) != lastBattery.getInt(lastBattery.getColumnIndex(Battery_Data.STATUS)));
+                            (extras.getInt(BatteryManager.EXTRA_PLUGGED) != lastBattery.getInt(lastBattery.getColumnIndex(Battery_Data.PLUG_ADAPTOR))) ||
+                            (extras.getInt(BatteryManager.EXTRA_STATUS) != lastBattery.getInt(lastBattery.getColumnIndex(Battery_Data.STATUS)));
                 } else changed = true;
                 if (lastBattery != null) lastBattery.close();
 
@@ -313,9 +313,11 @@ public class Battery extends Aware_Sensor {
     private final Battery_Broadcaster batteryMonitor = new Battery_Broadcaster();
 
     private static Battery.AWARESensorObserver awareSensor;
+
     public static void setSensorObserver(Battery.AWARESensorObserver observer) {
         awareSensor = observer;
     }
+
     public static Battery.AWARESensorObserver getSensorObserver() {
         return awareSensor;
     }
@@ -387,14 +389,13 @@ public class Battery extends Aware_Sensor {
 
         unregisterReceiver(batteryMonitor);
 
-        if (Aware.isSyncEnabled(this, Battery_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Battery_Provider.getAuthority(this), false);
-            ContentResolver.removePeriodicSync(
-                    Aware.getAWAREAccount(this),
-                    Battery_Provider.getAuthority(this),
-                    Bundle.EMPTY
-            );
-        }
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Battery_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                Battery_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
+
 
         if (Aware.DEBUG) Log.d(TAG, "Battery service terminated...");
     }
@@ -409,12 +410,12 @@ public class Battery extends Aware_Sensor {
 
             if (Aware.DEBUG) Log.d(TAG, "Battery service active...");
 
-            if (!Aware.isSyncEnabled(this, Battery_Provider.getAuthority(this)) && Aware.isStudy(this)) {
+            if (Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Battery_Provider.getAuthority(this), 1);
                 ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Battery_Provider.getAuthority(this), true);
                 long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
                 SyncRequest request = new SyncRequest.Builder()
-                        .syncPeriodic(frequency, frequency/3)
+                        .syncPeriodic(frequency, frequency / 3)
                         .setSyncAdapter(Aware.getAWAREAccount(this), Battery_Provider.getAuthority(this))
                         .setExtras(new Bundle()).build();
                 ContentResolver.requestSync(request);

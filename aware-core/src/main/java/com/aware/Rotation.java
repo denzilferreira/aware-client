@@ -178,9 +178,11 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
     }
 
     private static Rotation.AWARESensorObserver awareSensor;
+
     public static void setSensorObserver(Rotation.AWARESensorObserver observer) {
         awareSensor = observer;
     }
+
     public static Rotation.AWARESensorObserver getSensorObserver() {
         return awareSensor;
     }
@@ -267,14 +269,12 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
 
         unregisterReceiver(dataLabeler);
 
-        if (Aware.isSyncEnabled(this, Rotation_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Rotation_Provider.getAuthority(this), false);
-            ContentResolver.removePeriodicSync(
-                    Aware.getAWAREAccount(this),
-                    Rotation_Provider.getAuthority(this),
-                    Bundle.EMPTY
-            );
-        }
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Rotation_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                Rotation_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
 
         if (Aware.DEBUG) Log.d(TAG, "Rotation service terminated...");
     }
@@ -323,12 +323,12 @@ public class Rotation extends Aware_Sensor implements SensorEventListener {
                 if (Aware.DEBUG) Log.d(TAG, "Rotation service active...");
             }
 
-            if (!Aware.isSyncEnabled(this, Rotation_Provider.getAuthority(this)) && Aware.isStudy(this)) {
+            if (Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Rotation_Provider.getAuthority(this), 1);
                 ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Rotation_Provider.getAuthority(this), true);
                 long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
                 SyncRequest request = new SyncRequest.Builder()
-                        .syncPeriodic(frequency, frequency/3)
+                        .syncPeriodic(frequency, frequency / 3)
                         .setSyncAdapter(Aware.getAWAREAccount(this), Rotation_Provider.getAuthority(this))
                         .setExtras(new Bundle()).build();
                 ContentResolver.requestSync(request);

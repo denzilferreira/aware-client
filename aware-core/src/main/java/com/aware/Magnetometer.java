@@ -95,7 +95,7 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
         long TS = System.currentTimeMillis();
-        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY/1000 )
+        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY / 1000)
             return;
         if (LAST_VALUES != null && THRESHOLD > 0 &&
                 Math.abs(event.values[0] - LAST_VALUES[0]) < THRESHOLD &&
@@ -115,7 +115,7 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
         rowData.put(Magnetometer_Data.ACCURACY, event.accuracy);
         rowData.put(Magnetometer_Data.LABEL, LABEL);
 
-        if (awareSensor!= null) awareSensor.onMagnetometerChanged(rowData);
+        if (awareSensor != null) awareSensor.onMagnetometerChanged(rowData);
 
         data_values.add(rowData);
         LAST_TS = TS;
@@ -149,12 +149,15 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
     }
 
     private static Magnetometer.AWARESensorObserver awareSensor;
+
     public static void setSensorObserver(Magnetometer.AWARESensorObserver observer) {
         awareSensor = observer;
     }
+
     public static Magnetometer.AWARESensorObserver getSensorObserver() {
         return awareSensor;
     }
+
     public interface AWARESensorObserver {
         void onMagnetometerChanged(ContentValues data);
     }
@@ -235,14 +238,12 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
 
         unregisterReceiver(dataLabeler);
 
-        if (Aware.isSyncEnabled(this, Magnetometer_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Magnetometer_Provider.getAuthority(this), false);
-            ContentResolver.removePeriodicSync(
-                    Aware.getAWAREAccount(this),
-                    Magnetometer_Provider.getAuthority(this),
-                    Bundle.EMPTY
-            );
-        }
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Magnetometer_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                Magnetometer_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
 
         if (Aware.DEBUG) Log.d(TAG, "Magnetometer service terminated...");
     }
@@ -291,12 +292,12 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
 
                 if (Aware.DEBUG) Log.d(TAG, "Magnetometer service active...");
 
-                if (!Aware.isSyncEnabled(this, Magnetometer_Provider.getAuthority(this)) && Aware.isStudy(this)) {
+                if (Aware.isStudy(this)) {
                     ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Magnetometer_Provider.getAuthority(this), 1);
                     ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Magnetometer_Provider.getAuthority(this), true);
                     long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
                     SyncRequest request = new SyncRequest.Builder()
-                            .syncPeriodic(frequency, frequency/3)
+                            .syncPeriodic(frequency, frequency / 3)
                             .setSyncAdapter(Aware.getAWAREAccount(this), Magnetometer_Provider.getAuthority(this))
                             .setExtras(new Bundle()).build();
                     ContentResolver.requestSync(request);

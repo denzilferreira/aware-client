@@ -34,13 +34,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Hashtable;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Created by denzilferreira on 19/07/2017.
@@ -131,7 +127,8 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
         //Do we need WiFi?
         if (!isWifiNeededAndConnected()) {
             if (!isForce3G(database_table)) {
-                if (Aware.DEBUG) Log.d(Aware.TAG, "Sync data only over Wi-Fi. Will try again later...");
+                if (Aware.DEBUG)
+                    Log.d(Aware.TAG, "Sync data only over Wi-Fi. Will try again later...");
                 return;
             }
         }
@@ -146,6 +143,10 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
          * Max number of rows to place on the HTTP(s) post
          */
         int MAX_POST_SIZE = getBatchSize();
+        if (MAX_POST_SIZE == 0) {
+            Log.d(Aware.TAG, "Device without available memory left for sync.");
+            return;
+        }
 
         if (Aware.is_watch(context)) {
             MAX_POST_SIZE = 100; //default for Android Wear (we have a limit of 100KB of data packet size (Message API restrictions)
@@ -173,7 +174,8 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
 
                     Log.d(Aware.TAG, "Table: " + database_table + " exists: " + (response != null && response.length() == 0));
                     Log.d(Aware.TAG, "Latest synched record: " + latest);
-                    if (study_condition.length() > 0) Log.d(Aware.TAG, "Resume from: " + study_condition);
+                    if (study_condition.length() > 0)
+                        Log.d(Aware.TAG, "Resume from: " + study_condition);
                     if (total_records > 0) Log.d(Aware.TAG, "Rows to sync: " + total_records);
                 }
 
@@ -209,7 +211,8 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
                     if (removeFrom > 0 && allow_table_maintenance)
                         performDatabaseSpaceMaintenance(CONTENT_URI, removeFrom, columnsStr, web_service_remove_data, context, database_table, DEBUG);
 
-                    if (DEBUG) Log.d(Aware.TAG, database_table + " sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis() - start) / 1000));
+                    if (DEBUG)
+                        Log.d(Aware.TAG, database_table + " sync time: " + DateUtils.formatElapsedTime((System.currentTimeMillis() - start) / 1000));
 
                     if (!Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
                         notifyUser(context, "Finished syncing " + database_table + ". Thanks!", true, false, notificationID);
@@ -258,44 +261,23 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private int getBatchSize() {
-        double availableRam;
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-            String load;
-            try (RandomAccessFile reader = new RandomAccessFile("/proc/meminfo", "r")) {
-                load = reader.readLine();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-                load = "0";
-            }
+        ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
+        ActivityManager actManager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+        actManager.getMemoryInfo(memInfo);
 
-            // Get the Number value from the string
-            Pattern p = Pattern.compile("(\\d+)");
-            Matcher m = p.matcher(load);
-            String value = "";
-            while (m.find())
-                value = m.group(1);
+        if (memInfo.lowMemory) return 0;
 
-            availableRam = Double.parseDouble(value) / 1048576.0;
-        } else {
-            ActivityManager actManager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
-            ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
-            actManager.getMemoryInfo(memInfo);
-            availableRam = memInfo.totalMem / 1048576000.0;
-        }
-
-        if (availableRam <= 1.0)
-            return 500;
-        else if (availableRam <= 2.0)
-            return 1500;
-        else if (availableRam <= 4.0)
-            return 5000;
-        else
-            return 10000;
+        double availableRam = memInfo.totalMem / 1048576000.0;
+        if (availableRam <= 1.0) return 500;
+        if (availableRam <= 2.0) return 1500;
+        if (availableRam <= 4.0) return 5000;
+        return 10000;
     }
 
 
     /**
      * Check the current connection is WiFi and we are connected
+     *
      * @return
      */
     public boolean isWifiNeededAndConnected() {
@@ -312,15 +294,15 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
      */
     public boolean isForce3G(String database_table) {
         if (Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).length() > 0 && !Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK).equals("0")) {
-            Cursor lastSynched = mContext.getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE 'STUDY-SYNC: "+ database_table + "'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
+            Cursor lastSynched = mContext.getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE 'STUDY-SYNC: " + database_table + "'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
             if (lastSynched != null && lastSynched.moveToFirst()) {
                 long synched = lastSynched.getLong(lastSynched.getColumnIndex(Aware_Provider.Aware_Log.LOG_TIMESTAMP));
 
                 Log.d(Aware.TAG, "Checking forced sync over 3G...");
-                Log.d(Aware.TAG, "Last sync: " + synched + " elapsed: " + (System.currentTimeMillis()-synched) + " force: " +(System.currentTimeMillis()-synched >= Integer.parseInt(Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK)) * 60 * 60 * 1000));
+                Log.d(Aware.TAG, "Last sync: " + synched + " elapsed: " + (System.currentTimeMillis() - synched) + " force: " + (System.currentTimeMillis() - synched >= Integer.parseInt(Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK)) * 60 * 60 * 1000));
 
                 lastSynched.close();
-                return (System.currentTimeMillis()-synched >= Integer.parseInt(Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK)) * 60 * 60 * 1000);
+                return (System.currentTimeMillis() - synched >= Integer.parseInt(Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_FALLBACK_NETWORK)) * 60 * 60 * 1000);
             } else
                 return true; //first time synching.
         }

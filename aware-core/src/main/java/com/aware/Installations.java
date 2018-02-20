@@ -130,12 +130,12 @@ public class Installations extends Aware_Sensor {
 
             if (Aware.DEBUG) Log.d(TAG, "Installations service active...");
 
-            if (!Aware.isSyncEnabled(this, Installations_Provider.getAuthority(this)) && Aware.isStudy(this)) {
+            if (Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Installations_Provider.getAuthority(this), 1);
                 ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Installations_Provider.getAuthority(this), true);
                 long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
                 SyncRequest request = new SyncRequest.Builder()
-                        .syncPeriodic(frequency, frequency/3)
+                        .syncPeriodic(frequency, frequency / 3)
                         .setSyncAdapter(Aware.getAWAREAccount(this), Installations_Provider.getAuthority(this))
                         .setExtras(new Bundle()).build();
                 ContentResolver.requestSync(request);
@@ -151,14 +151,12 @@ public class Installations extends Aware_Sensor {
 
         unregisterReceiver(installationsMonitor);
 
-        if (Aware.isSyncEnabled(this, Installations_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Installations_Provider.getAuthority(this), false);
-            ContentResolver.removePeriodicSync(
-                    Aware.getAWAREAccount(this),
-                    Installations_Provider.getAuthority(this),
-                    Bundle.EMPTY
-            );
-        }
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Installations_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                Installations_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
 
         if (Aware.DEBUG) Log.d(TAG, "Installations service terminated...");
     }
@@ -248,7 +246,8 @@ public class Installations extends Aware_Sensor {
                     if (get_application_info != null && get_application_info.moveToFirst()) {
                         appName = get_application_info.getString(get_application_info.getColumnIndex(Applications_History.APPLICATION_NAME));
                     }
-                    if (get_application_info != null && ! get_application_info.isClosed()) get_application_info.close();
+                    if (get_application_info != null && !get_application_info.isClosed())
+                        get_application_info.close();
 
                     if (appName.length() == 0) {
                         //try application history as last resort
@@ -256,7 +255,8 @@ public class Installations extends Aware_Sensor {
                         if (get_application_info != null && get_application_info.moveToFirst()) {
                             appName = get_application_info.getString(get_application_info.getColumnIndex(Applications_History.APPLICATION_NAME));
                         }
-                        if (get_application_info != null && ! get_application_info.isClosed()) get_application_info.close();
+                        if (get_application_info != null && !get_application_info.isClosed())
+                            get_application_info.close();
                     }
 
                     ContentValues rowData = new ContentValues();

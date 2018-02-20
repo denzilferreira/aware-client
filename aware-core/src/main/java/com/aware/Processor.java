@@ -92,7 +92,7 @@ public class Processor extends Aware_Sensor {
             try {
                 getContentResolver().insert(Processor_Data.CONTENT_URI, rowData);
 
-                if(awareSensor!= null) awareSensor.onChanged(rowData);
+                if (awareSensor != null) awareSensor.onChanged(rowData);
 
             } catch (SQLiteException e) {
                 if (Aware.DEBUG) Log.d(TAG, e.getMessage());
@@ -109,14 +109,14 @@ public class Processor extends Aware_Sensor {
                 Intent stressed = new Intent(ACTION_AWARE_PROCESSOR_STRESSED);
                 sendBroadcast(stressed);
 
-                if (awareSensor!= null) awareSensor.onOverloaded();
+                if (awareSensor != null) awareSensor.onOverloaded();
             }
 
             if (idle_percentage >= 90) {
                 Intent relaxed = new Intent(ACTION_AWARE_PROCESSOR_RELAXED);
                 sendBroadcast(relaxed);
 
-                if (awareSensor!= null) awareSensor.onIdle();
+                if (awareSensor != null) awareSensor.onIdle();
             }
 
             mHandler.postDelayed(mRunnable, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR)) * 1000);
@@ -131,12 +131,15 @@ public class Processor extends Aware_Sensor {
     }
 
     private static Processor.AWARESensorObserver awareSensor;
+
     public static void setSensorObserver(Processor.AWARESensorObserver observer) {
         awareSensor = observer;
     }
+
     public static Processor.AWARESensorObserver getSensorObserver() {
         return awareSensor;
     }
+
     public interface AWARESensorObserver {
         /**
          * CPU load is >=90%
@@ -150,6 +153,7 @@ public class Processor extends Aware_Sensor {
 
         /**
          * CPU load updated
+         *
          * @param data
          */
         void onChanged(ContentValues data);
@@ -200,12 +204,12 @@ public class Processor extends Aware_Sensor {
 
             if (Aware.DEBUG) Log.d(TAG, "Processor service active: " + FREQUENCY + "s");
 
-            if (!Aware.isSyncEnabled(this, Processor_Provider.getAuthority(this)) && Aware.isStudy(this)) {
+            if (Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Processor_Provider.getAuthority(this), 1);
                 ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Processor_Provider.getAuthority(this), true);
                 long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
                 SyncRequest request = new SyncRequest.Builder()
-                        .syncPeriodic(frequency, frequency/3)
+                        .syncPeriodic(frequency, frequency / 3)
                         .setSyncAdapter(Aware.getAWAREAccount(this), Processor_Provider.getAuthority(this))
                         .setExtras(new Bundle()).build();
                 ContentResolver.requestSync(request);
@@ -221,14 +225,12 @@ public class Processor extends Aware_Sensor {
 
         mHandler.removeCallbacks(mRunnable);
 
-        if (Aware.isSyncEnabled(this, Processor_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Processor_Provider.getAuthority(this), false);
-            ContentResolver.removePeriodicSync(
-                    Aware.getAWAREAccount(this),
-                    Processor_Provider.getAuthority(this),
-                    Bundle.EMPTY
-            );
-        }
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Processor_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                Processor_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
 
         if (Aware.DEBUG) Log.d(TAG, "Processor service terminated...");
     }
@@ -244,8 +246,8 @@ public class Processor extends Aware_Sensor {
     public static HashMap<String, Integer> getProcessorLoad() {
         HashMap<String, Integer> processor = new HashMap<String, Integer>();
         processor.put("user", 0);
-        processor.put("system",0);
-        processor.put("idle",0);
+        processor.put("system", 0);
+        processor.put("idle", 0);
 
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream("/proc/stat")), 5000);

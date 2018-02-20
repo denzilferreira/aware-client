@@ -118,7 +118,7 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
         }
 
         long TS = System.currentTimeMillis();
-        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY/1000 )
+        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY / 1000)
             return;
         if (LAST_VALUES != null && THRESHOLD > 0 && Math.abs(event.values[0] - LAST_VALUES[0]) < THRESHOLD
                 && Math.abs(event.values[1] - LAST_VALUES[1]) < THRESHOLD
@@ -171,12 +171,15 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
     }
 
     private static LinearAccelerometer.AWARESensorObserver awareSensor;
+
     public static void setSensorObserver(LinearAccelerometer.AWARESensorObserver observer) {
         awareSensor = observer;
     }
+
     public static LinearAccelerometer.AWARESensorObserver getSensorObserver() {
         return awareSensor;
     }
+
     public interface AWARESensorObserver {
         void onLinearAccelChanged(ContentValues data);
     }
@@ -257,21 +260,19 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
 
         unregisterReceiver(dataLabeler);
 
-        if (Aware.isSyncEnabled(this, Linear_Accelerometer_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Linear_Accelerometer_Provider.getAuthority(this), false);
-            ContentResolver.removePeriodicSync(
-                    Aware.getAWAREAccount(this),
-                    Linear_Accelerometer_Provider.getAuthority(this),
-                    Bundle.EMPTY
-            );
-        }
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Linear_Accelerometer_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                Linear_Accelerometer_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
 
         if (Aware.DEBUG) Log.d(TAG, "Linear-accelerometer service terminated...");
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        super.onStartCommand(intent,flags, startId);
+        super.onStartCommand(intent, flags, startId);
 
         if (PERMISSIONS_OK) {
             if (mLinearAccelerator == null) {
@@ -311,14 +312,15 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
                 mSensorManager.registerListener(this, mLinearAccelerator, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER)), sensorHandler);
                 LAST_SAVE = System.currentTimeMillis();
 
-                if (Aware.DEBUG) Log.d(TAG, "Linear-accelerometer service active: " + FREQUENCY + "ms");
+                if (Aware.DEBUG)
+                    Log.d(TAG, "Linear-accelerometer service active: " + FREQUENCY + "ms");
 
-                if (!Aware.isSyncEnabled(this, Linear_Accelerometer_Provider.getAuthority(this)) && Aware.isStudy(this)) {
+                if (Aware.isStudy(this)) {
                     ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Linear_Accelerometer_Provider.getAuthority(this), 1);
                     ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Linear_Accelerometer_Provider.getAuthority(this), true);
                     long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
                     SyncRequest request = new SyncRequest.Builder()
-                            .syncPeriodic(frequency, frequency/3)
+                            .syncPeriodic(frequency, frequency / 3)
                             .setSyncAdapter(Aware.getAWAREAccount(this), Linear_Accelerometer_Provider.getAuthority(this))
                             .setExtras(new Bundle()).build();
                     ContentResolver.requestSync(request);

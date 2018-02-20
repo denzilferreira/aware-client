@@ -277,6 +277,7 @@ public class Communication extends Aware_Sensor {
     }
 
     private PhoneState phoneState = new PhoneState();
+
     private class PhoneState extends PhoneStateListener {
         @Override
         public void onCallStateChanged(int state, String incomingNumber) {
@@ -312,9 +313,11 @@ public class Communication extends Aware_Sensor {
     }
 
     private static Communication.AWARESensorObserver awareSensor;
+
     public static void setSensorObserver(Communication.AWARESensorObserver observer) {
         awareSensor = observer;
     }
+
     public static Communication.AWARESensorObserver getSensorObserver() {
         return awareSensor;
     }
@@ -401,12 +404,12 @@ public class Communication extends Aware_Sensor {
 
             if (Aware.DEBUG) Log.d(TAG, TAG + " service active...");
 
-            if (!Aware.isSyncEnabled(this, Communication_Provider.getAuthority(this)) && Aware.isStudy(this)) {
+            if (Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Communication_Provider.getAuthority(this), 1);
                 ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Communication_Provider.getAuthority(this), true);
                 long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
                 SyncRequest request = new SyncRequest.Builder()
-                        .syncPeriodic(frequency, frequency/3)
+                        .syncPeriodic(frequency, frequency / 3)
                         .setSyncAdapter(Aware.getAWAREAccount(this), Communication_Provider.getAuthority(this))
                         .setExtras(new Bundle()).build();
                 ContentResolver.requestSync(request);
@@ -424,14 +427,12 @@ public class Communication extends Aware_Sensor {
         getContentResolver().unregisterContentObserver(msgsObs);
         telephonyManager.listen(phoneState, PhoneStateListener.LISTEN_NONE);
 
-        if (Aware.isSyncEnabled(this, Communication_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Communication_Provider.getAuthority(this), false);
-            ContentResolver.removePeriodicSync(
-                    Aware.getAWAREAccount(this),
-                    Communication_Provider.getAuthority(this),
-                    Bundle.EMPTY
-            );
-        }
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Communication_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                Communication_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
 
         if (Aware.DEBUG) Log.d(TAG, TAG + " service terminated...");
     }

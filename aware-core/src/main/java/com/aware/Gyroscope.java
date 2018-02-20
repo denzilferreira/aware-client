@@ -123,7 +123,7 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
         }
 
         long TS = System.currentTimeMillis();
-        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY/1000 )
+        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY / 1000)
             return;
         if (LAST_VALUES != null && THRESHOLD > 0 && Math.abs(event.values[0] - LAST_VALUES[0]) < THRESHOLD
                 && Math.abs(event.values[1] - LAST_VALUES[1]) < THRESHOLD
@@ -176,12 +176,15 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
     }
 
     private static Gyroscope.AWARESensorObserver awareSensor;
+
     public static void setSensorObserver(Gyroscope.AWARESensorObserver observer) {
         awareSensor = observer;
     }
+
     public static Gyroscope.AWARESensorObserver getSensorObserver() {
         return awareSensor;
     }
+
     public interface AWARESensorObserver {
         void onGyroscopeChanged(ContentValues data);
     }
@@ -268,14 +271,12 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
 
         unregisterReceiver(dataLabeler);
 
-        if (Aware.isSyncEnabled(this, Gyroscope_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Gyroscope_Provider.getAuthority(this), false);
-            ContentResolver.removePeriodicSync(
-                    Aware.getAWAREAccount(this),
-                    Gyroscope_Provider.getAuthority(this),
-                    Bundle.EMPTY
-            );
-        }
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Gyroscope_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                Gyroscope_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
 
         if (Aware.DEBUG) Log.d(TAG, "Gyroscope service terminated...");
     }
@@ -284,7 +285,7 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
 
-        if(PERMISSIONS_OK) {
+        if (PERMISSIONS_OK) {
             if (mGyroscope == null) {
                 if (Aware.DEBUG) Log.w(TAG, "This device does not have a gyroscope!");
                 Aware.setSetting(this, Aware_Preferences.STATUS_GYROSCOPE, false);
@@ -327,12 +328,12 @@ public class Gyroscope extends Aware_Sensor implements SensorEventListener {
 
             if (Aware.DEBUG) Log.d(TAG, "Gyroscope service active: " + FREQUENCY + "ms");
 
-            if (!Aware.isSyncEnabled(this, Gyroscope_Provider.getAuthority(this)) && Aware.isStudy(this)) {
+            if (Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Gyroscope_Provider.getAuthority(this), 1);
                 ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Gyroscope_Provider.getAuthority(this), true);
                 long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
                 SyncRequest request = new SyncRequest.Builder()
-                        .syncPeriodic(frequency, frequency/3)
+                        .syncPeriodic(frequency, frequency / 3)
                         .setSyncAdapter(Aware.getAWAREAccount(this), Gyroscope_Provider.getAuthority(this))
                         .setExtras(new Bundle()).build();
                 ContentResolver.requestSync(request);

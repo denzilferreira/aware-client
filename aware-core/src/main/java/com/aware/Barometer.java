@@ -83,7 +83,7 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
         long TS = System.currentTimeMillis();
-        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY/1000 )
+        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY / 1000)
             return;
         if (LAST_VALUE != null && THRESHOLD > 0 && Math.abs(event.values[0] - LAST_VALUE) < THRESHOLD) {
             return;
@@ -132,12 +132,15 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
     }
 
     private static Barometer.AWARESensorObserver awareSensor;
+
     public static void setSensorObserver(Barometer.AWARESensorObserver observer) {
         awareSensor = observer;
     }
+
     public static Barometer.AWARESensorObserver getSensorObserver() {
         return awareSensor;
     }
+
     public interface AWARESensorObserver {
         void onBarometerChanged(ContentValues data);
     }
@@ -221,14 +224,12 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
 
         unregisterReceiver(dataLabeler);
 
-        if (Aware.isSyncEnabled(this, Barometer_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Barometer_Provider.getAuthority(this), false);
-            ContentResolver.removePeriodicSync(
-                    Aware.getAWAREAccount(this),
-                    Barometer_Provider.getAuthority(this),
-                    Bundle.EMPTY
-            );
-        }
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Barometer_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                Barometer_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
 
         if (Aware.DEBUG) Log.d(TAG, "Barometer service terminated...");
     }
@@ -278,12 +279,12 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
 
                 if (Aware.DEBUG) Log.d(TAG, "Barometer service active: " + FREQUENCY + "ms");
 
-                if (!Aware.isSyncEnabled(this, Barometer_Provider.getAuthority(this)) && Aware.isStudy(this)) {
+                if (Aware.isStudy(this)) {
                     ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Barometer_Provider.getAuthority(this), 1);
                     ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Barometer_Provider.getAuthority(this), true);
                     long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
                     SyncRequest request = new SyncRequest.Builder()
-                            .syncPeriodic(frequency, frequency/3)
+                            .syncPeriodic(frequency, frequency / 3)
                             .setSyncAdapter(Aware.getAWAREAccount(this), Barometer_Provider.getAuthority(this))
                             .setExtras(new Bundle()).build();
                     ContentResolver.requestSync(request);

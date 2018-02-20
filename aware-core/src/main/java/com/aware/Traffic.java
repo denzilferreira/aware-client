@@ -64,7 +64,7 @@ public class Traffic extends Aware_Sensor {
             wifi.put(Traffic_Data.SENT_PACKETS, d_wifiTxPackets);
             getContentResolver().insert(Traffic_Data.CONTENT_URI, wifi);
 
-            if (awareSensor!= null) awareSensor.onWiFiTraffic(wifi);
+            if (awareSensor != null) awareSensor.onWiFiTraffic(wifi);
 
             if (Aware.DEBUG) Log.d(TAG, "Wifi:" + wifi.toString());
 
@@ -78,7 +78,7 @@ public class Traffic extends Aware_Sensor {
             network.put(Traffic_Data.SENT_PACKETS, d_mobileTxPackets);
             getContentResolver().insert(Traffic_Data.CONTENT_URI, network);
 
-            if (awareSensor!= null) awareSensor.onNetworkTraffic(network);
+            if (awareSensor != null) awareSensor.onNetworkTraffic(network);
             if (Aware.DEBUG) Log.d(TAG, "Network: " + network.toString());
 
             Intent traffic = new Intent(ACTION_AWARE_NETWORK_TRAFFIC);
@@ -122,16 +122,20 @@ public class Traffic extends Aware_Sensor {
     }
 
     private static Traffic.AWARESensorObserver awareSensor;
+
     public static void setSensorObserver(Traffic.AWARESensorObserver observer) {
         awareSensor = observer;
     }
+
     public static Traffic.AWARESensorObserver getSensorObserver() {
         return awareSensor;
     }
 
     public interface AWARESensorObserver {
         void onNetworkTraffic(ContentValues data);
+
         void onWiFiTraffic(ContentValues data);
+
         void onIdleTraffic();
     }
 
@@ -157,7 +161,8 @@ public class Traffic extends Aware_Sensor {
 
             if (startTotalRxBytes == TrafficStats.UNSUPPORTED) {
                 Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_NETWORK_TRAFFIC, false);
-                if (Aware.DEBUG) Log.d(TAG, "Device doesn't support traffic statistics! Disabling sensor...");
+                if (Aware.DEBUG)
+                    Log.d(TAG, "Device doesn't support traffic statistics! Disabling sensor...");
                 Aware.stopTraffic(this);
 
             } else {
@@ -182,12 +187,12 @@ public class Traffic extends Aware_Sensor {
 
                 if (Aware.DEBUG) Log.d(TAG, "Traffic service active...");
 
-                if (!Aware.isSyncEnabled(this, Traffic_Provider.getAuthority(this)) && Aware.isStudy(this)) {
+                if (Aware.isStudy(this)) {
                     ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Traffic_Provider.getAuthority(this), 1);
                     ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Traffic_Provider.getAuthority(this), true);
                     long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
                     SyncRequest request = new SyncRequest.Builder()
-                            .syncPeriodic(frequency, frequency/3)
+                            .syncPeriodic(frequency, frequency / 3)
                             .setSyncAdapter(Aware.getAWAREAccount(this), Traffic_Provider.getAuthority(this))
                             .setExtras(new Bundle()).build();
                     ContentResolver.requestSync(request);
@@ -220,7 +225,7 @@ public class Traffic extends Aware_Sensor {
                     break;
                 case TelephonyManager.DATA_ACTIVITY_NONE:
                     //no-op.
-                    if (awareSensor!= null) awareSensor.onIdleTraffic();
+                    if (awareSensor != null) awareSensor.onIdleTraffic();
                     break;
             }
         }
@@ -232,14 +237,12 @@ public class Traffic extends Aware_Sensor {
 
         telephonyManager.listen(networkTrafficObserver, PhoneStateListener.LISTEN_NONE);
 
-        if (Aware.isSyncEnabled(this, Traffic_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Traffic_Provider.getAuthority(this), false);
-            ContentResolver.removePeriodicSync(
-                    Aware.getAWAREAccount(this),
-                    Traffic_Provider.getAuthority(this),
-                    Bundle.EMPTY
-            );
-        }
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Traffic_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                Traffic_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
 
         if (Aware.DEBUG) Log.d(TAG, "Traffic service terminated...");
     }

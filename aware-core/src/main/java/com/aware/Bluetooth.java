@@ -155,20 +155,28 @@ public class Bluetooth extends Aware_Sensor {
     }
 
     private static Bluetooth.AWARESensorObserver awareSensor;
+
     public static void setSensorObserver(Bluetooth.AWARESensorObserver observer) {
         awareSensor = observer;
     }
+
     public static Bluetooth.AWARESensorObserver getSensorObserver() {
         return awareSensor;
     }
 
     public interface AWARESensorObserver {
         void onBluetoothDetected(ContentValues data);
+
         void onBluetoothBLEDetected(ContentValues data);
+
         void onScanStarted();
+
         void onScanEnded();
+
         void onBLEScanStarted();
+
         void onBLEScanEnded();
+
         void onBluetoothDisabled();
     }
 
@@ -221,13 +229,13 @@ public class Bluetooth extends Aware_Sensor {
                 }
             }
 
-            if (!Aware.isSyncEnabled(this, Bluetooth_Provider.getAuthority(this)) && Aware.isStudy(this)) {
+            if (Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Bluetooth_Provider.getAuthority(this), 1);
                 ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Bluetooth_Provider.getAuthority(this), true);
 
                 long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
                 SyncRequest request = new SyncRequest.Builder()
-                        .syncPeriodic(frequency, frequency/3)
+                        .syncPeriodic(frequency, frequency / 3)
                         .setSyncAdapter(Aware.getAWAREAccount(this), Bluetooth_Provider.getAuthority(this))
                         .setExtras(new Bundle()).build();
                 ContentResolver.requestSync(request);
@@ -327,14 +335,14 @@ public class Bluetooth extends Aware_Sensor {
             alarmManager.cancel(bluetoothScan);
             notificationManager.cancel(123);
 
-            if (Aware.isSyncEnabled(this, Bluetooth_Provider.getAuthority(this))) {
-                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Bluetooth_Provider.getAuthority(this), false);
-                ContentResolver.removePeriodicSync(
-                        Aware.getAWAREAccount(this),
-                        Bluetooth_Provider.getAuthority(this),
-                        Bundle.EMPTY
-                );
-            }
+
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Bluetooth_Provider.getAuthority(this), false);
+            ContentResolver.removePeriodicSync(
+                    Aware.getAWAREAccount(this),
+                    Bluetooth_Provider.getAuthority(this),
+                    Bundle.EMPTY
+            );
+
         }
 
         if (Aware.DEBUG) Log.d(TAG, "Bluetooth service terminated...");
@@ -460,6 +468,7 @@ public class Bluetooth extends Aware_Sensor {
     }
 
     private final Bluetooth_Broadcaster bluetoothMonitor = new Bluetooth_Broadcaster();
+
     private void save_bluetooth_device(BluetoothAdapter btAdapter) {
         if (btAdapter == null) return;
 

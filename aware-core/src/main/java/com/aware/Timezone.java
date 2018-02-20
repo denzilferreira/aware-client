@@ -23,10 +23,11 @@ import java.util.TimeZone;
 /**
  * Timezone module. Keeps track of changes in the device Timezone.
  * Last modified:
- * @author Denzil
- * Made sensor event-based, instead of polling data.
  *
- * Original @author Nikola
+ * @author Denzil
+ *         Made sensor event-based, instead of polling data.
+ *         <p>
+ *         Original @author Nikola
  */
 public class Timezone extends Aware_Sensor {
 
@@ -37,12 +38,15 @@ public class Timezone extends Aware_Sensor {
     public static final String EXTRA_DATA = "data";
 
     private static Timezone.AWARESensorObserver awareSensor;
+
     public static void setSensorObserver(Timezone.AWARESensorObserver observer) {
         awareSensor = observer;
     }
+
     public static Timezone.AWARESensorObserver getSensorObserver() {
         return awareSensor;
     }
+
     public interface AWARESensorObserver {
         void onTimezoneChanged(ContentValues data);
     }
@@ -76,6 +80,7 @@ public class Timezone extends Aware_Sensor {
     }
 
     private TimezoneObserver timezoneObserver = new TimezoneObserver();
+
     public class TimezoneObserver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -102,7 +107,7 @@ public class Timezone extends Aware_Sensor {
 
             if (Aware.DEBUG) Log.d(Aware.TAG, rowData.toString());
 
-            if (awareSensor!= null) awareSensor.onTimezoneChanged(rowData);
+            if (awareSensor != null) awareSensor.onTimezoneChanged(rowData);
 
             Intent newTimeZone = new Intent(ACTION_AWARE_TIMEZONE);
             newTimeZone.putExtra(EXTRA_DATA, rowData);
@@ -129,12 +134,12 @@ public class Timezone extends Aware_Sensor {
 
             if (Aware.DEBUG) Log.d(TAG, "Timezone service active...");
 
-            if (!Aware.isSyncEnabled(this, TimeZone_Provider.getAuthority(this)) && Aware.isStudy(this)) {
+            if (Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), TimeZone_Provider.getAuthority(this), 1);
                 ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), TimeZone_Provider.getAuthority(this), true);
                 long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
                 SyncRequest request = new SyncRequest.Builder()
-                        .syncPeriodic(frequency, frequency/3)
+                        .syncPeriodic(frequency, frequency / 3)
                         .setSyncAdapter(Aware.getAWAREAccount(this), TimeZone_Provider.getAuthority(this))
                         .setExtras(new Bundle()).build();
                 ContentResolver.requestSync(request);
@@ -150,14 +155,12 @@ public class Timezone extends Aware_Sensor {
 
         unregisterReceiver(timezoneObserver);
 
-        if (Aware.isSyncEnabled(this, TimeZone_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), TimeZone_Provider.getAuthority(this), false);
-            ContentResolver.removePeriodicSync(
-                    Aware.getAWAREAccount(this),
-                    TimeZone_Provider.getAuthority(this),
-                    Bundle.EMPTY
-            );
-        }
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), TimeZone_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                TimeZone_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
 
         if (Aware.DEBUG) Log.d(TAG, "Timezone service terminated...");
     }

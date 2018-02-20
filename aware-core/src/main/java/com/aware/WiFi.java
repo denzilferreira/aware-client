@@ -96,16 +96,22 @@ public class WiFi extends Aware_Sensor {
     }
 
     private static WiFi.AWARESensorObserver awareSensor;
+
     public static void setSensorObserver(WiFi.AWARESensorObserver observer) {
         awareSensor = observer;
     }
+
     public static WiFi.AWARESensorObserver getSensorObserver() {
         return awareSensor;
     }
+
     public interface AWARESensorObserver {
         void onWiFiAPDetected(ContentValues data);
+
         void onWiFiDisabled();
+
         void onWiFiScanStarted();
+
         void onWiFiScanEnded();
     }
 
@@ -132,12 +138,12 @@ public class WiFi extends Aware_Sensor {
                 if (Aware.DEBUG) Log.d(TAG, "WiFi service active...");
             }
 
-            if (!Aware.isSyncEnabled(this, WiFi_Provider.getAuthority(this)) && Aware.isStudy(this)) {
+            if (Aware.isStudy(this)) {
                 ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), WiFi_Provider.getAuthority(this), 1);
                 ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), WiFi_Provider.getAuthority(this), true);
                 long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
                 SyncRequest request = new SyncRequest.Builder()
-                        .syncPeriodic(frequency, frequency/3)
+                        .syncPeriodic(frequency, frequency / 3)
                         .setSyncAdapter(Aware.getAWAREAccount(this), WiFi_Provider.getAuthority(this))
                         .setExtras(new Bundle()).build();
                 ContentResolver.requestSync(request);
@@ -154,14 +160,12 @@ public class WiFi extends Aware_Sensor {
         unregisterReceiver(wifiMonitor);
         if (wifiScan != null) alarmManager.cancel(wifiScan);
 
-        if (Aware.isSyncEnabled(this, WiFi_Provider.getAuthority(this))) {
-            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), WiFi_Provider.getAuthority(this), false);
-            ContentResolver.removePeriodicSync(
-                    Aware.getAWAREAccount(this),
-                    WiFi_Provider.getAuthority(this),
-                    Bundle.EMPTY
-            );
-        }
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), WiFi_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                WiFi_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
 
         if (Aware.DEBUG) Log.d(TAG, "WiFi service terminated...");
     }
@@ -181,6 +185,7 @@ public class WiFi extends Aware_Sensor {
             }
         }
     }
+
     private final WiFiMonitor wifiMonitor = new WiFiMonitor();
 
     /**
@@ -321,7 +326,7 @@ public class WiFi extends Aware_Sensor {
 
                             getContentResolver().insert(WiFi_Data.CONTENT_URI, rowData);
 
-                            if (awareSensor!=null) awareSensor.onWiFiDisabled();
+                            if (awareSensor != null) awareSensor.onWiFiDisabled();
                         }
                     } catch (NullPointerException e) {
                         if (Aware.DEBUG) {
@@ -335,7 +340,7 @@ public class WiFi extends Aware_Sensor {
 
                         getContentResolver().insert(WiFi_Data.CONTENT_URI, rowData);
 
-                        if (awareSensor!=null) awareSensor.onWiFiDisabled();
+                        if (awareSensor != null) awareSensor.onWiFiDisabled();
                     }
                 }
 
