@@ -5,6 +5,7 @@ import android.app.ActivityManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.AbstractThreadedSyncAdapter;
+import android.content.ComponentName;
 import android.content.ContentProviderClient;
 import android.content.Context;
 import android.content.Intent;
@@ -21,6 +22,7 @@ import android.support.v4.app.NotificationCompat;
 import android.text.format.DateUtils;
 import android.util.Log;
 
+import com.aware.Applications;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.R;
@@ -152,7 +154,8 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
             MAX_POST_SIZE = 100; //default for Android Wear (we have a limit of 100KB of data packet size (Message API restrictions)
         }
 
-        if (Aware.DEBUG) Log.d(Aware.TAG, "Synching " + database_table + " to: " + web_server + " in batches of " + MAX_POST_SIZE);
+        if (Aware.DEBUG)
+            Log.d(Aware.TAG, "Synching " + database_table + " to: " + web_server + " in batches of " + MAX_POST_SIZE);
 
         String device_id = Aware.getSetting(context, Aware_Preferences.DEVICE_ID);
         boolean DEBUG = Aware.getSetting(context, Aware_Preferences.DEBUG_FLAG).equals("true");
@@ -265,7 +268,29 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
         ActivityManager actManager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
         actManager.getMemoryInfo(memInfo);
 
-        if (memInfo.lowMemory) return 0;
+        if (memInfo.lowMemory) {
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getContext(), Aware.AWARE_NOTIFICATION_ID);
+            mBuilder.setSmallIcon(R.drawable.ic_stat_aware_plugin_dependency);
+            mBuilder.setContentTitle("Low memory detected...");
+            mBuilder.setContentText("Tap and swipe to clear recently used applications.");
+            mBuilder.setAutoCancel(true);
+            mBuilder.setOnlyAlertOnce(true);
+            mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_ID);
+
+            Intent intent = new Intent("com.android.systemui.recent.action.TOGGLE_RECENTS");
+            intent.setComponent(new ComponentName("com.android.systemui", "com.android.systemui.recent.RecentsActivity"));
+
+            PendingIntent clickIntent = PendingIntent.getActivity(getContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            mBuilder.setContentIntent(clickIntent);
+
+            NotificationManager notificationManager = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.notify(Applications.ACCESSIBILITY_NOTIFICATION_ID, mBuilder.build());
+
+            return 0;
+        }
 
         double availableRam = memInfo.totalMem / 1048576000.0;
         if (availableRam <= 1.0) return 500;
