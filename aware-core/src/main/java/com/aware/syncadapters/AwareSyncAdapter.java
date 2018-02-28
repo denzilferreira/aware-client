@@ -164,8 +164,15 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
         if (response != null || web_service_simple) {
             try {
                 String[] columnsStr = getTableColumnsNames(CONTENT_URI, context);
-                String latest = getLatestRecordInDatabase(device_id, web_service_simple, web_service_remove_data, database_table, protocol, context, web_server);
-                String study_condition = getRemoteSyncCondition(context, database_table);
+
+                /**
+                 * We used to check the latest timestamp from the server side. We now keep track of it locally on the phone for scalability and performance hit on MySQL per sync event.
+                 */
+                String latest;
+                //latest = getLatestRecordFromServer(device_id, web_service_simple, web_service_remove_data, database_table, protocol, context, web_server);
+                latest = getLatestRecordSynched(database_table, columnsStr);
+
+                String study_condition = getStudySyncCondition(context, database_table);
                 int total_records = getNumberOfRecordsToSync(CONTENT_URI, columnsStr, latest, study_condition, context);
                 boolean allow_table_maintenance = isTableAllowedForMaintenance(database_table);
 
@@ -176,9 +183,8 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
                     }
 
                     Log.d(Aware.TAG, "Table: " + database_table + " exists: " + (response != null && response.length() == 0));
-                    Log.d(Aware.TAG, "Latest synched record: " + latest);
-                    if (study_condition.length() > 0)
-                        Log.d(Aware.TAG, "Resume from: " + study_condition);
+                    Log.d(Aware.TAG, "Last synched record in this table: " + latest);
+                    if (study_condition.length() > 0) Log.d(Aware.TAG, "Joined study since: " + study_condition);
                     if (total_records > 0) Log.d(Aware.TAG, "Rows to sync: " + total_records);
                 }
 
@@ -191,8 +197,7 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
                     long lastSynced;
                     long removeFrom = 0;
 
-                    do { //paginate cursor so it does not explode the phone's memory
-
+                    do {
                         if (!Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SILENT).equals("true"))
                             notifyUser(context, "Table: " + database_table + " syncing batch " + (uploaded_records + MAX_POST_SIZE) / MAX_POST_SIZE + " of " + batches, false, true, notificationID);
 
@@ -205,7 +210,6 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
                         } else {
                             removeFrom = lastSynced;
                         }
-
                         uploaded_records += MAX_POST_SIZE;
                     }
                     while (uploaded_records < total_records && lastSynced > 0 && isWifiNeededAndConnected());
@@ -367,12 +371,50 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
         return columnsStr;
     }
 
-    private String getLatestRecordInDatabase(String DEVICE_ID, Boolean WEBSERVICE_SIMPLE, Boolean WEBSERVICE_REMOVE_DATA, String DATABASE_TABLE, String protocol, Context mContext, String WEBSERVER) {
+    private String getLatestRecordSynched(String database_table, String[] columnsStr) {
+        String json_last_timestamp = null;
+        long last_sync_timestamp;
+
+        Cursor lastSynched = mContext.getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE '{\"table\":\"" + database_table + "\", \"last_sync_timestamp\":%'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
+        if (lastSynched != null && lastSynched.moveToFirst()) {
+            try {
+                JSONObject logSyncData = new JSONObject(lastSynched.getString(lastSynched.getColumnIndex(Aware_Provider.Aware_Log.LOG_MESSAGE)));
+                last_sync_timestamp = logSyncData.getLong("last_sync_timestamp");
+
+                if (exists(columnsStr, "double_end_timestamp")) {
+                    return new JSONObject().put("double_end_timestamp", last_sync_timestamp).toString();
+                } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
+                    return new JSONObject().put("double_esm_user_answer_timestamp", last_sync_timestamp).toString();
+                } else {
+                    return new JSONObject().put("timestamp", last_sync_timestamp).toString();
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            lastSynched.close();
+        } else {
+            json_last_timestamp = "[]";
+        }
+        return json_last_timestamp;
+    }
+
+    /**
+     * @deprecated We are dropping this because of overhead and scalability when millions of records on the server side. We now keep track locally of the last successful record timestamp.
+     * @param DEVICE_ID
+     * @param WEBSERVICE_SIMPLE
+     * @param WEBSERVICE_REMOVE_DATA
+     * @param DATABASE_TABLE
+     * @param protocol
+     * @param mContext
+     * @param WEBSERVER
+     * @return
+     */
+    private String getLatestRecordFromServer(String DEVICE_ID, Boolean WEBSERVICE_SIMPLE, Boolean WEBSERVICE_REMOVE_DATA, String DATABASE_TABLE, String protocol, Context mContext, String WEBSERVER) {
         Hashtable<String, String> request = new Hashtable<>();
         request.put(Aware_Preferences.DEVICE_ID, DEVICE_ID);
 
         //check the latest entry in remote database
-        String latest = null;
+        String latest;
         // Default aware has this condition as TRUE and does the /latest call.
         // Only if WEBSERVICE_REMOVE_DATA is true can we safely do this, and
         // we also require WEBSERVICE_SIMPLE so that we can remove data while
@@ -395,7 +437,7 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
         return latest;
     }
 
-    private String getRemoteSyncCondition(Context mContext, String DATABASE_TABLE) {
+    private String getStudySyncCondition(Context mContext, String DATABASE_TABLE) {
         //If in a study, get only data from joined date onwards
         String study_condition = "";
         if (Aware.isStudy(mContext)) {
@@ -618,6 +660,17 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
                 if (DEBUG) Log.d(Aware.TAG, DATABASE_TABLE + " FAILED to sync. Server down?");
                 return 0;
             } else {
+
+                try {
+                    Aware.debug(mContext, new JSONObject()
+                                    .put("table", DATABASE_TABLE)
+                                    .put("last_sync_timestamp", lastSynced)
+                                    .toString());
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
                 if (DEBUG)
                     Log.d(Aware.TAG, "Sync OK into " + DATABASE_TABLE + " [ " + rows.length() + " rows ]");
             }
@@ -627,9 +680,8 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private boolean isTableAllowedForMaintenance(String table_name) {
-        //we need to keep the schedulers and aware_studies tables and on those tables that contain
-        if (table_name.equalsIgnoreCase("aware_studies") || table_name.equalsIgnoreCase("scheduler"))
-            return false;
+        //we always keep locally the information of the study and defined schedulers.
+        if (table_name.equalsIgnoreCase("aware_studies") || table_name.equalsIgnoreCase("scheduler")) return false;
         return true;
     }
 
