@@ -376,7 +376,7 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
         String json_last_timestamp = null;
         long last_sync_timestamp;
 
-        Cursor lastSynched = mContext.getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE '{\"table\":\"" + database_table + "\", \"last_sync_timestamp\":%'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
+        Cursor lastSynched = mContext.getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE '{\"table\":\"" + database_table + "\",\"last_sync_timestamp\":%'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
 
         Log.d(Aware.TAG, DatabaseUtils.dumpCursorToString(lastSynched));
 
