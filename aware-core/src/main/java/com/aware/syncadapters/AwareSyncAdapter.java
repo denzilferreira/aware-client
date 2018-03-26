@@ -461,7 +461,6 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
         if (latest == null) return 0;
 
         JSONArray remoteData = new JSONArray(latest);
-        Log.d(Aware.TAG, "Latest: " + remoteData.toString(5));
 
         int TOTAL_RECORDS = 0;
         if (remoteData.length() == 0) {
