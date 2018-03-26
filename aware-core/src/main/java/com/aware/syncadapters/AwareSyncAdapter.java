@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SyncResult;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -376,6 +377,9 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
         long last_sync_timestamp;
 
         Cursor lastSynched = mContext.getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE '{\"table\":\"" + database_table + "\", \"last_sync_timestamp\":%'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
+
+        Log.d(Aware.TAG, DatabaseUtils.dumpCursorToString(lastSynched));
+
         if (lastSynched != null && lastSynched.moveToFirst()) {
             try {
                 JSONObject logSyncData = new JSONObject(lastSynched.getString(lastSynched.getColumnIndex(Aware_Provider.Aware_Log.LOG_MESSAGE)));
