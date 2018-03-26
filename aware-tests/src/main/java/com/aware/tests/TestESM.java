@@ -282,7 +282,8 @@ public class TestESM implements AwareTest {
             esmPAM.setTitle("PAM")
                     .setInstructions("Pick the closest to how you feel right now.")
                     .setSubmitButton("OK")
-                    .setTrigger("AWARE Test");
+                    .setTrigger("AWARE Test")
+                    .setAppIntegration("fourtwentystudy://");
 
             factory.addESM(esmFreetext);
             factory.addESM(esmCheckbox);

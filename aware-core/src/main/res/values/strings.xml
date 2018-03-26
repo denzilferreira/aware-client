@@ -27,4 +27,33 @@
     <string name="foreground_notification_title">AWARE</string>
     <string name="foreground_notification_text">Data collection active</string>
     <string name="foreground_notification_sync_text">Sync</string>
+
+    <string name="sensor_accelerometer">Accelerometer</string>
+    <string name="sensor_applications">Applications</string>
+    <string name="sensor_bluetooth">Bluetooth</string>
+    <string name="sensor_locations">Locations</string>
+    <string name="sensor_installations">Installations</string>
+    <string name="sensor_esms">Mobile questionnaires/ESM</string>
+    <string name="sensor_temperature">Temperature</string>
+    <string name="sensor_linear_accelerometer">Linear Accelerometer</string>
+    <string name="sensor_gravity">Gravity</string>
+    <string name="sensor_barometer">Barometer</string>
+    <string name="sensor_magnetometer">Magnetometer</string>
+    <string name="sensor_proximity">Proximity</string>
+    <string name="sensor_light">Light</string>
+    <string name="sensor_telephony">Telephony</string>
+    <string name="sensor_aware">AWARE device</string>
+    <string name="sensor_rotation">Rotation</string>
+    <string name="sensor_wifi">Wi-Fi</string>
+    <string name="sensor_gyroscope">Gyroscope</string>
+    <string name="sensor_traffic">Network traffic</string>
+    <string name="sensor_processor">Processor (CPU)</string>
+    <string name="sensor_timezone">Timezone</string>
+    <string name="sensor_battery">Battery</string>
+    <string name="sensor_screen">Screen</string>
+    <string name="sensor_network_usage">Network</string>
+    <string name="sensor_communications">Communications (call/text)</string>
+    <string name="sensor_keyboard">Keyboard</string>
+    <string name="sensor_significant">Significant motion</string>
+
 </resources>

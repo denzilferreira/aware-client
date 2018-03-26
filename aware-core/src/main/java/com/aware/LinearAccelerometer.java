@@ -2,10 +2,12 @@
 package com.aware;
 
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SyncRequest;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
@@ -13,15 +15,12 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Binder;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
-
 
 import com.aware.providers.Linear_Accelerometer_Provider;
 import com.aware.providers.Linear_Accelerometer_Provider.Linear_Accelerometer_Data;
@@ -30,7 +29,6 @@ import com.aware.utils.Aware_Sensor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.lang.Math;
 
 /**
  * @author df
@@ -63,9 +61,6 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
      * ContentProvider: LinearAccelerationProvider
      */
     public static final String ACTION_AWARE_LINEAR_ACCELEROMETER = "ACTION_AWARE_LINEAR_ACCELEROMETER";
-    public static final String EXTRA_DATA = "data";
-    public static final String EXTRA_SENSOR = "sensor";
-
     public static final String ACTION_AWARE_LINEAR_LABEL = "ACTION_AWARE_LINEAR_LABEL";
     public static final String EXTRA_LABEL = "label";
 
@@ -97,11 +92,19 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
     public void onSensorChanged(SensorEvent event) {
         if (SignificantMotion.isSignificantMotionActive && !SignificantMotion.CURRENT_SIGMOTION_STATE) {
             if (data_values.size() > 0) {
-                ContentValues[] data_buffer = new ContentValues[data_values.size()];
+                final ContentValues[] data_buffer = new ContentValues[data_values.size()];
                 data_values.toArray(data_buffer);
                 try {
                     if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true")) {
-                        new AsyncStore().execute(data_buffer);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                getContentResolver().bulkInsert(Linear_Accelerometer_Provider.Linear_Accelerometer_Data.CONTENT_URI, data_buffer);
+
+                                Intent newData = new Intent(ACTION_AWARE_LINEAR_ACCELEROMETER);
+                                sendBroadcast(newData);
+                            }
+                        }).run();
                     }
                 } catch (SQLiteException e) {
                     if (Aware.DEBUG) Log.d(TAG, e.getMessage());
@@ -115,7 +118,7 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
         }
 
         long TS = System.currentTimeMillis();
-        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY/1000 )
+        if (ENFORCE_FREQUENCY && TS < LAST_TS + FREQUENCY / 1000)
             return;
         if (LAST_VALUES != null && THRESHOLD > 0 && Math.abs(event.values[0] - LAST_VALUES[0]) < THRESHOLD
                 && Math.abs(event.values[1] - LAST_VALUES[1]) < THRESHOLD
@@ -137,22 +140,26 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
         data_values.add(rowData);
         LAST_TS = TS;
 
-        Intent accelData = new Intent(ACTION_AWARE_LINEAR_ACCELEROMETER);
-        accelData.putExtra(EXTRA_DATA, rowData);
-        sendBroadcast(accelData);
-
-        if (Aware.DEBUG) Log.d(TAG, "Linear-accelerometer:" + rowData.toString());
+        if (awareSensor != null) awareSensor.onLinearAccelChanged(rowData);
 
         if (data_values.size() < 250 && TS < LAST_SAVE + 300000) {
             return;
         }
 
-        ContentValues[] data_buffer = new ContentValues[data_values.size()];
+        final ContentValues[] data_buffer = new ContentValues[data_values.size()];
         data_values.toArray(data_buffer);
 
         try {
             if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true")) {
-                new AsyncStore().execute(data_buffer);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        getContentResolver().bulkInsert(Linear_Accelerometer_Provider.Linear_Accelerometer_Data.CONTENT_URI, data_buffer);
+
+                        Intent newData = new Intent(ACTION_AWARE_LINEAR_ACCELEROMETER);
+                        sendBroadcast(newData);
+                    }
+                }).run();
             }
         } catch (SQLiteException e) {
             if (Aware.DEBUG) Log.d(TAG, e.getMessage());
@@ -163,15 +170,18 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
         LAST_SAVE = TS;
     }
 
-    /**
-     * Database I/O on different thread
-     */
-    private class AsyncStore extends AsyncTask<ContentValues[], Void, Void> {
-        @Override
-        protected Void doInBackground(ContentValues[]... data) {
-            getContentResolver().bulkInsert(Linear_Accelerometer_Data.CONTENT_URI, data[0]);
-            return null;
-        }
+    private static LinearAccelerometer.AWARESensorObserver awareSensor;
+
+    public static void setSensorObserver(LinearAccelerometer.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+
+    public static LinearAccelerometer.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
+
+    public interface AWARESensorObserver {
+        void onLinearAccelChanged(ContentValues data);
     }
 
     /**
@@ -208,10 +218,6 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
 
             getContentResolver().insert(Linear_Accelerometer_Sensor.CONTENT_URI, rowData);
 
-            Intent accel_dev = new Intent(ACTION_AWARE_LINEAR_ACCELEROMETER);
-            accel_dev.putExtra(EXTRA_SENSOR, rowData);
-            sendBroadcast(accel_dev);
-
             if (Aware.DEBUG) Log.d(TAG, "Linear-accelerometer sensor: " + rowData.toString());
         }
         if (accelInfo != null && !accelInfo.isClosed()) accelInfo.close();
@@ -220,6 +226,8 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
     @Override
     public void onCreate() {
         super.onCreate();
+
+        AUTHORITY = Linear_Accelerometer_Provider.getAuthority(this);
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         mLinearAccelerator = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
@@ -232,10 +240,6 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
         wakeLock.acquire();
 
         sensorHandler = new Handler(sensorThread.getLooper());
-
-        DATABASE_TABLES = Linear_Accelerometer_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Linear_Accelerometer_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Linear_Accelerometer_Sensor.CONTENT_URI, Linear_Accelerometer_Data.CONTENT_URI};
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_AWARE_LINEAR_LABEL);
@@ -256,12 +260,19 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
 
         unregisterReceiver(dataLabeler);
 
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Linear_Accelerometer_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                Linear_Accelerometer_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
+
         if (Aware.DEBUG) Log.d(TAG, "Linear-accelerometer service terminated...");
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        super.onStartCommand(intent,flags, startId);
+        super.onStartCommand(intent, flags, startId);
 
         if (PERMISSIONS_OK) {
             if (mLinearAccelerator == null) {
@@ -301,7 +312,19 @@ public class LinearAccelerometer extends Aware_Sensor implements SensorEventList
                 mSensorManager.registerListener(this, mLinearAccelerator, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_LINEAR_ACCELEROMETER)), sensorHandler);
                 LAST_SAVE = System.currentTimeMillis();
 
-                if (Aware.DEBUG) Log.d(TAG, "Linear-accelerometer service active: " + FREQUENCY + "ms");
+                if (Aware.DEBUG)
+                    Log.d(TAG, "Linear-accelerometer service active: " + FREQUENCY + "ms");
+
+                if (Aware.isStudy(this)) {
+                    ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Linear_Accelerometer_Provider.getAuthority(this), 1);
+                    ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Linear_Accelerometer_Provider.getAuthority(this), true);
+                    long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
+                    SyncRequest request = new SyncRequest.Builder()
+                            .syncPeriodic(frequency, frequency / 3)
+                            .setSyncAdapter(Aware.getAWAREAccount(this), Linear_Accelerometer_Provider.getAuthority(this))
+                            .setExtras(new Bundle()).build();
+                    ContentResolver.requestSync(request);
+                }
             }
         }
 

@@ -1,23 +1,22 @@
 
 package com.aware;
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.content.SyncRequest;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
-import android.net.Uri;
-import android.os.Binder;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.aware.providers.Processor_Provider;
 import com.aware.providers.Processor_Provider.Processor_Data;
-import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 
 import java.io.BufferedReader;
@@ -92,6 +91,9 @@ public class Processor extends Aware_Sensor {
 
             try {
                 getContentResolver().insert(Processor_Data.CONTENT_URI, rowData);
+
+                if (awareSensor != null) awareSensor.onChanged(rowData);
+
             } catch (SQLiteException e) {
                 if (Aware.DEBUG) Log.d(TAG, e.getMessage());
             } catch (SQLException e) {
@@ -106,11 +108,15 @@ public class Processor extends Aware_Sensor {
             if (idle_percentage <= 10) {
                 Intent stressed = new Intent(ACTION_AWARE_PROCESSOR_STRESSED);
                 sendBroadcast(stressed);
+
+                if (awareSensor != null) awareSensor.onOverloaded();
             }
 
             if (idle_percentage >= 90) {
                 Intent relaxed = new Intent(ACTION_AWARE_PROCESSOR_RELAXED);
                 sendBroadcast(relaxed);
+
+                if (awareSensor != null) awareSensor.onIdle();
             }
 
             mHandler.postDelayed(mRunnable, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_PROCESSOR)) * 1000);
@@ -124,13 +130,39 @@ public class Processor extends Aware_Sensor {
         return null;
     }
 
+    private static Processor.AWARESensorObserver awareSensor;
+
+    public static void setSensorObserver(Processor.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+
+    public static Processor.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
+
+    public interface AWARESensorObserver {
+        /**
+         * CPU load is >=90%
+         */
+        void onOverloaded();
+
+        /**
+         * CPU load is <=10%
+         */
+        void onIdle();
+
+        /**
+         * CPU load updated
+         *
+         * @param data
+         */
+        void onChanged(ContentValues data);
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
-
-        DATABASE_TABLES = Processor_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Processor_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Processor_Data.CONTENT_URI};
+        AUTHORITY = Processor_Provider.getAuthority(this);
 
         if (Aware.DEBUG) Log.d(TAG, "Processor service created");
     }
@@ -143,6 +175,9 @@ public class Processor extends Aware_Sensor {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 Log.d(TAG, "Processor service is not allowed by Google, buuuu. Disabling sensor...");
+
+                Toast.makeText(getApplicationContext(), "Google has disabled processor sensor: Android N (7+).", Toast.LENGTH_LONG).show();
+
                 Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_PROCESSOR, false);
                 Aware.stopProcessor(getApplicationContext());
                 stopSelf();
@@ -168,6 +203,17 @@ public class Processor extends Aware_Sensor {
             }
 
             if (Aware.DEBUG) Log.d(TAG, "Processor service active: " + FREQUENCY + "s");
+
+            if (Aware.isStudy(this)) {
+                ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Processor_Provider.getAuthority(this), 1);
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Processor_Provider.getAuthority(this), true);
+                long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
+                SyncRequest request = new SyncRequest.Builder()
+                        .syncPeriodic(frequency, frequency / 3)
+                        .setSyncAdapter(Aware.getAWAREAccount(this), Processor_Provider.getAuthority(this))
+                        .setExtras(new Bundle()).build();
+                ContentResolver.requestSync(request);
+            }
         }
 
         return START_STICKY;
@@ -178,6 +224,13 @@ public class Processor extends Aware_Sensor {
         super.onDestroy();
 
         mHandler.removeCallbacks(mRunnable);
+
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Processor_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                Processor_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
 
         if (Aware.DEBUG) Log.d(TAG, "Processor service terminated...");
     }
@@ -193,8 +246,8 @@ public class Processor extends Aware_Sensor {
     public static HashMap<String, Integer> getProcessorLoad() {
         HashMap<String, Integer> processor = new HashMap<String, Integer>();
         processor.put("user", 0);
-        processor.put("system",0);
-        processor.put("idle",0);
+        processor.put("system", 0);
+        processor.put("idle", 0);
 
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream("/proc/stat")), 5000);

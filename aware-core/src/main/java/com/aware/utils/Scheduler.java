@@ -1,7 +1,5 @@
 package com.aware.utils;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentValues;
@@ -10,8 +8,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteException;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
@@ -25,25 +24,26 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Locale;
+import java.util.Random;
 
 public class Scheduler extends Aware_Sensor {
 
-    private static String TAG = "AWARE::Scheduler";
-
     public static final String ACTION_AWARE_SCHEDULER_CHECK = "ACTION_AWARE_SCHEDULER_CHECK";
-
     public static final String ACTION_AWARE_SCHEDULER_TRIGGERED = "ACTION_AWARE_SCHEDULER_TRIGGERED";
     public static final String EXTRA_SCHEDULER_ID = "extra_scheduler_id";
-
     public static final String SCHEDULE_TRIGGER = "trigger";
     public static final String SCHEDULE_ACTION = "action";
     public static final String SCHEDULE_ID = "schedule_id";
-
     public static final String TRIGGER_INTERVAL = "interval";
     public static final String TRIGGER_INTERVAL_DELAYED = "interval_delayed";
     public static final String TRIGGER_MINUTE = "minute";
@@ -54,20 +54,16 @@ public class Scheduler extends Aware_Sensor {
     public static final String TRIGGER_CONTEXT = "context";
     public static final String TRIGGER_CONDITION = "condition";
     public static final String TRIGGER_RANDOM = "random";
-
     public static final String CONDITION_URI = "condition_uri";
     public static final String CONDITION_WHERE = "condition_where";
-
     /**
      * How many times per day
      */
     public static final String RANDOM_TIMES = "random_times";
-
     /**
      * Minimum amount of elapsed time until we may trigger again
      */
     public static final String RANDOM_INTERVAL = "random_interval";
-
     /**
      * Defines the type of action (e.g., broadcast, service or activity)
      */
@@ -75,7 +71,6 @@ public class Scheduler extends Aware_Sensor {
     public static final String ACTION_TYPE_BROADCAST = "broadcast";
     public static final String ACTION_TYPE_SERVICE = "service";
     public static final String ACTION_TYPE_ACTIVITY = "activity";
-
     /**
      * Used only if action type is service or activity
      * Defined as package/package.service_class or package/package.activity_class
@@ -85,24 +80,21 @@ public class Scheduler extends Aware_Sensor {
      * Would open the main client UI with the Aware_Client activity class
      */
     public static final String ACTION_CLASS = "class";
-
     /**
      * Used to specify the intent action for broadcasts, activities and services
      */
     public static final String ACTION_INTENT_ACTION = "intent_action";
-
     /**
      * Used to define intent extras, if needed
      */
     public static final String ACTION_EXTRAS = "extras";
     public static final String ACTION_EXTRA_KEY = "extra_key";
     public static final String ACTION_EXTRA_VALUE = "extra_value";
-
     //String is the scheduler ID, and hashtable contains list of IntentFilters and BroadcastReceivers
     private static final Hashtable<String, Hashtable<IntentFilter, BroadcastReceiver>> schedulerListeners = new Hashtable<>();
-
     //String is the scheduler ID, and hashtable contains list of Uri and ContentObservers
     private static final Hashtable<String, Hashtable<Uri, ContentObserver>> schedulerDataObservers = new Hashtable<>();
+    private static String TAG = "AWARE::Scheduler";
 
     /**
      * Save the defined scheduled task
@@ -113,14 +105,14 @@ public class Scheduler extends Aware_Sensor {
     public static void saveSchedule(Context context, Schedule schedule) {
         try {
             ArrayList<String> global_settings = new ArrayList<>();
-            global_settings.add(Aware.SCHEDULE_SYNC_DATA);
+            //global_settings.add(Aware.SCHEDULE_SYNC_DATA);
 
             boolean is_global = global_settings.contains(schedule.getScheduleID());
 
             if (context.getResources().getBoolean(R.bool.standalone))
                 is_global = false;
 
-            if (schedule.getRandom().length() != 0) {
+            if (schedule.getRandom().length() != 0 && schedule.getTimer() == -1) {
 
                 JSONObject random = schedule.getRandom();
 
@@ -132,36 +124,35 @@ public class Scheduler extends Aware_Sensor {
                 int latest = schedule.getDailyLatest();
 
                 start.set(Calendar.HOUR_OF_DAY, earliest);
-                start.set(Calendar.MINUTE, start.get(Calendar.MINUTE));
-                start.set(Calendar.SECOND, start.get(Calendar.SECOND));
-                start.set(Calendar.MILLISECOND, start.get(Calendar.MILLISECOND));
+                start.set(Calendar.MINUTE, 0);
+                start.set(Calendar.SECOND, 0);
+                start.set(Calendar.MILLISECOND, 0);
 
                 end.set(Calendar.HOUR_OF_DAY, latest);
                 end.set(Calendar.MINUTE, 59);
                 end.set(Calendar.SECOND, 59);
                 end.set(Calendar.MILLISECOND, 999);
 
-                if (now.get(Calendar.HOUR_OF_DAY) > earliest) { //earliest today is earlier today, let's assign randoms for the rest of today
-                    start.set(Calendar.HOUR_OF_DAY, now.get(Calendar.HOUR_OF_DAY));
-                    start.add(Calendar.MINUTE, 15); //schedule randomly 15 minutes from now->latest
-
-                    Log.d(TAG, "Random times set for today between " + start.getTime().toString() + " and " + end.getTime().toString());
+                String original_id = schedule.getScheduleID();
+                String random_seed = original_id;
+                random_seed += "-" + Aware.getSetting(context, Aware_Preferences.DEVICE_ID);
+                // Get the random events for today
+                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), random_seed);
+                // Remove events that are in the past
+                Iterator<Long> iter = randoms.iterator();
+                while (iter.hasNext()) {
+                    if (iter.next() < now.getTimeInMillis() + 2 * 1000) {
+                        iter.remove();
+                    }
                 }
-
-                if (now.get(Calendar.HOUR_OF_DAY) > latest) { //too late to schedule them today, schedule for the next day starting at the earliest hour onwards
+                Log.d(TAG, "Random times for today between " + start.getTime().toString() + " and " + end.getTime().toString() + ":  " + randoms.size() + " left");
+                // If we have no events left today, reschedule for tomorrow instead.
+                if (randoms.size() <= 0) {
                     start.add(Calendar.DAY_OF_YEAR, 1);
-                    start.set(Calendar.HOUR_OF_DAY, earliest);
-                    start.set(Calendar.MINUTE, 0);
-                    start.set(Calendar.SECOND, 0);
-                    start.set(Calendar.MILLISECOND, 0);
-
                     end.add(Calendar.DAY_OF_YEAR, 1);
-
+                    randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), random_seed);
                     Log.d(TAG, "Random times set for tomorrow between " + start.getTime().toString() + " and " + end.getTime().toString());
                 }
-
-                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
-                String original_id = schedule.getScheduleID();
 
                 long max = getLastRandom(randoms);
                 for (Long r : randoms) {
@@ -178,15 +169,10 @@ public class Scheduler extends Aware_Sensor {
                         schedule.setScheduleID(original_id + "_random_" + r);
                     }
 
-                    ContentValues data = new ContentValues();
-                    data.put(Scheduler_Provider.Scheduler_Data.TIMESTAMP, System.currentTimeMillis());
-                    data.put(Scheduler_Provider.Scheduler_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                    data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID, schedule.getScheduleID());
-                    data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE, schedule.build().toString());
-                    data.put(Scheduler_Provider.Scheduler_Data.PACKAGE_NAME, (is_global) ? "com.aware.phone" : context.getPackageName());
-
-                    Log.d(Scheduler.TAG, "Random schedule: " + data.toString() + "\n");
-                    context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
+                    Log.d(Scheduler.TAG, "Random schedule: " + schedule.getScheduleID() + "\n");
+                    // Recursively call saveSchedule.  This does not end up here again, because
+                    // now there is a timer set.
+                    saveSchedule(context, schedule);
                 }
             } else {
                 ContentValues data = new ContentValues();
@@ -198,11 +184,23 @@ public class Scheduler extends Aware_Sensor {
 
                 Cursor schedules = context.getContentResolver().query(Scheduler_Provider.Scheduler_Data.CONTENT_URI, null, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + context.getPackageName() + "'", null, null);
                 if (schedules != null && schedules.getCount() == 1) {
-                    Log.d(Scheduler.TAG, "Updating already existing schedule...");
-                    context.getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + ((is_global) ? "com.aware.phone" : context.getPackageName()) + "'", null);
+                    try {
+                        Log.d(Scheduler.TAG, "Updating already existing schedule...");
+                        context.getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + ((is_global) ? "com.aware.phone" : context.getPackageName()) + "'", null);
+                    } catch (SQLiteException e) {
+                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                    } catch (SQLException e) {
+                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                    }
                 } else {
-                    Log.d(Scheduler.TAG, "New schedule: " + data.toString());
-                    context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
+                    try {
+                        Log.d(Scheduler.TAG, "New schedule: " + data.toString());
+                        context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
+                    } catch (SQLiteException e) {
+                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                    } catch (SQLException e) {
+                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                    }
                 }
 
                 if (schedules != null && !schedules.isClosed()) schedules.close();
@@ -223,7 +221,7 @@ public class Scheduler extends Aware_Sensor {
      */
     public static void saveSchedule(Context context, Schedule schedule, String package_name) {
         try {
-            if (schedule.getRandom().length() != 0) {
+            if (schedule.getRandom().length() != 0 && schedule.getTimer() == -1) {
 
                 JSONObject random = schedule.getRandom();
 
@@ -235,37 +233,35 @@ public class Scheduler extends Aware_Sensor {
                 int latest = schedule.getDailyLatest();
 
                 start.set(Calendar.HOUR_OF_DAY, earliest);
-                start.set(Calendar.MINUTE, start.get(Calendar.MINUTE));
-                start.set(Calendar.SECOND, start.get(Calendar.SECOND));
-                start.set(Calendar.MILLISECOND, start.get(Calendar.MILLISECOND));
+                start.set(Calendar.MINUTE, 0);
+                start.set(Calendar.SECOND, 0);
+                start.set(Calendar.MILLISECOND, 0);
 
                 end.set(Calendar.HOUR_OF_DAY, latest);
                 end.set(Calendar.MINUTE, 59);
                 end.set(Calendar.SECOND, 59);
                 end.set(Calendar.MILLISECOND, 999);
 
-                if (now.get(Calendar.HOUR_OF_DAY) > earliest) { //earliest today is earlier today, let's assign randoms for the rest of today
-                    start.set(Calendar.HOUR_OF_DAY, now.get(Calendar.HOUR_OF_DAY));
-                    start.add(Calendar.MINUTE, 15); //schedule randomly 15 minutes from now->latest
-
-                    Log.d(TAG, "Random times set for today between " + start.getTime().toString() + " and " + end.getTime().toString());
+                String original_id = schedule.getScheduleID();
+                String random_seed = original_id;
+                random_seed += "-" + Aware.getSetting(context, Aware_Preferences.DEVICE_ID);
+                // Get the random events for today
+                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), random_seed);
+                // Remove events that are in the past
+                Iterator<Long> iter = randoms.iterator();
+                while (iter.hasNext()) {
+                    if (iter.next() < now.getTimeInMillis() + 2 * 1000) {
+                        iter.remove();
+                    }
                 }
-
-                //too late to schedule them today, schedule for the next day
-                if (now.get(Calendar.HOUR_OF_DAY) > latest) {
+                Log.d(TAG, "Random times for today between " + start.getTime().toString() + " and " + end.getTime().toString() + ":  " + randoms.size() + " left");
+                // If we have no events left today, reschedule for tomorrow instead.
+                if (randoms.size() <= 0) {
                     start.add(Calendar.DAY_OF_YEAR, 1);
-                    start.set(Calendar.HOUR_OF_DAY, earliest);
-                    start.set(Calendar.MINUTE, 0);
-                    start.set(Calendar.SECOND, 0);
-                    start.set(Calendar.MILLISECOND, 0);
-
                     end.add(Calendar.DAY_OF_YEAR, 1);
-
+                    randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), random_seed);
                     Log.d(TAG, "Random times set for tomorrow between " + start.getTime().toString() + " and " + end.getTime().toString());
                 }
-
-                ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
-                String original_id = schedule.getScheduleID();
 
                 long max = getLastRandom(randoms);
 
@@ -283,15 +279,10 @@ public class Scheduler extends Aware_Sensor {
                         schedule.setScheduleID(original_id + "_random_" + r);
                     }
 
-                    ContentValues data = new ContentValues();
-                    data.put(Scheduler_Provider.Scheduler_Data.TIMESTAMP, System.currentTimeMillis());
-                    data.put(Scheduler_Provider.Scheduler_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                    data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE_ID, schedule.getScheduleID());
-                    data.put(Scheduler_Provider.Scheduler_Data.SCHEDULE, schedule.build().toString());
-                    data.put(Scheduler_Provider.Scheduler_Data.PACKAGE_NAME, package_name);
-
-                    Log.d(Scheduler.TAG, "Random schedule: " + data.toString() + "\n");
-                    context.getContentResolver().insert(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data);
+                    Log.d(Scheduler.TAG, "Random schedule: " + schedule.getScheduleID() + "\n");
+                    // Recursively call saveSchedule.  This does not end up here again, because
+                    // now there is a timer set.
+                    saveSchedule(context, schedule, package_name);
                 }
             } else {
                 ContentValues data = new ContentValues();
@@ -352,8 +343,10 @@ public class Scheduler extends Aware_Sensor {
 
             Log.d(TAG, "Random times set for tomorrow between " + start.getTime().toString() + " and " + end.getTime().toString());
 
-            ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL));
             String original_id = schedule.getScheduleID();
+            String random_seed = original_id;
+            random_seed += "-" + Aware.getSetting(context, Aware_Preferences.DEVICE_ID);
+            ArrayList<Long> randoms = random_times(start, end, random.getInt(RANDOM_TIMES), random.getInt(RANDOM_INTERVAL), random_seed);
 
             long max = getLastRandom(randoms);
 
@@ -396,7 +389,7 @@ public class Scheduler extends Aware_Sensor {
     public static void removeSchedule(Context context, String schedule_id) {
 
         ArrayList<String> global_settings = new ArrayList<>();
-        global_settings.add(Aware.SCHEDULE_SYNC_DATA);
+        //global_settings.add(Aware.SCHEDULE_SYNC_DATA);
 
         boolean is_global = global_settings.contains(schedule_id);
         if (context.getResources().getBoolean(R.bool.standalone))
@@ -432,7 +425,7 @@ public class Scheduler extends Aware_Sensor {
     public static Schedule getSchedule(Context context, String schedule_id) {
 
         ArrayList<String> global_settings = new ArrayList<>();
-        global_settings.add(Aware.SCHEDULE_SYNC_DATA);
+        //global_settings.add(Aware.SCHEDULE_SYNC_DATA);
 
         boolean is_global = global_settings.contains(schedule_id);
         if (context.getResources().getBoolean(R.bool.standalone))
@@ -542,389 +535,80 @@ public class Scheduler extends Aware_Sensor {
     }
 
     /**
-     * Scheduler object that contains<br/>
-     * - schedule ID<br/>
-     * - schedule action<br/>
-     * - schedule trigger
+     * Given a timeframe, a number of randoms and a minimum time interval, return a list of timestamps
+     *
+     * @param start
+     * @param end
+     * @param amount           number of times
+     * @param interval_minutes how much time is set between timestamps, in minutes
+     * @return ArrayList<Long> of timestamps between interval
      */
-    public static class Schedule {
-
-        private JSONObject schedule = new JSONObject();
-        private JSONObject trigger = new JSONObject();
-        private JSONObject action = new JSONObject();
-
-        public Schedule(String schedule_id) {
-            try {
-                this.schedule.put(SCHEDULE_ID, schedule_id);
-                this.schedule.put(SCHEDULE_ACTION, this.action);
-                this.schedule.put(SCHEDULE_TRIGGER, this.trigger);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+    public static ArrayList<Long> random_times(Calendar start, Calendar end, int amount, int interval_minutes, String random_seed) {
+        //String seed = "hJYAe7cV";
+        ArrayList<Long> randomList = new ArrayList<>();
+        random_seed = String.format("%s-%d-%d", random_seed, start.get(Calendar.YEAR), start.get(Calendar.DAY_OF_YEAR));
+        long random_seed_int = 13;
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(random_seed.getBytes("UTF-8"));
+            byte[] digest = md.digest();
+            random_seed_int = (((((((digest[0] << 8 + digest[1]) << 8 + digest[2]) << 8 + digest[3]) << 8)
+                    + digest[4] << 8) + digest[5] << 8) + digest[6] << 8) + digest[7];
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
 
-        public Schedule(JSONObject schedule) {
-            this.rebuild(schedule);
+        Random rng = new Random(random_seed_int);
+
+        long totalInterval = end.getTimeInMillis() - start.getTimeInMillis();
+        long minDifferenceMillis = interval_minutes * 60 * 1000;
+        long effectiveInterval = totalInterval - minDifferenceMillis * (amount - 1);
+
+        // Create random intervals without the minimum interval.
+        while (randomList.size() < amount) {
+            long random = start.getTimeInMillis() + (long) (rng.nextDouble() * effectiveInterval);
+            randomList.add(random);
+        }
+        // Sort and add the minimum intervals between all events.
+        Collections.sort(randomList);
+        for (int i = 0; i < randomList.size(); i++) {
+            randomList.set(i, randomList.get(i) + i * minDifferenceMillis);
         }
 
-        /**
-         * Rebuild schedule object from database JSON
-         *
-         * @param schedule
-         * @return
-         */
-        public Schedule rebuild(JSONObject schedule) {
-            try {
-                this.schedule = schedule.getJSONObject("schedule");
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            return this;
+        return randomList;
+    }
+
+    /**
+     * Given a timeframe, a number of random at a minimum interval in between, returns a list of possible timestamps in milliseconds
+     *
+     * @param start
+     * @param end
+     * @param amount
+     * @param interval_minutes
+     * @return ArrayList<Long> of timestamps between interval
+     */
+    public static ArrayList<Long> random_times(Calendar start, Calendar end, int amount, int interval_minutes) {
+        ArrayList<Long> randomList = new ArrayList<>();
+
+        Random rng = new Random();
+        long totalInterval = end.getTimeInMillis() - start.getTimeInMillis();
+        long minDifferenceMillis = interval_minutes * 60 * 1000;
+        long effectiveInterval = totalInterval - minDifferenceMillis * (amount - 1);
+
+        // Create random intervals without the minimum interval.
+        while (randomList.size() < amount) {
+            long random = start.getTimeInMillis() + (long) (rng.nextDouble() * effectiveInterval);
+            randomList.add(random);
+        }
+        // Sort and add the minimum intervals between all events.
+        Collections.sort(randomList);
+        for (int i = 0; i < randomList.size(); i++) {
+            randomList.set(i, randomList.get(i) + i * minDifferenceMillis);
         }
 
-        public Schedule setScheduleID(String new_id) throws JSONException {
-            this.schedule.put(SCHEDULE_ID, new_id);
-            return this;
-        }
-
-        public String getScheduleID() throws JSONException {
-            return this.schedule.getString(SCHEDULE_ID);
-        }
-
-        /**
-         * Generates a JSONObject representation for saving JSON to database
-         *
-         * @return
-         * @throws JSONException
-         */
-        public JSONObject build() throws JSONException {
-            JSONObject schedule = new JSONObject();
-            schedule.put("schedule", this.schedule);
-            return schedule;
-        }
-
-        public Schedule setActionType(String type) throws JSONException {
-            this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_TYPE, type);
-            return this;
-        }
-
-        /**
-         * Get type of action
-         *
-         * @return
-         * @throws JSONException
-         */
-        public String getActionType() throws JSONException {
-            return this.schedule.getJSONObject(SCHEDULE_ACTION).getString(ACTION_TYPE);
-        }
-
-        /**
-         * Get action class
-         *
-         * @return
-         * @throws JSONException
-         */
-        public String getActionClass() throws JSONException {
-            if (!this.schedule.getJSONObject(SCHEDULE_ACTION).has(ACTION_CLASS)) {
-                this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_CLASS, "");
-            }
-            return this.schedule.getJSONObject(SCHEDULE_ACTION).getString(ACTION_CLASS);
-        }
-
-        public Schedule setActionClass(String classname) throws JSONException {
-            this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_CLASS, classname);
-            return this;
-        }
-
-        public String getActionIntentAction() throws JSONException {
-            if (!this.schedule.getJSONObject(SCHEDULE_ACTION).has(ACTION_INTENT_ACTION)) {
-                this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_INTENT_ACTION, "");
-            }
-            return this.schedule.getJSONObject(SCHEDULE_ACTION).getString(ACTION_INTENT_ACTION);
-        }
-
-        public Schedule setActionIntentAction(String action) throws JSONException {
-            this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_INTENT_ACTION, action);
-            return this;
-        }
-
-        public Schedule setInterval(long minutes) throws JSONException {
-            this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_INTERVAL, minutes);
-            return this;
-        }
-
-        public Schedule addHour(int hour) throws JSONException {
-            JSONArray hours = getHours();
-            for (int i = 0; i < hours.length(); i++) {
-                int m = hours.getInt(i);
-                if (m == hour) return this;
-            }
-            hours.put(hour);
-            return this;
-        }
-
-        /**
-         * Return the latest hour of the day in which a random scheduler can be scheduled
-         *
-         * @return latest hour
-         * @throws JSONException
-         */
-        public int getDailyLatest() throws JSONException {
-            JSONArray hours = getHours();
-
-            //Handle case when random is requested without a time frame
-            if (hours.length() == 0) {
-                return 23;
-            }
-
-            int max = 0;
-            for (int i = 0; i < hours.length(); i++) {
-                if (hours.getInt(i) >= max) max = hours.getInt(i);
-            }
-
-            Log.d(TAG, "Latest random hour: " + max);
-
-            return max;
-        }
-
-        /**
-         * Return the earliest hour of the day in which a random scheduler can be scheduled
-         *
-         * @return earliest hour
-         * @throws JSONException
-         */
-        public int getDailyEarliest() throws JSONException {
-            JSONArray hours = getHours();
-
-            //Handle case when random is requested without a time frame
-            if (hours.length() == 0) {
-                return 0;
-            }
-
-            int min = 23;
-            for (int i = 0; i < hours.length(); i++) {
-                if (hours.getInt(i) <= min) min = hours.getInt(i);
-            }
-
-            Log.d(TAG, "Earliest random hour: " + min);
-
-            return min;
-        }
-
-        public Schedule addMinute(int minute) throws JSONException {
-            JSONArray minutes = getMinutes();
-            for (int i = 0; i < minutes.length(); i++) {
-                int m = minutes.getInt(i);
-                if (m == minute) return this;
-            }
-            minutes.put(minute);
-            return this;
-        }
-
-        public JSONArray getActionExtras() throws JSONException {
-            if (!this.schedule.getJSONObject(SCHEDULE_ACTION).has(ACTION_EXTRAS)) {
-                this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_EXTRAS, new JSONArray());
-            }
-            return this.schedule.getJSONObject(SCHEDULE_ACTION).getJSONArray(ACTION_EXTRAS);
-        }
-
-        public Schedule addActionExtra(String key, Object value) throws JSONException {
-            JSONArray extras = getActionExtras();
-            extras.put(new JSONObject().put(ACTION_EXTRA_KEY, key).put(ACTION_EXTRA_VALUE, value));
-            return this;
-        }
-
-        /**
-         * Get scheduled interval
-         *
-         * @return
-         * @throws JSONException
-         */
-        public long getInterval() throws JSONException {
-            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_INTERVAL)) {
-                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_INTERVAL, 0);
-            }
-            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getLong(TRIGGER_INTERVAL);
-        }
-
-        /**
-         * Get scheduled interval delay
-         * For some schedules, we don't want it to run immediately after we set it (mainly
-         * a schedule which updates the config itself).  If this setting is true, then do not
-         *
-         * @return true or false
-         * @throws JSONException
-         */
-        public long getIntervalDelayed() throws JSONException {
-            if (this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_INTERVAL_DELAYED)) {
-                return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getLong(TRIGGER_INTERVAL_DELAYED);
-            }
-            return 0;
-        }
-
-        /**
-         * Get scheduled minutes
-         *
-         * @return
-         * @throws JSONException
-         */
-        public JSONArray getMinutes() throws JSONException {
-            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_MINUTE)) {
-                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_MINUTE, new JSONArray());
-            }
-            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_MINUTE);
-        }
-
-        /**
-         * Get scheduled hours
-         *
-         * @return
-         */
-        public JSONArray getHours() throws JSONException {
-            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_HOUR)) {
-                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_HOUR, new JSONArray());
-            }
-            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_HOUR);
-        }
-
-        /**
-         * Set trigger to a specified date and time
-         *
-         * @param date
-         */
-        public Schedule setTimer(Calendar date) throws JSONException {
-            this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_TIMER, date.getTimeInMillis());
-            return this;
-        }
-
-        /**
-         * Get trigger specific unix timestamp
-         *
-         * @return
-         */
-        public long getTimer() throws JSONException {
-            if (this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_TIMER)) {
-                return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getLong(TRIGGER_TIMER);
-            }
-            return -1;
-        }
-
-        /**
-         * Add a weekday e.g., "Monday",...,"Sunday"
-         *
-         * @param week_day
-         * @return
-         * @throws JSONException
-         */
-        public Schedule addWeekday(String week_day) throws JSONException {
-            JSONArray weekdays = getWeekdays();
-            for (int i = 0; i < weekdays.length(); i++) {
-                String m = weekdays.getString(i);
-                if (m.equalsIgnoreCase(week_day)) return this;
-            }
-            weekdays.put(week_day);
-            return this;
-        }
-
-        /**
-         * Get days of week in which this trigger is scheduled
-         *
-         * @return
-         */
-        public JSONArray getWeekdays() throws JSONException {
-            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_WEEKDAY)) {
-                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_WEEKDAY, new JSONArray());
-            }
-            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_WEEKDAY);
-        }
-
-        /**
-         * Add a month e.g., "January",...,"December"
-         *
-         * @param month
-         * @return
-         * @throws JSONException
-         */
-        public Schedule addMonth(String month) throws JSONException {
-            JSONArray months = getMonths();
-            for (int i = 0; i < months.length(); i++) {
-                String m = months.getString(i);
-                if (m.equalsIgnoreCase(month)) return this;
-            }
-            months.put(month);
-            return this;
-        }
-
-        /**
-         * Get months where schedule is valid
-         *
-         * @return
-         */
-        public JSONArray getMonths() throws JSONException {
-            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_MONTH)) {
-                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_MONTH, new JSONArray());
-            }
-            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_MONTH);
-        }
-
-        public JSONObject getRandom() throws JSONException {
-            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_RANDOM)) {
-                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_RANDOM, new JSONObject());
-            }
-            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONObject(TRIGGER_RANDOM);
-        }
-
-        public Schedule addCondition(Uri content_uri, String where) throws JSONException {
-            JSONArray conditions = getConditions();
-            JSONObject condition = new JSONObject();
-            condition.put(CONDITION_URI, content_uri.toString());
-            condition.put(CONDITION_WHERE, where);
-            conditions.put(condition);
-            return this;
-        }
-
-        public JSONArray getConditions() throws JSONException {
-            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_CONDITION)) {
-                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_CONDITION, new JSONArray());
-            }
-            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_CONDITION);
-        }
-
-        /**
-         * Listen for this contextual broadcast to trigger this schedule
-         *
-         * @param broadcast e.g., ACTION_AWARE_CALL_ACCEPTED runs this schedule when the user has answered a phone call
-         */
-        public Schedule addContext(String broadcast) throws JSONException {
-            JSONArray contexts = getContexts();
-            contexts.put(broadcast);
-            return this;
-        }
-
-        /**
-         * Returns the list of contexts which trigger this schedule
-         *
-         * @return
-         * @throws JSONException
-         */
-        public JSONArray getContexts() throws JSONException {
-            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_CONTEXT)) {
-                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_CONTEXT, new JSONArray());
-            }
-            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_CONTEXT);
-        }
-
-        /**
-         * Set random schedules between two dates. Define the total amount of times per day, with at least X interval minutes apart
-         *
-         * @throws JSONException
-         */
-        public Schedule random(int daily_amount, int minimum_interval) throws JSONException {
-            JSONObject json_random = getRandom();
-            json_random.put(RANDOM_TIMES, daily_amount);
-            json_random.put(RANDOM_INTERVAL, minimum_interval);
-            return this;
-        }
+        return randomList;
     }
 
     @Override
@@ -933,80 +617,25 @@ public class Scheduler extends Aware_Sensor {
         if (DEBUG) Log.d(TAG, "Scheduler is created");
     }
 
-    /**
-     * Scheduler's ContentObservers
-     */
-    private class DBObserver extends ContentObserver {
-        private Uri data;
-        private String condition;
-        private Schedule schedule;
-
-        DBObserver(Handler h) {
-            super(h);
-        }
-
-        DBObserver setSchedule(Schedule s) {
-            this.schedule = s;
-            return this;
-        }
-
-        DBObserver setData(Uri content_uri) {
-            this.data = content_uri;
-            return this;
-        }
-
-        DBObserver setCondition(String where) {
-            this.condition = where;
-            return this;
-        }
-
-        @Override
-        public void onChange(boolean selfChange) {
-            super.onChange(selfChange);
-
-            if (DEBUG) Log.d(Aware.TAG, "Checking condition : " + data.toString() + " where: " + condition);
-
-            if (this.data != null && this.condition.length() > 0) {
-
-                boolean condition_met = false;
-
-                Cursor rows = getContentResolver().query(this.data, null, this.condition, null, null);
-                if (rows != null && rows.moveToFirst() && rows.getCount() > 0) {
-                    condition_met = true;
-                }
-                if (rows != null && !rows.isClosed()) rows.close();
-
-                if (condition_met) {
-                    if (is_trigger(schedule)) {
-                        performAction(schedule);
-                        if (DEBUG) Log.d(Aware.TAG, "Condition triggered: " + data.toString() + " where: " + condition);
-                    }
-                }
-            }
-        }
-    }
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
 
         if (PERMISSIONS_OK) {
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
-                Intent scheduler = new Intent(this, Scheduler.class);
-                PendingIntent repeating = PendingIntent.getService(getApplicationContext(), 0, scheduler, PendingIntent.FLAG_UPDATE_CURRENT);
-                am.setAlarmClock(new AlarmManager.AlarmClockInfo(System.currentTimeMillis() + (60000), repeating), repeating); //next minute
-            } else {
-                //no-op: using a repeating alarm for older versions of Android.
+            //Restores core AWARE service in case it get's killed
+            if (!Aware.IS_CORE_RUNNING) {
+                Intent aware = new Intent(getApplicationContext(), Aware.class);
+                startService(aware);
             }
+
 
             DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
 
             if (DEBUG) Log.d(TAG, "Checking for scheduled tasks: " + getPackageName());
 
             String standalone = "";
-            if (getResources().getBoolean(R.bool.standalone)) {
+            if (getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
                 standalone = " OR " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE 'com.aware.phone'";
             }
 
@@ -1045,7 +674,8 @@ public class Scheduler extends Aware_Sensor {
                                     @Override
                                     public void onReceive(Context context, Intent intent) {
                                         if (is_trigger(schedule)) {
-                                            if (DEBUG) Log.d(TAG, "Triggered contextual trigger: " + contexts.toString());
+                                            if (DEBUG)
+                                                Log.d(TAG, "Triggered contextual trigger: " + contexts.toString());
 
                                             performAction(schedule);
                                         }
@@ -1059,11 +689,13 @@ public class Scheduler extends Aware_Sensor {
 
                                 registerReceiver(listener, filter);
 
-                                if (DEBUG) Log.d(TAG, "Registered a contextual trigger for " + contexts.toString());
+                                if (DEBUG)
+                                    Log.d(TAG, "Registered a contextual trigger for " + contexts.toString());
 
                             } else {
 
-                                if (DEBUG) Log.d(TAG, "Contextual triggers are active: " + schedule.getContexts().toString());
+                                if (DEBUG)
+                                    Log.d(TAG, "Contextual triggers are active: " + schedule.getContexts().toString());
 
                             }
 
@@ -1111,7 +743,8 @@ public class Scheduler extends Aware_Sensor {
 
                         //Not contextual or conditional scheduler, it is time-based
                         if (is_trigger(schedule)) {
-                            if (DEBUG) Log.d(TAG, "Triggering scheduled task: " + schedule.getScheduleID() + " in package: " + getPackageName());
+                            if (DEBUG)
+                                Log.d(TAG, "Triggering scheduled task: " + schedule.getScheduleID() + " in package: " + getPackageName());
                             performAction(schedule);
                         }
                     } catch (JSONException e) {
@@ -1157,7 +790,7 @@ public class Scheduler extends Aware_Sensor {
             Log.i(TAG, "Time now is: " + now.getTime().toString());
 
             try {
-                Log.i(TAG, "Scheduler info: " + schedule.build().toString(5));
+                Log.i(TAG, "Scheduler info: id=" + schedule.getScheduleID() + " schedule=" + schedule.build().toString());
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -1188,7 +821,8 @@ public class Scheduler extends Aware_Sensor {
                 sched_timestamp = schedule_data_cursor.getLong(schedule_data_cursor.getColumnIndex(Scheduler_Provider.Scheduler_Data.TIMESTAMP));
                 schedule_data_cursor.close();
             }
-            if (schedule_data_cursor != null && !schedule_data_cursor.isClosed()) schedule_data_cursor.close();
+            if (schedule_data_cursor != null && !schedule_data_cursor.isClosed())
+                schedule_data_cursor.close();
 
             // This is a scheduled task on a specific timestamp.
             // NOTE: Once triggered, it's deleted from the database automatically.
@@ -1238,27 +872,43 @@ public class Scheduler extends Aware_Sensor {
                 if (DEBUG) Log.d(Scheduler.TAG, "Trigger interval (delayed): " + execute_interval);
             }
 
+            // This is used to prevent executing the schedule multiple times for the same interval.
+            // It defaults to true, and if a schedule repeats in the same time period (for example,
+            // an hour trigger and the schedule runner runs multiple times in that hour), then
+            // it will be set to false.  But, the most fine-grained condition takes precedence.
+            // For example, if we have an hour condition, it shouldn't run twice in an hour, but it
+            // should run multiple times in the same day.
+            Boolean execute_not_same_interval = true;
+
             Boolean execute_month = null;
             if (schedule.getMonths().length() > 0) {
                 execute_month = is_trigger_month(schedule);
+                if (execute_month)
+                    execute_not_same_interval = (previous == null) || !is_same_month(previous, now);
                 if (DEBUG) Log.d(Scheduler.TAG, "Trigger month: " + execute_month);
             }
 
             Boolean execute_weekdays = null;
             if (schedule.getWeekdays().length() > 0) {
                 execute_weekdays = is_trigger_weekday(schedule);
+                if (execute_weekdays)
+                    execute_not_same_interval = (previous == null) || !is_same_weekday(previous, now);
                 if (DEBUG) Log.d(Scheduler.TAG, "Trigger weekday: " + execute_weekdays);
             }
 
             Boolean execute_hours = null;
             if (schedule.getHours().length() > 0) {
                 execute_hours = is_trigger_hour(schedule);
+                if (execute_hours)
+                    execute_not_same_interval = (previous == null) || !is_same_hour_day(previous, now);
                 if (DEBUG) Log.d(Scheduler.TAG, "Trigger hour: " + execute_hours);
             }
 
             Boolean execute_minutes = null;
             if (schedule.getMinutes().length() > 0) {
                 execute_minutes = is_trigger_minute(schedule);
+                if (execute_minutes)
+                    execute_not_same_interval = (previous == null) || !is_same_minute_hour(previous, now);
                 if (DEBUG) Log.d(Scheduler.TAG, "Trigger minute: " + execute_minutes);
             }
 
@@ -1268,6 +918,7 @@ public class Scheduler extends Aware_Sensor {
             if (execute_weekdays != null) executers.add(execute_weekdays);
             if (execute_hours != null) executers.add(execute_hours);
             if (execute_minutes != null) executers.add(execute_minutes);
+            if (execute_not_same_interval != null) executers.add(execute_not_same_interval);
 
             return !executers.contains(false);
 
@@ -1549,7 +1200,7 @@ public class Scheduler extends Aware_Sensor {
                 ContentValues data = new ContentValues();
                 data.put(Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED, System.currentTimeMillis());
 
-                if (getResources().getBoolean(R.bool.standalone)) {
+                if (getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
                     getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "' OR " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE 'com.aware.phone'", null);
                 } else {
                     getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null);
@@ -1560,48 +1211,461 @@ public class Scheduler extends Aware_Sensor {
         }
     }
 
-    /**
-     * Given a timeframe, a number of randoms and a minimum time interval, return a list of timestamps
-     *
-     * @param start
-     * @param end
-     * @param amount           number of times
-     * @param interval_minutes how much time is set between timestamps, in minutes
-     * @return ArrayList<Long> of timestamps between interval
-     */
-    public static ArrayList<Long> random_times(Calendar start, Calendar end, int amount, int interval_minutes) {
-        ArrayList<Long> randomList = new ArrayList<>();
-
-        int minDifferenceMillis = interval_minutes * 60 * 1000;
-
-        long startedLoop = System.currentTimeMillis();
-        while (randomList.size() < amount) {
-
-            if ((System.currentTimeMillis() - startedLoop) >= 3000) break;
-
-            boolean valid_random = true;
-
-            long random = start.getTimeInMillis() + (long) (Math.random() * (end.getTimeInMillis() - start.getTimeInMillis()));
-
-            if (randomList.size() == 0) {
-                randomList.add(random);
-            } else {
-                for (int i = 0; i < randomList.size(); i++) {
-                    Long timestamp = randomList.get(i);
-                    if (Math.abs(timestamp - random) < minDifferenceMillis) {
-                        valid_random = false;
-                    }
-                }
-                if (valid_random) {
-                    randomList.add(random);
-                }
-            }
-        }
-        return randomList;
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    /**
+     * Scheduler object that contains<br/>
+     * - schedule ID<br/>
+     * - schedule action<br/>
+     * - schedule trigger
+     */
+    public static class Schedule {
+
+        private JSONObject schedule = new JSONObject();
+        private JSONObject trigger = new JSONObject();
+        private JSONObject action = new JSONObject();
+
+        public Schedule(String schedule_id) {
+            try {
+                this.schedule.put(SCHEDULE_ID, schedule_id);
+                this.schedule.put(SCHEDULE_ACTION, this.action);
+                this.schedule.put(SCHEDULE_TRIGGER, this.trigger);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public Schedule(JSONObject schedule) {
+            this.rebuild(schedule);
+        }
+
+        /**
+         * Rebuild schedule object from database JSON
+         *
+         * @param schedule
+         * @return
+         */
+        public Schedule rebuild(JSONObject schedule) {
+            try {
+                this.schedule = schedule.getJSONObject("schedule");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return this;
+        }
+
+        public String getScheduleID() throws JSONException {
+            return this.schedule.getString(SCHEDULE_ID);
+        }
+
+        public Schedule setScheduleID(String new_id) throws JSONException {
+            this.schedule.put(SCHEDULE_ID, new_id);
+            return this;
+        }
+
+        /**
+         * Generates a JSONObject representation for saving JSON to database
+         *
+         * @return
+         * @throws JSONException
+         */
+        public JSONObject build() throws JSONException {
+            JSONObject schedule = new JSONObject();
+            schedule.put("schedule", this.schedule);
+            return schedule;
+        }
+
+        /**
+         * Get type of action
+         *
+         * @return
+         * @throws JSONException
+         */
+        public String getActionType() throws JSONException {
+            return this.schedule.getJSONObject(SCHEDULE_ACTION).getString(ACTION_TYPE);
+        }
+
+        public Schedule setActionType(String type) throws JSONException {
+            this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_TYPE, type);
+            return this;
+        }
+
+        /**
+         * Get action class
+         *
+         * @return
+         * @throws JSONException
+         */
+        public String getActionClass() throws JSONException {
+            if (!this.schedule.getJSONObject(SCHEDULE_ACTION).has(ACTION_CLASS)) {
+                this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_CLASS, "");
+            }
+            return this.schedule.getJSONObject(SCHEDULE_ACTION).getString(ACTION_CLASS);
+        }
+
+        public Schedule setActionClass(String classname) throws JSONException {
+            this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_CLASS, classname);
+            return this;
+        }
+
+        public String getActionIntentAction() throws JSONException {
+            if (!this.schedule.getJSONObject(SCHEDULE_ACTION).has(ACTION_INTENT_ACTION)) {
+                this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_INTENT_ACTION, "");
+            }
+            return this.schedule.getJSONObject(SCHEDULE_ACTION).getString(ACTION_INTENT_ACTION);
+        }
+
+        public Schedule setActionIntentAction(String action) throws JSONException {
+            this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_INTENT_ACTION, action);
+            return this;
+        }
+
+        public Schedule addHour(int hour) throws JSONException {
+            JSONArray hours = getHours();
+            for (int i = 0; i < hours.length(); i++) {
+                int m = hours.getInt(i);
+                if (m == hour) return this;
+            }
+            hours.put(hour);
+            return this;
+        }
+
+        /**
+         * Return the latest hour of the day in which a random scheduler can be scheduled
+         *
+         * @return latest hour
+         * @throws JSONException
+         */
+        public int getDailyLatest() throws JSONException {
+            JSONArray hours = getHours();
+
+            //Handle case when random is requested without a time frame
+            if (hours.length() == 0) {
+                return 23;
+            }
+
+            int max = 0;
+            for (int i = 0; i < hours.length(); i++) {
+                if (hours.getInt(i) >= max) max = hours.getInt(i);
+            }
+
+            Log.d(TAG, "Latest random hour: " + max);
+
+            return max;
+        }
+
+        /**
+         * Return the earliest hour of the day in which a random scheduler can be scheduled
+         *
+         * @return earliest hour
+         * @throws JSONException
+         */
+        public int getDailyEarliest() throws JSONException {
+            JSONArray hours = getHours();
+
+            //Handle case when random is requested without a time frame
+            if (hours.length() == 0) {
+                return 0;
+            }
+
+            int min = 23;
+            for (int i = 0; i < hours.length(); i++) {
+                if (hours.getInt(i) <= min) min = hours.getInt(i);
+            }
+
+            Log.d(TAG, "Earliest random hour: " + min);
+
+            return min;
+        }
+
+        public Schedule addMinute(int minute) throws JSONException {
+            JSONArray minutes = getMinutes();
+            for (int i = 0; i < minutes.length(); i++) {
+                int m = minutes.getInt(i);
+                if (m == minute) return this;
+            }
+            minutes.put(minute);
+            return this;
+        }
+
+        public JSONArray getActionExtras() throws JSONException {
+            if (!this.schedule.getJSONObject(SCHEDULE_ACTION).has(ACTION_EXTRAS)) {
+                this.schedule.getJSONObject(SCHEDULE_ACTION).put(ACTION_EXTRAS, new JSONArray());
+            }
+            return this.schedule.getJSONObject(SCHEDULE_ACTION).getJSONArray(ACTION_EXTRAS);
+        }
+
+        public Schedule addActionExtra(String key, Object value) throws JSONException {
+            JSONArray extras = getActionExtras();
+
+            boolean update = false;
+            for (int i = 0; i < extras.length(); i++) {
+                JSONObject extra = extras.getJSONObject(i);
+                if (extra.opt(key) != null) {
+                    extra.put(key, value); //updates value
+                    update = true;
+                    break;
+                }
+            }
+            if (!update) {
+                extras.put(new JSONObject().put(ACTION_EXTRA_KEY, key).put(ACTION_EXTRA_VALUE, value));
+            }
+            return this;
+        }
+
+        /**
+         * Get scheduled interval
+         *
+         * @return
+         * @throws JSONException
+         */
+        public long getInterval() throws JSONException {
+            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_INTERVAL)) {
+                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_INTERVAL, 0);
+            }
+            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getLong(TRIGGER_INTERVAL);
+        }
+
+        public Schedule setInterval(long minutes) throws JSONException {
+            this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_INTERVAL, minutes);
+            return this;
+        }
+
+        /**
+         * Get scheduled interval delay
+         * For some schedules, we don't want it to run immediately after we set it (mainly
+         * a schedule which updates the config itself).  If this setting is true, then do not
+         *
+         * @return true or false
+         * @throws JSONException
+         */
+        public long getIntervalDelayed() throws JSONException {
+            if (this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_INTERVAL_DELAYED)) {
+                return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getLong(TRIGGER_INTERVAL_DELAYED);
+            }
+            return 0;
+        }
+
+        /**
+         * Get scheduled minutes
+         *
+         * @return
+         * @throws JSONException
+         */
+        public JSONArray getMinutes() throws JSONException {
+            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_MINUTE)) {
+                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_MINUTE, new JSONArray());
+            }
+            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_MINUTE);
+        }
+
+        /**
+         * Get scheduled hours
+         *
+         * @return
+         */
+        public JSONArray getHours() throws JSONException {
+            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_HOUR)) {
+                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_HOUR, new JSONArray());
+            }
+            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_HOUR);
+        }
+
+        /**
+         * Get trigger specific unix timestamp
+         *
+         * @return
+         */
+        public long getTimer() throws JSONException {
+            if (this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_TIMER)) {
+                return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getLong(TRIGGER_TIMER);
+            }
+            return -1;
+        }
+
+        /**
+         * Set trigger to a specified date and time
+         *
+         * @param date
+         */
+        public Schedule setTimer(Calendar date) throws JSONException {
+            this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_TIMER, date.getTimeInMillis());
+            return this;
+        }
+
+        /**
+         * Add a weekday e.g., "Monday",...,"Sunday"
+         *
+         * @param week_day
+         * @return
+         * @throws JSONException
+         */
+        public Schedule addWeekday(String week_day) throws JSONException {
+            JSONArray weekdays = getWeekdays();
+            for (int i = 0; i < weekdays.length(); i++) {
+                String m = weekdays.getString(i);
+                if (m.equalsIgnoreCase(week_day)) return this;
+            }
+            weekdays.put(week_day);
+            return this;
+        }
+
+        /**
+         * Get days of week in which this trigger is scheduled
+         *
+         * @return
+         */
+        public JSONArray getWeekdays() throws JSONException {
+            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_WEEKDAY)) {
+                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_WEEKDAY, new JSONArray());
+            }
+            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_WEEKDAY);
+        }
+
+        /**
+         * Add a month e.g., "January",...,"December"
+         *
+         * @param month
+         * @return
+         * @throws JSONException
+         */
+        public Schedule addMonth(String month) throws JSONException {
+            JSONArray months = getMonths();
+            for (int i = 0; i < months.length(); i++) {
+                String m = months.getString(i);
+                if (m.equalsIgnoreCase(month)) return this;
+            }
+            months.put(month);
+            return this;
+        }
+
+        /**
+         * Get months where schedule is valid
+         *
+         * @return
+         */
+        public JSONArray getMonths() throws JSONException {
+            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_MONTH)) {
+                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_MONTH, new JSONArray());
+            }
+            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_MONTH);
+        }
+
+        public JSONObject getRandom() throws JSONException {
+            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_RANDOM)) {
+                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_RANDOM, new JSONObject());
+            }
+            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONObject(TRIGGER_RANDOM);
+        }
+
+        public Schedule addCondition(Uri content_uri, String where) throws JSONException {
+            JSONArray conditions = getConditions();
+            JSONObject condition = new JSONObject();
+            condition.put(CONDITION_URI, content_uri.toString());
+            condition.put(CONDITION_WHERE, where);
+            conditions.put(condition);
+            return this;
+        }
+
+        public JSONArray getConditions() throws JSONException {
+            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_CONDITION)) {
+                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_CONDITION, new JSONArray());
+            }
+            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_CONDITION);
+        }
+
+        /**
+         * Listen for this contextual broadcast to trigger this schedule
+         *
+         * @param broadcast e.g., ACTION_AWARE_CALL_ACCEPTED runs this schedule when the user has answered a phone call
+         */
+        public Schedule addContext(String broadcast) throws JSONException {
+            JSONArray contexts = getContexts();
+            contexts.put(broadcast);
+            return this;
+        }
+
+        /**
+         * Returns the list of contexts which trigger this schedule
+         *
+         * @return
+         * @throws JSONException
+         */
+        public JSONArray getContexts() throws JSONException {
+            if (!this.schedule.getJSONObject(SCHEDULE_TRIGGER).has(TRIGGER_CONTEXT)) {
+                this.schedule.getJSONObject(SCHEDULE_TRIGGER).put(TRIGGER_CONTEXT, new JSONArray());
+            }
+            return this.schedule.getJSONObject(SCHEDULE_TRIGGER).getJSONArray(TRIGGER_CONTEXT);
+        }
+
+        /**
+         * Set random schedules between two dates. Define the total amount of times per day, with at least X interval minutes apart
+         *
+         * @throws JSONException
+         */
+        public Schedule random(int daily_amount, int minimum_interval) throws JSONException {
+            JSONObject json_random = getRandom();
+            json_random.put(RANDOM_TIMES, daily_amount);
+            json_random.put(RANDOM_INTERVAL, minimum_interval);
+            return this;
+        }
+    }
+
+    /**
+     * Scheduler's ContentObservers
+     */
+    private class DBObserver extends ContentObserver {
+        private Uri data;
+        private String condition;
+        private Schedule schedule;
+
+        DBObserver(Handler h) {
+            super(h);
+        }
+
+        DBObserver setSchedule(Schedule s) {
+            this.schedule = s;
+            return this;
+        }
+
+        DBObserver setData(Uri content_uri) {
+            this.data = content_uri;
+            return this;
+        }
+
+        DBObserver setCondition(String where) {
+            this.condition = where;
+            return this;
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            super.onChange(selfChange);
+
+            if (DEBUG)
+                Log.d(Aware.TAG, "Checking condition : " + data.toString() + " where: " + condition);
+
+            if (this.data != null && this.condition.length() > 0) {
+
+                boolean condition_met = false;
+
+                Cursor rows = getContentResolver().query(this.data, null, this.condition, null, null);
+                if (rows != null && rows.moveToFirst() && rows.getCount() > 0) {
+                    condition_met = true;
+                }
+                if (rows != null && !rows.isClosed()) rows.close();
+
+                if (condition_met) {
+                    if (is_trigger(schedule)) {
+                        performAction(schedule);
+                        if (DEBUG)
+                            Log.d(Aware.TAG, "Condition triggered: " + data.toString() + " where: " + condition);
+                    }
+                }
+            }
+        }
     }
 }

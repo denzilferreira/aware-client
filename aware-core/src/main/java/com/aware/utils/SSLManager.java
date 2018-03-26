@@ -1,8 +1,6 @@
 package com.aware.utils;
 
-import android.app.IntentService;
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
 import android.support.v4.content.ContextCompat;
@@ -15,7 +13,6 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,10 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
@@ -237,6 +231,7 @@ public class SSLManager {
             outputStream.close();
 
         } catch (CertificateEncodingException | IOException | NullPointerException e) {
+            Ion.getDefault(context.getApplicationContext()).getConscryptMiddleware().enable(false);
             Future https = Ion.with(context.getApplicationContext())
                     .load("http://" + cert_host + "/public/server.crt")
                     .noCache()
@@ -468,6 +463,7 @@ public class SSLManager {
         File host_credentials = new File(root_folder.toString(), server);
         if (host_credentials.exists()) {
             File[] certs = host_credentials.listFiles();
+            if (certs == null) return null;
             for (File crt : certs) {
                 if (crt.getName().equals("server.crt")) return new FileInputStream(crt);
             }

@@ -174,6 +174,7 @@ public class ESM_PAM extends ESM_Question {
                 Integer pic = 1 + rand_pic.nextInt(3);
 
                 //Asynchronously download mood image and caches automatically
+                Ion.getDefault(getActivity().getApplicationContext()).getConscryptMiddleware().enable(false);
                 Ion.with(moodOption).placeholder(R.drawable.square).load(mood_picture_url + "/" + pic + ".jpg");
 
                 moodOption.setTag(moodDescription(i));

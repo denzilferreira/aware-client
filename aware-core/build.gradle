@@ -1,14 +1,42 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion compile_sdk
+    buildToolsVersion build_tools
 
     defaultConfig {
         versionCode version_code
         versionName version_readable
-        targetSdkVersion 25
-        minSdkVersion 11 //Android 3.0
+        targetSdkVersion target_sdk
+        minSdkVersion minimum_sdk
+
+        resValue "string", "provider_accelerometer", "com.aware.provider.accelerometer"
+        resValue "string", "provider_applications", "com.aware.provider.applications"
+        resValue "string", "provider_aware", "com.aware.provider.aware"
+        resValue "string", "provider_barometer", "com.aware.provider.barometer"
+        resValue "string", "provider_battery", "com.aware.provider.battery"
+        resValue "string", "provider_bluetooth", "com.aware.provider.bluetooth"
+        resValue "string", "provider_communication", "com.aware.provider.communication"
+        resValue "string", "provider_esm", "com.aware.provider.esm"
+        resValue "string", "provider_gravity", "com.aware.provider.gravity"
+        resValue "string", "provider_gyroscope", "com.aware.provider.gyroscope"
+        resValue "string", "provider_installations", "com.aware.provider.installations"
+        resValue "string", "provider_keyboard", "com.aware.provider.keyboard"
+        resValue "string", "provider_light", "com.aware.provider.light"
+        resValue "string", "provider_linear_accelerometer", "com.aware.provider.accelerometer.linear"
+        resValue "string", "provider_locations", "com.aware.provider.locations"
+        resValue "string", "provider_magnetometer", "com.aware.provider.magnetometer"
+        resValue "string", "provider_network", "com.aware.provider.network"
+        resValue "string", "provider_processor", "com.aware.provider.processor"
+        resValue "string", "provider_proximity", "com.aware.provider.proximity"
+        resValue "string", "provider_rotation", "com.aware.provider.rotation"
+        resValue "string", "provider_screen", "com.aware.provider.screen"
+        resValue "string", "provider_significant", "com.aware.provider.significant"
+        resValue "string", "provider_telephony", "com.aware.provider.telephony"
+        resValue "string", "provider_temperature", "com.aware.provider.temperature"
+        resValue "string", "provider_timezones", "com.aware.provider.timezone"
+        resValue "string", "provider_traffic", "com.aware.provider.traffic"
+        resValue "string", "provider_wifi", "com.aware.provider.wifi"
     }
 
     signingConfigs {

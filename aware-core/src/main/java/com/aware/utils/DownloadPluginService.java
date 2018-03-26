@@ -96,12 +96,15 @@ public class DownloadPluginService extends IntentService {
 
                 String package_url = study_host + json_package.getString("package_path") + json_package.getString("package_name");
 
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext(), Aware.AWARE_NOTIFICATION_ID);
                 mBuilder.setSmallIcon(R.drawable.ic_action_aware_plugins);
                 mBuilder.setContentTitle("AWARE Plugin");
                 mBuilder.setContentText(((is_update) ? "Updating " : "Downloading ") + json_package.getString("title"));
                 mBuilder.setProgress(0, 0, true);
                 mBuilder.setAutoCancel(true);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                    mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_ID);
 
                 final int notID = new Random(System.currentTimeMillis()).nextInt();
                 notManager.notify(notID, mBuilder.build());
@@ -124,6 +127,8 @@ public class DownloadPluginService extends IntentService {
                     //Fix for known-bug on <= JellyBean (4.x)
                     System.setProperty("http.keepAlive", "false");
 
+                    Ion.getDefault(getApplicationContext()).getConscryptMiddleware().enable(false);
+
                     Ion.getDefault(getApplicationContext())
                             .getHttpClient()
                             .getSSLSocketMiddleware().setTrustManagers(trustManagerFactory.getTrustManagers());
@@ -132,6 +137,7 @@ public class DownloadPluginService extends IntentService {
                             .getSSLSocketMiddleware().setSSLContext(sslContext);
                 }
 
+                Ion.getDefault(getApplicationContext()).getConscryptMiddleware().enable(false);
                 Ion.with(getApplicationContext()).load(package_url).noCache()
                         .write(new File(Environment.getExternalStoragePublicDirectory("AWARE/plugins/" + json_package.getString("package_name")).toString()))
                         .setCallback(new FutureCallback<File>() {

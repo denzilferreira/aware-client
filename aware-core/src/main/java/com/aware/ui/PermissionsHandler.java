@@ -3,7 +3,6 @@ package com.aware.ui;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.PermissionChecker;
@@ -65,7 +64,7 @@ public class PermissionsHandler extends Activity {
                 String[] component = getIntent().getStringExtra(EXTRA_REDIRECT_ACTIVITY).split("/");
                 redirect_activity.setComponent(new ComponentName(component[0], component[1]));
                 redirect_activity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            } else if (getIntent().hasExtra(EXTRA_REDIRECT_SERVICE)){
+            } else if (getIntent().hasExtra(EXTRA_REDIRECT_SERVICE)) {
                 redirect_service = new Intent();
                 redirect_service.setAction(ACTION_AWARE_PERMISSIONS_CHECK);
                 String[] component = getIntent().getStringExtra(EXTRA_REDIRECT_SERVICE).split("/");
@@ -76,6 +75,7 @@ public class PermissionsHandler extends Activity {
             setResult(Activity.RESULT_OK, activity);
             finish();
         }
+
     }
 
     @Override
@@ -124,7 +124,7 @@ public class PermissionsHandler extends Activity {
             redirect_service.setAction(ACTION_AWARE_PERMISSIONS_CHECK);
             startService(redirect_service);
         }
-        if (redirect_activity != null){
+        if (redirect_activity != null) {
             Log.d(TAG, "Redirecting to Activity: " + redirect_activity.getComponent().toString());
             setResult(Activity.RESULT_OK, redirect_activity);
             startActivity(redirect_activity);

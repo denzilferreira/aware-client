@@ -11,17 +11,13 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
-import com.aware.ESM;
 import com.aware.utils.DatabaseHelper;
 
-import java.io.File;
 import java.util.HashMap;
-import java.util.Hashtable;
 
 /**
  * ESM Content Provider Allows you to access all the recorded readings on the
@@ -71,15 +67,15 @@ public class ESM_Provider extends ContentProvider {
     public static final String[] DATABASE_TABLES = {"esms"};
     public static final String[] TABLES_FIELDS = {
             ESM_Data._ID + " integer primary key autoincrement,"
-            + ESM_Data.TIMESTAMP + " real default 0,"
-            + ESM_Data.DEVICE_ID + " text default '',"
-            + ESM_Data.JSON + " text default '',"
-            + ESM_Data.STATUS + " integer default 0,"
-            + ESM_Data.EXPIRATION_THRESHOLD + " integer default 0,"
-            + ESM_Data.NOTIFICATION_TIMEOUT + " integer default 0,"
-            + ESM_Data.ANSWER_TIMESTAMP + " real default 0,"
-            + ESM_Data.ANSWER + " text default '',"
-            + ESM_Data.TRIGGER + " text default ''"
+                    + ESM_Data.TIMESTAMP + " real default 0,"
+                    + ESM_Data.DEVICE_ID + " text default '',"
+                    + ESM_Data.JSON + " text default '',"
+                    + ESM_Data.STATUS + " integer default 0,"
+                    + ESM_Data.EXPIRATION_THRESHOLD + " integer default 0,"
+                    + ESM_Data.NOTIFICATION_TIMEOUT + " integer default 0,"
+                    + ESM_Data.ANSWER_TIMESTAMP + " real default 0,"
+                    + ESM_Data.ANSWER + " text default '',"
+                    + ESM_Data.TRIGGER + " text default ''"
     };
 
     private UriMatcher sUriMatcher = null;
@@ -120,7 +116,7 @@ public class ESM_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 
@@ -157,7 +153,7 @@ public class ESM_Provider extends ContentProvider {
                 if (quest_id > 0) {
                     Uri questUri = ContentUris.withAppendedId(ESM_Data.CONTENT_URI,
                             quest_id);
-                    getContext().getContentResolver().notifyChange(questUri, null);
+                    getContext().getContentResolver().notifyChange(questUri, null, false);
                     return questUri;
                 }
                 database.endTransaction();
@@ -166,6 +162,15 @@ public class ESM_Provider extends ContentProvider {
                 database.endTransaction();
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
+    }
+
+    /**
+     * Returns the provider authority that is dynamic
+     * @return
+     */
+    public static String getAuthority(Context context) {
+        AUTHORITY = context.getPackageName() + ".provider.esm";
+        return AUTHORITY;
     }
 
     @Override
@@ -228,7 +233,7 @@ public class ESM_Provider extends ContentProvider {
      */
     @Override
     public synchronized int update(Uri uri, ContentValues values, String selection,
-                      String[] selectionArgs) {
+                                   String[] selectionArgs) {
 
         initialiseDatabase();
 
@@ -248,7 +253,7 @@ public class ESM_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 }

@@ -6,28 +6,24 @@ import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
+import android.content.SyncRequest;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
-import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.Binder;
-import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.PermissionChecker;
 import android.util.Log;
 
 import com.aware.providers.WiFi_Provider;
 import com.aware.providers.WiFi_Provider.WiFi_Data;
 import com.aware.providers.WiFi_Provider.WiFi_Sensor;
-import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 import com.aware.utils.Encrypter;
 
@@ -35,7 +31,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * WiFi Module. Scans and returns surrounding WiFi AccessPoints devices information and RSSI dB values.
@@ -81,6 +76,8 @@ public class WiFi extends Aware_Sensor {
     public void onCreate() {
         super.onCreate();
 
+        AUTHORITY = WiFi_Provider.getAuthority(this);
+
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
         wifiManager = (WifiManager) this.getApplicationContext().getSystemService(WIFI_SERVICE);
 
@@ -92,13 +89,30 @@ public class WiFi extends Aware_Sensor {
         backgroundService.setAction(ACTION_AWARE_WIFI_REQUEST_SCAN);
         wifiScan = PendingIntent.getService(this, 0, backgroundService, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        DATABASE_TABLES = WiFi_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = WiFi_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{WiFi_Data.CONTENT_URI, WiFi_Sensor.CONTENT_URI};
-
         REQUIRED_PERMISSIONS.add(Manifest.permission.CHANGE_WIFI_STATE);
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_WIFI_STATE);
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_NETWORK_STATE);
+    }
+
+    private static WiFi.AWARESensorObserver awareSensor;
+
+    public static void setSensorObserver(WiFi.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+
+    public static WiFi.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
+
+    public interface AWARESensorObserver {
+        void onWiFiAPDetected(ContentValues data);
+
+        void onWiFiDisabled();
+
+        void onWiFiScanStarted();
+
+        void onWiFiScanEnded();
     }
 
     @Override
@@ -123,6 +137,17 @@ public class WiFi extends Aware_Sensor {
 
                 if (Aware.DEBUG) Log.d(TAG, "WiFi service active...");
             }
+
+            if (Aware.isStudy(this)) {
+                ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), WiFi_Provider.getAuthority(this), 1);
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), WiFi_Provider.getAuthority(this), true);
+                long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
+                SyncRequest request = new SyncRequest.Builder()
+                        .syncPeriodic(frequency, frequency / 3)
+                        .setSyncAdapter(Aware.getAWAREAccount(this), WiFi_Provider.getAuthority(this))
+                        .setExtras(new Bundle()).build();
+                ContentResolver.requestSync(request);
+            }
         }
 
         return START_STICKY;
@@ -132,8 +157,15 @@ public class WiFi extends Aware_Sensor {
     public void onDestroy() {
         super.onDestroy();
 
-        if (wifiMonitor != null) unregisterReceiver(wifiMonitor);
+        unregisterReceiver(wifiMonitor);
         if (wifiScan != null) alarmManager.cancel(wifiScan);
+
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), WiFi_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                WiFi_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
 
         if (Aware.DEBUG) Log.d(TAG, "WiFi service terminated...");
     }
@@ -143,7 +175,7 @@ public class WiFi extends Aware_Sensor {
         return null;
     }
 
-    public static class WiFiMonitor extends BroadcastReceiver {
+    public class WiFiMonitor extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
@@ -153,7 +185,8 @@ public class WiFi extends Aware_Sensor {
             }
         }
     }
-    private static final WiFiMonitor wifiMonitor = new WiFiMonitor();
+
+    private final WiFiMonitor wifiMonitor = new WiFiMonitor();
 
     /**
      * Asynchronously get the AP we are currently connected to.
@@ -224,18 +257,21 @@ public class WiFi extends Aware_Sensor {
 
                 try {
                     mContext.getContentResolver().insert(WiFi_Data.CONTENT_URI, rowData);
+
+                    if (awareSensor != null) awareSensor.onWiFiAPDetected(rowData);
+
+                    if (Aware.DEBUG)
+                        Log.d(TAG, ACTION_AWARE_WIFI_NEW_DEVICE + ": " + rowData.toString());
+
+                    Intent detectedAP = new Intent(ACTION_AWARE_WIFI_NEW_DEVICE);
+                    detectedAP.putExtra(EXTRA_DATA, rowData);
+                    mContext.sendBroadcast(detectedAP);
+
                 } catch (SQLiteException e) {
                     if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                 } catch (SQLException e) {
                     if (Aware.DEBUG) Log.d(TAG, e.getMessage());
                 }
-
-                if (Aware.DEBUG)
-                    Log.d(TAG, ACTION_AWARE_WIFI_NEW_DEVICE + ": " + rowData.toString());
-
-                Intent detectedAP = new Intent(ACTION_AWARE_WIFI_NEW_DEVICE);
-                detectedAP.putExtra(EXTRA_DATA, rowData);
-                mContext.sendBroadcast(detectedAP);
             }
 
             if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_WIFI_SCAN_ENDED);
@@ -262,40 +298,66 @@ public class WiFi extends Aware_Sensor {
 
         @Override
         protected void onHandleIntent(Intent intent) {
-            WifiManager wifiManager = (WifiManager) this.getApplicationContext().getSystemService(WIFI_SERVICE);
+            if (intent.getAction() != null) {
+                WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
 
-            if (intent.getAction().equals(WiFi.ACTION_AWARE_WIFI_REQUEST_SCAN)) {
-                if (wifiManager.isWifiEnabled()) {
-                    if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_WIFI_SCAN_STARTED);
-                    Intent scanStart = new Intent(ACTION_AWARE_WIFI_SCAN_STARTED);
-                    sendBroadcast(scanStart);
-                    wifiManager.startScan();
-                } else {
-                    if (Aware.DEBUG) {
-                        Log.d(WiFi.TAG, "WiFi is off");
+                if (intent.getAction().equals(WiFi.ACTION_AWARE_WIFI_REQUEST_SCAN)) {
+                    try {
+                        if (wifiManager.isWifiEnabled()) {
+
+                            if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_WIFI_SCAN_STARTED);
+
+                            Intent scanStart = new Intent(ACTION_AWARE_WIFI_SCAN_STARTED);
+                            sendBroadcast(scanStart);
+
+                            wifiManager.startScan();
+
+                            if (awareSensor != null) awareSensor.onWiFiScanStarted();
+
+                        } else {
+                            if (Aware.DEBUG) {
+                                Log.d(WiFi.TAG, "WiFi is off");
+                            }
+
+                            ContentValues rowData = new ContentValues();
+                            rowData.put(WiFi_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                            rowData.put(WiFi_Data.TIMESTAMP, System.currentTimeMillis());
+                            rowData.put(WiFi_Data.LABEL, "disabled");
+
+                            getContentResolver().insert(WiFi_Data.CONTENT_URI, rowData);
+
+                            if (awareSensor != null) awareSensor.onWiFiDisabled();
+                        }
+                    } catch (NullPointerException e) {
+                        if (Aware.DEBUG) {
+                            Log.d(WiFi.TAG, "WiFi is off");
+                        }
+
+                        ContentValues rowData = new ContentValues();
+                        rowData.put(WiFi_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                        rowData.put(WiFi_Data.TIMESTAMP, System.currentTimeMillis());
+                        rowData.put(WiFi_Data.LABEL, "disabled");
+
+                        getContentResolver().insert(WiFi_Data.CONTENT_URI, rowData);
+
+                        if (awareSensor != null) awareSensor.onWiFiDisabled();
                     }
-
-                    ContentValues rowData = new ContentValues();
-                    rowData.put(WiFi_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-                    rowData.put(WiFi_Data.TIMESTAMP, System.currentTimeMillis());
-                    rowData.put(WiFi_Data.LABEL, "disabled");
-
-                    getContentResolver().insert(WiFi_Data.CONTENT_URI, rowData);
                 }
-            }
 
-            if (intent.getAction().equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
-                WifiInfo wifi = wifiManager.getConnectionInfo();
-                if (wifi == null) return;
+                if (intent.getAction().equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
+                    WifiInfo wifi = wifiManager.getConnectionInfo();
+                    if (wifi == null) return;
 
-                WifiInfoFetch wifiInfo = new WifiInfoFetch(getApplicationContext(), wifi);
-                WifiApResults scanResults = new WifiApResults(getApplicationContext(), wifiManager.getScanResults());
+                    WifiInfoFetch wifiInfo = new WifiInfoFetch(getApplicationContext(), wifi);
+                    WifiApResults scanResults = new WifiApResults(getApplicationContext(), wifiManager.getScanResults());
 
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.submit(wifiInfo);
-                executor.submit(scanResults);
-                executor.shutdown();
+                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                    executor.submit(wifiInfo);
+                    executor.submit(scanResults);
+                    executor.shutdown();
 
+                    if (awareSensor != null) awareSensor.onWiFiScanEnded();
+                }
             }
         }
     }

@@ -1,13 +1,14 @@
 package com.aware;
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SyncRequest;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.net.Uri;
-import android.os.Binder;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -49,9 +50,27 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
     public static final String ACTION_AWARE_SIGNIFICANT_MOTION_START = "ACTION_AWARE_SIGNIFICANT_MOTION_START";
     public static final String ACTION_AWARE_SIGNIFICANT_MOTION_END = "ACTION_AWARE_SIGNIFICANT_MOTION_END";
 
+    private static SignificantMotion.AWARESensorObserver awareSensor;
+
+    public static void setSensorObserver(SignificantMotion.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
+
+    public static SignificantMotion.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
+
+    public interface AWARESensorObserver {
+        void onSignificantMotionStart();
+
+        void onSignificantMotionEnd();
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
+
+        AUTHORITY = Significant_Provider.getAuthority(this);
 
         DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
 
@@ -66,10 +85,6 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
         wakeLock.acquire();
 
         sensorHandler = new Handler(sensorThread.getLooper());
-
-        DATABASE_TABLES = Significant_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Significant_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Significant_Provider.Significant_Data.CONTENT_URI};
 
         CONTEXT_PRODUCER = new ContextProducer() {
             @Override
@@ -86,10 +101,11 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
                 Intent sigmotion = new Intent();
                 if (CURRENT_SIGMOTION_STATE) {
                     sigmotion.setAction(ACTION_AWARE_SIGNIFICANT_MOTION_START);
+                    if (awareSensor != null) awareSensor.onSignificantMotionStart();
                 } else {
                     sigmotion.setAction(ACTION_AWARE_SIGNIFICANT_MOTION_END);
+                    if (awareSensor != null) awareSensor.onSignificantMotionEnd();
                 }
-
                 sendBroadcast(sigmotion);
             }
         };
@@ -118,6 +134,17 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
 
                 if (Aware.DEBUG) Log.d(TAG, "Significant motion service active...");
             }
+
+            if (Aware.isStudy(this)) {
+                ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Significant_Provider.getAuthority(this), 1);
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Significant_Provider.getAuthority(this), true);
+                long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
+                SyncRequest request = new SyncRequest.Builder()
+                        .syncPeriodic(frequency, frequency / 3)
+                        .setSyncAdapter(Aware.getAWAREAccount(this), Significant_Provider.getAuthority(this))
+                        .setExtras(new Bundle()).build();
+                ContentResolver.requestSync(request);
+            }
         }
 
         return START_STICKY;
@@ -127,11 +154,18 @@ public class SignificantMotion extends Aware_Sensor implements SensorEventListen
     public void onDestroy() {
         super.onDestroy();
 
-        isSignificantMotionActive =false;
+        isSignificantMotionActive = false;
         sensorHandler.removeCallbacksAndMessages(null);
         mSensorManager.unregisterListener(this, mAccelerometer);
         sensorThread.quit();
         wakeLock.release();
+
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Significant_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                Significant_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
 
         if (Aware.DEBUG) Log.d(TAG, "Significant motion service destroyed...");
     }

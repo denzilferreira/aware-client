@@ -16,10 +16,8 @@ import android.util.Log;
 
 import com.aware.Accelerometer;
 import com.aware.Aware;
-import com.aware.SignificantMotion;
 import com.aware.utils.DatabaseHelper;
 
-import java.io.File;
 import java.util.HashMap;
 
 /**
@@ -108,7 +106,7 @@ public class Significant_Provider extends ContentProvider {
 
         database.setTransactionSuccessful();
         database.endTransaction();
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 
@@ -143,7 +141,7 @@ public class Significant_Provider extends ContentProvider {
                 database.endTransaction();
                 if (accelData_id > 0) {
                     Uri accelDataUri = ContentUris.withAppendedId(Significant_Data.CONTENT_URI, accelData_id);
-                    getContext().getContentResolver().notifyChange(accelDataUri, null);
+                    getContext().getContentResolver().notifyChange(accelDataUri, null, false);
                     return accelDataUri;
                 }
                 database.endTransaction();
@@ -193,9 +191,18 @@ public class Significant_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
 
         return count;
+    }
+
+    /**
+     * Returns the provider authority that is dynamic
+     * @return
+     */
+    public static String getAuthority(Context context) {
+        AUTHORITY = context.getPackageName() + ".provider.significant";
+        return AUTHORITY;
     }
 
     @Override
@@ -275,7 +282,7 @@ public class Significant_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 }

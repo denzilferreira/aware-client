@@ -1,52 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/LinearLayout1"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:minWidth="300dip"
-    android:orientation="vertical" >
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <TextView
         android:id="@+id/esm_title"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
         android:padding="16dp"
-        android:textStyle="normal|bold"
-        android:textSize="18sp" />
+        android:textSize="18sp"
+        android:textStyle="normal|bold" />
 
     <TextView
         android:id="@+id/esm_instructions"
+        android:layout_below="@id/esm_title"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:padding="10dp" />
 
     <ScrollView
         android:id="@+id/radios_container"
-        android:layout_width="fill_parent"
-        android:layout_height="200dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_below="@+id/esm_instructions"
-        android:padding="10dp" >
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:padding="10dp">
 
         <RadioGroup
             android:id="@+id/esm_radio"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
-        </RadioGroup>
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
     </ScrollView>
 
     <LinearLayout
         android:id="@+id/LinearLayout1"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/radios_container"
+        android:layout_alignParentBottom="true"
+        android:paddingBottom="10dp"
         android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingBottom="10dp" >
+        android:paddingRight="10dp">
 
         <Button
             android:id="@+id/esm_cancel"
+            android:layout_gravity="bottom"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -54,6 +54,7 @@
 
         <Button
             android:id="@+id/esm_submit"
+            android:layout_gravity="bottom"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="2"
@@ -61,4 +62,4 @@
             android:text="Button" />
     </LinearLayout>
 
-</LinearLayout>
+</RelativeLayout>

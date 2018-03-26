@@ -1,27 +1,33 @@
 
 package com.aware;
 
+import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.content.IntentFilter;
+import android.content.SyncRequest;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
-import android.net.Uri;
-import android.os.Binder;
-import android.os.Handler;
+import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.aware.providers.TimeZone_Provider;
 import com.aware.providers.TimeZone_Provider.TimeZone_Data;
-import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
+
+import java.util.TimeZone;
 
 /**
  * Timezone module. Keeps track of changes in the device Timezone.
+ * Last modified:
  *
- * @author Nikola
+ * @author Denzil
+ *         Made sensor event-based, instead of polling data.
+ *         <p>
+ *         Original @author Nikola
  */
 public class Timezone extends Aware_Sensor {
 
@@ -31,35 +37,21 @@ public class Timezone extends Aware_Sensor {
     public static final String ACTION_AWARE_TIMEZONE = "ACTION_AWARE_TIMEZONE";
     public static final String EXTRA_DATA = "data";
 
-    private static int FREQUENCY = -1;
+    private static Timezone.AWARESensorObserver awareSensor;
 
-    private static Handler mHandler = new Handler();
-    private final Runnable mRunnable = new Runnable() {
-        @Override
-        public void run() {
-            String timeZone = java.util.TimeZone.getDefault().getID();
-            ContentValues rowData = new ContentValues();
-            rowData.put(TimeZone_Data.TIMESTAMP, System.currentTimeMillis());
-            rowData.put(TimeZone_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
-            rowData.put(TimeZone_Data.TIMEZONE, timeZone);
+    public static void setSensorObserver(Timezone.AWARESensorObserver observer) {
+        awareSensor = observer;
+    }
 
-            try {
-                getContentResolver().insert(TimeZone_Data.CONTENT_URI, rowData);
-            } catch (SQLiteException e) {
-                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-            } catch (SQLException e) {
-                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-            } catch (IllegalStateException e) {
-                if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-            }
+    public static Timezone.AWARESensorObserver getSensorObserver() {
+        return awareSensor;
+    }
 
-            Intent newTimeZone = new Intent(ACTION_AWARE_TIMEZONE);
-            newTimeZone.putExtra(EXTRA_DATA, rowData);
-            sendBroadcast(newTimeZone);
+    public interface AWARESensorObserver {
+        void onTimezoneChanged(ContentValues data);
+    }
 
-            mHandler.postDelayed(mRunnable, Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE)) * 1000);
-        }
-    };
+    private String lastTimezone = "";
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -70,9 +62,7 @@ public class Timezone extends Aware_Sensor {
     public void onCreate() {
         super.onCreate();
 
-        DATABASE_TABLES = TimeZone_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = TimeZone_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{TimeZone_Data.CONTENT_URI};
+        AUTHORITY = TimeZone_Provider.getAuthority(this);
 
         CONTEXT_PRODUCER = new ContextProducer() {
             @Override
@@ -82,7 +72,54 @@ public class Timezone extends Aware_Sensor {
             }
         };
 
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
+        registerReceiver(timezoneObserver, filter);
+
         if (Aware.DEBUG) Log.d(TAG, "Timezone service created");
+    }
+
+    private TimezoneObserver timezoneObserver = new TimezoneObserver();
+
+    public class TimezoneObserver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equalsIgnoreCase(Intent.ACTION_TIMEZONE_CHANGED)) {
+                retrieveTimezone();
+            }
+        }
+    }
+
+    /**
+     * Logs the current timezone
+     */
+    private void retrieveTimezone() {
+        if (lastTimezone.equalsIgnoreCase(TimeZone.getDefault().getID())) return;
+
+        lastTimezone = TimeZone.getDefault().getID();
+        ContentValues rowData = new ContentValues();
+        rowData.put(TimeZone_Data.TIMESTAMP, System.currentTimeMillis());
+        rowData.put(TimeZone_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+        rowData.put(TimeZone_Data.TIMEZONE, lastTimezone);
+
+        try {
+            getContentResolver().insert(TimeZone_Data.CONTENT_URI, rowData);
+
+            if (Aware.DEBUG) Log.d(Aware.TAG, rowData.toString());
+
+            if (awareSensor != null) awareSensor.onTimezoneChanged(rowData);
+
+            Intent newTimeZone = new Intent(ACTION_AWARE_TIMEZONE);
+            newTimeZone.putExtra(EXTRA_DATA, rowData);
+            sendBroadcast(newTimeZone);
+
+        } catch (SQLiteException e) {
+            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+        } catch (SQLException e) {
+            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+        } catch (IllegalStateException e) {
+            if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+        }
     }
 
     @Override
@@ -93,16 +130,20 @@ public class Timezone extends Aware_Sensor {
             DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
             Aware.setSetting(this, Aware_Preferences.STATUS_TIMEZONE, true);
 
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE).length() == 0) {
-                Aware.setSetting(this, Aware_Preferences.FREQUENCY_TIMEZONE, 3600);
-            }
+            if (lastTimezone.length() == 0) retrieveTimezone();
 
-            if (FREQUENCY != Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE))) {
-                mHandler.removeCallbacks(mRunnable);
-                mHandler.post(mRunnable);
-                FREQUENCY = Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_TIMEZONE));
-            }
             if (Aware.DEBUG) Log.d(TAG, "Timezone service active...");
+
+            if (Aware.isStudy(this)) {
+                ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), TimeZone_Provider.getAuthority(this), 1);
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), TimeZone_Provider.getAuthority(this), true);
+                long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
+                SyncRequest request = new SyncRequest.Builder()
+                        .syncPeriodic(frequency, frequency / 3)
+                        .setSyncAdapter(Aware.getAWAREAccount(this), TimeZone_Provider.getAuthority(this))
+                        .setExtras(new Bundle()).build();
+                ContentResolver.requestSync(request);
+            }
         }
 
         return START_STICKY;
@@ -112,7 +153,14 @@ public class Timezone extends Aware_Sensor {
     public void onDestroy() {
         super.onDestroy();
 
-        mHandler.removeCallbacks(mRunnable);
+        unregisterReceiver(timezoneObserver);
+
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), TimeZone_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                TimeZone_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
 
         if (Aware.DEBUG) Log.d(TAG, "Timezone service terminated...");
     }

@@ -2,10 +2,12 @@
 package com.aware;
 
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SyncRequest;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -14,18 +16,14 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
-import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.aware.providers.Applications_Provider.Applications_History;
 import com.aware.providers.Installations_Provider;
 import com.aware.providers.Installations_Provider.Installations_Data;
-import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
-import com.aware.utils.PluginsManager;
 
 /**
  * Service that logs application installations on the device.
@@ -99,9 +97,7 @@ public class Installations extends Aware_Sensor {
     public void onCreate() {
         super.onCreate();
 
-        DATABASE_TABLES = Installations_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Installations_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Installations_Data.CONTENT_URI};
+        AUTHORITY = Installations_Provider.getAuthority(this);
 
         CONTEXT_PRODUCER = new Aware_Sensor.ContextProducer() {
             @Override
@@ -133,6 +129,17 @@ public class Installations extends Aware_Sensor {
             Aware.setSetting(this, Aware_Preferences.STATUS_INSTALLATIONS, true);
 
             if (Aware.DEBUG) Log.d(TAG, "Installations service active...");
+
+            if (Aware.isStudy(this)) {
+                ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Installations_Provider.getAuthority(this), 1);
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Installations_Provider.getAuthority(this), true);
+                long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
+                SyncRequest request = new SyncRequest.Builder()
+                        .syncPeriodic(frequency, frequency / 3)
+                        .setSyncAdapter(Aware.getAWAREAccount(this), Installations_Provider.getAuthority(this))
+                        .setExtras(new Bundle()).build();
+                ContentResolver.requestSync(request);
+            }
         }
 
         return START_STICKY;
@@ -143,6 +150,13 @@ public class Installations extends Aware_Sensor {
         super.onDestroy();
 
         unregisterReceiver(installationsMonitor);
+
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Installations_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                Installations_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
 
         if (Aware.DEBUG) Log.d(TAG, "Installations service terminated...");
     }
@@ -232,7 +246,8 @@ public class Installations extends Aware_Sensor {
                     if (get_application_info != null && get_application_info.moveToFirst()) {
                         appName = get_application_info.getString(get_application_info.getColumnIndex(Applications_History.APPLICATION_NAME));
                     }
-                    if (get_application_info != null && ! get_application_info.isClosed()) get_application_info.close();
+                    if (get_application_info != null && !get_application_info.isClosed())
+                        get_application_info.close();
 
                     if (appName.length() == 0) {
                         //try application history as last resort
@@ -240,7 +255,8 @@ public class Installations extends Aware_Sensor {
                         if (get_application_info != null && get_application_info.moveToFirst()) {
                             appName = get_application_info.getString(get_application_info.getColumnIndex(Applications_History.APPLICATION_NAME));
                         }
-                        if (get_application_info != null && ! get_application_info.isClosed()) get_application_info.close();
+                        if (get_application_info != null && !get_application_info.isClosed())
+                            get_application_info.close();
                     }
 
                     ContentValues rowData = new ContentValues();

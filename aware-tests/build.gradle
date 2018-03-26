@@ -1,15 +1,15 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion compile_sdk
+    buildToolsVersion build_tools
 
     defaultConfig {
         applicationId "com.aware.tests"
-        minSdkVersion 11
-        targetSdkVersion 25
-        versionCode 1
-        versionName "1.0"
+        minSdkVersion minimum_sdk
+        targetSdkVersion target_sdk
+        versionCode version_code
+        versionName version_readable
     }
     buildTypes {
         release {
@@ -24,8 +24,7 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    implementation project(':aware-core')
-    implementation "com.android.support:appcompat-v7:$support_libs"
+    api project(':aware-core')
     implementation "com.android.support:gridlayout-v7:$support_libs"
+    implementation "com.android.support:appcompat-v7:$support_libs"
 }

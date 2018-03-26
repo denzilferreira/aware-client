@@ -18,14 +18,21 @@
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
+
     <uses-feature
         android:name="android.hardware.camera.front"
         android:required="false" />
+
     <uses-feature
         android:name="android.hardware.camera.autofocus"
         android:required="false" />
+
     <uses-feature
         android:name="android.hardware.telephony"
+        android:required="false" />
+
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
         android:required="false" />
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -67,7 +74,6 @@
             android:theme="@style/Theme.Aware">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
@@ -80,7 +86,7 @@
             android:label="@string/aware_stream"
             android:launchMode="singleTop"
             android:noHistory="true"
-            android:theme="@style/Theme.Aware"/>
+            android:theme="@style/Theme.Aware" />
         <activity
             android:name="com.aware.phone.ui.Aware_QRCode"
             android:configChanges="keyboardHidden|orientation|screenSize"
@@ -122,11 +128,11 @@
             android:launchMode="singleTop"
             android:theme="@style/Theme.Aware">
             <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="aware"/>
-                <data android:scheme="aware-ssl"/>
+                <data android:scheme="aware" />
+                <data android:scheme="aware-ssl" />
             </intent-filter>
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

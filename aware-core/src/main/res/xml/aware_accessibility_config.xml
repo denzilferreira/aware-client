@@ -3,7 +3,7 @@
     android:description="@string/aware_description"
     android:settingsActivity="com.aware.phone.Aware_Client"
     android:accessibilityEventTypes="typeAllMask"
-    android:accessibilityFeedbackType="feedbackAllMask"
+    android:accessibilityFeedbackType="feedbackGeneric"
     android:accessibilityFlags="flagDefault"
     android:notificationTimeout="100"
     android:canRetrieveWindowContent="true"

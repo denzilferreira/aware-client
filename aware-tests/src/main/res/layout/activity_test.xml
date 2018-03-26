@@ -8,10 +8,10 @@
         android:id="@+id/button_ESMNotification"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="ESM TESTS" />
+        android:text="ESM test" />
 
     <Button
-        android:text="Scheduler tests"
+        android:text="Scheduler test"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/btn_test_timer" />
@@ -21,5 +21,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/btn_clear_schedulers" />
+
+    <Button
+        android:text="Jenkins test"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/btn_jenkins" />
 
 </LinearLayout>

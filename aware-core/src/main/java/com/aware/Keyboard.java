@@ -1,13 +1,12 @@
 package com.aware;
 
+import android.content.ContentResolver;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.support.v4.content.ContextCompat;
+import android.content.SyncRequest;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.aware.providers.Keyboard_Provider;
-import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Aware_Sensor;
 
 /**
@@ -24,13 +23,23 @@ public class Keyboard extends Aware_Sensor {
     public void onCreate() {
         super.onCreate();
 
+        AUTHORITY = Keyboard_Provider.getAuthority(this);
+
         TAG = "AWARE::Keyboard";
 
-        DATABASE_TABLES = Keyboard_Provider.DATABASE_TABLES;
-        TABLES_FIELDS = Keyboard_Provider.TABLES_FIELDS;
-        CONTEXT_URIS = new Uri[]{Keyboard_Provider.Keyboard_Data.CONTENT_URI};
-
         if (Aware.DEBUG) Log.d(TAG, "Keyboard service created!");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Keyboard_Provider.getAuthority(this), false);
+        ContentResolver.removePeriodicSync(
+                Aware.getAWAREAccount(this),
+                Keyboard_Provider.getAuthority(this),
+                Bundle.EMPTY
+        );
     }
 
     @Override
@@ -42,6 +51,17 @@ public class Keyboard extends Aware_Sensor {
             Aware.setSetting(this, Aware_Preferences.STATUS_KEYBOARD, true);
 
             if (Aware.DEBUG) Log.d(TAG, "Keyboard service active...");
+
+            if (Aware.isStudy(this)) {
+                ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Keyboard_Provider.getAuthority(this), 1);
+                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Keyboard_Provider.getAuthority(this), true);
+                long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
+                SyncRequest request = new SyncRequest.Builder()
+                        .syncPeriodic(frequency, frequency / 3)
+                        .setSyncAdapter(Aware.getAWAREAccount(this), Keyboard_Provider.getAuthority(this))
+                        .setExtras(new Bundle()).build();
+                ContentResolver.requestSync(request);
+            }
         }
 
         return START_STICKY;

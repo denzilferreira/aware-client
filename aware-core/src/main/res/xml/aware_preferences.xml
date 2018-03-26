@@ -12,13 +12,11 @@
             android:summary="%s"
             android:title="AWARE Device ID" />
         <EditTextPreference
-            android:defaultValue=""
             android:key="device_label"
             android:persistent="true"
             android:summary="%s"
             android:title="Device label" />
         <EditTextPreference
-            android:defaultValue=""
             android:key="aware_version"
             android:persistent="true"
             android:selectable="false"
@@ -50,7 +48,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_accelerometer"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_accelerometer"
@@ -89,13 +86,13 @@
                 android:title="Application usage" />
 
             <EditTextPreference
-                android:defaultValue="1"
+                android:defaultValue="0"
                 android:dependency="status_applications"
                 android:inputType="number"
                 android:key="frequency_applications"
                 android:persistent="true"
-                android:summary="X minute(s)"
-                android:title="Background applications" />
+                android:summary="Update every X minute(s). 0 to disable."
+                android:title="Background processes" />
 
             <CheckBoxPreference
                 android:defaultValue="false"
@@ -142,7 +139,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_barometer"
                 android:entries="@array/low_frequency_readable"
                 android:entryValues="@array/low_frequency_values"
                 android:key="frequency_barometer"
@@ -194,7 +190,6 @@
 
             <EditTextPreference
                 android:defaultValue="60"
-                android:dependency="status_bluetooth"
                 android:inputType="number"
                 android:key="frequency_bluetooth"
                 android:persistent="true"
@@ -207,12 +202,6 @@
             android:summary="Communication usage (calls/messages)"
             android:title="Communication">
 
-            <CheckBoxPreference
-                android:defaultValue="false"
-                android:key="status_communication_events"
-                android:persistent="true"
-                android:summary="User in call, not in call"
-                android:title="User availability" />
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:key="status_calls"
@@ -254,7 +243,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_gravity"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_gravity"
@@ -294,7 +282,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_gyroscope"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_gyroscope"
@@ -412,7 +399,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_light"
                 android:entries="@array/low_frequency_readable"
                 android:entryValues="@array/low_frequency_values"
                 android:key="frequency_light"
@@ -439,7 +425,7 @@
 
         </PreferenceScreen>
         <PreferenceScreen
-            android:icon="@drawable/ic_action_linear_acceleration"
+            android:icon="@drawable/ic_action_linear_accelerometer"
             android:key="linear_accelerometer"
             android:summary="Acceleration, w/o gravity (m/s^2)"
             android:title="Linear accelerometer">
@@ -452,7 +438,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_linear_accelerometer"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_linear_accelerometer"
@@ -498,14 +483,6 @@
                 android:summary="Wi-Fi &amp; mobile network traffic (bytes,packets)"
                 android:title="Network traffic" />
 
-            <EditTextPreference
-                android:defaultValue="60"
-                android:inputType="number"
-                android:key="frequency_network_traffic"
-                android:persistent="true"
-                android:summary="Every X seconds"
-                android:title="Traffic update frequency" />
-
         </PreferenceScreen>
         <PreferenceScreen
             android:icon="@drawable/ic_action_magnetometer"
@@ -521,7 +498,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_magnetometer"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_magnetometer"
@@ -561,7 +537,6 @@
 
             <EditTextPreference
                 android:defaultValue="10"
-                android:dependency="status_processor"
                 android:inputType="number"
                 android:key="frequency_processor"
                 android:persistent="true"
@@ -580,14 +555,6 @@
                 android:persistent="true"
                 android:title="Active" />
 
-            <EditTextPreference
-                android:defaultValue="3600"
-                android:dependency="status_timezone"
-                android:inputType="number"
-                android:key="frequency_timezone"
-                android:persistent="true"
-                android:summary="Every X seconds"
-                android:title="Update frequency" />
         </PreferenceScreen>
         <PreferenceScreen
             android:icon="@drawable/ic_action_proximity"
@@ -603,7 +570,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_proximity"
                 android:entries="@array/low_frequency_readable"
                 android:entryValues="@array/low_frequency_values"
                 android:key="frequency_proximity"
@@ -643,7 +609,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_rotation"
                 android:entries="@array/frequency_readable"
                 android:entryValues="@array/frequency_values"
                 android:key="frequency_rotation"
@@ -680,7 +645,14 @@
                 android:key="status_screen"
                 android:persistent="true"
                 android:summary="Capture screen events (on, off, locked, unlocked)"
-                android:title="Active" />
+                android:title="Screen usage" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_touch"
+                android:persistent="true"
+                android:summary="Capture clicks, long clicks and scroll up/down events"
+                android:title="Screen interaction" />
 
         </PreferenceScreen>
         <PreferenceScreen
@@ -711,7 +683,6 @@
 
             <ListPreference
                 android:defaultValue="200000"
-                android:dependency="status_temperature"
                 android:entries="@array/low_frequency_readable"
                 android:entryValues="@array/low_frequency_values"
                 android:key="frequency_temperature"
@@ -764,7 +735,6 @@
 
             <EditTextPreference
                 android:defaultValue="60"
-                android:dependency="status_wifi"
                 android:inputType="number"
                 android:key="frequency_wifi"
                 android:persistent="true"
@@ -858,15 +828,13 @@
                 android:summary="Sync only over Wi-Fi"
                 android:title="Wi-Fi only" />
 
-            <ListPreference
+            <EditTextPreference
                 android:defaultValue="0"
                 android:dependency="webservice_wifi_only"
-                android:entries="@array/fallback_network_readable"
-                android:entryValues="@array/fallback_network_values"
                 android:key="fallback_network"
                 android:persistent="true"
-                android:summary="Fallback to 3G"
-                android:title="Fallback to 3G" />
+                android:summary="%s"
+                android:title="Fallback to 3G after x hours" />
 
             <CheckBoxPreference
                 android:defaultValue="false"

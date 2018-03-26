@@ -12,8 +12,10 @@ import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.util.Log;
+import android.view.ViewGroup;
 
 import com.aware.Aware;
 import com.aware.ESM;
@@ -44,6 +46,7 @@ public class ESM_Question extends DialogFragment {
     public static final String esm_flows = "esm_flows";
     public static final String flow_user_answer = "user_answer";
     public static final String flow_next_esm = "next_esm";
+    public static final String esm_app_integration = "esm_app_integration";
 
     protected ESM_Question setID(int id) {
         _id = id;
@@ -192,6 +195,24 @@ public class ESM_Question extends DialogFragment {
     public ESM_Question setReplaceQueue(boolean replace_queue) throws JSONException {
         this.esm.put(esm_replace_queue, replace_queue);
         return this;
+    }
+
+    /**
+     * Callback to app URI
+     * @param appIntegration
+     * @return
+     * @throws JSONException
+     */
+    public ESM_Question setAppIntegration(String appIntegration) throws JSONException {
+        this.esm.put(esm_app_integration, appIntegration);
+        return this;
+    }
+
+    public String getAppIntegration() throws JSONException {
+        if (!this.esm.has(esm_app_integration)) {
+            this.esm.put(esm_app_integration, "");
+        }
+        return this.esm.getString(esm_app_integration);
     }
 
     public String getTrigger() throws JSONException {
@@ -459,6 +480,21 @@ public class ESM_Question extends DialogFragment {
             if (esm_dialog != null) esm_dialog.dismiss();
 
             getActivity().finish();
+        }
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setStyle(DialogFragment.STYLE_NO_FRAME, android.R.style.Theme_DeviceDefault_Light);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Dialog d = getDialog();
+        if (d != null) {
+            d.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         }
     }
 }

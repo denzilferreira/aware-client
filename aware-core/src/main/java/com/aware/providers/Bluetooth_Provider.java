@@ -11,15 +11,12 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.aware.Aware;
-import com.aware.BuildConfig;
 import com.aware.utils.DatabaseHelper;
 
-import java.io.File;
 import java.util.HashMap;
 
 /**
@@ -95,18 +92,18 @@ public class Bluetooth_Provider extends ContentProvider {
     public static final String[] TABLES_FIELDS = {
             // device
             Bluetooth_Sensor._ID + " integer primary key autoincrement,"
-            + Bluetooth_Sensor.TIMESTAMP + " real default 0,"
-            + Bluetooth_Sensor.DEVICE_ID + " text default '',"
-            + Bluetooth_Sensor.BT_ADDRESS + " text default '',"
-            + Bluetooth_Sensor.BT_NAME + " text default ''",
+                    + Bluetooth_Sensor.TIMESTAMP + " real default 0,"
+                    + Bluetooth_Sensor.DEVICE_ID + " text default '',"
+                    + Bluetooth_Sensor.BT_ADDRESS + " text default '',"
+                    + Bluetooth_Sensor.BT_NAME + " text default ''",
             // data
             Bluetooth_Data._ID + " integer primary key autoincrement,"
-            + Bluetooth_Data.TIMESTAMP + " real default 0,"
-            + Bluetooth_Data.DEVICE_ID + " text default '',"
-            + Bluetooth_Data.BT_ADDRESS + " text default '',"
-            + Bluetooth_Data.BT_NAME + " text default '',"
-            + Bluetooth_Data.BT_RSSI + " integer default 0,"
-            + Bluetooth_Data.BT_LABEL + " text default ''"
+                    + Bluetooth_Data.TIMESTAMP + " real default 0,"
+                    + Bluetooth_Data.DEVICE_ID + " text default '',"
+                    + Bluetooth_Data.BT_ADDRESS + " text default '',"
+                    + Bluetooth_Data.BT_NAME + " text default '',"
+                    + Bluetooth_Data.BT_RSSI + " integer default 0,"
+                    + Bluetooth_Data.BT_LABEL + " text default ''"
     };
 
     private UriMatcher sUriMatcher = null;
@@ -152,7 +149,7 @@ public class Bluetooth_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 
@@ -193,8 +190,7 @@ public class Bluetooth_Provider extends ContentProvider {
                 if (rowId > 0) {
                     Uri bluetoothUri = ContentUris.withAppendedId(
                             Bluetooth_Sensor.CONTENT_URI, rowId);
-                    getContext().getContentResolver().notifyChange(bluetoothUri,
-                            null);
+                    getContext().getContentResolver().notifyChange(bluetoothUri,null,false);
                     return bluetoothUri;
                 }
                 database.endTransaction();
@@ -207,8 +203,7 @@ public class Bluetooth_Provider extends ContentProvider {
                 if (btId > 0) {
                     Uri bluetoothUri = ContentUris.withAppendedId(
                             Bluetooth_Data.CONTENT_URI, btId);
-                    getContext().getContentResolver().notifyChange(bluetoothUri,
-                            null);
+                    getContext().getContentResolver().notifyChange(bluetoothUri,null,false);
                     return bluetoothUri;
                 }
                 database.endTransaction();
@@ -217,6 +212,16 @@ public class Bluetooth_Provider extends ContentProvider {
                 database.endTransaction();
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
+    }
+
+    /**
+     * Returns the provider authority that is dynamic
+     *
+     * @return
+     */
+    public static String getAuthority(Context context) {
+        AUTHORITY = context.getPackageName() + ".provider.bluetooth";
+        return AUTHORITY;
     }
 
     @Override
@@ -300,7 +305,7 @@ public class Bluetooth_Provider extends ContentProvider {
      */
     @Override
     public synchronized int update(Uri uri, ContentValues values, String selection,
-                      String[] selectionArgs) {
+                                   String[] selectionArgs) {
 
         initialiseDatabase();
 
@@ -324,7 +329,7 @@ public class Bluetooth_Provider extends ContentProvider {
         database.setTransactionSuccessful();
         database.endTransaction();
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(uri, null, false);
         return count;
     }
 }

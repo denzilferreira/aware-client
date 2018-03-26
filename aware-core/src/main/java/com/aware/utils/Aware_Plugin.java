@@ -3,28 +3,22 @@ package com.aware.utils;
 
 import android.Manifest;
 import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
-import com.aware.R;
 import com.aware.ui.PermissionsHandler;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 
 /**
  * Aware_Plugin: Extend to integrate with the framework (extension of Android Service class).
@@ -49,21 +43,6 @@ public class Aware_Plugin extends Service {
     public ContextProducer CONTEXT_PRODUCER = null;
 
     /**
-     * Context ContentProvider tables
-     */
-    public String[] DATABASE_TABLES = null;
-
-    /**
-     * Context ContentProvider fields
-     */
-    public String[] TABLES_FIELDS = null;
-
-    /**
-     * Context ContentProvider Uris
-     */
-    public Uri[] CONTEXT_URIS = null;
-
-    /**
      * Permissions needed for this plugin to run
      */
     public ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
@@ -83,19 +62,28 @@ public class Aware_Plugin extends Service {
      */
     public boolean PERMISSIONS_OK = true;
 
+    /**
+     * Integration with sync adapters
+     */
+    public String AUTHORITY = "";
+
     @Override
     public void onCreate() {
         super.onCreate();
 
+
         //Register Context Broadcaster
         IntentFilter filter = new IntentFilter();
         filter.addAction(Aware.ACTION_AWARE_CURRENT_CONTEXT);
-        filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
-        filter.addAction(Aware.ACTION_AWARE_CLEAR_DATA);
         filter.addAction(Aware.ACTION_AWARE_STOP_PLUGINS);
+        filter.addAction(Aware.ACTION_AWARE_SYNC_DATA);
         registerReceiver(contextBroadcaster, filter);
 
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.GET_ACCOUNTS);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_SYNC_SETTINGS);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.READ_SYNC_SETTINGS);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.READ_SYNC_STATS);
 
         Log.d(Aware.TAG, "created: " + getClass().getName() + " package: " + getPackageName());
     }
@@ -123,7 +111,7 @@ public class Aware_Plugin extends Service {
             PERMISSIONS_OK = true;
 
             //Restores core AWARE service in case it get's killed
-            if (!Aware.isServiceRunning(getApplicationContext(), Aware.class)) {
+            if (!Aware.IS_CORE_RUNNING) {
                 Intent aware = new Intent(getApplicationContext(), Aware.class);
                 startService(aware);
             }
@@ -161,11 +149,8 @@ public class Aware_Plugin extends Service {
     /**
      * AWARE Context Broadcaster<br/>
      * - ACTION_AWARE_CURRENT_CONTEXT: returns current plugin's context
-     * - ACTION_AWARE_WEBSERVICE: push content provider data remotely
-     * - ACTION_AWARE_CLEAN_DATABASES: clears local and remote database
-     * - ACTION_AWARE_STOP_SENSORS: stops this plugin
-     * - ACTION_AWARE_SPACE_MAINTENANCE: clears old data from content providers
-     *
+     * - ACTION_AWARE_STOP_PLUGINS: stops this plugin
+     * - ACTION_AWARE_SYNC_DATA: sends the data to the server
      * @author denzil
      */
     public class ContextBroadcaster extends WakefulBroadcastReceiver {
@@ -176,35 +161,6 @@ public class Aware_Plugin extends Service {
                     CONTEXT_PRODUCER.onContext();
                 }
             }
-            if (intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA)) {
-                if (DATABASE_TABLES != null && TABLES_FIELDS != null && CONTEXT_URIS != null) {
-                    for (int i = 0; i < DATABASE_TABLES.length; i++) {
-                        Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
-                        webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_SYNC_TABLE);
-                        webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
-                        webserviceHelper.putExtra(WebserviceHelper.EXTRA_FIELDS, TABLES_FIELDS[i]);
-                        webserviceHelper.putExtra(WebserviceHelper.EXTRA_CONTENT_URI, CONTEXT_URIS[i].toString());
-                        startWakefulService(context, webserviceHelper);
-                    }
-                }
-            }
-            if (intent.getAction().equals(Aware.ACTION_AWARE_CLEAR_DATA)) {
-                if (DATABASE_TABLES != null && CONTEXT_URIS != null) {
-                    for (int i = 0; i < DATABASE_TABLES.length; i++) {
-                        //Clear locally
-                        context.getContentResolver().delete(CONTEXT_URIS[i], null, null);
-                        if (Aware.DEBUG) Log.d(TAG, "Cleared " + CONTEXT_URIS[i].toString());
-
-                        //Clear remotely
-                        if (Aware.getSetting(context, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
-                            Intent webserviceHelper = new Intent(context, WebserviceHelper.class);
-                            webserviceHelper.setAction(WebserviceHelper.ACTION_AWARE_WEBSERVICE_CLEAR_TABLE);
-                            webserviceHelper.putExtra(WebserviceHelper.EXTRA_TABLE, DATABASE_TABLES[i]);
-                            startWakefulService(context, webserviceHelper);
-                        }
-                    }
-                }
-            }
             if (intent.getAction().equals(Aware.ACTION_AWARE_STOP_PLUGINS)) {
                 if (Aware.DEBUG) Log.d(TAG, TAG + " stopped");
                 try {
@@ -213,6 +169,12 @@ public class Aware_Plugin extends Service {
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }
+            }
+            if (intent.getAction().equals(Aware.ACTION_AWARE_SYNC_DATA) && AUTHORITY.length() > 0) {
+                Bundle sync = new Bundle();
+                sync.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+                sync.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+                ContentResolver.requestSync(Aware.getAWAREAccount(context), AUTHORITY, sync);
             }
         }
     }
