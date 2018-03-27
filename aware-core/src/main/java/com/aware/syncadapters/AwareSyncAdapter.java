@@ -195,8 +195,9 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
                     long start = System.currentTimeMillis();
                     int uploaded_records = 0;
                     int batches = (int) Math.ceil(total_records / (double) MAX_POST_SIZE);
-                    long lastSynced;
+
                     long removeFrom = 0;
+                    Long lastSynced;
 
                     do {
                         if (!Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SILENT).equals("true"))
@@ -204,7 +205,7 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
 
                         Cursor sync_data = getSyncData(remoteLatestData, CONTENT_URI, study_condition, columnsStr, uploaded_records, context, MAX_POST_SIZE);
                         lastSynced = syncBatch(sync_data, database_table, device_id, context, protocol, web_server, DEBUG);
-                        if (lastSynced == 0) {
+                        if (lastSynced == null) {
                             removeFrom = 0;
                             Log.d(Aware.TAG, "Connection to server interrupted. Will try again later.");
                             break;
@@ -225,12 +226,7 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
                     if (!Aware.getSetting(context, Aware_Preferences.WEBSERVICE_SILENT).equals("true")) {
                         notifyUser(context, "Finished syncing " + database_table + ". Thanks!", true, false, notificationID);
                     }
-                } else {
-                    //nothing to upload, no need to do anything now.
-                    return;
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -373,7 +369,8 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private String getLatestRecordSynched(String database_table, String[] columnsStr) {
-        String json_last_timestamp = null;
+
+        JSONObject latest = new JSONObject();
         long last_sync_timestamp;
 
         Cursor lastSynched = mContext.getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE '{\"table\":\"" + database_table + "\",\"last_sync_timestamp\":%'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
@@ -383,20 +380,21 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
                 last_sync_timestamp = logSyncData.getLong("last_sync_timestamp");
 
                 if (exists(columnsStr, "double_end_timestamp")) {
-                    return new JSONObject().put("double_end_timestamp", last_sync_timestamp).toString();
+                    latest = new JSONObject().put("double_end_timestamp", last_sync_timestamp);
                 } else if (exists(columnsStr, "double_esm_user_answer_timestamp")) {
-                    return new JSONObject().put("double_esm_user_answer_timestamp", last_sync_timestamp).toString();
+                    latest = new JSONObject().put("double_esm_user_answer_timestamp", last_sync_timestamp);
                 } else {
-                    return new JSONObject().put("timestamp", last_sync_timestamp).toString();
+                    latest = new JSONObject().put("timestamp", last_sync_timestamp);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
             lastSynched.close();
         } else {
-            json_last_timestamp = "[]";
+            return new JSONArray().toString();
         }
-        return json_last_timestamp;
+
+        return new JSONArray().put(latest).toString();
     }
 
     /**
@@ -599,7 +597,7 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
-    private long syncBatch(Cursor context_data, String DATABASE_TABLE, String DEVICE_ID, Context mContext, String protocol, String WEBSERVER, Boolean DEBUG) throws JSONException {
+    private Long syncBatch(Cursor context_data, String DATABASE_TABLE, String DEVICE_ID, Context mContext, String protocol, String WEBSERVER, Boolean DEBUG) throws JSONException {
         JSONArray rows = new JSONArray();
         long lastSynced = 0;
         if (context_data != null && context_data.moveToFirst()) {
@@ -659,7 +657,7 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
             //Something went wrong, e.g., server is down, lost internet, etc.
             if (success == null) {
                 if (DEBUG) Log.d(Aware.TAG, DATABASE_TABLE + " FAILED to sync. Server down?");
-                return 0;
+                return null;
             } else {
 
                 try {
