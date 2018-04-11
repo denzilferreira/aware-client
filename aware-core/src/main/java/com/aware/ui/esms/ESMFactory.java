@@ -62,6 +62,8 @@ public class ESMFactory {
                 return new ESM_PAM().rebuild(esm).setID(_id);
             case ESM.TYPE_ESM_NUMBER:
                 return new ESM_Number().rebuild(esm).setID(_id);
+            case ESM.TYPE_ESM_WEB:
+                return new ESM_Web().rebuild(esm).setID(_id);
             default:
                 return null;
         }

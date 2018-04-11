@@ -165,12 +165,13 @@ public class ESM extends Aware_Sensor {
     /**
      * ESM Dialog with a date and time picker
      * Example: [{"esm":{"esm_type":7,"esm_title":"Date and time","esm_instructions":"When did this happen?","esm_submit":"OK","esm_trigger":"AWARE Test"}}]
+     * User answer is saved as yyyy-MM-dd HH:mm:ss Z
      */
     public static final int TYPE_ESM_DATETIME = 7;
 
     /**
      * ESM Dialog with PAM (Photographic Affect Meter)
-     * [{"esm":{"esm_type":8,"esm_title":"PAM","esm_instructions":"Select what best illustrates your mood","esm_submit":"OK","esm_trigger":"AWARE Test"}}]
+     * Example: [{"esm":{"esm_type":8,"esm_title":"PAM","esm_instructions":"Select what best illustrates your mood","esm_submit":"OK","esm_trigger":"AWARE Test"}}]
      */
     public static final int TYPE_ESM_PAM = 8;
 

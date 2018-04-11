@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.TabLayout;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.text.format.DateFormat;
@@ -27,6 +28,7 @@ import com.aware.providers.ESM_Provider;
 
 import org.json.JSONException;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 /**
@@ -115,16 +117,8 @@ public class ESM_DateTime extends ESM_Question {
 
         @Override
         public CharSequence getPageTitle(int position) {
-            String title = "";
-            switch (position) {
-                case 0:
-                    title = "Date";
-                    break;
-                case 1:
-                    title = "Time";
-                    break;
-            }
-            return title;
+            String[] titles = {"Date", "Time"};
+            return titles[position];
         }
 
         @Override
@@ -145,7 +139,6 @@ public class ESM_DateTime extends ESM_Question {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
         datePicked = Calendar.getInstance();
 
         View ui = inflater.inflate(R.layout.esm_datetime, null);
@@ -176,6 +169,9 @@ public class ESM_DateTime extends ESM_Question {
                 }
             });
 
+            final TabLayout tabLayout = ui.findViewById(R.id.datetimetabs);
+            tabLayout.setupWithViewPager(datetimePager, true);
+
             Button cancel_text = (Button) ui.findViewById(R.id.esm_cancel);
             cancel_text.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -193,9 +189,11 @@ public class ESM_DateTime extends ESM_Question {
                         if (getExpirationThreshold() > 0 && expire_monitor != null)
                             expire_monitor.cancel(true);
 
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+
                         ContentValues rowData = new ContentValues();
                         rowData.put(ESM_Provider.ESM_Data.ANSWER_TIMESTAMP, System.currentTimeMillis());
-                        rowData.put(ESM_Provider.ESM_Data.ANSWER, datePicked.getTimeInMillis());
+                        rowData.put(ESM_Provider.ESM_Data.ANSWER, dateFormat.format(datePicked.getTime()));
                         rowData.put(ESM_Provider.ESM_Data.STATUS, ESM.STATUS_ANSWERED);
 
                         getActivity().getContentResolver().update(ESM_Provider.ESM_Data.CONTENT_URI, rowData, ESM_Provider.ESM_Data._ID + "=" + getID(), null);

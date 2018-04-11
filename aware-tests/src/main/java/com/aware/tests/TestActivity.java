@@ -29,6 +29,8 @@ public class TestActivity extends Activity {
         Intent aware = new Intent(this, Aware.class);
         startService(aware);
 
+        Aware.setSetting(this, Aware_Preferences.DEBUG_FLAG, true);
+
         button_ESMNotification = (Button) findViewById(R.id.button_ESMNotification);
         button_ESMNotification.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {

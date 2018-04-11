@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/LinearLayout1"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
@@ -9,57 +10,61 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
-        android:textStyle="normal|bold"
-        android:textSize="18sp" />
+        android:textSize="18sp"
+        android:textStyle="normal|bold" />
 
     <TextView
         android:id="@+id/esm_instructions"
-        android:layout_below="@id/esm_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@id/esm_title"
         android:padding="16dp" />
+
+    <android.support.design.widget.TabLayout
+        android:id="@+id/datetimetabs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/esm_instructions"
+        android:background="@color/primary"
+        android:minHeight="?attr/actionBarSize"
+        app:tabGravity="fill"
+        app:tabIndicatorColor="#FFF"
+        app:tabIndicatorHeight="3dp"
+        app:tabMode="fixed"
+        app:tabSelectedTextColor="#FFF"
+        app:tabTextColor="#000" />
 
     <android.support.v4.view.ViewPager
         android:id="@+id/datetimepager"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:padding="0dp"
-        android:layout_below="@+id/esm_instructions"
+        android:layout_height="250dp"
+        android:layout_below="@+id/datetimetabs"
         android:layout_marginLeft="0dp"
         android:layout_marginRight="0dp"
-        android:layout_marginTop="0dp">
-
-        <android.support.v4.view.PagerTitleStrip
-            android:id="@+id/datetimepagerstrip"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="top"
-            android:paddingBottom="2dp"
-            android:paddingTop="0dp"
-            android:textColor="#000" />
-    </android.support.v4.view.ViewPager>
+        android:layout_marginTop="0dp"
+        android:padding="0dp" />
 
     <LinearLayout
         android:id="@+id/LinearLayout1"
         android:layout_width="match_parent"
-        android:layout_alignParentBottom="true"
         android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
         android:layout_below="@+id/datetimepager"
         android:padding="10dp">
 
         <Button
             android:id="@+id/esm_cancel"
-            android:layout_gravity="bottom"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
             android:layout_weight="1"
             android:text="Cancel" />
 
         <Button
             android:id="@+id/esm_submit"
-            android:layout_gravity="bottom"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
             android:layout_weight="2"
             android:gravity="center_vertical|center_horizontal"
             android:text="Button" />

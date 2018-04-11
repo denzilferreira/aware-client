@@ -16,6 +16,7 @@ import com.aware.ui.esms.ESM_PAM;
 import com.aware.ui.esms.ESM_QuickAnswer;
 import com.aware.ui.esms.ESM_Radio;
 import com.aware.ui.esms.ESM_Scale;
+import com.aware.ui.esms.ESM_Web;
 
 import org.json.JSONException;
 
@@ -26,7 +27,7 @@ public class TestESM implements AwareTest {
 
     @Override
     public void test(Context context) {
-        testESMS(context);
+//        testESMS(context);
 //        trialESMS(context);
 //        testFlow(context);
 //        testTimeoutQueue(context);
@@ -35,10 +36,32 @@ public class TestESM implements AwareTest {
 //        testPAM(context);
 //        testOptionsOverflow(context);
 //        testNotificationRetries(context);
+
+        testESMWeb(context);
+    }
+
+    private void testESMWeb(Context context) {
+        ESMFactory factory = new ESMFactory();
+        try {
+
+            ESM_Web web = new ESM_Web();
+            web.setURL("https://www.google.com");
+            web.setTitle("Web survey");
+            web.setInstructions("Fill out this survey. Press OK when finished");
+            web.setSubmitButton("OK");
+
+            factory.addESM(web);
+
+            ESM.queueESM(context, factory.build());
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
      * This tests the notification re-trigger x times after y seconds have elapsed.
+     *
      * @param context
      */
     private void testNotificationRetries(Context context) {
@@ -46,7 +69,7 @@ public class TestESM implements AwareTest {
         try {
 
             ESM_Number number = new ESM_Number();
-            number.setNotificationTimeout(5*60) //5 minutes
+            number.setNotificationTimeout(5 * 60) //5 minutes
                     .setNotificationRetry(3) //notify the user 3 times, so notification alive for 3 * 5 minutes = 15 minutes
                     .setTitle("Lucky number?")
                     .setInstructions("Pick one.");
@@ -55,7 +78,7 @@ public class TestESM implements AwareTest {
 
             ESM.queueESM(context, factory.build());
 
-        } catch (JSONException e){
+        } catch (JSONException e) {
             e.printStackTrace();
         }
     }
@@ -114,7 +137,7 @@ public class TestESM implements AwareTest {
 
             ESM.queueESM(context, factory.build());
 
-        } catch (JSONException e){
+        } catch (JSONException e) {
             e.printStackTrace();
         }
     }
@@ -152,11 +175,7 @@ public class TestESM implements AwareTest {
 
             factory.addESM(q1);
 
-            Log.d(Aware.TAG, factory.build());
-
-            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
-            queue.putExtra(ESM.EXTRA_ESM, factory.build());
-            context.sendBroadcast(queue);
+            ESM.queueESM(context, factory.build());
 
         } catch (JSONException e) {
             e.printStackTrace();
