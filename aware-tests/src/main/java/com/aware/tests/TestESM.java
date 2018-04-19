@@ -49,6 +49,7 @@ public class TestESM implements AwareTest {
             date.setTitle("ESM: Date");
             date.setInstructions("On which day did this occur?");
             date.setSubmitButton("OK");
+            date.setCalendar(false); //don't use calendar view, use date picker
 
             factory.addESM(date);
 
