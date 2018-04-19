@@ -8,6 +8,7 @@ import com.aware.Aware;
 import com.aware.ESM;
 import com.aware.ui.esms.ESMFactory;
 import com.aware.ui.esms.ESM_Checkbox;
+import com.aware.ui.esms.ESM_Date;
 import com.aware.ui.esms.ESM_DateTime;
 import com.aware.ui.esms.ESM_Freetext;
 import com.aware.ui.esms.ESM_Likert;
@@ -36,13 +37,31 @@ public class TestESM implements AwareTest {
 //        testPAM(context);
 //        testOptionsOverflow(context);
 //        testNotificationRetries(context);
+//        testESMWeb(context);
+        testESMDate(context);
+    }
 
-        testESMWeb(context);
+    private void testESMDate(Context context) {
+        try {
+            ESMFactory factory = new ESMFactory();
+
+            ESM_Date date = new ESM_Date();
+            date.setTitle("ESM: Date");
+            date.setInstructions("On which day did this occur?");
+            date.setSubmitButton("OK");
+
+            factory.addESM(date);
+
+            ESM.queueESM(context, factory.build());
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     private void testESMWeb(Context context) {
-        ESMFactory factory = new ESMFactory();
         try {
+            ESMFactory factory = new ESMFactory();
 
             ESM_Web web = new ESM_Web();
             web.setURL("https://www.google.com");
@@ -155,9 +174,8 @@ public class TestESM implements AwareTest {
 
             factory.addESM(q1);
 
-            Log.d(Aware.TAG, factory.build());
-
             ESM.queueESM(context, factory.build());
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -194,11 +212,7 @@ public class TestESM implements AwareTest {
 
             factory.addESM(q1);
 
-            Log.d(Aware.TAG, factory.build());
-
-            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
-            queue.putExtra(ESM.EXTRA_ESM, factory.build());
-            context.sendBroadcast(queue);
+            ESM.queueESM(context, factory.build());
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -314,9 +328,6 @@ public class TestESM implements AwareTest {
             factory.addESM(esmDate);
 
             ESM.queueESM(context, factory.build());
-//            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
-//            queue.putExtra(ESM.EXTRA_ESM, factory.build());
-//            context.sendBroadcast(queue);
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -389,9 +400,7 @@ public class TestESM implements AwareTest {
             factory.addESM(esmRadio);
             factory.addESM(esmScale);
 
-            Intent queue = new Intent(ESM.ACTION_AWARE_TRY_ESM);
-            queue.putExtra(ESM.EXTRA_ESM, factory.build());
-            context.sendBroadcast(queue);
+            ESM.queueESM(context, factory.build(), true);
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -469,9 +478,7 @@ public class TestESM implements AwareTest {
             factory.addESM(esmRadio);
             factory.addESM(esmScale);
 
-            Intent queue = new Intent(ESM.ACTION_AWARE_QUEUE_ESM);
-            queue.putExtra(ESM.EXTRA_ESM, factory.build());
-            context.sendBroadcast(queue);
+            ESM.queueESM(context, factory.build());
 
         } catch (JSONException e) {
             e.printStackTrace();

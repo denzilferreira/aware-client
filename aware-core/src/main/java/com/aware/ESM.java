@@ -183,14 +183,17 @@ public class ESM extends Aware_Sensor {
 
     /**
      * ESM that shows the user a webpage
+     * Example: [{"esm":{"esm_type":10,"esm_title":"ESM Web","esm_instructions":"Please fill out this online survey. Press OK when done.","esm_submit":"OK","esm_url":"https://www.google.com"}}]
      */
     public static final int TYPE_ESM_WEB = 10;
     /**
      * ESM that asks the user to pick a date
+     * User answer is saved as yyyy-MM-dd Z
      */
     public static final int TYPE_ESM_DATE = 11;
     /**
      * ESM that asks the user to choose a time
+     * User answer is saved as HH:mm:ss Z
      */
     public static final int TYPE_ESM_TIME = 12;
     /**
