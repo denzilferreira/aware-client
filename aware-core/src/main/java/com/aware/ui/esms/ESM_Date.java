@@ -47,7 +47,7 @@ public class ESM_Date extends ESM_Question {
     }
 
     public boolean isCalendar() throws JSONException {
-        if(!this.esm.has(esm_calendar)) this.esm.put(esm_calendar, true);
+        if(!this.esm.has(esm_calendar)) this.esm.put(esm_calendar, false);
         return this.esm.getBoolean(esm_calendar);
     }
 
