@@ -7,7 +7,8 @@
     <LinearLayout
         android:id="@+id/LinearLayout1"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
         android:orientation="vertical">
 
         <TextView
@@ -29,15 +30,16 @@
         <CalendarView
             android:id="@+id/esm_calendar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
 
         <DatePicker
             android:id="@+id/esm_datePicker"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:calendarViewShown="false"
-            android:datePickerMode="spinner" />
-
+            android:datePickerMode="spinner"
+            android:visibility="visible" />
 
     </LinearLayout>
 
@@ -47,7 +49,6 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_below="@+id/esm_webpage"
-        android:layout_weight="1"
         android:padding="10dp">
 
         <Button

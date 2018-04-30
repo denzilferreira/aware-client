@@ -47,7 +47,7 @@ public class ESM_Date extends ESM_Question {
     }
 
     public boolean isCalendar() throws JSONException {
-        if(!this.esm.has(esm_calendar)) this.esm.put(esm_calendar, false);
+        if (!this.esm.has(esm_calendar)) this.esm.put(esm_calendar, false);
         return this.esm.getBoolean(esm_calendar);
     }
 
@@ -81,7 +81,8 @@ public class ESM_Date extends ESM_Question {
             final CalendarView calendarPicker = ui.findViewById(R.id.esm_calendar);
             final DatePicker datePicker = ui.findViewById(R.id.esm_datePicker);
 
-            if (isCalendar()) {
+            if (isCalendar() || Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) { //date picker doesn't exist for < 21
+                calendarPicker.setVisibility(View.VISIBLE);
                 calendarPicker.setDate(datePicked.getTimeInMillis());
                 calendarPicker.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -104,6 +105,7 @@ public class ESM_Date extends ESM_Question {
                 });
                 datePicker.setVisibility(View.GONE);
             } else {
+                datePicker.setVisibility(View.VISIBLE);
                 datePicker.init(datePicked.get(Calendar.YEAR), datePicked.get(Calendar.MONTH), datePicked.get(Calendar.DAY_OF_MONTH), new DatePicker.OnDateChangedListener() {
                     @Override
                     public void onDateChanged(DatePicker datePicker, int year, int month, int dayOfMonth) {
