@@ -23,8 +23,19 @@ android {
     }
 }
 
+repositories {
+    maven { url 'https://jitpack.io' } //this allows library generation directly from GitHub source-code
+}
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
 dependencies {
-    api project(':aware-core')
+    //api project(':aware-core')
+
+    api "com.github.denzilferreira:aware-client:master-SNAPSHOT"
+
     implementation "com.android.support:gridlayout-v7:$support_libs"
     implementation "com.android.support:appcompat-v7:$support_libs"
 }

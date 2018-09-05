@@ -9,6 +9,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SyncRequest;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
@@ -239,6 +240,8 @@ public class ESM extends Aware_Sensor {
     //Static instance to the notification manager
     private static NotificationManager mNotificationManager;
 
+    private static final ESMMonitor esmMonitor = new ESMMonitor();
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -248,6 +251,16 @@ public class ESM extends Aware_Sensor {
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (Aware.DEBUG) Log.d(TAG, "ESM service created!");
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_AWARE_TRY_ESM);
+        filter.addAction(ACTION_AWARE_QUEUE_ESM);
+        filter.addAction(ACTION_AWARE_ESM_ANSWERED);
+        filter.addAction(ACTION_AWARE_ESM_DISMISSED);
+        filter.addAction(ACTION_AWARE_ESM_EXPIRED);
+        filter.addAction(ACTION_AWARE_ESM_REPLACED);
+
+        registerReceiver(esmMonitor, filter);
     }
 
     @Override
@@ -260,6 +273,8 @@ public class ESM extends Aware_Sensor {
                 ESM_Provider.getAuthority(this),
                 Bundle.EMPTY
         );
+
+        unregisterReceiver(esmMonitor);
 
         if (Aware.DEBUG) Log.d(TAG, "ESM service terminated...");
     }

@@ -170,15 +170,6 @@
             android:name="com.aware.SignificantMotion"
             android:exported="true" />
 
-        <!-- Shared BroadcastReceivers -->
-        <receiver
-            android:name="com.aware.utils.Aware_TTS$Aware_TTS_Receiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="ACTION_AWARE_TTS_SPEAK" />
-            </intent-filter>
-        </receiver>
-
         <receiver
             android:name="com.aware.Aware$Storage_Broadcaster"
             android:exported="true">
@@ -189,35 +180,11 @@
                 <data android:scheme="file" />
             </intent-filter>
         </receiver>
-
-        <receiver
-            android:name="com.aware.ESM$ESMMonitor"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="ACTION_AWARE_TRY_ESM" />
-                <action android:name="ACTION_AWARE_QUEUE_ESM" />
-                <action android:name="ACTION_AWARE_ESM_ANSWERED" />
-                <action android:name="ACTION_AWARE_ESM_DISMISSED" />
-                <action android:name="ACTION_AWARE_ESM_EXPIRED" />
-                <action android:name="ACTION_AWARE_ESM_REPLACED" />
-            </intent-filter>
-        </receiver>
-
         <receiver
             android:name="com.aware.Aware$AwareBoot"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
-
-        <receiver
-            android:name="com.aware.Aware$Aware_Broadcaster"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="ACTION_AWARE_CLEAR_DATA" />
-                <action android:name="ACTION_AWARE_SYNC_DATA" />
-                <action android:name="ACTION_QUIT_STUDY" />
             </intent-filter>
         </receiver>
 

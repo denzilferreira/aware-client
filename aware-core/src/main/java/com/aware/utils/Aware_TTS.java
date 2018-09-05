@@ -5,6 +5,7 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Build;
 import android.os.IBinder;
 import android.speech.tts.TextToSpeech;
@@ -60,6 +61,12 @@ public class Aware_TTS extends Service implements OnInitListener {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_AWARE_TTS_SPEAK);
+
+        registerReceiver(awareTTS, filter);
+
         tts = new TextToSpeech(this, this);
     }
 
@@ -81,6 +88,9 @@ public class Aware_TTS extends Service implements OnInitListener {
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        unregisterReceiver(awareTTS);
+
         if( tts != null ) tts.shutdown();
     }
 
@@ -89,6 +99,7 @@ public class Aware_TTS extends Service implements OnInitListener {
         return null;
     }
 
+    public static final Aware_TTS_Receiver awareTTS = new Aware_TTS_Receiver();
     public static class Aware_TTS_Receiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {

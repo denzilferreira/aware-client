@@ -1822,7 +1822,7 @@ public class Aware extends Service {
             unregisterReceiver(foregroundMgr);
             unregisterReceiver(schedulerTicker);
         } catch (IllegalArgumentException e) {
-            //There is no API to check if a broadcast receiver already is registered. Since Aware.java is shared accross plugins, the receiver is only registered on the client, not the plugins.
+            //There is no API to check if a broadcast receiver already is registered. Since Aware.java is shared across plugins, the receiver is only registered on the client, not the plugins.
         }
     }
 
@@ -2131,7 +2131,7 @@ public class Aware extends Service {
      * Aware#ACTION_AWARE_SYNC_DATA: send the data remotely
      * @author denzil
      */
-    private static final Aware_Broadcaster aware_BR = new Aware_Broadcaster();
+    public static final Aware_Broadcaster aware_BR = new Aware_Broadcaster();
     public static class Aware_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
