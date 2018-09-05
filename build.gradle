@@ -2,7 +2,7 @@
 project.ext {
     mqtt_libs = (System.getenv("mqtt_libs") as String ?: "1.2.0")
     ion_libs = (System.getenv("ion_libs") as String ?: "2.+")
-    support_libs = (System.getenv("support_libs") as String ?: "27.1.0")
+    support_libs = (System.getenv("support_libs") as String ?: "27.1.1")
     google_libs = (System.getenv("google_libs") ?: "12.0.0")
     version_code = (System.getenv("aware_revision") as Integer ?: 700)
     version_readable = "4.0." + version_code + "." + (System.getenv("aware_label") as String ?: "selfie")
@@ -22,7 +22,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.1'
+        classpath 'com.android.tools.build:gradle:3.1.4'
     }
 }
 

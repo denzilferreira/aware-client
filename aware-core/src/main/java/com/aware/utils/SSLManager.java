@@ -2,6 +2,7 @@ package com.aware.utils;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
@@ -55,6 +57,13 @@ public class SSLManager {
         Uri study_uri = Uri.parse(url);
         String hostname = study_uri.getHost();
 
+        String protocol = "http";
+        try {
+            protocol = new URL(url).getProtocol();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
         if (study_uri.getQuery() != null) {
             // If it is in URL parameters, always unconditionally handle it
             String crt = study_uri.getQueryParameter("crt");
@@ -70,7 +79,7 @@ public class SSLManager {
                 if (Aware.DEBUG)
                     Log.d(Aware.TAG, "Certificates: Downloading crt if not present: " + hostname);
                 if (!hasCertificate(context, hostname)) {
-                    downloadCertificate(context, hostname, block);
+                    downloadCertificate(context, protocol, hostname, block);
                 } else {
                     if (Aware.DEBUG)
                         Log.d(Aware.TAG, "Certificates: Already present and key_management=once: " + hostname);
@@ -79,16 +88,15 @@ public class SSLManager {
                 try {
                     if (!hasCertificate(context, hostname)) {
                         if (Aware.DEBUG) Log.d(Aware.TAG, "Certificates: Downloading for the first time SSL certificate: " + hostname);
-                        downloadCertificate(context, hostname, block);
+                        downloadCertificate(context, protocol, hostname, block);
                     } else {
+
+                        //Cached certificate information
                         InputStream localCertificate = getCertificate(context, hostname);
                         CertificateFactory cf = CertificateFactory.getInstance("X.509");
                         X509Certificate cert = (X509Certificate) cf.generateCertificate(localCertificate);
 
-                        if (System.currentTimeMillis() > cert.getNotAfter().getTime()) { //local certificate is expired, download new certificate
-                            downloadCertificate(context, hostname, true);
-                            //this will force download of SSL certificate from the server. Checked every 15 minutes until successful update to up-to-date certificate.
-                        }
+                        new CheckCertificates(context, url).execute(cert);
                     }
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
@@ -96,6 +104,49 @@ public class SSLManager {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    public static class CheckCertificates extends AsyncTask<X509Certificate, Void, Void> {
+        private String url;
+        private String protocol;
+        private String hostname;
+        private Context context;
+
+        CheckCertificates(Context context, String URL) {
+            this.url = URL;
+            this.context = context;
+
+            Uri study_uri = Uri.parse(url);
+            this.hostname = study_uri.getHost();
+
+            this.protocol = "http";
+            try {
+                protocol = new URL(url).getProtocol();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                protocol = "http";
+            }
+        }
+
+        @Override
+        protected Void doInBackground(X509Certificate... x509Certificate) {
+
+            //Remote certificate information
+            X509Certificate remote_certificate = null;
+            try {
+                remote_certificate = retrieveRemoteCertificate(new URL(protocol+"://"+hostname));
+
+                if (!x509Certificate[0].equals(remote_certificate)) { //local certificate is expired or different, download new certificate
+                    downloadCertificate(context, protocol, hostname, true);
+                    //this will force download of SSL certificate from the server. Checked every 15 minutes until successful update to up-to-date certificate.
+                }
+
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+
+            return null;
         }
     }
 
@@ -110,11 +161,7 @@ public class SSLManager {
             HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
             conn.setConnectTimeout(5000); //5 seconds to connect
             conn.setReadTimeout(10000); //10 seconds to acknowledge the response
-
-            long now = System.currentTimeMillis();
-            while (conn.getResponseCode() != HttpsURLConnection.HTTP_OK || now - System.currentTimeMillis() <= 5000) {
-                //noop - wait up to 5 seconds to retrieve the certificate
-            }
+            conn.connect();
 
             // retrieve the N-length signing chain for the server certificates
             // certs[0] is the server's certificate
@@ -155,11 +202,7 @@ public class SSLManager {
             HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
             conn.setConnectTimeout(5000); //5 seconds to connect
             conn.setReadTimeout(10000); //10 seconds to acknowledge the response
-
-            long now = System.currentTimeMillis();
-            while (conn.getResponseCode() != HttpsURLConnection.HTTP_OK || now - System.currentTimeMillis() <= 5000) {
-                //noop - wait up to 5 seconds to retrieve the certificate
-            }
+            conn.connect();
 
             // retrieve the N-length signing chain for the server certificates
             // certs[0] is the server's certificate
@@ -199,7 +242,7 @@ public class SSLManager {
      * @param hostname Hostname to download.
      * @param block    If true, block until certificate retrieved, otherwise do not.
      */
-    public static void downloadCertificate(Context context, String hostname, boolean block) {
+    public static void downloadCertificate(Context context, String protocol, String hostname, boolean block) {
         //Fixed: make sure we have a valid hostname
         if (hostname == null || hostname.length() == 0) return;
 
@@ -221,7 +264,7 @@ public class SSLManager {
         root_folder.mkdirs();
 
         try {
-            X509Certificate certificate = retrieveRemoteCertificate(new URL(hostname));
+            X509Certificate certificate = retrieveRemoteCertificate(new URL(protocol+"://"+hostname));
             Log.d(Aware.TAG, "Certificate info: " + certificate.toString());
 
             byte[] certificate_data = certificate.getEncoded();
