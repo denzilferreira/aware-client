@@ -7,13 +7,13 @@
         android:description="@string/read_permission"
         android:icon="@drawable/ic_launcher_settings"
         android:label="Read AWARE&apos;s Context data"
-        android:protectionLevel="normal" />
+        android:protectionLevel="signature" />
     <permission
         android:name="com.aware.WRITE_CONTEXT_DATA"
         android:description="@string/write_permission"
         android:icon="@drawable/ic_launcher_settings"
         android:label="Write to AWARE&apos;s Context data"
-        android:protectionLevel="normal" />
+        android:protectionLevel="signature" />
 
     <uses-feature
         android:name="android.hardware.camera"

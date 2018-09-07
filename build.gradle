@@ -3,13 +3,13 @@ project.ext {
     mqtt_libs = (System.getenv("mqtt_libs") as String ?: "1.2.0")
     ion_libs = (System.getenv("ion_libs") as String ?: "2.+")
     support_libs = (System.getenv("support_libs") as String ?: "27.1.1")
-    google_libs = (System.getenv("google_libs") ?: "12.0.0")
+    google_libs = (System.getenv("google_libs") ?: "15.0.1")
     version_code = (System.getenv("aware_revision") as Integer ?: 700)
     version_readable = "4.0." + version_code + "." + (System.getenv("aware_label") as String ?: "selfie")
-    compile_sdk = (System.getenv("compile_sdk") as Integer ?: 26)
-    target_sdk = (System.getenv("target_sdk") as Integer ?: 25)
+    compile_sdk = (System.getenv("compile_sdk") as Integer ?: 28)
+    target_sdk = (System.getenv("target_sdk") as Integer ?: 28)
     minimum_sdk = (System.getenv("minimum_sdk") as Integer ?: 19) //Android 4.4+
-    build_tools = (System.getenv("build_tools") ?: "27.0.3")
+    build_tools = (System.getenv("build_tools") ?: "28.0.2")
 }
 
 buildscript {

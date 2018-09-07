@@ -502,7 +502,7 @@ public class Aware extends Service {
                     JSONArray status = new JSONArray(study_status);
 
                     JSONObject study = status.getJSONObject(0);
-                    if (!study.getBoolean("status")) {
+                    if (!study.optBoolean("status", false)) {
                         return false; //study no longer active, make clients quit the study and reset.
                     }
 
