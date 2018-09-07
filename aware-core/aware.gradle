@@ -9,4 +9,5 @@ ext {
     target_sdk = (System.getenv("target_sdk") as Integer ?: 28)
     minimum_sdk = (System.getenv("minimum_sdk") as Integer ?: 19) //Android 4.4+
     build_tools = (System.getenv("build_tools") ?: "28.0.2")
+    aware_libs = (System.getenv("aware_libs") as String ?: "master-SNAPSHOT")
 }
