@@ -8,6 +8,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -65,7 +66,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     private static final ArrayList<String> REQUIRED_PERMISSIONS = new ArrayList<>();
     private static final Hashtable<String, Integer> optionalSensors = new Hashtable<>();
 
-    private Aware.AndroidPackageMonitor packageMonitor;
+    private final Aware.AndroidPackageMonitor packageMonitor = new Aware.AndroidPackageMonitor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,13 +136,10 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
             startService(aware);
         }
 
-//        IntentFilter awarePackages = new IntentFilter();
-//        awarePackages.addAction(Intent.ACTION_PACKAGE_ADDED);
-//        awarePackages.addAction(Intent.ACTION_PACKAGE_REMOVED);
-//
-//        packageMonitor = new Aware.AndroidPackageMonitor();
-//
-//        registerReceiver(packageMonitor, awarePackages);
+        IntentFilter awarePackages = new IntentFilter();
+        awarePackages.addAction(Intent.ACTION_PACKAGE_ADDED);
+        awarePackages.addAction(Intent.ACTION_PACKAGE_REMOVED);
+        registerReceiver(packageMonitor, awarePackages);
     }
 
     @Override
@@ -446,7 +444,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        //unregisterReceiver(packageMonitor);
+        unregisterReceiver(packageMonitor);
     }
 
     private class AsyncPing extends AsyncTask<Void, Void, Boolean> {
