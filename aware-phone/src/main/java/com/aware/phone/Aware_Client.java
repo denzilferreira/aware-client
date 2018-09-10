@@ -139,6 +139,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         IntentFilter awarePackages = new IntentFilter();
         awarePackages.addAction(Intent.ACTION_PACKAGE_ADDED);
         awarePackages.addAction(Intent.ACTION_PACKAGE_REMOVED);
+        awarePackages.addDataScheme("package");
         registerReceiver(packageMonitor, awarePackages);
     }
 
