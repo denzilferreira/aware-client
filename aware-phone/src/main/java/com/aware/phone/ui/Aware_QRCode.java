@@ -141,6 +141,10 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                     //Note: Joining a study always downloads the certificate.
                     SSLManager.handleUrl(getApplicationContext(), study_url, true);
 
+                    while(!SSLManager.hasCertificate(getApplicationContext(), study_uri.getHost())) {
+                        //wait until we have the certificate downloaded
+                    }
+
                     try {
                         request = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
                     } catch (FileNotFoundException e) {

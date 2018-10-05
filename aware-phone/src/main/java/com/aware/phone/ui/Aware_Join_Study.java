@@ -284,23 +284,27 @@ public class Aware_Join_Study extends Aware_Activity {
                 study_api_key = path_segments.get(path_segments.size() - 1);
                 study_id = path_segments.get(path_segments.size() - 2);
 
-                if (Aware.DEBUG) Log.d(Aware.TAG, "Study API: " + study_api_key + " \nStudy ID: " + study_id);
+                Log.d(Aware.TAG, "Study API: " + study_api_key + " \nStudy ID: " + study_id);
 
                 String request;
                 if (protocol.equals("https")) {
                     //Note: Joining a study always downloads the certificate.
                     SSLManager.handleUrl(getApplicationContext(), study_url, true);
 
+                    while(!SSLManager.hasCertificate(getApplicationContext(), study_uri.getHost())) {
+                        //wait until we have the certificate downloaded
+                    }
+
                     try {
                         request = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url))
-                                .dataGET(study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key,
+                                .dataGET(study_uri.getHost() + "/index.php/webservice/client_get_study_info/" + study_api_key,
                                         true);
                     } catch (FileNotFoundException e) {
                         Log.d(Aware.TAG, "Failed to load certificate: " + e.getMessage());
                         request = null;
                     }
                 } else {
-                    request = new Http().dataGET(study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                    request = new Http().dataGET(study_uri.getHost() + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
                 }
 
                 if (Aware.DEBUG) Log.d(Aware.TAG, "Request result: " + request);

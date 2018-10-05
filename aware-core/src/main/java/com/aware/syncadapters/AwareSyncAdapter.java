@@ -92,12 +92,7 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
      */
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
-        //Restores core AWARE service in case it get's killed
-        if (!Aware.IS_CORE_RUNNING) {
-            Intent aware = new Intent(mContext, Aware.class);
-            mContext.startService(aware);
-        }
-
+        
         if (!Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_SILENT).equals("true"))
             notManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
 

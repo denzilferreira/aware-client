@@ -142,6 +142,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
     public static MqttClient MQTT_CLIENT;
 
+    private static MQTTAsync mqttAsync;
+
     @Override
     public void connectionLost(Throwable throwable) {
         if (awareSensor != null) awareSensor.onDisconnected();
@@ -151,12 +153,15 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
     }
 
     private static Mqtt.AWARESensorObserver awareSensor;
+
     public static void setSensorObserver(Mqtt.AWARESensorObserver observer) {
         awareSensor = observer;
     }
+
     public static Mqtt.AWARESensorObserver getSensorObserver() {
         return awareSensor;
     }
+
     public interface AWARESensorObserver {
         /**
          * Connected successfully to the server
@@ -170,6 +175,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
 
         /**
          * New message received from the server
+         *
          * @param data
          */
         void onMessage(ContentValues data);
@@ -187,7 +193,7 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         try {
             getContentResolver().insert(Mqtt_Messages.CONTENT_URI, rowData);
 
-            if (awareSensor!= null) awareSensor.onMessage(rowData);
+            if (awareSensor != null) awareSensor.onMessage(rowData);
 
         } catch (SQLiteException e) {
             if (Aware.DEBUG) Log.d(TAG, e.getMessage());
@@ -360,7 +366,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                 Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, true);
 
                 if (MQTT_CLIENT != null && MQTT_CLIENT.isConnected()) {
-                    if (DEBUG) Log.d(TAG, "MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
+                    if (DEBUG)
+                        Log.d(TAG, "MQTT: Client ID=" + MQTT_CLIENT.getClientId() + "\n Server:" + MQTT_CLIENT.getServerURI());
                 } else {
                     initializeMQTT();
                 }
@@ -380,7 +387,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
             try {
                 MQTT_MESSAGES_PERSISTENCE.close();
                 MQTT_CLIENT.disconnect();
-                if (Aware.DEBUG) Log.e(TAG, "Disconnected by demand successfully from the server...");
+                if (Aware.DEBUG)
+                    Log.e(TAG, "Disconnected by demand successfully from the server...");
             } catch (MqttException e) {
                 if (Aware.DEBUG) Log.e(TAG, e.getMessage());
             }
@@ -390,6 +398,9 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
     }
 
     private void initializeMQTT() {
+
+        if (mqttAsync != null) return; //already initialised
+
         String server = Aware.getSetting(getApplicationContext(), Aware_Preferences.MQTT_SERVER);
         if (server == null || server.length() == 0) return;
 
@@ -426,25 +437,28 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
         if (MQTT_PASSWORD.length() > 0)
             MQTT_OPTIONS.setPassword(MQTT_PASSWORD.toCharArray());
 
-        if (MQTT_PROTOCOL.equalsIgnoreCase("ssl")) {
-            try {
+
+        try {
+            if (MQTT_PROTOCOL.equalsIgnoreCase("ssl")) {
                 SocketFactory factory = new SSLUtils(this).getSocketFactory(MQTT_SERVER);
                 MQTT_OPTIONS.setSocketFactory(factory);
-                
-                MQTT_CLIENT = new MqttClient(
-                        MQTT_URL,
-                        String.valueOf(Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).hashCode()),
-                        MQTT_MESSAGES_PERSISTENCE);
-
-                MQTT_CLIENT.setCallback(this);
-
-                new MQTTAsync().execute(MQTT_OPTIONS);
-
-            } catch (NullPointerException e) {
-                Log.e(Mqtt.TAG, "Unable to create SSL factory. Certificate missing?");
-            } catch (MqttException | IllegalArgumentException e) {
-                if (Aware.DEBUG) Log.e(TAG, "Failed: " + e.getMessage());
             }
+
+            MQTT_CLIENT = new MqttClient(
+                    MQTT_URL,
+                    String.valueOf(Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID).hashCode()),
+                    MQTT_MESSAGES_PERSISTENCE);
+
+            MQTT_CLIENT.setCallback(this);
+
+            mqttAsync = new MQTTAsync();
+            mqttAsync.execute(MQTT_OPTIONS);
+
+        } catch (NullPointerException | MqttException | IllegalArgumentException e) {
+            Log.e(TAG, e.getMessage());
+
+            Aware.setSetting(this, Aware_Preferences.STATUS_MQTT, false);
+            stopSelf();
         }
     }
 
@@ -537,7 +551,8 @@ public class Mqtt extends Aware_Sensor implements MqttCallback {
                 }
 
             } else {
-                if (Aware.DEBUG) Log.d(TAG, "MQTT Client failed to connect... Parameters used: " + options.toString());
+                if (Aware.DEBUG)
+                    Log.d(TAG, "MQTT Client failed to connect... Parameters used: " + options.toString());
                 if (Aware.DEBUG) Log.d(TAG, "Disabling MQTT...");
                 Aware.setSetting(getApplicationContext(), Aware_Preferences.STATUS_MQTT, false);
                 Aware.stopMQTT(getApplicationContext());

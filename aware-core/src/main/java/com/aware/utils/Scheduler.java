@@ -623,13 +623,6 @@ public class Scheduler extends Aware_Sensor {
 
         if (PERMISSIONS_OK) {
 
-            //Restores core AWARE service in case it get's killed
-            if (!Aware.IS_CORE_RUNNING) {
-                Intent aware = new Intent(getApplicationContext(), Aware.class);
-                startService(aware);
-            }
-
-
             DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
 
             if (DEBUG) Log.d(TAG, "Checking for scheduled tasks: " + getPackageName());
