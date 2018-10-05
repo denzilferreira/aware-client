@@ -113,7 +113,7 @@ public class Aware_Sensor extends Service {
             if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
                 SSLManager.handleUrl(getApplicationContext(), Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER), true);
             }
-            Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
+            //Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -123,7 +123,7 @@ public class Aware_Sensor extends Service {
     public void onDestroy() {
         super.onDestroy();
         if (PERMISSIONS_OK) {
-            Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
+            //Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
         }
 
         //Unregister Context Broadcaster

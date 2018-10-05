@@ -125,7 +125,7 @@ public class Aware_Plugin extends Service {
                 SSLManager.handleUrl(getApplicationContext(), Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER), true);
             }
 
-            Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
+            //Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
         }
         return super.onStartCommand(intent, flags, startId);
     }
@@ -135,7 +135,7 @@ public class Aware_Plugin extends Service {
         super.onDestroy();
 
         if (PERMISSIONS_OK) {
-            Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
+            //Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
         }
 
         if (contextBroadcaster != null) unregisterReceiver(contextBroadcaster);

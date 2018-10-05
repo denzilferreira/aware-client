@@ -79,7 +79,8 @@ public class SSLManager {
                 if (Aware.DEBUG)
                     Log.d(Aware.TAG, "Certificates: Downloading crt if not present: " + hostname);
                 if (!hasCertificate(context, hostname)) {
-                    downloadCertificate(context, protocol, hostname, block);
+                    //downloadCertificate(context, protocol, hostname, block);
+                    new DownloadCertificateTask(context, protocol, hostname).execute();
                 } else {
                     if (Aware.DEBUG)
                         Log.d(Aware.TAG, "Certificates: Already present and key_management=once: " + hostname);
@@ -87,15 +88,13 @@ public class SSLManager {
             } else {
                 try {
                     if (!hasCertificate(context, hostname)) {
-                        if (Aware.DEBUG) Log.d(Aware.TAG, "Certificates: Downloading for the first time SSL certificate: " + hostname);
-                        downloadCertificate(context, protocol, hostname, block);
+                        if (Aware.DEBUG) Log.d(Aware.TAG, "Certificates: Downloading for the first time SSL certificate: " + protocol+"://"+hostname);
+                        new DownloadCertificateTask(context, protocol, hostname).execute();
                     } else {
-
                         //Cached certificate information
                         InputStream localCertificate = getCertificate(context, hostname);
                         CertificateFactory cf = CertificateFactory.getInstance("X.509");
                         X509Certificate cert = (X509Certificate) cf.generateCertificate(localCertificate);
-
                         new CheckCertificates(context, url).execute(cert);
                     }
                 } catch (FileNotFoundException e) {
@@ -125,27 +124,20 @@ public class SSLManager {
                 protocol = new URL(url).getProtocol();
             } catch (MalformedURLException e) {
                 e.printStackTrace();
-                protocol = "http";
             }
         }
 
         @Override
         protected Void doInBackground(X509Certificate... x509Certificate) {
-
-            //Remote certificate information
-            X509Certificate remote_certificate = null;
             try {
-                remote_certificate = retrieveRemoteCertificate(new URL(protocol+"://"+hostname));
-
+                X509Certificate remote_certificate = retrieveRemoteCertificate(new URL(protocol+"://"+hostname));
                 if (!x509Certificate[0].equals(remote_certificate)) { //local certificate is expired or different, download new certificate
                     downloadCertificate(context, protocol, hostname, true);
                     //this will force download of SSL certificate from the server. Checked every 15 minutes until successful update to up-to-date certificate.
                 }
-
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
-
             return null;
         }
     }
@@ -191,7 +183,23 @@ public class SSLManager {
             return null;
         }
     }
+    public static class DownloadCertificateTask extends AsyncTask<Void,Void,Void>{
+        String protocol;
+        String hostname;
+        Context context;
 
+        DownloadCertificateTask(Context context, String protocol, String URL) {
+            this.context = context;
+            this.hostname = Uri.parse(protocol+"://"+URL).getHost();
+            this.protocol = protocol;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            downloadCertificate(context, this.protocol, this.hostname, true);
+            return null;
+        }
+    }
     /**
      * Downloads the certificate directly from the URL, instead of a public folder.
      * @param url
@@ -246,13 +254,6 @@ public class SSLManager {
         //Fixed: make sure we have a valid hostname
         if (hostname == null || hostname.length() == 0) return;
 
-        // api.awareframework.com is an exception: we download from a different host.
-        // cert_host is the host from which we actually download.
-        String cert_host;
-        if (hostname.contains("api.awareframework.com")) {
-            cert_host = "awareframework.com";
-        } else cert_host = hostname;
-
         File root_folder;
         if (context.getApplicationContext().getResources().getBoolean(R.bool.internalstorage)) {
             root_folder = new File(context.getFilesDir(), "/credentials/" + hostname);
@@ -265,36 +266,12 @@ public class SSLManager {
 
         try {
             X509Certificate certificate = retrieveRemoteCertificate(new URL(protocol+"://"+hostname));
-            Log.d(Aware.TAG, "Certificate info: " + certificate.toString());
-
             byte[] certificate_data = certificate.getEncoded();
-
             FileOutputStream outputStream = new FileOutputStream(new File(root_folder.toString() + "/server.crt"));
             outputStream.write(certificate_data);
             outputStream.close();
-
         } catch (CertificateEncodingException | IOException | NullPointerException e) {
-            Ion.getDefault(context.getApplicationContext()).getConscryptMiddleware().enable(false);
-            Future https = Ion.with(context.getApplicationContext())
-                    .load("http://" + cert_host + "/public/server.crt")
-                    .noCache()
-                    .write(new File(root_folder.toString() + "/server.crt"))
-                    .setCallback(new FutureCallback<File>() {
-                        @Override
-                        public void onCompleted(Exception e, File result) {
-                            if (e != null) {
-                                Log.d(Aware.TAG, "ERROR SSL certificate: " + e.getMessage());
-                            }
-                        }
-                    });
-
-            if (block) {
-                try {
-                    https.get();
-                } catch (java.lang.InterruptedException | ExecutionException j) {
-                    // What to do here?
-                }
-            }
+            Log.d(Aware.TAG, "SSL error: " + e.getMessage());
         }
     }
 
@@ -375,7 +352,7 @@ public class SSLManager {
      * @param hostname hostname to check (only hostname, no protocol or anything.)
      * @return true if a certificate exists, false otherwise
      */
-    private static boolean hasCertificate(Context context, String hostname) {
+    public static boolean hasCertificate(Context context, String hostname) {
         if (hostname == null || hostname.length() == 0) return false;
 
         File root_folder;

@@ -1628,6 +1628,10 @@ public class Aware extends Service {
                 if (protocol.equals("https")) {
                     SSLManager.handleUrl(getApplicationContext(), full_url, true);
 
+                    while(!SSLManager.hasCertificate(getApplicationContext(), study_uri.getHost())) {
+                        //wait until we have the certificate downloaded
+                    }
+
                     try {
                         request = new Https(SSLManager.getHTTPS(getApplicationContext(), full_url)).dataGET(full_url.substring(0, full_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
                     } catch (FileNotFoundException e) {
@@ -1796,10 +1800,6 @@ public class Aware extends Service {
 
                         //Let others know that we just joined a study
                         sendBroadcast(new Intent(Aware.ACTION_JOINED_STUDY));
-
-                        //Start engine
-                        Intent aware = new Intent(getApplicationContext(), Aware.class);
-                        startService(aware);
 
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -2296,12 +2296,7 @@ public class Aware extends Service {
                 complianceStatus.put("network", false);
             }
 
-            boolean airplane;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                airplane = Settings.Global.getInt(context.getContentResolver(), Settings.Global.AIRPLANE_MODE_ON, 0) != 0;
-            } else {
-                airplane = Settings.System.getInt(context.getContentResolver(), Settings.System.AIRPLANE_MODE_ON, 0) != 0;
-            }
+            boolean airplane = Settings.Global.getInt(context.getContentResolver(), Settings.Global.AIRPLANE_MODE_ON, 0) != 0;
 
             complianceStatus.put("airplane", airplane);
             complianceStatus.put("roaming", telephonyManager.isNetworkRoaming());

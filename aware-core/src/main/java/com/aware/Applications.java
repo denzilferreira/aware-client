@@ -384,75 +384,75 @@ public class Applications extends AccessibilityService {
         if (!Aware.IS_CORE_RUNNING) {
             Intent aware = new Intent(this, Aware.class);
             startService(aware);
-        } else {
-            Aware.debug(this, "created: " + getClass().getName() + " package: " + getPackageName());
+        }
 
-            Aware.startScheduler(this);
+        //Aware.debug(this, "created: " + getClass().getName() + " package: " + getPackageName());
 
-            DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
-            TAG = Aware.getSetting(this, Aware_Preferences.DEBUG_TAG);
+        Aware.startScheduler(this);
 
-            if (DEBUG) Log.d(Aware.TAG, "Aware service connected to accessibility services...");
+        DEBUG = Aware.getSetting(this, Aware_Preferences.DEBUG_FLAG).equals("true");
+        TAG = Aware.getSetting(this, Aware_Preferences.DEBUG_TAG);
 
-            //This makes sure that plugins and apps can check if the accessibility service is active
-            Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, true);
+        if (DEBUG) Log.d(Aware.TAG, "Aware service connected to accessibility services...");
 
-            IntentFilter webservices = new IntentFilter();
-            webservices.addAction(Aware.ACTION_AWARE_SYNC_DATA);
-            registerReceiver(awareMonitor, webservices);
+        //This makes sure that plugins and apps can check if the accessibility service is active
+        Aware.setSetting(this, Applications.STATUS_AWARE_ACCESSIBILITY, true);
 
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FOREGROUND_PRIORITY).equals("true")) {
-                sendBroadcast(new Intent(Aware.ACTION_AWARE_PRIORITY_FOREGROUND));
-            }
+        IntentFilter webservices = new IntentFilter();
+        webservices.addAction(Aware.ACTION_AWARE_SYNC_DATA);
+        registerReceiver(awareMonitor, webservices);
 
-            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS).length() == 0) {
-                Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS, 0);
-            }
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FOREGROUND_PRIORITY).equals("true")) {
+            sendBroadcast(new Intent(Aware.ACTION_AWARE_PRIORITY_FOREGROUND));
+        }
 
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP && Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS)) > 0) {
-                try {
-                    Scheduler.Schedule backgroundApps = Scheduler.getSchedule(getApplicationContext(), SCHEDULER_APPLICATIONS_BACKGROUND);
-                    if (backgroundApps == null) {
-                        backgroundApps = new Scheduler.Schedule(SCHEDULER_APPLICATIONS_BACKGROUND)
-                                .setInterval(Long.parseLong(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS)))
-                                .setActionIntentAction(ACTION_AWARE_APPLICATIONS_HISTORY)
-                                .setActionType(Scheduler.ACTION_TYPE_SERVICE)
-                                .setActionClass(getPackageName() + "/" + BackgroundService.class.getName());
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS).length() == 0) {
+            Aware.setSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS, 0);
+        }
 
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP && Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_APPLICATIONS).equals("true") && Integer.parseInt(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS)) > 0) {
+            try {
+                Scheduler.Schedule backgroundApps = Scheduler.getSchedule(getApplicationContext(), SCHEDULER_APPLICATIONS_BACKGROUND);
+                if (backgroundApps == null) {
+                    backgroundApps = new Scheduler.Schedule(SCHEDULER_APPLICATIONS_BACKGROUND)
+                            .setInterval(Long.parseLong(Aware.getSetting(getApplicationContext(), Aware_Preferences.FREQUENCY_APPLICATIONS)))
+                            .setActionIntentAction(ACTION_AWARE_APPLICATIONS_HISTORY)
+                            .setActionType(Scheduler.ACTION_TYPE_SERVICE)
+                            .setActionClass(getPackageName() + "/" + BackgroundService.class.getName());
+
+                    Scheduler.saveSchedule(this, backgroundApps);
+                } else {
+                    if (backgroundApps.getInterval() != Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_APPLICATIONS))) {
+                        backgroundApps.setInterval(Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_APPLICATIONS)));
                         Scheduler.saveSchedule(this, backgroundApps);
-                    } else {
-                        if (backgroundApps.getInterval() != Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_APPLICATIONS))) {
-                            backgroundApps.setInterval(Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_APPLICATIONS)));
-                            Scheduler.saveSchedule(this, backgroundApps);
-                        }
                     }
-
-                    if (DEBUG)
-                        Log.d(TAG, "Checking background services every " + backgroundApps.getInterval() + " minutes");
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
-            } else {
-                Scheduler.removeSchedule(getApplicationContext(), SCHEDULER_APPLICATIONS_BACKGROUND);
-                Aware.startScheduler(this);
+
                 if (DEBUG)
-                    Log.d(TAG, "Checking background services is not possible starting Android 5+");
+                    Log.d(TAG, "Checking background services every " + backgroundApps.getInterval() + " minutes");
+
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
+        } else {
+            Scheduler.removeSchedule(getApplicationContext(), SCHEDULER_APPLICATIONS_BACKGROUND);
+            Aware.startScheduler(this);
+            if (DEBUG)
+                Log.d(TAG, "Checking background services is not possible starting Android 5+");
+        }
 
-            Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
+        //Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
 
-            if (Aware.isStudy(this)) {
-                ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), 1);
-                ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), true);
+        if (Aware.isStudy(this)) {
+            ContentResolver.setIsSyncable(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), 1);
+            ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this), true);
 
-                long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
-                SyncRequest request = new SyncRequest.Builder()
-                        .syncPeriodic(frequency, frequency / 3)
-                        .setSyncAdapter(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this))
-                        .setExtras(new Bundle()).build();
-                ContentResolver.requestSync(request);
-            }
+            long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
+            SyncRequest request = new SyncRequest.Builder()
+                    .syncPeriodic(frequency, frequency / 3)
+                    .setSyncAdapter(Aware.getAWAREAccount(this), Applications_Provider.getAuthority(this))
+                    .setExtras(new Bundle()).build();
+            ContentResolver.requestSync(request);
         }
     }
 
@@ -527,7 +527,7 @@ public class Applications extends AccessibilityService {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
+        //Aware.debug(this, "destroyed: " + getClass().getName() + " package: " + getPackageName());
     }
 
     private static Applications.AWARESensorObserver awareSensor;

@@ -46,7 +46,7 @@ public class Https {
      */
     public Https(InputStream certificate) {
         if (certificate == null) {
-            Log.e(TAG, "SSL: unable to read certificate!");
+            //Log.e(TAG, "SSL: unable to read certificate!");
             return;
         }
 
@@ -208,20 +208,19 @@ public class Https {
 
             String result;
             try (BufferedReader br = new BufferedReader(new InputStreamReader(stream))) {
-                StringBuilder page_content = new StringBuilder("");
+                StringBuilder page_content = new StringBuilder();
                 String line;
                 while ((line = br.readLine()) != null) {
                     page_content.append(line);
                 }
                 result = page_content.toString();
-                br.close();
             }
             stream.close();
 
             return result;
 
         } catch (IOException | NullPointerException e) {
-            Log.e(TAG, "Sync HTTPS dataGet io/null error: " + e.getMessage());
+            //Log.e(TAG, "Sync HTTPS dataGet io/null error: " + e.getMessage());
         }
 
         return null;
