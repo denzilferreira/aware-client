@@ -79,7 +79,8 @@ public class SSLManager {
                 if (Aware.DEBUG)
                     Log.d(Aware.TAG, "Certificates: Downloading crt if not present: " + hostname);
                 if (!hasCertificate(context, hostname)) {
-                    downloadCertificate(context, protocol, hostname, block);
+                    //downloadCertificate(context, protocol, hostname, block);
+                    new DownloadCertificateTask(context,hostname).execute();
                 } else {
                     if (Aware.DEBUG)
                         Log.d(Aware.TAG, "Certificates: Already present and key_management=once: " + hostname);
@@ -88,7 +89,8 @@ public class SSLManager {
                 try {
                     if (!hasCertificate(context, hostname)) {
                         if (Aware.DEBUG) Log.d(Aware.TAG, "Certificates: Downloading for the first time SSL certificate: " + hostname);
-                        downloadCertificate(context, protocol, hostname, block);
+//                        downloadCertificate(context, protocol, hostname, block);
+                        new DownloadCertificateTask(context,hostname).execute();
                     } else {
 
                         //Cached certificate information
@@ -191,7 +193,40 @@ public class SSLManager {
             return null;
         }
     }
+    public static class DownloadCertificateTask extends AsyncTask<Void,Void,Void>{
 
+        private String url;
+        private String protocol;
+        private String hostname;
+        private Context context;
+
+        DownloadCertificateTask(Context context, String URL) {
+            this.url = URL;
+            this.context = context;
+
+            Uri study_uri = Uri.parse(url);
+            this.hostname = study_uri.getHost();
+
+            this.protocol = "http";
+            try {
+                protocol = new URL(url).getProtocol();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                protocol = "http";
+            }
+
+        }
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            downloadCertificate(context, protocol, hostname, true);
+            return null;
+        }
+    }
     /**
      * Downloads the certificate directly from the URL, instead of a public folder.
      * @param url
