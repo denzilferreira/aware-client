@@ -80,7 +80,6 @@ public class SSLManager {
                     Log.d(Aware.TAG, "Certificates: Downloading crt if not present: " + hostname);
                 if (!hasCertificate(context, hostname)) {
                     //downloadCertificate(context, protocol, hostname, block);
-                    Log.d("UCLADGC", "UCLA DGC - handleUrl 1");
                     new DownloadCertificateTask(context,hostname).execute();
                 } else {
                     if (Aware.DEBUG)
@@ -91,7 +90,6 @@ public class SSLManager {
                     if (!hasCertificate(context, hostname)) {
                         if (Aware.DEBUG) Log.d(Aware.TAG, "Certificates: Downloading for the first time SSL certificate: " + hostname);
 //                        downloadCertificate(context, protocol, hostname, block);
-                        Log.d("UCLADGC", "UCLA DGC - handleUrl 2");
                         new DownloadCertificateTask(context,hostname).execute();
                     } else {
 
@@ -225,7 +223,6 @@ public class SSLManager {
 
         @Override
         protected Void doInBackground(Void... voids) {
-            Log.d("UCLADGC", "UCLA DGC - DownloadCertificateTask");
             downloadCertificate(context, protocol, hostname, true);
             return null;
         }
