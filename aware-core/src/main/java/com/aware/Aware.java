@@ -1801,6 +1801,8 @@ public class Aware extends Service {
                         //Let others know that we just joined a study
                         sendBroadcast(new Intent(Aware.ACTION_JOINED_STUDY));
 
+                        Aware.startAccelerometer(getApplicationContext());
+
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
