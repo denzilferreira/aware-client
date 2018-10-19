@@ -79,8 +79,7 @@ public class SSLManager {
                 if (Aware.DEBUG)
                     Log.d(Aware.TAG, "Certificates: Downloading crt if not present: " + hostname);
                 if (!hasCertificate(context, hostname)) {
-                    //downloadCertificate(context, protocol, hostname, block);
-                    new DownloadCertificateTask(context, protocol, hostname).execute();
+                    downloadCertificate(context, protocol, hostname, true);
                 } else {
                     if (Aware.DEBUG)
                         Log.d(Aware.TAG, "Certificates: Already present and key_management=once: " + hostname);
@@ -89,7 +88,7 @@ public class SSLManager {
                 try {
                     if (!hasCertificate(context, hostname)) {
                         if (Aware.DEBUG) Log.d(Aware.TAG, "Certificates: Downloading for the first time SSL certificate: " + protocol+"://"+hostname);
-                        new DownloadCertificateTask(context, protocol, hostname).execute();
+                        downloadCertificate(context, protocol, hostname, true);
                     } else {
                         //Cached certificate information
                         InputStream localCertificate = getCertificate(context, hostname);
@@ -143,64 +142,6 @@ public class SSLManager {
     }
 
     /**
-     * Based on https://www.experts-exchange.com/questions/27668989/Getting-SSL-Certificate-expiry-date.html
-     * Improved to wait 5 seconds for the connection
-     * @param url
-     * @return
-     */
-    public static Date getRemoteCertificateExpiration(URL url) {
-        try {
-            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-            conn.setConnectTimeout(5000); //5 seconds to connect
-            conn.setReadTimeout(10000); //10 seconds to acknowledge the response
-            conn.connect();
-
-            // retrieve the N-length signing chain for the server certificates
-            // certs[0] is the server's certificate
-            // certs[1] - certs[N-1] are the intermediate authorities that signed the cert
-            // certs[N] is the root certificate authority of the chain
-            Certificate[] certs = conn.getServerCertificates();
-            if (certs.length > 0 && certs[0] instanceof X509Certificate) {
-                // certs[0] is an X.509 certificate, return its "notAfter" date
-                return ((X509Certificate) certs[0]).getNotAfter();
-            }
-
-            // connection is not HTTPS or server is not signed with an X.509 certificate, return null
-            return null;
-        } catch (SSLPeerUnverifiedException spue) {
-            // connection to server is not verified, unable to get certificates
-            Log.d(Aware.TAG, "Certificates: " + spue.getMessage());
-            return null;
-        } catch (IllegalStateException ise) {
-            // shouldn't get here -- indicates attempt to get certificates before
-            // connection is established
-            Log.d(Aware.TAG, "Certificates: " + ise.getMessage());
-            return null;
-        } catch (IOException ioe) {
-            // error connecting to URL -- this must be caught last since
-            // other exceptions are subclasses of IOException
-            Log.d(Aware.TAG, "Certificates: " + ioe.getMessage());
-            return null;
-        }
-    }
-    public static class DownloadCertificateTask extends AsyncTask<Void,Void,Void>{
-        String protocol;
-        String hostname;
-        Context context;
-
-        DownloadCertificateTask(Context context, String protocol, String URL) {
-            this.context = context;
-            this.hostname = Uri.parse(protocol+"://"+URL).getHost();
-            this.protocol = protocol;
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-            downloadCertificate(context, this.protocol, this.hostname, true);
-            return null;
-        }
-    }
-    /**
      * Downloads the certificate directly from the URL, instead of a public folder.
      * @param url
      * @return
@@ -214,13 +155,12 @@ public class SSLManager {
 
             // retrieve the N-length signing chain for the server certificates
             // certs[0] is the server's certificate
-            // certs[1] - certs[N-1] are the intermediate authorities that signed the cert
-            // certs[N] is the root certificate authority of the chain
             Certificate[] certs = conn.getServerCertificates();
             if (certs.length > 0 && certs[0] instanceof X509Certificate) {
-                // certs[0] is an X.509 certificate, return its "notAfter" date
                 return ((X509Certificate) certs[0]);
             }
+
+            Log.d(Aware.TAG, "Not an X509Certificate! " + certs[0].getType() + " : " + certs[0].toString());
 
             // connection is not HTTPS or server is not signed with an X.509 certificate, return null
             return null;
@@ -250,10 +190,7 @@ public class SSLManager {
      * @param hostname Hostname to download.
      * @param block    If true, block until certificate retrieved, otherwise do not.
      */
-    public static void downloadCertificate(Context context, String protocol, String hostname, boolean block) {
-        //Fixed: make sure we have a valid hostname
-        if (hostname == null || hostname.length() == 0) return;
-
+    private static void downloadCertificate(Context context, String protocol, String hostname, boolean block) {
         File root_folder;
         if (context.getApplicationContext().getResources().getBoolean(R.bool.internalstorage)) {
             root_folder = new File(context.getFilesDir(), "/credentials/" + hostname);

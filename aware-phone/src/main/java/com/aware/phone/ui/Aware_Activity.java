@@ -97,9 +97,9 @@ public abstract class Aware_Activity extends AppCompatPreferenceActivity {
                 permissions.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(permissions);
             } else {
-                Intent join_study = new Intent(Aware_Activity.this, Aware_QRCode.class);
-                join_study.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(join_study);
+                Intent qrcode = new Intent(Aware_Activity.this, Aware_QRCode.class);
+                qrcode.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(qrcode);
             }
         }
         if (item.getTitle().toString().equalsIgnoreCase(getResources().getString(R.string.aware_study))) {

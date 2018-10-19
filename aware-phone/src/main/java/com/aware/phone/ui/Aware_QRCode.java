@@ -124,7 +124,10 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
         protected JSONObject doInBackground(String... params) {
             study_url = params[0];
 
-            if (study_url.length() == 0) return null;
+            if (study_url.length() == 0) {
+                Log.e(Aware.TAG, "Aware_QRCode study_url? " + study_url);
+                return null;
+            }
 
             if (Aware.DEBUG) Log.d(Aware.TAG, "Aware_QRCode study_url: " + study_url);
 
