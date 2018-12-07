@@ -39,6 +39,17 @@ android {
         resValue "string", "provider_timezones", android.defaultConfig.applicationId + ".provider.timezone"
         resValue "string", "provider_traffic", android.defaultConfig.applicationId + ".provider.traffic"
         resValue "string", "provider_wifi", android.defaultConfig.applicationId + ".provider.wifi"
+
+        //plugins
+        resValue "string", "provider_device_usage", android.defaultConfig.applicationId + ".provider.device_usage"
+        resValue "string", "provider_ambient_noise", android.defaultConfig.applicationId + ".provider.ambient_noise"
+        resValue "string", "provider_contacts_list", android.defaultConfig.applicationId + ".provider.contacts_list"
+        resValue "string", "provider_conversations", android.defaultConfig.applicationId + ".provider.audio_final"
+        resValue "string", "provider_fitbit", android.defaultConfig.applicationId + ".provider.fitbit"
+        resValue "string", "provider_google_activity_recognition", android.defaultConfig.applicationId + ".provider.gar"
+        resValue "string", "provider_google_login", android.defaultConfig.applicationId + ".provider.google_login"
+        resValue "string", "provider_google_fused", android.defaultConfig.applicationId + ".provider.geofences"
+        resValue "string", "provider_openweather", android.defaultConfig.applicationId + ".provider.openweather"
     }
 
     signingConfigs {
@@ -68,13 +79,67 @@ if (System.getenv("storeFile") != null && System.getenv("storePassword") != null
     android.buildTypes.release.signingConfig = null
 }
 
+repositories {
+    maven { url "https://jitpack.io" } //MPAndroidChart, AWARE
+}
+
 dependencies {
+    implementation "com.android.support:cardview-v7:$support_libs"
+    implementation "com.android.support:design:$support_libs"
+    implementation('me.dm7.barcodescanner:zbar:1.8.4') {
+        exclude group: 'com.android.support', module: "support-v4"
+    }
+
     api project(':aware-core')
-    implementation ("com.android.support:cardview-v7:$support_libs")
-    implementation ("com.android.support:design:$support_libs")
-    implementation ("me.dm7.barcodescanner:zbar:1.8.4") {
-        exclude group: 'com.android.support'
-        exclude module: 'support-v4'
+
+    api ("com.github.denzilferreira:com.aware.plugin.device_usage:$aware_libs") {
+        exclude group: "com.github.denzilferreira", module: "aware-client"
+        exclude group: 'com.android.support', module: "support-v4"
+    }
+
+    api ("com.github.denzilferreira:com.aware.plugin.ambient_noise:$aware_libs") {
+        exclude group: "com.github.denzilferreira", module: "aware-client"
+        exclude group: 'com.android.support', module: "support-v4"
+    }
+
+    api ("com.github.denzilferreira:com.aware.plugin.contacts_list:$aware_libs") {
+        exclude group: "com.github.denzilferreira", module: "aware-client"
+        exclude group: 'com.android.support', module: "support-v4"
+    }
+
+    api ("com.github.denzilferreira:com.aware.plugin.esm.scheduler:$aware_libs") {
+        exclude group: "com.github.denzilferreira", module: "aware-client"
+        exclude group: 'com.android.support', module: "support-v4"
+    }
+
+    api ("com.github.denzilferreira:com.aware.plugin.fitbit:$aware_libs") {
+        exclude group: "com.github.denzilferreira", module: "aware-client"
+        exclude group: 'com.android.support', module: "support-v4"
+    }
+
+    api ("com.github.denzilferreira:com.aware.plugin.google.activity_recognition:$aware_libs") {
+        exclude group: "com.github.denzilferreira", module: "aware-client"
+        exclude group: 'com.android.support', module: "support-v4"
+    }
+
+    api ("com.github.denzilferreira:com.aware.plugin.google.fused_location:$aware_libs") {
+        exclude group: "com.github.denzilferreira", module: "aware-client"
+        exclude group: 'com.android.support', module: "support-v4"
+    }
+
+    api ("com.github.denzilferreira:com.aware.plugin.google.auth:$aware_libs") {
+        exclude group: "com.github.denzilferreira", module: "aware-client"
+        exclude group: 'com.android.support', module: "support-v4"
+    }
+
+    api ("com.github.denzilferreira:com.aware.plugin.openweather:$aware_libs") {
+        exclude group: "com.github.denzilferreira", module: "aware-client"
+        exclude group: 'com.android.support', module: "support-v4"
+    }
+
+    api ("com.github.denzilferreira:com.aware.plugin.studentlife.audio_final:$aware_libs") {
+        exclude group: "com.github.denzilferreira", module: "aware-client"
+        exclude group: 'com.android.support', module: "support-v4"
     }
 }
 
