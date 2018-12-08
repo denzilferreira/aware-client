@@ -91,55 +91,11 @@ dependencies {
     }
 
     api project(':aware-core')
-
-    api ("com.github.denzilferreira:com.aware.plugin.device_usage:$aware_libs") {
-        exclude group: "com.github.denzilferreira", module: "aware-client"
-        exclude group: 'com.android.support', module: "support-v4"
+    api (project(":com.aware.plugin.device_usage")) {
+        exclude group:'com.github.denzilferreira',module:'aware-client'
     }
-
-    api ("com.github.denzilferreira:com.aware.plugin.ambient_noise:$aware_libs") {
-        exclude group: "com.github.denzilferreira", module: "aware-client"
-        exclude group: 'com.android.support', module: "support-v4"
-    }
-
-    api ("com.github.denzilferreira:com.aware.plugin.contacts_list:$aware_libs") {
-        exclude group: "com.github.denzilferreira", module: "aware-client"
-        exclude group: 'com.android.support', module: "support-v4"
-    }
-
-    api ("com.github.denzilferreira:com.aware.plugin.esm.scheduler:$aware_libs") {
-        exclude group: "com.github.denzilferreira", module: "aware-client"
-        exclude group: 'com.android.support', module: "support-v4"
-    }
-
-    api ("com.github.denzilferreira:com.aware.plugin.fitbit:$aware_libs") {
-        exclude group: "com.github.denzilferreira", module: "aware-client"
-        exclude group: 'com.android.support', module: "support-v4"
-    }
-
-    api ("com.github.denzilferreira:com.aware.plugin.google.activity_recognition:$aware_libs") {
-        exclude group: "com.github.denzilferreira", module: "aware-client"
-        exclude group: 'com.android.support', module: "support-v4"
-    }
-
-    api ("com.github.denzilferreira:com.aware.plugin.google.fused_location:$aware_libs") {
-        exclude group: "com.github.denzilferreira", module: "aware-client"
-        exclude group: 'com.android.support', module: "support-v4"
-    }
-
-    api ("com.github.denzilferreira:com.aware.plugin.google.auth:$aware_libs") {
-        exclude group: "com.github.denzilferreira", module: "aware-client"
-        exclude group: 'com.android.support', module: "support-v4"
-    }
-
-    api ("com.github.denzilferreira:com.aware.plugin.openweather:$aware_libs") {
-        exclude group: "com.github.denzilferreira", module: "aware-client"
-        exclude group: 'com.android.support', module: "support-v4"
-    }
-
-    api ("com.github.denzilferreira:com.aware.plugin.studentlife.audio_final:$aware_libs") {
-        exclude group: "com.github.denzilferreira", module: "aware-client"
-        exclude group: 'com.android.support', module: "support-v4"
+    api (project(":com.aware.plugin.ambient_noise")) {
+        exclude group:'com.github.denzilferreira',module:'aware-client'
     }
 }
 

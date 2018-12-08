@@ -172,8 +172,7 @@ public class Stream_UI extends Aware_Activity {
                     if (pkg.versionName.equals("bundled")) {
                         if (cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME).equals("com.aware.plugin.device_usage")) {
                             convertView = new com.aware.plugin.device_usage.ContextCard().getContextCard(mContext);
-                        }
-
+                        } else
                         if (cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME).equals("com.aware.plugin.ambient_noise")) {
                             convertView = new com.aware.plugin.ambient_noise.ContextCard().getContextCard(mContext);
                         }

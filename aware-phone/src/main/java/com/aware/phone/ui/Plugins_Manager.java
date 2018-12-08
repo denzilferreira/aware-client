@@ -230,13 +230,7 @@ public class Plugins_Manager extends Aware_Activity {
                 if (status != PluginsManager.PLUGIN_NOT_INSTALLED) {
                     PackageInfo pkg = PluginsManager.isInstalled(getApplicationContext(), package_name);
                     if (pkg != null && pkg.versionName.equals("bundled")) {
-
-                        if (pkg.packageName.equals("com.aware.plugin.device_usage")) {
-                            pkg_icon.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), com.aware.plugin.device_usage.R.drawable.ic_launcher_aware));
-                        } else if (pkg.packageName.equals("com.aware.plugin.ambient_noise")) {
-                            pkg_icon.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), com.aware.plugin.ambient_noise.R.drawable.ic_launcher_aware));
-                        } else
-                            pkg_icon.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_launcher_aware));
+                        pkg_icon.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_launcher_aware));
                     } else {
                         ApplicationInfo appInfo = mContext.getPackageManager().getApplicationInfo(package_name, PackageManager.GET_META_DATA);
                         pkg_icon.setImageDrawable(appInfo.loadIcon(getPackageManager()));
