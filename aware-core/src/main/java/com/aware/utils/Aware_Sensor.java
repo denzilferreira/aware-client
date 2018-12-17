@@ -8,6 +8,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -111,7 +112,7 @@ public class Aware_Sensor extends Service {
         } else {
             PERMISSIONS_OK = true;
             if (Aware.getSetting(this, Aware_Preferences.STATUS_WEBSERVICE).equals("true")) {
-                SSLManager.handleUrl(getApplicationContext(), Aware.getSetting(this, Aware_Preferences.WEBSERVICE_SERVER), true);
+                downloadCertificate(this);
             }
             //Aware.debug(this, "active: " + getClass().getName() + " package: " + getPackageName());
         }
@@ -174,6 +175,19 @@ public class Aware_Sensor extends Service {
                 sync.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
                 ContentResolver.requestSync(Aware.getAWAREAccount(context), provider, sync);
             }
+        }
+    }
+
+    private void downloadCertificate(Context context) {
+        new SSLDownloadTask().execute(context);
+    }
+
+    class SSLDownloadTask extends AsyncTask<Context, Void, Void>
+    {
+        @Override
+        protected Void doInBackground(Context... params) {
+            SSLManager.handleUrl(getApplicationContext(), Aware.getSetting(params[0], Aware_Preferences.WEBSERVICE_SERVER), true);
+            return null;
         }
     }
 
