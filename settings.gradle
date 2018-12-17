@@ -1,2 +1,7 @@
-include ':aware-core', ':aware-phone', ':aware-tests'
+include ':aware-core', ':aware-phone'
 
+include ':com.aware.plugin.device_usage'
+project(':com.aware.plugin.device_usage').projectDir = new File('../com.aware.plugin.device_usage/com.aware.plugin.device_usage.lib')
+
+include ':com.aware.plugin.ambient_noise'
+project(':com.aware.plugin.ambient_noise').projectDir = new File('../com.aware.plugin.ambient_noise/com.aware.plugin.ambient_noise.lib')

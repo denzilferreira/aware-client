@@ -81,18 +81,27 @@ public class Plugins_Manager extends Aware_Activity {
 
         PackageManager pkgManager = getApplicationContext().getPackageManager();
         try {
-            PackageInfo bundle = pkgManager.getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA);
+            PackageInfo bundle = pkgManager.getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_SERVICES);
             if (bundle.services == null) return;
+
+            StringBuilder pluginsPackagesInstalled = new StringBuilder();
+            pluginsPackagesInstalled.append("(");
 
             for(ServiceInfo serviceInfo : bundle.services) {
                 if (serviceInfo.name.contains(".Plugin")) {
                     String package_name = serviceInfo.name.subSequence(0, serviceInfo.name.indexOf(".Plugin")).toString();
+
+                    if (pluginsPackagesInstalled.length() > 1)
+                        pluginsPackagesInstalled.append(',');
+
+                    pluginsPackagesInstalled.append("'" + package_name + "'");
+
                     Cursor cached = getContentResolver().query(Aware_Provider.Aware_Plugins.CONTENT_URI, null, Aware_Provider.Aware_Plugins.PLUGIN_PACKAGE_NAME + " LIKE '" + package_name + "'", null, null);
                     if (cached == null || !cached.moveToFirst()) {
                         ContentValues rowData = new ContentValues();
                         rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_AUTHOR, "Bundle");
                         rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_DESCRIPTION, "Bundled with " + getApplicationContext().getPackageName());
-                        rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_NAME, package_name);
+                        rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_NAME, serviceInfo.nonLocalizedLabel.toString());
                         rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_PACKAGE_NAME, package_name);
                         rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_STATUS, Aware_Plugin.STATUS_PLUGIN_OFF);
                         rowData.put(Aware_Provider.Aware_Plugins.PLUGIN_VERSION, 1);
@@ -102,6 +111,10 @@ public class Plugins_Manager extends Aware_Activity {
                     if (cached != null && !cached.isClosed()) cached.close();
                 }
             }
+            pluginsPackagesInstalled.append(")");
+
+            //clean database from cached but no longer installed plugins
+            getContentResolver().delete(Aware_Plugins.CONTENT_URI,Aware_Plugins.PLUGIN_PACKAGE_NAME + " NOT IN " + pluginsPackagesInstalled.toString(), null);
 
         } catch (NameNotFoundException e) {
             e.printStackTrace();
