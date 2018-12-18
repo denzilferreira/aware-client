@@ -56,7 +56,7 @@ android {
         abi {
             enable true
             reset()
-            include 'armeabi'
+            include 'armeabi', 'x86'
         }
     }
 
