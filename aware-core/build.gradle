@@ -66,11 +66,16 @@ if (System.getenv("storeFile") != null && System.getenv("storePassword") != null
     android.buildTypes.release.signingConfig = null
 }
 
+repositories {
+    maven { url "https://jitpack.io" } //MPAndroidChart, AWARE
+}
+
 dependencies {
     implementation "org.eclipse.paho:org.eclipse.paho.client.mqttv3:$mqtt_libs"
     implementation "com.koushikdutta.ion:ion:$ion_libs"
     implementation "com.android.support:gridlayout-v7:$support_libs"
     implementation "com.android.support:appcompat-v7:$support_libs"
     implementation "com.android.support:design:$support_libs"
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0-alpha'
 }
 

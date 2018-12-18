@@ -20,16 +20,14 @@ import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
 import android.text.Html;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
@@ -80,6 +78,22 @@ public class Aware_Join_Study extends Aware_Activity {
         TextView txtStudyResearcher = (TextView) findViewById(R.id.txt_researcher);
         btnAction = (Button) findViewById(R.id.btn_sign_up);
         btnQuit = (Button) findViewById(R.id.btn_quit_study);
+
+        EditText participant_label = findViewById(R.id.participant_label);
+        participant_label.setText(Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_LABEL));
+        participant_label.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_LABEL, s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
 
         pluginsRecyclerView = (RecyclerView) findViewById(R.id.rv_plugins);
         mLayoutManager = new LinearLayoutManager(this);
