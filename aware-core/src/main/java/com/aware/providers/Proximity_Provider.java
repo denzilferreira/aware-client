@@ -342,6 +342,7 @@ public class Proximity_Provider extends ContentProvider {
         initialiseDatabase();
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        qb.setStrict(true);
         switch (sUriMatcher.match(uri)) {
             case SENSOR_DEV:
                 qb.setTables(DATABASE_TABLES[0]);

@@ -368,6 +368,7 @@ public class Linear_Accelerometer_Provider extends ContentProvider {
         initialiseDatabase();
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        qb.setStrict(true);
         switch (sUriMatcher.match(uri)) {
             case ACCEL_DEV:
                 qb.setTables(DATABASE_TABLES[0]);

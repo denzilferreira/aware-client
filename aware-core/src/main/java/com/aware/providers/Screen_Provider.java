@@ -255,6 +255,7 @@ public class Screen_Provider extends ContentProvider {
         initialiseDatabase();
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        qb.setStrict(true);
         switch (sUriMatcher.match(uri)) {
             case SCREEN:
                 qb.setTables(DATABASE_TABLES[0]);

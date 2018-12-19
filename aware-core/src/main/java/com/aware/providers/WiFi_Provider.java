@@ -269,7 +269,7 @@ public class WiFi_Provider extends ContentProvider {
         initialiseDatabase();
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
-
+        qb.setStrict(true);
         switch (sUriMatcher.match(uri)) {
             case WIFI_DATA:
                 qb.setTables(DATABASE_TABLES[0]);

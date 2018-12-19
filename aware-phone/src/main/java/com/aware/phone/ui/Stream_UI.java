@@ -168,18 +168,7 @@ public class Stream_UI extends Aware_Activity {
             final ViewHolder cardHolder;
             if (convertView == null) {
                 try {
-                    PackageInfo pkg = PluginsManager.isInstalled(mContext, cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-                    if (pkg.versionName.equals("bundled")) {
-                        if (cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME).equals("com.aware.plugin.device_usage")) {
-                            convertView = new com.aware.plugin.device_usage.ContextCard().getContextCard(mContext);
-                        } else
-                        if (cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME).equals("com.aware.plugin.ambient_noise")) {
-                            convertView = new com.aware.plugin.ambient_noise.ContextCard().getContextCard(mContext);
-                        }
-                    }
-                    //else {
-                    //    convertView = Aware.getContextCard(mContext, cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME));
-                    //}
+                    convertView = Aware.getContextCard(mContext, cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME));
 
                     cardHolder = new ViewHolder();
                     cardHolder.card = convertView;
