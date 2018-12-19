@@ -50,6 +50,7 @@ android {
         resValue "string", "provider_google_login", android.defaultConfig.applicationId + ".provider.google_login"
         resValue "string", "provider_google_fused", android.defaultConfig.applicationId + ".provider.geofences"
         resValue "string", "provider_openweather", android.defaultConfig.applicationId + ".provider.openweather"
+        resValue "string", "provider_sensortag", android.defaultConfig.applicationId + ".provider.sensortag"
     }
 
     splits {
@@ -140,6 +141,9 @@ dependencies {
         exclude group:'com.github.denzilferreira',module:'aware-client'
     }
     api (project(":com.aware.plugin.esm.scheduler")) {
+        exclude group:'com.github.denzilferreira',module:'aware-client'
+    }
+    api (project(":com.aware.plugin.sensortag")) {
         exclude group:'com.github.denzilferreira',module:'aware-client'
     }
 }
