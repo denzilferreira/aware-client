@@ -1,0 +1,33 @@
+[submodule "com.aware.plugin.device_usage"]
+	path = com.aware.plugin.device_usage
+	url = https://github.com/denzilferreira/com.aware.plugin.device_usage.git
+[submodule "com.aware.plugin.ambient_noise"]
+	path = com.aware.plugin.ambient_noise
+	url = https://github.com/denzilferreira/com.aware.plugin.ambient_noise.git
+[submodule "com.aware.plugin.contacts_list"]
+	path = com.aware.plugin.contacts_list
+	url = https://github.com/denzilferreira/com.aware.plugin.contacts_list.git
+[submodule "com.aware.plugin.studentlife.audio"]
+	path = com.aware.plugin.studentlife.audio
+	url = https://github.com/denzilferreira/com.aware.plugin.studentlife.audio
+[submodule "com.aware.plugin.fitbit"]
+	path = com.aware.plugin.fitbit
+	url = https://github.com/denzilferreira/com.aware.plugin.fitbit
+[submodule "com.aware.plugin.google.activity_recognition"]
+	path = com.aware.plugin.google.activity_recognition
+	url = https://github.com/denzilferreira/com.aware.plugin.google.activity_recognition
+[submodule "com.aware.plugin.google.auth"]
+	path = com.aware.plugin.google.auth
+	url = https://github.com/denzilferreira/com.aware.plugin.google.auth
+[submodule "com.aware.plugin.google.fused_location"]
+	path = com.aware.plugin.google.fused_location
+	url = https://github.com/denzilferreira/com.aware.plugin.google.fused_location
+[submodule "com.aware.plugin.openweather"]
+	path = com.aware.plugin.openweather
+	url = https://github.com/denzilferreira/com.aware.plugin.openweather
+[submodule "com.aware.plugin.esm.scheduler"]
+	path = com.aware.plugin.esm.scheduler
+	url = https://github.com/denzilferreira/com.aware.plugin.esm.scheduler
+[submodule "com.aware.plugin.sensortag"]
+	path = com.aware.plugin.sensortag
+	url = https://github.com/denzilferreira/com.aware.plugin.sensortag
