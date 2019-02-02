@@ -111,8 +111,8 @@ dependencies {
     implementation('me.dm7.barcodescanner:zbar:1.8.4') {
         exclude group: 'com.android.support', module: "support-v4"
     }
-
     api project(':aware-core')
+
     api (project(":com.aware.plugin.device_usage")) {
         exclude group:'com.github.denzilferreira',module:'aware-client'
     }

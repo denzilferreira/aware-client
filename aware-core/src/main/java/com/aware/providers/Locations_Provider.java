@@ -220,7 +220,7 @@ public class Locations_Provider extends ContentProvider {
         initialiseDatabase();
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
-
+        qb.setStrict(true);
         switch (sUriMatcher.match(uri)) {
             case LOCATIONS:
                 qb.setTables(DATABASE_TABLES[0]);

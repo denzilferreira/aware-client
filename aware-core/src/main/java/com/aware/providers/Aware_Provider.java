@@ -472,6 +472,7 @@ public class Aware_Provider extends ContentProvider {
         if (database == null) return null;
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        qb.setStrict(true);
         switch (sUriMatcher.match(uri)) {
             case DEVICE_INFO:
                 qb.setTables(DATABASE_TABLES[0]);

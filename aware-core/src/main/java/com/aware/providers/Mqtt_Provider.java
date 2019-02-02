@@ -252,6 +252,7 @@ public class Mqtt_Provider extends ContentProvider {
         initialiseDatabase();
 
 		SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+		qb.setStrict(true);
 		switch (sUriMatcher.match(uri)) {
 		case MQTT:
 			qb.setTables(DATABASE_TABLES[0]);
