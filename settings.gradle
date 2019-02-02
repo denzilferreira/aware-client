@@ -10,7 +10,7 @@ include ':com.aware.plugin.contacts_list'
 project(':com.aware.plugin.contacts_list').projectDir = new File('com.aware.plugin.contacts_list/com.aware.plugin.contacts_list.lib')
 
 include ':com.aware.plugin.studentlife.audio'
-project(':com.aware.plugin.studentlife.audio').projectDir = new File('com.aware.plugin.studentlife.audio_final/com.aware.plugin.studentlife.audio.lib')
+project(':com.aware.plugin.studentlife.audio').projectDir = new File('com.aware.plugin.studentlife.audio/com.aware.plugin.studentlife.audio.lib')
 
 include ':com.aware.plugin.fitbit'
 project(':com.aware.plugin.fitbit').projectDir = new File('com.aware.plugin.fitbit/com.aware.plugin.fitbit.lib')

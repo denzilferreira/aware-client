@@ -145,9 +145,11 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         awarePackages.addDataScheme("package");
         registerReceiver(packageMonitor, awarePackages);
 
-        Intent whitelisting = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-        whitelisting.setData(Uri.parse("package:" + getPackageName()));
-        startActivity(whitelisting);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Intent whitelisting = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+            whitelisting.setData(Uri.parse("package:" + getPackageName()));
+            startActivity(whitelisting);
+        }
     }
 
     @Override

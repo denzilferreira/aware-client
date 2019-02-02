@@ -84,7 +84,6 @@
         <activity
             android:name="com.aware.phone.ui.Stream_UI"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:exported="true"
             android:icon="@mipmap/ic_launcher_stream"
             android:label="@string/aware_stream"
             android:launchMode="singleTop"
@@ -103,7 +102,6 @@
         <activity
             android:name="com.aware.phone.ui.Plugins_Manager"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:exported="true"
             android:icon="@drawable/ic_launcher_settings"
             android:label="@string/aware_plugins"
             android:launchMode="singleTop"
@@ -115,7 +113,6 @@
         <activity
             android:name="com.aware.phone.ui.About"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:exported="true"
             android:label="@string/aware_team"
             android:launchMode="singleTop"
             android:theme="@style/Theme.Aware">
@@ -126,7 +123,6 @@
         <activity
             android:name="com.aware.phone.ui.Aware_Join_Study"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:exported="true"
             android:label="Join study"
             android:launchMode="singleTop"
             android:theme="@style/Theme.Aware">
@@ -143,8 +139,7 @@
         </activity>
 
         <receiver
-            android:name="com.aware.Aware$AndroidPackageMonitor"
-            android:exported="true">
+            android:name="com.aware.Aware$AndroidPackageMonitor" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_ADDED" />
                 <action android:name="android.intent.action.PACKAGE_REMOVED" />
@@ -154,9 +149,7 @@
         </receiver>
 
         <receiver
-            android:name="com.aware.Aware$AwareBoot"
-            android:enabled="true"
-            android:exported="true">
+            android:name="com.aware.Aware$AwareBoot">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <category android:name="android.intent.category.DEFAULT" />
