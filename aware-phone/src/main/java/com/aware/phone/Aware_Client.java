@@ -18,6 +18,7 @@ import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,6 +29,7 @@ import android.preference.Preference;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.provider.Settings;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v7.widget.Toolbar;
@@ -119,6 +121,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_SYNC_SETTINGS);
         REQUIRED_PERMISSIONS.add(Manifest.permission.READ_SYNC_SETTINGS);
         REQUIRED_PERMISSIONS.add(Manifest.permission.READ_SYNC_STATS);
+        REQUIRED_PERMISSIONS.add(Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) REQUIRED_PERMISSIONS.add(Manifest.permission.FOREGROUND_SERVICE);
 
@@ -141,6 +144,12 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         awarePackages.addAction(Intent.ACTION_PACKAGE_REMOVED);
         awarePackages.addDataScheme("package");
         registerReceiver(packageMonitor, awarePackages);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Intent whitelisting = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+            whitelisting.setData(Uri.parse("package:" + getPackageName()));
+            startActivity(whitelisting);
+        }
     }
 
     @Override
@@ -371,7 +380,7 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
             }
 
             //Check if AWARE is allowed to run on Doze
-            Aware.isBatteryOptimizationIgnored(this, getPackageName());
+            //Aware.isBatteryOptimizationIgnored(this, getPackageName());
 
             prefs.registerOnSharedPreferenceChangeListener(this);
             

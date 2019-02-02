@@ -79,6 +79,17 @@ public class Plugins_Manager extends Aware_Activity {
     private void restoreBundled() {
         if (!getApplicationContext().getResources().getBoolean(R.bool.standalone)) return;
 
+        //If we already restored bundled, do nothing
+        boolean bundledRestored = false;
+        Cursor bundled = getContentResolver().query(Aware_Plugins.CONTENT_URI, null, Aware_Plugins.PLUGIN_AUTHOR + " LIKE 'Bundle'", null, null);
+        if (bundled!= null && bundled.moveToFirst()) {
+            if (bundled.getCount() > 0) {
+                bundledRestored = true;
+            }
+            bundled.close();
+        }
+        if (bundledRestored) return;
+
         PackageManager pkgManager = getApplicationContext().getPackageManager();
         try {
             PackageInfo bundle = pkgManager.getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_SERVICES);
@@ -112,9 +123,6 @@ public class Plugins_Manager extends Aware_Activity {
                 }
             }
             pluginsPackagesInstalled.append(")");
-
-            //clean database from cached but no longer installed plugins
-            getContentResolver().delete(Aware_Plugins.CONTENT_URI,Aware_Plugins.PLUGIN_PACKAGE_NAME + " NOT IN " + pluginsPackagesInstalled.toString(), null);
 
         } catch (NameNotFoundException e) {
             e.printStackTrace();

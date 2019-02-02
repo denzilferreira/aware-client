@@ -17,6 +17,7 @@ import android.support.v4.content.PermissionChecker;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.aware.Aware;
 import com.aware.R;
 
 import org.json.JSONArray;
@@ -235,8 +236,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 // sdcard/AWARE/ (shareable, does not delete when uninstalling)
                 aware_folder = new File(Environment.getExternalStoragePublicDirectory("AWARE").toString());
             } else {
-                // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
-                aware_folder = new File(ContextCompat.getExternalFilesDirs(mContext, null)[0] + "/AWARE");
+                if (isEmulator()) {
+                    aware_folder = mContext.getFilesDir();
+                } else {
+                    // sdcard/Android/<app_package_name>/AWARE/ (not shareable, deletes when uninstalling package)
+                    aware_folder = new File(ContextCompat.getExternalFilesDirs(mContext, null)[0] + "/AWARE");
+                }
             }
 
             if (!aware_folder.exists()) {
@@ -248,5 +253,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         } catch (SQLiteException e) {
             return null;
         }
+    }
+
+    public static boolean isEmulator() {
+        return Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                || Build.MANUFACTURER.contains("Genymotion")
+                || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
+                || "google_sdk".equals(Build.PRODUCT);
     }
 }

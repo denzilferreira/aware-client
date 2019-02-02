@@ -1,1 +1,35 @@
+
 include ':aware-core', ':aware-phone'
+
+include ':com.aware.plugin.device_usage'
+project(':com.aware.plugin.device_usage').projectDir = new File('com.aware.plugin.device_usage/com.aware.plugin.device_usage.lib')
+
+include ':com.aware.plugin.ambient_noise'
+project(':com.aware.plugin.ambient_noise').projectDir = new File('com.aware.plugin.ambient_noise/com.aware.plugin.ambient_noise.lib')
+
+include ':com.aware.plugin.contacts_list'
+project(':com.aware.plugin.contacts_list').projectDir = new File('com.aware.plugin.contacts_list/com.aware.plugin.contacts_list.lib')
+
+include ':com.aware.plugin.studentlife.audio'
+project(':com.aware.plugin.studentlife.audio').projectDir = new File('com.aware.plugin.studentlife.audio/com.aware.plugin.studentlife.audio.lib')
+
+include ':com.aware.plugin.fitbit'
+project(':com.aware.plugin.fitbit').projectDir = new File('com.aware.plugin.fitbit/com.aware.plugin.fitbit.lib')
+
+include ':com.aware.plugin.google.activity_recognition'
+project(':com.aware.plugin.google.activity_recognition').projectDir = new File('com.aware.plugin.google.activity_recognition/com.aware.plugin.google.activity_recognition.lib')
+
+include ':com.aware.plugin.google.auth'
+project(':com.aware.plugin.google.auth').projectDir = new File('com.aware.plugin.google.auth/com.aware.plugin.google.auth.lib')
+
+include ':com.aware.plugin.google.fused_location'
+project(':com.aware.plugin.google.fused_location').projectDir = new File('com.aware.plugin.google.fused_location/com.aware.plugin.google.fused_location.lib')
+
+include ':com.aware.plugin.openweather'
+project(':com.aware.plugin.openweather').projectDir = new File('com.aware.plugin.openweather/com.aware.plugin.openweather.lib')
+
+include ':com.aware.plugin.esm.scheduler'
+project(':com.aware.plugin.esm.scheduler').projectDir = new File('com.aware.plugin.esm.scheduler/com.aware.plugin.esm.scheduler.lib')
+
+include ':com.aware.plugin.sensortag'
+project(':com.aware.plugin.sensortag').projectDir = new File('com.aware.plugin.sensortag/com.aware.plugin.sensortag.lib')

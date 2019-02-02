@@ -168,7 +168,28 @@ public class Stream_UI extends Aware_Activity {
             final ViewHolder cardHolder;
             if (convertView == null) {
                 try {
-                    convertView = Aware.getContextCard(mContext, cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+                    PackageInfo pkg = PluginsManager.isInstalled(mContext, cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+                    if (pkg.versionName.equals("bundled")) {
+                        if (cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME).equals("com.aware.plugin.google.auth")) {
+                            convertView = new com.aware.plugin.google.auth.ContextCard().getContextCard(mContext);
+                        } else if (cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME).equals("com.aware.plugin.device_usage")) {
+                            convertView = new com.aware.plugin.device_usage.ContextCard().getContextCard(mContext);
+                        } else if (cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME).equals("com.aware.plugin.ambient_noise")) {
+                            convertView = new com.aware.plugin.ambient_noise.ContextCard().getContextCard(mContext);
+                        } else if (cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME).equals("com.aware.plugin.fitbit")) {
+                            convertView = new com.aware.plugin.fitbit.ContextCard().getContextCard(mContext);
+                        } else if (cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME).equals("com.aware.plugin.google.activity_recognition")) {
+                            convertView = new com.aware.plugin.google.activity_recognition.ContextCard().getContextCard(mContext);
+                        } else if (cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME).equals("com.aware.plugin.google.fused_location")) {
+                            convertView = new com.aware.plugin.google.fused_location.ContextCard().getContextCard(mContext);
+                        } else if (cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME).equals("com.aware.plugin.openweather")) {
+                            convertView = new com.aware.plugin.openweather.ContextCard().getContextCard(mContext);
+                        }
+                    } else {
+                        convertView = Aware.getContextCard(mContext, cards.getJSONObject(position).getString(Aware_Plugins.PLUGIN_PACKAGE_NAME));
+                    }
+
+                    if (convertView == null) convertView = new View(getApplicationContext());
 
                     cardHolder = new ViewHolder();
                     cardHolder.card = convertView;
