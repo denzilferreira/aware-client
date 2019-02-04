@@ -20,6 +20,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.aware.Aware;
+import com.aware.Aware_Preferences;
 import com.aware.ESM;
 import com.aware.R;
 import com.aware.providers.ESM_Provider;
@@ -41,7 +42,10 @@ public class ESM_Web extends ESM_Question {
         if(!this.esm.has(esm_url)) {
             this.esm.put(esm_url,"");
         }
-        return this.esm.getString(esm_url);
+
+        //add support to passing AWARE's Device ID as parameter for online surveys
+        String url = esm.getString(esm_url).replace("AWARE_DEVICE_ID", Aware.getSetting(getContext(), Aware_Preferences.DEVICE_ID));
+        return url;
     }
 
     public ESM_Web setURL(String url) throws JSONException {
