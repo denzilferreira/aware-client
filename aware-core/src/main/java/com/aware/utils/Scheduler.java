@@ -1194,7 +1194,7 @@ public class Scheduler extends Aware_Sensor {
                 data.put(Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED, System.currentTimeMillis());
 
                 if (getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
-                    getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "' OR " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE 'com.aware.phone'", null);
+                    getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND (" + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "' OR " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE 'com.aware.phone')", null);
                 } else {
                     getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null);
                 }
