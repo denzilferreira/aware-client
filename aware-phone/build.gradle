@@ -10,6 +10,7 @@ android {
         versionName version_readable
         targetSdkVersion target_sdk
         minSdkVersion minimum_sdk
+        multiDexEnabled true
 
         //AWARE core sensors SyncAdapters
         resValue "string", "provider_accelerometer", android.defaultConfig.applicationId + ".provider.accelerometer"
