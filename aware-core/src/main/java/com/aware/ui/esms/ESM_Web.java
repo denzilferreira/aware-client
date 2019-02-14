@@ -10,21 +10,17 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.WindowManager;
-import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
-
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.ESM;
 import com.aware.R;
 import com.aware.providers.ESM_Provider;
-
 import org.json.JSONException;
 
 /**
@@ -39,8 +35,8 @@ public class ESM_Web extends ESM_Question {
     }
 
     public String getURL() throws JSONException {
-        if(!this.esm.has(esm_url)) {
-            this.esm.put(esm_url,"");
+        if (!this.esm.has(esm_url)) {
+            this.esm.put(esm_url, "");
         }
 
         //add support to passing AWARE's Device ID as parameter for online surveys
@@ -74,7 +70,16 @@ public class ESM_Web extends ESM_Question {
             TextView esm_instructions = (TextView) ui.findViewById(R.id.esm_instructions);
             esm_instructions.setText(getInstructions());
 
-            final WebView webView = ui.findViewById(R.id.esm_webpage);
+            final LinearLayout webViewContainer = ui.findViewById(R.id.esm_webpage);
+
+            final WebView webView = new WebView(getActivity()) {
+                @Override
+                public boolean onCheckIsTextEditor() {
+                    return true;
+                }
+            };
+            webViewContainer.addView(webView);
+
             webView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
                 @Override
                 public void onFocusChange(View view, boolean b) {
@@ -135,4 +140,6 @@ public class ESM_Web extends ESM_Question {
         }
         return esm_dialog;
     }
+
+
 }
