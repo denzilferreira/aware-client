@@ -842,20 +842,33 @@ public class Aware extends Service {
                 context.sendBroadcast(new Intent(Aware.ACTION_AWARE_UPDATE_PLUGINS_INFO)); //sync the Plugins Manager UI for running statuses
             }
 
-            ComponentName componentName;
+            ComponentName componentName = null;
             if (packageInfo.versionName.equals("bundled")) {
                 componentName = new ComponentName(context.getPackageName(), package_name + ".Plugin");
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Initializing bundled: " + componentName.toString());
+                if (Aware.DEBUG) Log.d(Aware.TAG, "Initializing bundled: " + componentName.toString());
             } else {
                 componentName = new ComponentName(package_name, package_name + ".Plugin");
-                if (Aware.DEBUG)
-                    Log.d(Aware.TAG, "Initializing external: " + componentName.toString());
+                if (Aware.DEBUG) Log.d(Aware.TAG, "Initializing external: " + componentName.toString());
             }
 
             Intent pluginIntent = new Intent();
             pluginIntent.setComponent(componentName);
-            context.startService(pluginIntent);
+            componentName = context.startService(pluginIntent);
+
+            //Try Kotlin compatibility
+            if (componentName == null) {
+                if (packageInfo.versionName.equals("bundled")) {
+                    componentName = new ComponentName(context.getPackageName(), package_name + ".PluginKt");
+                    if (Aware.DEBUG) Log.d(Aware.TAG, "Initializing bundled: " + componentName.toString());
+                } else {
+                    componentName = new ComponentName(package_name, package_name + ".PluginKt");
+                    if (Aware.DEBUG) Log.d(Aware.TAG, "Initializing external: " + componentName.toString());
+                }
+
+                pluginIntent = new Intent();
+                pluginIntent.setComponent(componentName);
+                context.startService(pluginIntent);
+            }
         }
     }
 

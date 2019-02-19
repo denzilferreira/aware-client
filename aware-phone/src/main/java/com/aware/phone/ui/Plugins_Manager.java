@@ -99,7 +99,7 @@ public class Plugins_Manager extends Aware_Activity {
             pluginsPackagesInstalled.append("(");
 
             for(ServiceInfo serviceInfo : bundle.services) {
-                if (serviceInfo.name.contains(".Plugin")) {
+                if (serviceInfo.name.contains(".Plugin") || serviceInfo.name.contains(".PluginKt")) {
                     String package_name = serviceInfo.name.subSequence(0, serviceInfo.name.indexOf(".Plugin")).toString();
 
                     if (pluginsPackagesInstalled.length() > 1)

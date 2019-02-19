@@ -101,10 +101,6 @@ if (System.getenv("storeFile") != null && System.getenv("storePassword") != null
     android.buildTypes.release.signingConfig = null
 }
 
-repositories {
-    maven { url "https://jitpack.io" } //MPAndroidChart, AWARE
-}
-
 dependencies {
     implementation "com.android.support:cardview-v7:$support_libs"
     implementation "com.android.support:design:$support_libs"
@@ -145,6 +141,9 @@ dependencies {
         exclude group:'com.github.denzilferreira',module:'aware-client'
     }
     api (project(":com.aware.plugin.sensortag")) {
+        exclude group:'com.github.denzilferreira',module:'aware-client'
+    }
+    api (project(":com.aware.plugin.sentimental")) {
         exclude group:'com.github.denzilferreira',module:'aware-client'
     }
 }

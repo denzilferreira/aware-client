@@ -33,3 +33,6 @@ project(':com.aware.plugin.esm.scheduler').projectDir = new File('com.aware.plug
 
 include ':com.aware.plugin.sensortag'
 project(':com.aware.plugin.sensortag').projectDir = new File('com.aware.plugin.sensortag/com.aware.plugin.sensortag.lib')
+
+include ':com.aware.plugin.sentimental'
+project(':com.aware.plugin.sentimental').projectDir = new File('com.aware.plugin.sentimental/com.aware.plugin.sentimental.lib')

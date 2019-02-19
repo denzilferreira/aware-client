@@ -31,3 +31,6 @@
 [submodule "com.aware.plugin.sensortag"]
 	path = com.aware.plugin.sensortag
 	url = https://github.com/denzilferreira/com.aware.plugin.sensortag
+[submodule "com.aware.plugin.sentimental"]
+	path = com.aware.plugin.sentimental
+	url = https://github.com/denzilferreira/com.aware.plugin.sentimental.git
