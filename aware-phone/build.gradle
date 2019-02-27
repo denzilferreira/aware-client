@@ -102,61 +102,25 @@ if (System.getenv("storeFile") != null && System.getenv("storePassword") != null
 }
 
 dependencies {
-    implementation "com.android.support:cardview-v7:$support_libs"
-    implementation "com.android.support:design:$support_libs"
-    
     implementation('me.dm7.barcodescanner:zbar:1.8.4') {
         exclude group: 'com.android.support', module: "support-v4"
     }
+
+    implementation "com.android.support:appcompat-v7:$support_libs"
+    implementation "com.android.support:design:$support_libs"
     
-    api project(':aware-core')
-    
-    api (project(":com.aware.plugin.device_usage")) {
-        exclude group:'com.github.denzilferreira',module:'aware-client'
-    }
-    
-    api (project(":com.aware.plugin.ambient_noise")) {
-        exclude group:'com.github.denzilferreira',module:'aware-client'
-    }
-    
-    api (project(":com.aware.plugin.contacts_list")) {
-        exclude group:'com.github.denzilferreira',module:'aware-client'
-    }
-    
-    api (project(":com.aware.plugin.studentlife.audio")) {
-        exclude group:'com.github.denzilferreira',module:'aware-client'
-    }
-    
-    api (project(":com.aware.plugin.fitbit")) {
-        exclude group:'com.github.denzilferreira',module:'aware-client'
-    }
-    
-    api (project(":com.aware.plugin.google.activity_recognition")) {
-        exclude group:'com.github.denzilferreira',module:'aware-client'
-    }
-    
-    api (project(":com.aware.plugin.google.auth")) {
-        exclude group:'com.github.denzilferreira',module:'aware-client'
-    }
-    
-    api (project(":com.aware.plugin.google.fused_location")) {
-        exclude group:'com.github.denzilferreira',module:'aware-client'
-    }
-    
-    api (project(":com.aware.plugin.openweather")) {
-        exclude group:'com.github.denzilferreira',module:'aware-client'
-    }
-    
-    api (project(":com.aware.plugin.esm.scheduler")) {
-        exclude group:'com.github.denzilferreira',module:'aware-client'
-    }
-    
-    api (project(":com.aware.plugin.sensortag")) {
-        exclude group:'com.github.denzilferreira',module:'aware-client'
-    }
-    
-    api (project(":com.aware.plugin.sentimental")) {
-        exclude group:'com.github.denzilferreira',module:'aware-client'
-    }
+    api (project(':aware-core'))
+    api (project(":com.aware.plugin.ambient_noise"))
+    api (project(":com.aware.plugin.device_usage"))
+    api (project(":com.aware.plugin.contacts_list"))
+    api (project(":com.aware.plugin.studentlife.audio"))
+    api (project(":com.aware.plugin.fitbit"))
+    api (project(":com.aware.plugin.google.activity_recognition"))
+    api (project(":com.aware.plugin.google.auth"))
+    api (project(":com.aware.plugin.google.fused_location"))
+    api (project(":com.aware.plugin.openweather"))
+    api (project(":com.aware.plugin.esm.scheduler"))
+    api (project(":com.aware.plugin.sensortag"))
+    api (project(":com.aware.plugin.sentimental"))
 }
 

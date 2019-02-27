@@ -11,6 +11,23 @@ The platform is scalable with plugins and can be integrated with other platforms
 
 ![Arquitecture](http://www.awareframework.com/wp-content/uploads/2015/12/aware-architecture.png)
 
+Getting started
+===============
+Add to the build.gradle inside your module to include AWARE's libraries
+
+```Gradle
+repositories {
+    maven { url "https://jitpack.io" }
+}
+
+dependencies {
+    api "com.github.denzilferreira:aware-client:master-SNAPSHOT"
+}
+```
+
+You can now refer to AWARE's functions inside your app.
+
+
 Individuals: Record your own data
 =================================
 ![Individuals](http://www.awareframework.com/wp-content/uploads/2014/05/personal.png)
