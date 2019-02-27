@@ -42,6 +42,7 @@ import com.aware.providers.Applications_Provider.Applications_History;
 import com.aware.providers.Applications_Provider.Applications_Notifications;
 import com.aware.providers.Keyboard_Provider;
 import com.aware.providers.Screen_Provider;
+import com.aware.utils.Converters;
 import com.aware.utils.Encrypter;
 import com.aware.utils.Scheduler;
 
@@ -265,9 +266,15 @@ public class Applications extends AccessibilityService {
             keyboard.put(Keyboard_Provider.Keyboard_Data.TIMESTAMP, System.currentTimeMillis());
             keyboard.put(Keyboard_Provider.Keyboard_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
             keyboard.put(Keyboard_Provider.Keyboard_Data.PACKAGE_NAME, (String) event.getPackageName());
-            keyboard.put(Keyboard_Provider.Keyboard_Data.BEFORE_TEXT, (String) event.getBeforeText());
-            keyboard.put(Keyboard_Provider.Keyboard_Data.CURRENT_TEXT, event.getText().toString());
             keyboard.put(Keyboard_Provider.Keyboard_Data.IS_PASSWORD, event.isPassword());
+            if (Aware.getSetting(getApplicationContext(), Aware_Preferences.MASK_KEYBOARD).equals("true")){
+                keyboard.put(Keyboard_Provider.Keyboard_Data.BEFORE_TEXT, Converters.maskString(event.getBeforeText().toString()));
+                keyboard.put(Keyboard_Provider.Keyboard_Data.CURRENT_TEXT, Converters.maskString(event.getText().toString()));
+            }
+            else{
+                keyboard.put(Keyboard_Provider.Keyboard_Data.BEFORE_TEXT, event.getBeforeText().toString());
+                keyboard.put(Keyboard_Provider.Keyboard_Data.CURRENT_TEXT, event.getText().toString());
+            }
 
             if (awareSensor != null) awareSensor.onKeyboard(keyboard);
 
