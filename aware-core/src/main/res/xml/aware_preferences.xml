@@ -112,6 +112,14 @@
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:dependency="status_applications"
+                android:key="mask_keyboard"
+                android:persistent="true"
+                android:summary="Swaps all alphanumeric characters by A, a, and 1"
+                android:title="Mask keyboard input" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:dependency="status_applications"
                 android:key="status_notifications"
                 android:persistent="true"
                 android:summary="Notifications sent by any application, without text content"

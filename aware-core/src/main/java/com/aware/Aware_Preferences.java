@@ -582,6 +582,11 @@ public class Aware_Preferences {
     public static final String STATUS_KEYBOARD = "status_keyboard";
 
     /**
+     * Mask keyboard input
+     */
+    public static final String MASK_KEYBOARD = "mask_keyboard";
+
+    /**
      * Preferred hash function
      */
     public static final String HASH_FUNCTION = "hash_function";

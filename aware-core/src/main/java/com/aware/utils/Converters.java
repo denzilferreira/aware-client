@@ -36,4 +36,24 @@ public class Converters {
     public static boolean isNumeric(String str) {
         return str.matches("-?\\d+(\\.\\d+)?");  //match a number with optional '-' and decimal.
     }
+
+    /**
+     * Anonymises a string by substituting all alphanumeric characters with a random one.
+     *
+     * @param originalInput
+     * @return string
+     */
+    public static String maskString(String originalInput){
+        int length_input = originalInput.length();
+        char[] input = originalInput.toCharArray();
+        for(int i = 0; i < length_input; i++)
+            if (Character.isUpperCase(input[i]))
+                input[i] = 'A';
+            else if (Character.isLowerCase(input[i]))
+                input[i] = 'a';
+            else if (Character.isDigit(input[i]))
+                input[i] = '1';
+
+        return String.valueOf(input);
+    }
 }
