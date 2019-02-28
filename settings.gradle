@@ -1,5 +1,5 @@
 
-include ':aware-core', ':aware-phone'
+include ':aware-core', ':aware-phone', ":aware-tests"
 
 include ':com.aware.plugin.device_usage'
 project(':com.aware.plugin.device_usage').projectDir = new File('com.aware.plugin.device_usage/com.aware.plugin.device_usage.lib')
