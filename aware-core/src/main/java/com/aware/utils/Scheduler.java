@@ -818,7 +818,6 @@ public class Scheduler extends Aware_Sensor {
                 schedule_data_cursor.close();
 
             // This is a scheduled task on a specific timestamp.
-            // NOTE: Once triggered, it's deleted from the database automatically.
             if (schedule.getTimer() != -1 && last_triggered == 0) { //not been triggered yet
                 Calendar schedulerTimer = Calendar.getInstance();
                 schedulerTimer.setTimeInMillis(schedule.getTimer());
@@ -834,6 +833,8 @@ public class Scheduler extends Aware_Sensor {
                                     + "\n Time to trigger: " + Converters.readable_elapsed(schedule.getTimer() - now.getTimeInMillis()));
                     return false;
                 }
+            } else if (schedule.getTimer() != -1 && last_triggered != 0) {
+                return false; //already triggered, do nothing.
             }
 
             Calendar previous = null;
@@ -1176,7 +1177,7 @@ public class Scheduler extends Aware_Sensor {
 
             if (schedule.getTimer() != -1) {
 
-                removeSchedule(getApplicationContext(), schedule.getScheduleID());
+                //removeSchedule(getApplicationContext(), schedule.getScheduleID());
 
                 //Check if this scheduler is a random and it is the last time it was triggered, re-schedule new randoms
                 if (schedule.getRandom().length() > 0 && schedule.getScheduleID().contains("_last") && schedule.getScheduleID().contains("_random_")) {
@@ -1188,17 +1189,17 @@ public class Scheduler extends Aware_Sensor {
                     //recreate random scheduler for tomorrow
                     Scheduler.rescheduleRandom(getApplicationContext(), schedule);
                 }
-
-            } else {
-                ContentValues data = new ContentValues();
-                data.put(Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED, System.currentTimeMillis());
-
-                if (getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
-                    getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND (" + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "' OR " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE 'com.aware.phone')", null);
-                } else {
-                    getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null);
-                }
             }
+
+            ContentValues data = new ContentValues();
+            data.put(Scheduler_Provider.Scheduler_Data.LAST_TRIGGERED, System.currentTimeMillis());
+
+            if (getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
+                getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND (" + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "' OR " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE 'com.aware.phone')", null);
+            } else {
+                getContentResolver().update(Scheduler_Provider.Scheduler_Data.CONTENT_URI, data, Scheduler_Provider.Scheduler_Data.SCHEDULE_ID + " LIKE '" + schedule.getScheduleID() + "' AND " + Scheduler_Provider.Scheduler_Data.PACKAGE_NAME + " LIKE '" + getPackageName() + "'", null);
+            }
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
