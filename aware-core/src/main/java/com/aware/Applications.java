@@ -342,7 +342,10 @@ public class Applications extends AccessibilityService {
                 touch.put(Screen_Provider.Screen_Touch.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
                 touch.put(Screen_Provider.Screen_Touch.TOUCH_APP, event.getPackageName().toString());
                 touch.put(Screen_Provider.Screen_Touch.TOUCH_ACTION, Screen.ACTION_AWARE_TOUCH_CLICKED);
-                touch.put(Screen_Provider.Screen_Touch.TOUCH_ACTION_TEXT, event.getText().toString());
+                if (Aware.getSetting(getApplicationContext(), Aware_Preferences.MASK_TOUCH_TEXT).equals("true"))
+                    touch.put(Screen_Provider.Screen_Touch.TOUCH_ACTION_TEXT, Converters.maskString(event.getText().toString()));
+                else
+                    touch.put(Screen_Provider.Screen_Touch.TOUCH_ACTION_TEXT, event.getText().toString());
                 touch.put(Screen_Provider.Screen_Touch.TOUCH_INDEX_ITEMS, event.getItemCount());
                 touch.put(Screen_Provider.Screen_Touch.TOUCH_FROM_INDEX, event.getFromIndex());
                 touch.put(Screen_Provider.Screen_Touch.TOUCH_TO_INDEX, event.getToIndex());
@@ -363,7 +366,10 @@ public class Applications extends AccessibilityService {
                 touch.put(Screen_Provider.Screen_Touch.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
                 touch.put(Screen_Provider.Screen_Touch.TOUCH_APP, event.getPackageName().toString());
                 touch.put(Screen_Provider.Screen_Touch.TOUCH_ACTION, Screen.ACTION_AWARE_TOUCH_LONG_CLICKED);
-                touch.put(Screen_Provider.Screen_Touch.TOUCH_ACTION_TEXT, event.getText().toString());
+                if (Aware.getSetting(getApplicationContext(), Aware_Preferences.MASK_TOUCH_TEXT).equals("true"))
+                    touch.put(Screen_Provider.Screen_Touch.TOUCH_ACTION_TEXT, Converters.maskString(event.getText().toString()));
+                else
+                    touch.put(Screen_Provider.Screen_Touch.TOUCH_ACTION_TEXT, event.getText().toString());
                 touch.put(Screen_Provider.Screen_Touch.TOUCH_INDEX_ITEMS, event.getItemCount());
                 touch.put(Screen_Provider.Screen_Touch.TOUCH_FROM_INDEX, event.getFromIndex());
                 touch.put(Screen_Provider.Screen_Touch.TOUCH_TO_INDEX, event.getToIndex());

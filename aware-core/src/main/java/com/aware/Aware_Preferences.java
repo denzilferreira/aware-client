@@ -645,4 +645,9 @@ public class Aware_Preferences {
      * Log touch and gesture events
      */
     public static final String STATUS_TOUCH = "status_touch";
+
+    /**
+     * Masks text produced by touch events
+     */
+    public static final String MASK_TOUCH_TEXT = "mask_touch_text";
 }
