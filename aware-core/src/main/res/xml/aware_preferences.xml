@@ -662,6 +662,14 @@
                 android:summary="Capture clicks, long clicks and scroll up/down events"
                 android:title="Screen interaction" />
 
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:dependency="status_touch"
+                android:key="mask_touch_text"
+                android:persistent="true"
+                android:summary="Swaps all alphanumeric characters by A, a, and 1"
+                android:title="Mask text in touch events" />
+
         </PreferenceScreen>
         <PreferenceScreen
             android:icon="@drawable/ic_action_significant_motion"

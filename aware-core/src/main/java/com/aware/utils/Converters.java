@@ -38,7 +38,7 @@ public class Converters {
     }
 
     /**
-     * Anonymises a string by substituting all alphanumeric characters with a random one.
+     * Anonymises a string by substituting all alphanumeric characters with A, a, or 1.
      *
      * @param originalInput
      * @return string
