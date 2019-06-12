@@ -102,7 +102,7 @@ if (System.getenv("storeFile") != null && System.getenv("storePassword") != null
 }
 
 dependencies {
-    implementation('me.dm7.barcodescanner:zbar:1.8.4') {
+    implementation('me.dm7.barcodescanner:zbar:1.9.8') {
         exclude group: 'com.android.support', module: "support-v4"
     }
 
