@@ -3,19 +3,10 @@ package com.aware;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
-import android.app.ActivityManager;
+import android.app.*;
 import android.app.ActivityManager.ProcessErrorStateInfo;
 import android.app.ActivityManager.RunningAppProcessInfo;
-import android.app.IntentService;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.ContentResolver;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SyncRequest;
+import android.content.*;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -27,14 +18,13 @@ import android.database.sqlite.SQLiteException;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.WakefulBroadcastReceiver;
-import android.support.v4.view.accessibility.AccessibilityEventCompat;
-import android.support.v4.view.accessibility.AccessibilityManagerCompat;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
-
+import androidx.core.app.NotificationCompat;
+import androidx.core.view.accessibility.AccessibilityEventCompat;
+import androidx.core.view.accessibility.AccessibilityManagerCompat;
+import androidx.legacy.content.WakefulBroadcastReceiver;
 import com.aware.providers.Applications_Provider;
 import com.aware.providers.Applications_Provider.Applications_Crashes;
 import com.aware.providers.Applications_Provider.Applications_Foreground;
@@ -45,7 +35,6 @@ import com.aware.providers.Screen_Provider;
 import com.aware.utils.Converters;
 import com.aware.utils.Encrypter;
 import com.aware.utils.Scheduler;
-
 import org.json.JSONException;
 
 import java.util.Iterator;

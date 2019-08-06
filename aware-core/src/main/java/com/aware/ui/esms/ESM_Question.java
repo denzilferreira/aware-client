@@ -11,16 +11,14 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.view.ViewGroup;
-
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
 import com.aware.Aware;
 import com.aware.ESM;
 import com.aware.providers.ESM_Provider;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

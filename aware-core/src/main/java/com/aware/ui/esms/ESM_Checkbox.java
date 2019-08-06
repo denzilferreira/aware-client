@@ -6,24 +6,17 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-
+import android.widget.*;
+import androidx.annotation.NonNull;
 import com.aware.Aware;
 import com.aware.ESM;
 import com.aware.R;
 import com.aware.providers.ESM_Provider;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 

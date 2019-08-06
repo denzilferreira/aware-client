@@ -7,20 +7,20 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.widget.Toast;
-
+import androidx.core.app.NotificationCompat;
+import androidx.core.content.FileProvider;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.R;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -33,9 +33,6 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.util.Random;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
 
 /**
  * Created by denzil on 17/01/15.

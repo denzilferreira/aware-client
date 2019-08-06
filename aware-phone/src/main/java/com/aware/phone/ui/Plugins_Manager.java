@@ -2,14 +2,7 @@
 package com.aware.phone.ui;
 
 import android.app.AlertDialog;
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
+import android.content.*;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -18,27 +11,20 @@ import android.content.pm.ServiceInfo;
 import android.database.Cursor;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.GridView;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
-
+import android.widget.*;
+import androidx.core.content.ContextCompat;
 import com.aware.Aware;
-
 import com.aware.phone.R;
 import com.aware.providers.Aware_Provider;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
 import com.aware.utils.Aware_Plugin;
 import com.aware.utils.DatabaseHelper;
 import com.aware.utils.PluginsManager;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

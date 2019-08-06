@@ -1,25 +1,18 @@
 package com.aware.ui;
 
 import android.app.NotificationManager;
-import android.content.BroadcastReceiver;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.*;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.util.Log;
-
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.ESM;
 import com.aware.providers.ESM_Provider.ESM_Data;
 import com.aware.ui.esms.ESMFactory;
 import com.aware.ui.esms.ESM_Question;
-
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 

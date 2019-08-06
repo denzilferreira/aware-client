@@ -1,25 +1,18 @@
 
 package com.aware.utils;
 
-import android.Manifest;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
 import android.os.Environment;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.PermissionChecker;
 import android.text.TextUtils;
 import android.util.Log;
-
-import com.aware.Aware;
+import androidx.core.content.ContextCompat;
 import com.aware.R;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

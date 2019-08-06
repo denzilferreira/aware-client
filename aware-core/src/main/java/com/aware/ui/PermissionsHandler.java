@@ -3,11 +3,10 @@ package com.aware.ui;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.PermissionChecker;
 import android.util.Log;
-
+import androidx.core.app.ActivityCompat;
 import com.aware.Aware;
 
 import java.util.ArrayList;
@@ -83,7 +82,7 @@ public class PermissionsHandler extends Activity {
         if (requestCode == RC_PERMISSIONS) {
             int not_granted = 0;
             for (int i = 0; i < permissions.length; i++) {
-                if (grantResults[i] != PermissionChecker.PERMISSION_GRANTED) {
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
                     not_granted++;
                     Log.d(Aware.TAG, permissions[i] + " was not granted");
                 } else {
