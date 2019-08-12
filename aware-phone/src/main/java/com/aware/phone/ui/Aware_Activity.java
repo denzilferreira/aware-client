@@ -43,13 +43,6 @@ public abstract class Aware_Activity extends AppCompatPreferenceActivity {
                         case R.id.aware_plugins: //Plugins
                             Intent pluginsManager = new Intent(getApplicationContext(), Plugins_Manager.class);
                             startActivity(pluginsManager);
-                            /*Intent playStore = new Intent(Intent.ACTION_VIEW);
-                            playStore.setData(Uri.parse("market://search?q=awareframework&c=apps"));
-                            try {
-                                startActivity(playStore);
-                            } catch (ActivityNotFoundException e) {
-                                Toast.makeText(getApplicationContext(), "Google Play Store installed?", Toast.LENGTH_SHORT).show();
-                            }*/
                             break;
                         case R.id.aware_stream: //Stream
                             Intent stream_ui = new Intent(getApplicationContext(), Stream_UI.class);

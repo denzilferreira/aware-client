@@ -27,6 +27,7 @@ import com.aware.phone.Aware_Client;
 import com.aware.phone.R;
 import com.aware.providers.Aware_Provider;
 import com.aware.utils.*;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -72,6 +73,7 @@ public class Aware_Join_Study extends Aware_Activity {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
+
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 Aware.setSetting(getApplicationContext(), Aware_Preferences.DEVICE_LABEL, s.toString());
@@ -93,11 +95,12 @@ public class Aware_Join_Study extends Aware_Activity {
         //If we are getting here from an AWARE study link
         String scheme = getIntent().getScheme();
         if (scheme != null) {
-            if (Aware.DEBUG) Log.d(Aware.TAG, "AWARE Link detected: " + getIntent().getDataString() + " SCHEME: " + scheme);
+            if (Aware.DEBUG)
+                Log.d(Aware.TAG, "AWARE Link detected: " + getIntent().getDataString() + " SCHEME: " + scheme);
             if (scheme.equalsIgnoreCase("aware")) {
-                study_url = getIntent().getDataString().replace("aware://","http://");
+                study_url = getIntent().getDataString().replace("aware://", "http://");
             } else if (scheme.equalsIgnoreCase("aware-ssl")) {
-                study_url = getIntent().getDataString().replace("aware-ssl://","https://");
+                study_url = getIntent().getDataString().replace("aware-ssl://", "https://");
             }
         }
 
@@ -292,7 +295,7 @@ public class Aware_Join_Study extends Aware_Activity {
                     //Note: Joining a study always downloads the certificate.
                     SSLManager.handleUrl(getApplicationContext(), study_url, true);
 
-                    while(!SSLManager.hasCertificate(getApplicationContext(), study_uri.getHost())) {
+                    while (!SSLManager.hasCertificate(getApplicationContext(), study_uri.getHost())) {
                         //wait until we have the certificate downloaded
                     }
 
@@ -639,6 +642,11 @@ public class Aware_Join_Study extends Aware_Activity {
                 btnQuit.setVisibility(View.GONE);
             }
             qry.close();
+        }
+
+        if (Aware.getSetting(this, Aware_Preferences.INTERFACE_LOCKED).equals("true")) {
+            BottomNavigationView bottomNavigationView = (BottomNavigationView) findViewById(R.id.aware_bottombar);
+            bottomNavigationView.setVisibility(View.GONE);
         }
     }
 

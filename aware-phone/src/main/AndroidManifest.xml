@@ -135,6 +135,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.aware.phone.Aware_Client" />
         </activity>
+        <activity android:name=".ui.Aware_Participant" />
 
         <receiver
             android:name="com.aware.Aware$AndroidPackageMonitor" android:exported="true">

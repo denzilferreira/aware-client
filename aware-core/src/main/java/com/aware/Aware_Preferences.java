@@ -650,4 +650,9 @@ public class Aware_Preferences {
      * Masks text produced by touch events
      */
     public static final String MASK_TOUCH_TEXT = "mask_touch_text";
+
+    /**
+     * Lock interface after participant joins study
+     */
+    public static final String INTERFACE_LOCKED = "interface_locked";
 }

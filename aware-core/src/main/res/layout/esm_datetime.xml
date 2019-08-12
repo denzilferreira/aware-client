@@ -20,7 +20,7 @@
         android:layout_below="@id/esm_title"
         android:padding="16dp" />
 
-    <android.support.design.widget.TabLayout
+    <com.google.android.material.tabs.TabLayout
         android:id="@+id/datetimetabs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -34,7 +34,7 @@
         app:tabSelectedTextColor="#FFF"
         app:tabTextColor="#000" />
 
-    <android.support.v4.view.ViewPager
+    <androidx.viewpager.widget.ViewPager
         android:id="@+id/datetimepager"
         android:layout_width="match_parent"
         android:layout_height="250dp"

@@ -1,5 +1,8 @@
 apply plugin: 'com.android.application'
 
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-android'
+
 android {
     compileSdkVersion compile_sdk
     buildToolsVersion build_tools
@@ -102,6 +105,10 @@ if (System.getenv("storeFile") != null && System.getenv("storePassword") != null
 }
 
 dependencies {
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "org.jetbrains.anko:anko:$anko_version"
+
     implementation "me.dm7.barcodescanner:zbar:1.9.8"
 
     implementation "com.google.android.material:material:1.1.0-alpha09"
@@ -120,5 +127,9 @@ dependencies {
     api (project(":com.aware.plugin.esm.scheduler"))
     api (project(":com.aware.plugin.sensortag"))
     api (project(":com.aware.plugin.sentimental"))
+}
+
+repositories {
+    mavenCentral()
 }
 

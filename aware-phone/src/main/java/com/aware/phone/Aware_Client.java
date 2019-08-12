@@ -32,6 +32,7 @@ import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.phone.ui.Aware_Activity;
 import com.aware.phone.ui.Aware_Join_Study;
+import com.aware.phone.ui.Aware_Participant;
 import com.aware.ui.PermissionsHandler;
 import com.aware.utils.Https;
 import com.aware.utils.SSLManager;
@@ -70,6 +71,9 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         }
 
         prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
+        addPreferencesFromResource(R.xml.aware_preferences);
+
+        setContentView(R.layout.aware_ui);
 
         optionalSensors.put(Aware_Preferences.STATUS_ACCELEROMETER, Sensor.TYPE_ACCELEROMETER);
         optionalSensors.put(Aware_Preferences.STATUS_SIGNIFICANT_MOTION, Sensor.TYPE_ACCELEROMETER);
@@ -89,9 +93,6 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
         for (int i = 0; i < sensors.size(); i++) {
             listSensorType.put(sensors.get(i).getType(), true);
         }
-
-        addPreferencesFromResource(R.xml.aware_preferences);
-        setContentView(R.layout.aware_ui);
 
         REQUIRED_PERMISSIONS.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         REQUIRED_PERMISSIONS.add(Manifest.permission.ACCESS_WIFI_STATE);
@@ -426,6 +427,15 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                     findPreference(Aware_Preferences.FOREGROUND_PRIORITY),
                     findPreference(Aware_Preferences.STATUS_TOUCH)
             );
+        }
+
+        if (Aware.isStudy(this)) {
+            if (Aware.getSetting(this, Aware_Preferences.INTERFACE_LOCKED).equals("true") ||
+                    Aware.getSetting(this, "ui_mode").equals("1") || Aware.getSetting(this, "ui_mode").equals("2")
+            ) {
+                finish();
+                startActivity(new Intent(this, Aware_Participant.class));
+            }
         }
     }
 
