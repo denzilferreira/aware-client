@@ -221,7 +221,7 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
 
     private void notifyUser(Context mContext, String message, boolean dismiss, boolean indetermined, int id) {
         if (!dismiss) {
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(mContext, Aware.AWARE_NOTIFICATION_ID);
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(mContext, Aware.AWARE_NOTIFICATION_CHANNEL_DATASYNC);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_sync);
             mBuilder.setContentTitle(mContext.getResources().getString(R.string.app_name));
             mBuilder.setContentText(message);
@@ -230,11 +230,13 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
             mBuilder.setDefaults(NotificationCompat.DEFAULT_LIGHTS); //we only blink the LED, nothing else.
             mBuilder.setProgress(100, 100, indetermined);
 
+            mBuilder = Aware.setNotificationProperties(mBuilder, Aware.AWARE_NOTIFICATION_IMPORTANCE_DATASYNC);
+
             PendingIntent clickIntent = PendingIntent.getActivity(mContext, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
             mBuilder.setContentIntent(clickIntent);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_ID);
+                mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_CHANNEL_DATASYNC);
 
             try {
                 notManager.notify(id, mBuilder.build());
@@ -256,16 +258,16 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
         actManager.getMemoryInfo(memInfo);
 
         if (memInfo.lowMemory) {
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getContext(), Aware.AWARE_NOTIFICATION_ID);
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getContext(), Aware.AWARE_NOTIFICATION_CHANNEL_GENERAL);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_plugin_dependency);
             mBuilder.setContentTitle("Low memory detected...");
             mBuilder.setContentText("Tap and swipe to clear recently used applications.");
             mBuilder.setAutoCancel(true);
             mBuilder.setOnlyAlertOnce(true);
             mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
-
+            mBuilder = Aware.setNotificationProperties(mBuilder, Aware.AWARE_NOTIFICATION_IMPORTANCE_GENERAL);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_ID);
+                mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_CHANNEL_GENERAL);
 
             Intent intent = new Intent("com.android.systemui.recent.action.TOGGLE_RECENTS");
             intent.setComponent(new ComponentName("com.android.systemui", "com.android.systemui.recent.RecentsActivity"));

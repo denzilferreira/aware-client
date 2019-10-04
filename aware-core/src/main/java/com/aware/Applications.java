@@ -641,16 +641,16 @@ public class Applications extends AccessibilityService {
      */
     public synchronized static boolean isAccessibilityServiceActive(Context c) {
         if (!isAccessibilityEnabled(c)) {
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c, Aware.AWARE_NOTIFICATION_ID);
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c, Aware.AWARE_NOTIFICATION_CHANNEL_GENERAL);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_accessibility);
             mBuilder.setContentTitle(c.getResources().getString(R.string.aware_activate_accessibility_title));
             mBuilder.setContentText(c.getResources().getString(R.string.aware_activate_accessibility));
             mBuilder.setAutoCancel(true);
             mBuilder.setOnlyAlertOnce(true); //notify the user only once
             mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
-
+            mBuilder = Aware.setNotificationProperties(mBuilder, Aware.AWARE_NOTIFICATION_IMPORTANCE_GENERAL);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_ID);
+                mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_CHANNEL_GENERAL);
 
             Intent accessibilitySettings = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
             accessibilitySettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
