@@ -93,15 +93,16 @@ public class DownloadPluginService extends IntentService {
 
                 String package_url = study_host + json_package.getString("package_path") + json_package.getString("package_name");
 
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext(), Aware.AWARE_NOTIFICATION_ID);
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext(), Aware.AWARE_NOTIFICATION_CHANNEL_DATASYNC);
                 mBuilder.setSmallIcon(R.drawable.ic_action_aware_plugins);
                 mBuilder.setContentTitle("AWARE Plugin");
                 mBuilder.setContentText(((is_update) ? "Updating " : "Downloading ") + json_package.getString("title"));
                 mBuilder.setProgress(0, 0, true);
                 mBuilder.setAutoCancel(true);
+                mBuilder = Aware.setNotificationProperties(mBuilder, Aware.AWARE_NOTIFICATION_IMPORTANCE_DATASYNC);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                    mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_ID);
+                    mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_CHANNEL_DATASYNC);
 
                 final int notID = new Random(System.currentTimeMillis()).nextInt();
                 notManager.notify(notID, mBuilder.build());

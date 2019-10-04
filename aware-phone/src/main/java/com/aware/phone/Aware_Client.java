@@ -59,17 +59,6 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //Android 8 specific: create a notification channel for AWARE
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationManager not_manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            NotificationChannel aware_channel = new NotificationChannel(Aware.AWARE_NOTIFICATION_ID, getResources().getString(R.string.app_name), NotificationManager.IMPORTANCE_DEFAULT);
-            aware_channel.setDescription(getResources().getString(R.string.aware_description));
-            aware_channel.enableLights(true);
-            aware_channel.setLightColor(Color.BLUE);
-            aware_channel.enableVibration(true);
-            not_manager.createNotificationChannel(aware_channel);
-        }
-
         prefs = getSharedPreferences("com.aware.phone", Context.MODE_PRIVATE);
         addPreferencesFromResource(R.xml.aware_preferences);
 

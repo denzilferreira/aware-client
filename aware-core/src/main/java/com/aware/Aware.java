@@ -163,7 +163,13 @@ public class Aware extends Service {
     /**
      * Android 8 notification channels support
      */
-    public static final String AWARE_NOTIFICATION_ID = "AWARE_NOTIFICATION_ID";
+    public static final String AWARE_NOTIFICATION_CHANNEL_GENERAL = "AWARE_NOTIFICATION_CHANNEL_GENERAL";
+    public static final String AWARE_NOTIFICATION_CHANNEL_SILENT = "AWARE_NOTIFICATION_CHANNEL_SILENT";
+    public static final String AWARE_NOTIFICATION_CHANNEL_DATASYNC = "AWARE_NOTIFICATION_CHANNEL_DATASYNC";
+
+    public static final int AWARE_NOTIFICATION_IMPORTANCE_GENERAL = NotificationManager.IMPORTANCE_HIGH;
+    public static final int AWARE_NOTIFICATION_IMPORTANCE_SILENT = NotificationManager.IMPORTANCE_MIN;
+    public static final int AWARE_NOTIFICATION_IMPORTANCE_DATASYNC = NotificationManager.IMPORTANCE_LOW;
 
     private static Intent accelerometerSrv = null;
     private static Intent locationsSrv = null;
@@ -251,15 +257,31 @@ public class Aware extends Service {
             return;
         }
 
-        //Android 8 specific: create a notification channel for AWARE
+        //Android 8 specific: create notification channels for AWARE
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationManager not_manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            NotificationChannel aware_channel = new NotificationChannel(AWARE_NOTIFICATION_ID, getResources().getString(R.string.app_name), NotificationManager.IMPORTANCE_DEFAULT);
-            aware_channel.setDescription(getResources().getString(R.string.aware_description));
+            NotificationChannel aware_channel = new NotificationChannel(AWARE_NOTIFICATION_CHANNEL_GENERAL, getResources().getString(R.string.app_name), AWARE_NOTIFICATION_IMPORTANCE_GENERAL);
+            aware_channel.setDescription(getResources().getString(R.string.channel_general_description));
             aware_channel.enableLights(true);
             aware_channel.setLightColor(Color.BLUE);
             aware_channel.enableVibration(true);
             not_manager.createNotificationChannel(aware_channel);
+
+            NotificationChannel aware_channel_sync = new NotificationChannel(AWARE_NOTIFICATION_CHANNEL_DATASYNC, getResources().getString(R.string.app_name), AWARE_NOTIFICATION_IMPORTANCE_DATASYNC);
+            aware_channel_sync.setDescription(getResources().getString(R.string.channel_datasync_description));
+            aware_channel_sync.enableLights(false);
+            aware_channel_sync.setLightColor(Color.BLUE);
+            aware_channel_sync.enableVibration(false);
+            aware_channel_sync.setSound(null,null);
+            not_manager.createNotificationChannel(aware_channel_sync);
+
+            NotificationChannel aware_channel_silent = new NotificationChannel(AWARE_NOTIFICATION_CHANNEL_SILENT, getResources().getString(R.string.app_name), AWARE_NOTIFICATION_IMPORTANCE_SILENT);
+            aware_channel_silent.setDescription(getResources().getString(R.string.channel_silent_description));
+            aware_channel_silent.enableLights(false);
+            aware_channel_silent.setLightColor(Color.BLUE);
+            aware_channel_silent.enableVibration(false);
+            aware_channel_silent.setSound(null,null);
+            not_manager.createNotificationChannel(aware_channel_silent);
         }
 
         // Start the foreground service only if it's the client or a standalone application
@@ -320,21 +342,46 @@ public class Aware extends Service {
             Intent aware = new Intent(this, Aware.class);
             PendingIntent onTap = PendingIntent.getService(this, 0, aware, 0);
 
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, Aware.AWARE_NOTIFICATION_ID);
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, Aware.AWARE_NOTIFICATION_CHANNEL_SILENT);
             mBuilder.setSmallIcon(R.drawable.ic_action_aware_studies);
             mBuilder.setContentTitle(getApplicationContext().getResources().getString(R.string.foreground_notification_title));
             mBuilder.setContentText(getApplicationContext().getResources().getString(R.string.foreground_notification_text));
             mBuilder.setOngoing(true);
             mBuilder.setOnlyAlertOnce(true);
             mBuilder.setContentIntent(onTap);
-            mBuilder.setPriority(NotificationCompat.PRIORITY_MIN);
+            mBuilder = Aware.setNotificationProperties(mBuilder, AWARE_NOTIFICATION_IMPORTANCE_SILENT);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_ID);
+                mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_CHANNEL_SILENT);
 
             startForeground(Aware.AWARE_FOREGROUND_SERVICE, mBuilder.build());
         } else {
             stopForeground(true);
+        }
+    }
+
+    // set sound/vibration/priority, mainly for android v7 and older as these are handled by channel in 8+
+    // TODO potentially add other variables here in the future (e.g., icon, contentTitle, etc.)
+    public static NotificationCompat.Builder setNotificationProperties(NotificationCompat.Builder builder, int notificationImportance) {
+        switch(notificationImportance) {
+            case AWARE_NOTIFICATION_IMPORTANCE_DATASYNC:
+                builder.setSound(null);
+                builder.setVibrate(null);
+                // priority low but still visible
+                builder.setPriority(NotificationCompat.PRIORITY_LOW);
+                return builder;
+            case AWARE_NOTIFICATION_IMPORTANCE_SILENT:
+                builder.setSound(null);
+                builder.setVibrate(null);
+                // priority lowest
+                builder.setPriority(NotificationCompat.PRIORITY_MIN);
+                return builder;
+            case AWARE_NOTIFICATION_IMPORTANCE_GENERAL:
+                // default sound and vibration with HIGH priority
+                builder.setPriority(NotificationCompat.PRIORITY_HIGH);
+                return builder;
+            default:
+                return builder;
         }
     }
 
@@ -404,16 +451,17 @@ public class Aware extends Service {
         }
 
         if (!is_ignored) {
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, Aware.AWARE_NOTIFICATION_ID);
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, Aware.AWARE_NOTIFICATION_CHANNEL_GENERAL);
             mBuilder.setSmallIcon(R.drawable.ic_stat_aware_recharge);
             mBuilder.setContentTitle(context.getApplicationContext().getResources().getString(R.string.aware_activate_battery_optimize_ignore_title));
             mBuilder.setContentText(context.getApplicationContext().getResources().getString(R.string.aware_activate_battery_optimize_ignore));
             mBuilder.setAutoCancel(true);
             mBuilder.setOnlyAlertOnce(true); //notify the user only once
             mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
+            mBuilder = setNotificationProperties(mBuilder, AWARE_NOTIFICATION_IMPORTANCE_GENERAL);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_ID);
+                mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_CHANNEL_GENERAL);
 
             Intent batteryIntent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
             batteryIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -733,16 +781,16 @@ public class Aware extends Service {
                 if (batt != null && batt.getExtras() != null) {
                     Bundle extras = batt.getExtras();
                     if (extras.getInt(BatteryManager.EXTRA_LEVEL) <= 15 && extras.getInt(BatteryManager.EXTRA_STATUS) != BatteryManager.BATTERY_STATUS_CHARGING) {
-                        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context.getApplicationContext(), Aware.AWARE_NOTIFICATION_ID);
+                        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context.getApplicationContext(), Aware.AWARE_NOTIFICATION_CHANNEL_GENERAL);
                         mBuilder.setSmallIcon(R.drawable.ic_stat_aware_recharge);
                         mBuilder.setContentTitle(context.getApplicationContext().getResources().getString(R.string.app_name));
                         mBuilder.setContentText(context.getApplicationContext().getText(R.string.aware_battery_recharge));
                         mBuilder.setAutoCancel(true);
                         mBuilder.setOnlyAlertOnce(true); //notify the user only once
                         mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
-
+                        mBuilder = Aware.setNotificationProperties(mBuilder, AWARE_NOTIFICATION_IMPORTANCE_GENERAL);
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                            mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_ID);
+                            mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_CHANNEL_GENERAL);
 
                         PendingIntent clickIntent = PendingIntent.getActivity(context.getApplicationContext(), 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
                         mBuilder.setContentIntent(clickIntent);

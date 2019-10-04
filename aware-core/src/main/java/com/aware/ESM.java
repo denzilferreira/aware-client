@@ -442,7 +442,7 @@ public class ESM extends Aware_Sensor {
      */
     public static void notifyESM(Context context, boolean notifyOnce) {
 
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, Aware.AWARE_NOTIFICATION_ID);
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, Aware.AWARE_NOTIFICATION_CHANNEL_GENERAL);
         mBuilder.setSmallIcon(R.drawable.ic_stat_aware_esm);
         mBuilder.setContentTitle(context.getResources().getText(R.string.aware_esm_questions_title));
         mBuilder.setContentText(context.getResources().getText(R.string.aware_esm_questions));
@@ -451,9 +451,10 @@ public class ESM extends Aware_Sensor {
         mBuilder.setUsesChronometer(true);
         mBuilder.setOnlyAlertOnce(notifyOnce);
         mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
+        mBuilder = Aware.setNotificationProperties(mBuilder, Aware.AWARE_NOTIFICATION_IMPORTANCE_GENERAL);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-            mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_ID);
+            mBuilder.setChannelId(Aware.AWARE_NOTIFICATION_CHANNEL_GENERAL);
 
         Intent intent_ESM = new Intent(context, ESM_Queue.class);
         intent_ESM.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

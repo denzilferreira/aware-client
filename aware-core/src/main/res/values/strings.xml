@@ -2,6 +2,11 @@
 <resources>
     <string name="app_name">AWARE</string>
     <string name="aware_description">AWARE is an Android\'s framework dedicated to infer, log and share mobile context information between mobile applications. Visit http://awareframework.com for details.</string>
+
+    <string name="channel_general_description">General AWARE notifications</string>
+    <string name="channel_silent_description">Non-interruptive AWARE notifications</string>
+    <string name="channel_datasync_description">AWARE datasync notifications</string>
+
     <string name="read_permission">Allow read-only access to the local data.</string>
     <string name="write_permission">Allow read and write access to the local data.</string>
     <string name="aware_studies">AWARE Studies</string>
