@@ -614,6 +614,12 @@ public class Aware_Join_Study extends Aware_Activity {
 
         Cursor qry = Aware.getStudy(this, study_url);
         if (qry != null && qry.moveToFirst()) {
+
+            /*
+            --NOTE--
+            Denzil: as plugins are bundled with the client, we no longer need this. Also allows people to join study whether or not a plugin exists for Android and iOS
+            --------
+
             if (active_plugins.size() == 0) {
                 pluginsInstalled = true;
                 llPluginsRequired.setVisibility(View.GONE);
@@ -621,6 +627,11 @@ public class Aware_Join_Study extends Aware_Activity {
                 pluginsInstalled = verifyInstalledPlugins();
                 llPluginsRequired.setVisibility(View.VISIBLE);
             }
+            */
+
+            pluginsInstalled = true;
+            llPluginsRequired.setVisibility(View.GONE);
+
             if (pluginsInstalled) {
                 btnAction.setAlpha(1f);
                 btnAction.setEnabled(true);
