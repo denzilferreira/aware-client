@@ -490,7 +490,9 @@ public class Aware extends Service {
 
             try {
                 String webserver = Aware.getSetting(getApplicationContext(), Aware_Preferences.WEBSERVICE_SERVER);
-                String protocol = webserver.substring(0, webserver.indexOf(":"));
+
+                Uri url = Uri.parse(webserver);
+                String protocol = url.getScheme();
 
                 String study_status;
                 if (protocol.equalsIgnoreCase("https")) {

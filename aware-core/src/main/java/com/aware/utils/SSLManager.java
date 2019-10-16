@@ -36,15 +36,10 @@ public class SSLManager {
         // Warning: jelly_bean changes behavior of decoding "+".  Make sure that both
         // " " and "+" are %-encoded.
         Uri study_uri = Uri.parse(url);
+        String protocol = study_uri.getScheme();
+        if (protocol.equalsIgnoreCase("http")) return; //no need to do anything for http server
+
         String hostname = study_uri.getHost();
-
-        String protocol = "http";
-        try {
-            protocol = new URL(url).getProtocol();
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-
         if (study_uri.getQuery() != null) {
             // If it is in URL parameters, always unconditionally handle it
             String crt = study_uri.getQueryParameter("crt");

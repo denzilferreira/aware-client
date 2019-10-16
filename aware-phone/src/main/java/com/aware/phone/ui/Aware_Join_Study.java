@@ -282,13 +282,14 @@ public class Aware_Join_Study extends Aware_Activity {
 
             Uri study_uri = Uri.parse(study_url);
             String protocol = study_uri.getScheme();
+
             List<String> path_segments = study_uri.getPathSegments();
 
             if (path_segments.size() > 0) {
                 study_api_key = path_segments.get(path_segments.size() - 1);
                 study_id = path_segments.get(path_segments.size() - 2);
 
-                Log.d(Aware.TAG, "Study API: " + study_api_key + " \nStudy ID: " + study_id);
+                Log.d(Aware.TAG, "Study API: " + study_api_key + " Study ID: " + study_id);
 
                 String request;
                 if (protocol.equals("https")) {
@@ -300,18 +301,16 @@ public class Aware_Join_Study extends Aware_Activity {
                     }
 
                     try {
-                        request = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url))
-                                .dataGET(study_uri.getHost() + "/index.php/webservice/client_get_study_info/" + study_api_key,
-                                        true);
+                        request = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(protocol + "//" + study_uri.getHost() + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
                     } catch (FileNotFoundException e) {
                         Log.d(Aware.TAG, "Failed to load certificate: " + e.getMessage());
                         request = null;
                     }
                 } else {
-                    request = new Http().dataGET(study_uri.getHost() + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                    request = new Http().dataGET(protocol + "://" +study_uri.getHost() + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
                 }
 
-                if (Aware.DEBUG) Log.d(Aware.TAG, "Request result: " + request);
+                if (Aware.DEBUG) Log.d(Aware.TAG, "Request to " + protocol + "://" +study_uri.getHost() + "/index.php/webservice/client_get_study_info/" + study_api_key + " result: " + request);
 
                 if (request != null) {
                     try {
