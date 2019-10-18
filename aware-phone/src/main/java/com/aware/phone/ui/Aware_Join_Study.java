@@ -301,16 +301,16 @@ public class Aware_Join_Study extends Aware_Activity {
                     }
 
                     try {
-                        request = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(protocol + "//" + study_uri.getHost() + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                        request = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(protocol + "//" + study_uri.getHost() + ":" + study_uri.getPort() + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
                     } catch (FileNotFoundException e) {
                         Log.d(Aware.TAG, "Failed to load certificate: " + e.getMessage());
                         request = null;
                     }
                 } else {
-                    request = new Http().dataGET(protocol + "://" +study_uri.getHost() + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                    request = new Http().dataGET(protocol + "://" +study_uri.getHost() + ":" + study_uri.getPort() + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
                 }
 
-                if (Aware.DEBUG) Log.d(Aware.TAG, "Request to " + protocol + "://" +study_uri.getHost() + "/index.php/webservice/client_get_study_info/" + study_api_key + " result: " + request);
+                if (Aware.DEBUG) Log.d(Aware.TAG, "Request to " + protocol + "://" +study_uri.getHost() + ":" + study_uri.getPort() + "/index.php/webservice/client_get_study_info/" + study_api_key + " result: " + request);
 
                 if (request != null) {
                     try {

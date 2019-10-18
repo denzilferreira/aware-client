@@ -237,21 +237,16 @@ public class StudyUtils extends IntentService {
         }
 
         //Set the plugins' settings now
-        ArrayList<String> available_plugins = new ArrayList<>();
         ArrayList<String> enabled_plugins = new ArrayList<>();
-
         for (int i = 0; i < plugins.length(); i++) {
             try {
                 JSONObject plugin_config = plugins.getJSONObject(i);
 
                 String package_name = plugin_config.getString("plugin");
-                available_plugins.add(package_name);
-
                 JSONArray plugin_settings = plugin_config.getJSONArray("settings");
                 for (int j = 0; j < plugin_settings.length(); j++) {
                     JSONObject plugin_setting = plugin_settings.getJSONObject(j);
                     Aware.setSetting(context, plugin_setting.getString("setting"), plugin_setting.get("value"), package_name);
-
                     if (plugin_setting.getString("setting").contains("status_") && plugin_setting.get("value").equals("true")) {
                         enabled_plugins.add(package_name);
                     }
