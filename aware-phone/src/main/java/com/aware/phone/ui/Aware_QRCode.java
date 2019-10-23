@@ -150,12 +150,12 @@ public class Aware_QRCode extends Aware_Activity implements ZBarScannerView.Resu
                     }
 
                     try {
-                        request = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(protocol + "://"+ study_uri.getHost() + ":" + study_uri.getPort() + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                        request = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
                     } catch (FileNotFoundException e) {
                         request = null;
                     }
                 } else {
-                    request = new Http().dataGET(protocol + "://"+ study_uri.getHost() + ":" + study_uri.getPort() + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                    request = new Http().dataGET(study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
                 }
 
                 if (request != null) {

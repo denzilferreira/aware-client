@@ -34,8 +34,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.PermissionChecker;
+
 import com.aware.providers.Aware_Provider;
 import com.aware.providers.Aware_Provider.Aware_Device;
 import com.aware.providers.Aware_Provider.Aware_Plugins;
@@ -43,7 +45,9 @@ import com.aware.providers.Aware_Provider.Aware_Settings;
 import com.aware.providers.Battery_Provider;
 import com.aware.providers.Scheduler_Provider;
 import com.aware.utils.*;
+
 import dalvik.system.DexFile;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -272,7 +276,7 @@ public class Aware extends Service {
             aware_channel_sync.enableLights(false);
             aware_channel_sync.setLightColor(Color.BLUE);
             aware_channel_sync.enableVibration(false);
-            aware_channel_sync.setSound(null,null);
+            aware_channel_sync.setSound(null, null);
             not_manager.createNotificationChannel(aware_channel_sync);
 
             NotificationChannel aware_channel_silent = new NotificationChannel(AWARE_NOTIFICATION_CHANNEL_SILENT, getResources().getString(R.string.app_name), AWARE_NOTIFICATION_IMPORTANCE_SILENT);
@@ -280,7 +284,7 @@ public class Aware extends Service {
             aware_channel_silent.enableLights(false);
             aware_channel_silent.setLightColor(Color.BLUE);
             aware_channel_silent.enableVibration(false);
-            aware_channel_silent.setSound(null,null);
+            aware_channel_silent.setSound(null, null);
             not_manager.createNotificationChannel(aware_channel_silent);
         }
 
@@ -320,6 +324,7 @@ public class Aware extends Service {
     }
 
     private final Foreground_Priority foregroundMgr = new Foreground_Priority();
+
     public class Foreground_Priority extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -363,7 +368,7 @@ public class Aware extends Service {
     // set sound/vibration/priority, mainly for android v7 and older as these are handled by channel in 8+
     // TODO potentially add other variables here in the future (e.g., icon, contentTitle, etc.)
     public static NotificationCompat.Builder setNotificationProperties(NotificationCompat.Builder builder, int notificationImportance) {
-        switch(notificationImportance) {
+        switch (notificationImportance) {
             case AWARE_NOTIFICATION_IMPORTANCE_DATASYNC:
                 builder.setSound(null);
                 builder.setVibrate(null);
@@ -386,9 +391,11 @@ public class Aware extends Service {
     }
 
     private final SchedulerTicker schedulerTicker = new SchedulerTicker();
+
     public class SchedulerTicker extends BroadcastReceiver {
         long last_time = 0;
         long interval_ms = 60000; // Set in Aware class where we have context
+
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(Intent.ACTION_TIME_TICK)) { //Executed every 1-minute. OS will send this tickle automatically
@@ -515,16 +522,10 @@ public class Aware extends Service {
                         return false; //study no longer active, make clients quit the study and reset.
                     }
 
-                    //Ignored by standalone apps. They handle their own sensors, so server settings do not apply.
-                    //Denzil: Modified for flexibility for standalone apps. You can now modify the settings on the dashboard too for standalones.
-                    //if (getPackageName().equals("com.aware.phone") || !getApplicationContext().getResources().getBoolean(R.bool.standalone)) {
-                        if (study.getString("config").equalsIgnoreCase("[]")) {
-                            Aware.tweakSettings(getApplicationContext(), new JSONArray(study.getString("config")));
-                        } else if (!study.getString("config").equalsIgnoreCase("[]")) {
-                            JSONObject configJSON = new JSONObject(study.getString("config"));
-                            Aware.tweakSettings(getApplicationContext(), new JSONArray().put(configJSON));
-                        }
-                    //}
+                    if (!study.getString("config").equalsIgnoreCase("[]")) {
+                        JSONObject configJSON = new JSONObject(study.getString("config"));
+                        Aware.tweakSettings(getApplicationContext(), new JSONArray().put(configJSON));
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -755,7 +756,7 @@ public class Aware extends Service {
                 ContentResolver.setSyncAutomatically(Aware.getAWAREAccount(this), Aware_Provider.getAuthority(this), true);
                 long frequency = Long.parseLong(Aware.getSetting(this, Aware_Preferences.FREQUENCY_WEBSERVICE)) * 60;
                 SyncRequest request = new SyncRequest.Builder()
-                        .syncPeriodic(frequency, frequency/3)
+                        .syncPeriodic(frequency, frequency / 3)
                         .setSyncAdapter(Aware.getAWAREAccount(this), Aware_Provider.getAuthority(this))
                         .setExtras(new Bundle()).build();
                 ContentResolver.requestSync(request);
@@ -854,10 +855,12 @@ public class Aware extends Service {
             ComponentName componentName = null;
             if (packageInfo.versionName.equals("bundled")) {
                 componentName = new ComponentName(context.getPackageName(), package_name + ".Plugin");
-                if (Aware.DEBUG) Log.d(Aware.TAG, "Initializing bundled: " + componentName.toString());
+                if (Aware.DEBUG)
+                    Log.d(Aware.TAG, "Initializing bundled: " + componentName.toString());
             } else {
                 componentName = new ComponentName(package_name, package_name + ".Plugin");
-                if (Aware.DEBUG) Log.d(Aware.TAG, "Initializing external: " + componentName.toString());
+                if (Aware.DEBUG)
+                    Log.d(Aware.TAG, "Initializing external: " + componentName.toString());
             }
 
             Intent pluginIntent = new Intent();
@@ -868,10 +871,12 @@ public class Aware extends Service {
             if (componentName == null) {
                 if (packageInfo.versionName.equals("bundled")) {
                     componentName = new ComponentName(context.getPackageName(), package_name + ".PluginKt");
-                    if (Aware.DEBUG) Log.d(Aware.TAG, "Initializing bundled: " + componentName.toString());
+                    if (Aware.DEBUG)
+                        Log.d(Aware.TAG, "Initializing bundled: " + componentName.toString());
                 } else {
                     componentName = new ComponentName(package_name, package_name + ".PluginKt");
-                    if (Aware.DEBUG) Log.d(Aware.TAG, "Initializing external: " + componentName.toString());
+                    if (Aware.DEBUG)
+                        Log.d(Aware.TAG, "Initializing external: " + componentName.toString());
                 }
 
                 pluginIntent = new Intent();
@@ -1650,7 +1655,7 @@ public class Aware extends Service {
                 if (protocol.equals("https")) {
                     SSLManager.handleUrl(getApplicationContext(), full_url, true);
 
-                    while(!SSLManager.hasCertificate(getApplicationContext(), study_uri.getHost())) {
+                    while (!SSLManager.hasCertificate(getApplicationContext(), study_uri.getHost())) {
                         //wait until we have the certificate downloaded
                     }
 
@@ -1784,7 +1789,8 @@ public class Aware extends Service {
                             try {
                                 JSONObject sensor_config = sensors.getJSONObject(i);
                                 String package_name = "com.aware.phone";
-                                if (getApplicationContext().getResources().getBoolean(R.bool.standalone)) package_name = getApplicationContext().getPackageName();
+                                if (getApplicationContext().getResources().getBoolean(R.bool.standalone))
+                                    package_name = getApplicationContext().getPackageName();
                                 Aware.setSetting(getApplicationContext(), sensor_config.getString("setting"), sensor_config.get("value"), package_name);
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -1803,7 +1809,8 @@ public class Aware extends Service {
                                 JSONArray plugin_settings = plugin_config.getJSONArray("settings");
                                 for (int j = 0; j < plugin_settings.length(); j++) {
                                     JSONObject plugin_setting = plugin_settings.getJSONObject(j);
-                                    if (getApplicationContext().getResources().getBoolean(R.bool.standalone)) package_name = getApplicationContext().getPackageName();
+                                    if (getApplicationContext().getResources().getBoolean(R.bool.standalone))
+                                        package_name = getApplicationContext().getPackageName();
                                     Aware.setSetting(getApplicationContext(), plugin_setting.getString("setting"), plugin_setting.get("value"), package_name);
                                 }
                             } catch (JSONException e) {
@@ -2151,9 +2158,11 @@ public class Aware extends Service {
      * BroadcastReceiver that monitors for AWARE framework actions:
      * Aware#ACTION_AWARE_ACTION_QUIT_STUDY: quits a study
      * Aware#ACTION_AWARE_SYNC_DATA: send the data remotely
+     *
      * @author denzil
      */
     public static final Aware_Broadcaster aware_BR = new Aware_Broadcaster();
+
     public static class Aware_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -2177,6 +2186,7 @@ public class Aware extends Service {
      * Checks if we have access to the storage of the device. Turns off AWARE when we don't, turns it back on when available again.
      */
     private static final Storage_Broadcaster storage_BR = new Storage_Broadcaster();
+
     public static class Storage_Broadcaster extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -2197,6 +2207,7 @@ public class Aware extends Service {
      * Checks if we still have the accessibility services active or not
      */
     private static final AwareBoot awareBoot = new AwareBoot();
+
     public static class AwareBoot extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -2466,8 +2477,7 @@ public class Aware extends Service {
                     }
                 }
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // Write to file
             File logFile = new File("sdcard/log_aware.file");
             if (!logFile.exists()) {
@@ -2512,6 +2522,7 @@ public class Aware extends Service {
 
     /**
      * Checks if a specific sync adapter is enabled or not
+     *
      * @param authority
      * @returns
      */
@@ -2522,9 +2533,10 @@ public class Aware extends Service {
         boolean isMasterSyncEnabled = ContentResolver.getMasterSyncAutomatically();
         List<PeriodicSync> periodicSyncs = ContentResolver.getPeriodicSyncs(aware, authority);
 
-        if(Aware.DEBUG) Log.d(Aware.TAG, "Sync-Adapter Authority: " + authority + " syncable: " + isSynchable + " auto: " + isAutoSynchable + " Periodic: " + !periodicSyncs.isEmpty() + " global: " + isMasterSyncEnabled);
-        for(PeriodicSync p: periodicSyncs) {
-            if(Aware.DEBUG) Log.d(Aware.TAG, "Every: " + p.period/60 + " minutes");
+        if (Aware.DEBUG)
+            Log.d(Aware.TAG, "Sync-Adapter Authority: " + authority + " syncable: " + isSynchable + " auto: " + isAutoSynchable + " Periodic: " + !periodicSyncs.isEmpty() + " global: " + isMasterSyncEnabled);
+        for (PeriodicSync p : periodicSyncs) {
+            if (Aware.DEBUG) Log.d(Aware.TAG, "Every: " + p.period / 60 + " minutes");
         }
         return isSynchable && isAutoSynchable && isMasterSyncEnabled;
     }
