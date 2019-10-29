@@ -10,11 +10,22 @@ import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.R;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509ExtendedTrustManager;
+import javax.net.ssl.X509TrustManager;
+
 import java.io.*;
 import java.net.MalformedURLException;
+import java.net.Socket;
 import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.*;
 
 /**
@@ -118,15 +129,42 @@ public class SSLManager {
     }
 
     /**
-     * Downloads the certificate directly from the URL, instead of a public folder.
+     * Downloads the certificate directly from the URL, instead of a public folder. This only happens once when joining the study.
+     * We are trusting the certificate that is sent to us by the URL only once to avoid man-in-the-middle attacks
      * @param url
      * @return
      */
     public static X509Certificate retrieveRemoteCertificate(URL url) {
         try {
+
+            SSLContext ctx = SSLContext.getInstance("TLS");
+            ctx.init(null, new TrustManager[]{
+                    new X509TrustManager() {
+                        @Override
+                        public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                        }
+
+                        @Override
+                        public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                        }
+
+                        @Override
+                        public X509Certificate[] getAcceptedIssuers() {
+                            return new X509Certificate[0];
+                        }
+                    }
+            }, null);
+
             HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+            conn.setSSLSocketFactory(ctx.getSocketFactory());
             conn.setConnectTimeout(5000); //5 seconds to connect
             conn.setReadTimeout(10000); //10 seconds to acknowledge the response
+            conn.setHostnameVerifier(new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            });
             conn.connect();
 
             // retrieve the N-length signing chain for the server certificates
@@ -140,7 +178,7 @@ public class SSLManager {
 
             // connection is not HTTPS or server is not signed with an X.509 certificate, return null
             return null;
-        } catch (SSLPeerUnverifiedException spue) {
+        } catch (SSLPeerUnverifiedException | NoSuchAlgorithmException | KeyManagementException spue) {
             // connection to server is not verified, unable to get certificates
             Log.d(Aware.TAG, "Certificates: " + spue.getMessage());
             return null;

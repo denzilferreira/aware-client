@@ -37,7 +37,7 @@ android {
 }
 
 dependencies {
-    implementation "androidx.appcompat:appcompat:1.0.2"
+    implementation 'androidx.appcompat:appcompat:1.1.0'
     api project(":aware-core")
     api project(":com.aware.plugin.sentimental")
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

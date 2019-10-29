@@ -1,7 +1,8 @@
 apply plugin: 'com.android.application'
 
-apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion compile_sdk
@@ -92,6 +93,11 @@ android {
         exclude 'META-INF/ASL2.0'
         exclude 'META-INF/proguard/androidx-annotations.pro'
     }
+
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
 }
 
 if (System.getenv("storeFile") != null && System.getenv("storePassword") != null && System.getenv("keyAlias") != null && System.getenv("keyPassword") != null) {
@@ -111,8 +117,8 @@ dependencies {
 
     implementation "me.dm7.barcodescanner:zbar:1.9.8"
 
-    implementation "com.google.android.material:material:1.1.0-alpha09"
-    implementation "androidx.appcompat:appcompat:1.0.2"
+    implementation 'com.google.android.material:material:1.2.0-alpha01'
+    implementation 'androidx.appcompat:appcompat:1.1.0'
 
     api (project(':aware-core'))
     api (project(":com.aware.plugin.ambient_noise"))
