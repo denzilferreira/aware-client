@@ -322,8 +322,10 @@ public class SSLManager {
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             X509Certificate certificate = (X509Certificate) cf.generateCertificate(new FileInputStream(host_credentials.getPath()));
+            certificate.checkValidity();
             return true;
         } catch (Exception e) {
+            Log.d(Aware.TAG, "Error getting HTTPS SSL certificate: " + e.getMessage());
             return false;
         }
     }

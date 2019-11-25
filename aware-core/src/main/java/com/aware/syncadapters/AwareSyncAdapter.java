@@ -23,6 +23,8 @@ import com.aware.providers.Aware_Provider;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
 import com.aware.utils.SSLManager;
+import com.google.gson.JsonObject;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -151,24 +153,27 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
         if (response != null || web_service_simple) {
             try {
                 String[] columnsStr = getTableColumnsNames(CONTENT_URI, context);
-
-                /**
-                 * We used to check the latest timestamp from the server side. We now keep track of it locally on the phone for scalability and performance hit on MySQL per sync event.
-                 */
-                String latest;
-                //latest = getLatestRecordFromServer(device_id, web_service_simple, web_service_remove_data, database_table, protocol, context, web_server);
-                latest = getLatestRecordSynched(database_table, columnsStr);
-
                 String study_condition = getStudySyncCondition(context, database_table);
+                String latest = getLatestRecordSynced(database_table, columnsStr);
+
+                if (study_condition.length() == 0 && database_table.equalsIgnoreCase("aware_device")) {
+                    long joinedStudy = 0;
+                    Cursor study = Aware.getStudy(mContext, Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_SERVER));
+                    if (study != null && study.moveToFirst()) {
+                        joinedStudy = study.getLong(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED));
+                    }
+                    if (study != null && !study.isClosed()) study.close();
+
+                    JSONArray latestObj = new JSONArray(latest);
+                    if (latestObj.getJSONObject(0).getLong("timestamp") < joinedStudy) {
+                        latest = new JSONArray().toString();
+                    }
+                }
+
                 int total_records = getNumberOfRecordsToSync(CONTENT_URI, columnsStr, latest, study_condition, context);
                 boolean allow_table_maintenance = isTableAllowedForMaintenance(database_table);
 
                 if (Aware.DEBUG) {
-                    if (latest == null) {
-                        Log.d(Aware.TAG, "Unable to reach the server to retrieve latest... Will try again later.");
-                        return;
-                    }
-
                     Log.d(Aware.TAG, "Table: " + database_table + " exists: " + (response != null && response.length() == 0));
                     Log.d(Aware.TAG, "Last synched record in this table: " + latest);
                     Log.d(Aware.TAG, "Joined study since: " + study_condition);
@@ -356,15 +361,15 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
         return columnsStr;
     }
 
-    private String getLatestRecordSynched(String database_table, String[] columnsStr) {
+    private String getLatestRecordSynced(String database_table, String[] columnsStr) {
 
         JSONObject latest = new JSONObject();
         long last_sync_timestamp;
 
-        Cursor lastSynched = mContext.getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE '{\"table\":\"" + database_table + "\",\"last_sync_timestamp\":%'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
-        if (lastSynched != null && lastSynched.moveToFirst()) {
+        Cursor lastSynced = mContext.getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE '{\"table\":\"" + database_table + "\",\"last_sync_timestamp\":%'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
+        if (lastSynced != null && lastSynced.moveToFirst()) {
             try {
-                JSONObject logSyncData = new JSONObject(lastSynched.getString(lastSynched.getColumnIndex(Aware_Provider.Aware_Log.LOG_MESSAGE)));
+                JSONObject logSyncData = new JSONObject(lastSynced.getString(lastSynced.getColumnIndex(Aware_Provider.Aware_Log.LOG_MESSAGE)));
                 last_sync_timestamp = logSyncData.getLong("last_sync_timestamp");
 
                 if (exists(columnsStr, "double_end_timestamp")) {
@@ -377,7 +382,7 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            lastSynched.close();
+            lastSynced.close();
         } else {
             return new JSONArray().toString();
         }
@@ -430,14 +435,13 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
         if (Aware.isStudy(mContext)) {
             Cursor study = Aware.getStudy(mContext, Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_SERVER));
             if (study != null && study.moveToFirst()) {
-                study_condition += " AND timestamp >= " + study.getLong(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_TIMESTAMP));
+                study_condition += " AND timestamp >= " + study.getLong(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED));
             }
             if (study != null && !study.isClosed()) study.close();
         }
 
         //We always want to sync the device's profile and hardware sensor profiles for any study, no matter when we joined the study
-        if (DATABASE_TABLE.equalsIgnoreCase("aware_device")
-                || DATABASE_TABLE.matches("sensor_.*"))
+        if (DATABASE_TABLE.equalsIgnoreCase("aware_device") || DATABASE_TABLE.matches("sensor_.*"))
             study_condition = "";
 
         return study_condition;

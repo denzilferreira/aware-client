@@ -301,16 +301,14 @@ public class Aware_Join_Study extends Aware_Activity {
                     }
 
                     try {
-                        request = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(protocol + "//" + study_uri.getHost() + ":" + study_uri.getPort() + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                        request = new Https(SSLManager.getHTTPS(getApplicationContext(), study_url)).dataGET(study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
                     } catch (FileNotFoundException e) {
                         Log.d(Aware.TAG, "Failed to load certificate: " + e.getMessage());
                         request = null;
                     }
                 } else {
-                    request = new Http().dataGET(protocol + "://" +study_uri.getHost() + ":" + study_uri.getPort() + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
+                    request = new Http().dataGET(study_url.substring(0, study_url.indexOf("/index.php")) + "/index.php/webservice/client_get_study_info/" + study_api_key, true);
                 }
-
-                if (Aware.DEBUG) Log.d(Aware.TAG, "Request to " + protocol + "://" +study_uri.getHost() + ":" + study_uri.getPort() + "/index.php/webservice/client_get_study_info/" + study_api_key + " result: " + request);
 
                 if (request != null) {
                     try {
@@ -613,21 +611,6 @@ public class Aware_Join_Study extends Aware_Activity {
 
         Cursor qry = Aware.getStudy(this, study_url);
         if (qry != null && qry.moveToFirst()) {
-
-            /*
-            --NOTE--
-            Denzil: as plugins are bundled with the client, we no longer need this. Also allows people to join study whether or not a plugin exists for Android and iOS
-            --------
-
-            if (active_plugins.size() == 0) {
-                pluginsInstalled = true;
-                llPluginsRequired.setVisibility(View.GONE);
-            } else {
-                pluginsInstalled = verifyInstalledPlugins();
-                llPluginsRequired.setVisibility(View.VISIBLE);
-            }
-            */
-
             pluginsInstalled = true;
             llPluginsRequired.setVisibility(View.GONE);
 
