@@ -4,7 +4,13 @@ import android.accounts.Account;
 import android.app.ActivityManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.*;
+import android.content.AbstractThreadedSyncAdapter;
+import android.content.ComponentName;
+import android.content.ContentProviderClient;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SyncResult;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -14,7 +20,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.format.DateUtils;
 import android.util.Log;
+
 import androidx.core.app.NotificationCompat;
+
 import com.aware.Applications;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
@@ -23,7 +31,6 @@ import com.aware.providers.Aware_Provider;
 import com.aware.utils.Http;
 import com.aware.utils.Https;
 import com.aware.utils.SSLManager;
-import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -85,7 +92,7 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
      */
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
-        
+
         if (!Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_SILENT).equals("true"))
             notManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
 
@@ -343,11 +350,12 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
     private String getLatestRecordSynced(String database_table, String[] columnsStr) {
 
         JSONObject latest = new JSONObject();
-        long last_sync_timestamp;
+        long last_sync_timestamp = 0;
 
         Cursor lastSynced = mContext.getContentResolver().query(Aware_Provider.Aware_Log.CONTENT_URI, null, Aware_Provider.Aware_Log.LOG_MESSAGE + " LIKE '{\"table\":\"" + database_table + "\",\"last_sync_timestamp\":%'", null, Aware_Provider.Aware_Log.LOG_TIMESTAMP + " DESC LIMIT 1");
         if (lastSynced != null && lastSynced.moveToFirst()) {
             try {
+
                 JSONObject logSyncData = new JSONObject(lastSynced.getString(lastSynced.getColumnIndex(Aware_Provider.Aware_Log.LOG_MESSAGE)));
                 last_sync_timestamp = logSyncData.getLong("last_sync_timestamp");
 
@@ -358,10 +366,13 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
                 } else {
                     latest = new JSONObject().put("timestamp", last_sync_timestamp);
                 }
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+
             lastSynced.close();
+
         } else {
             return new JSONArray().toString();
         }
@@ -370,7 +381,6 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     /**
-     * @deprecated We are dropping this because of overhead and scalability when millions of records on the server side. We now keep track locally of the last successful record timestamp.
      * @param DEVICE_ID
      * @param WEBSERVICE_SIMPLE
      * @param WEBSERVICE_REMOVE_DATA
@@ -379,6 +389,7 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
      * @param mContext
      * @param WEBSERVER
      * @return
+     * @deprecated We are dropping this because of overhead and scalability when millions of records on the server side. We now keep track locally of the last successful record timestamp.
      */
     private String getLatestRecordFromServer(String DEVICE_ID, Boolean WEBSERVICE_SIMPLE, Boolean WEBSERVICE_REMOVE_DATA, String DATABASE_TABLE, String protocol, Context mContext, String WEBSERVER) {
         Hashtable<String, String> request = new Hashtable<>();
@@ -634,9 +645,9 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
 
                 try {
                     Aware.debug(mContext, new JSONObject()
-                                    .put("table", DATABASE_TABLE)
-                                    .put("last_sync_timestamp", lastSynced)
-                                    .toString());
+                            .put("table", DATABASE_TABLE)
+                            .put("last_sync_timestamp", lastSynced)
+                            .toString());
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -652,7 +663,8 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
 
     private boolean isTableAllowedForMaintenance(String table_name) {
         //we always keep locally the information of the study and defined schedulers.
-        if (table_name.equalsIgnoreCase("aware_studies") || table_name.equalsIgnoreCase("scheduler")) return false;
+        if (table_name.equalsIgnoreCase("aware_studies") || table_name.equalsIgnoreCase("scheduler"))
+            return false;
         return true;
     }
 

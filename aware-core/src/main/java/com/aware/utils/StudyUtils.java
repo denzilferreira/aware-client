@@ -187,6 +187,11 @@ public class StudyUtils extends IntentService {
         }
     }
 
+    public static void resetLogs(Context context){
+        context.getContentResolver().delete(Aware_Provider.Aware_Log.CONTENT_URI, null, null);
+        Log.d(Aware.TAG, "Cleared logs");
+    }
+
     /**
      * Sets first all the settings to the client.
      * If there are plugins, apply the same settings to them.
@@ -269,6 +274,8 @@ public class StudyUtils extends IntentService {
                 Aware.downloadPlugin(context, package_name, null, false);
             }
         }
+
+        resetLogs(context);
 
         Intent aware = new Intent(context, Aware.class);
         context.startService(aware);

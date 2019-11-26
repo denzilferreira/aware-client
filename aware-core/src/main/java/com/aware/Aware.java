@@ -1799,20 +1799,21 @@ public class Aware extends Service {
                         }
 
                         //Set the plugins' settings now
-                        ArrayList<String> active_plugins = new ArrayList<>();
+                        ArrayList<String> enabled_plugins = new ArrayList<>();
                         for (int i = 0; i < plugins.length(); i++) {
                             try {
                                 JSONObject plugin_config = plugins.getJSONObject(i);
 
                                 String package_name = plugin_config.getString("plugin");
-                                active_plugins.add(package_name);
-
                                 JSONArray plugin_settings = plugin_config.getJSONArray("settings");
                                 for (int j = 0; j < plugin_settings.length(); j++) {
                                     JSONObject plugin_setting = plugin_settings.getJSONObject(j);
                                     if (getApplicationContext().getResources().getBoolean(R.bool.standalone))
                                         package_name = getApplicationContext().getPackageName();
                                     Aware.setSetting(getApplicationContext(), plugin_setting.getString("setting"), plugin_setting.get("value"), package_name);
+                                    if (plugin_setting.getString("setting").contains("status_") && plugin_setting.get("value").equals("true")) {
+                                        enabled_plugins.add(package_name);
+                                    }
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -1823,13 +1824,24 @@ public class Aware extends Service {
                         if (schedulers.length() > 0)
                             Scheduler.setSchedules(getApplicationContext(), schedulers);
 
-                        //Start plugins
-                        for (String p : active_plugins) {
-                            Aware.startPlugin(getApplicationContext(), p);
+                        //Start enabled plugins
+                        for (String package_name : enabled_plugins) {
+                            PackageInfo installed = PluginsManager.isInstalled(getApplicationContext(), package_name);
+                            if (installed != null) {
+                                Aware.startPlugin(getApplicationContext(), package_name);
+                            } else {
+                                Aware.downloadPlugin(getApplicationContext(), package_name, null, false);
+                            }
                         }
+
+                        resetLogs(getApplicationContext());
 
                         //Let others know that we just joined a study
                         sendBroadcast(new Intent(Aware.ACTION_JOINED_STUDY));
+
+                        //Send data to server
+                        Intent sync = new Intent(Aware.ACTION_AWARE_SYNC_DATA);
+                        sendBroadcast(sync);
 
                     } catch (JSONException e) {
                         e.printStackTrace();
