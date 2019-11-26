@@ -202,6 +202,7 @@ public class Aware extends Service {
     private static Intent keyboard = null;
     private static Intent scheduler = null;
     private static Intent significantSrv = null;
+    private static Intent eventBus = null;
 
     private static AsyncStudyCheck studyCheck = null;
 
@@ -3052,5 +3053,20 @@ public class Aware extends Service {
     public static void stopMQTT(Context context) {
         if (context == null) return;
         if (mqttSrv != null) context.stopService(mqttSrv);
+    }
+
+    /**
+     * Start EventBus module
+     * @param context
+     */
+    public static void startEventBus(Context context) {
+        if(context == null) return;
+        if(eventBus == null) eventBus = new Intent(context, EventBus.class);
+        context.startService(eventBus);
+    }
+
+    public static void stopEventBus(Context context) {
+        if (context == null) return;
+        if (eventBus != null) context.stopService(eventBus);
     }
 }

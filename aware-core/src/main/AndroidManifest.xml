@@ -700,6 +700,9 @@
                 android:name="android.content.SyncAdapter"
                 android:resource="@xml/sync_wifi" />
         </service>
+        <service
+            android:name="com.aware.EventBus"
+            android:exported="true" />
 
     </application>
 

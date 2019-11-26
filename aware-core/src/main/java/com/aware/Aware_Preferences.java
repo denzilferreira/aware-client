@@ -655,4 +655,9 @@ public class Aware_Preferences {
      * Lock interface after participant joins study
      */
     public static final String INTERFACE_LOCKED = "interface_locked";
+
+    /**
+     * Enable real-time streaming through eventbus
+     */
+    public static final String STATUS_EVENTBUS = "status_eventbus";
 }

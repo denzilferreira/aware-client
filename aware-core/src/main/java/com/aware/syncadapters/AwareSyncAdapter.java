@@ -156,29 +156,8 @@ public class AwareSyncAdapter extends AbstractThreadedSyncAdapter {
                 String study_condition = getStudySyncCondition(context, database_table);
                 String latest = getLatestRecordSynced(database_table, columnsStr);
 
-                if (study_condition.length() == 0 && database_table.equalsIgnoreCase("aware_device")) {
-                    long joinedStudy = 0;
-                    Cursor study = Aware.getStudy(mContext, Aware.getSetting(mContext, Aware_Preferences.WEBSERVICE_SERVER));
-                    if (study != null && study.moveToFirst()) {
-                        joinedStudy = study.getLong(study.getColumnIndex(Aware_Provider.Aware_Studies.STUDY_JOINED));
-                    }
-                    if (study != null && !study.isClosed()) study.close();
-
-                    JSONArray latestObj = new JSONArray(latest);
-                    if (latestObj.getJSONObject(0).getLong("timestamp") < joinedStudy) {
-                        latest = new JSONArray().toString();
-                    }
-                }
-
                 int total_records = getNumberOfRecordsToSync(CONTENT_URI, columnsStr, latest, study_condition, context);
                 boolean allow_table_maintenance = isTableAllowedForMaintenance(database_table);
-
-                if (Aware.DEBUG) {
-                    Log.d(Aware.TAG, "Table: " + database_table + " exists: " + (response != null && response.length() == 0));
-                    Log.d(Aware.TAG, "Last synched record in this table: " + latest);
-                    Log.d(Aware.TAG, "Joined study since: " + study_condition);
-                    Log.d(Aware.TAG, "Rows remaining to sync: " + total_records);
-                }
 
                 // If we have records to sync
                 if (total_records > 0) {

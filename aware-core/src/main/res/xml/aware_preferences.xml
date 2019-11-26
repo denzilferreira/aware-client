@@ -762,6 +762,21 @@
         android:key="data_exchange"
         android:summary="Webservices, MQTT"
         android:title="Context exchange protocols">
+
+        <PreferenceScreen
+            android:icon="@drawable/ic_action_eventbus"
+            android:key="eventbus"
+            android:summary="Real-time eventbus stream (AWARE Micro)"
+            android:title="Real-time streaming">
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="status_eventbus"
+                android:persistent="true"
+                android:title="Enable real-time streaming to AWARE Micro"/>
+
+        </PreferenceScreen>
+
         <PreferenceScreen
             android:icon="@drawable/ic_action_mqtt"
             android:key="mqtt"
@@ -950,8 +965,7 @@
                 android:key="interface_locked"
                 android:persistent="true"
                 android:summary="Simplifies the interface for participants after joining a study"
-                android:title="Participant interface mode"
-                />
+                android:title="Participant interface mode" />
 
             <CheckBoxPreference
                 android:defaultValue="false"
