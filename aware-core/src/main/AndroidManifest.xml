@@ -701,7 +701,7 @@
                 android:resource="@xml/sync_wifi" />
         </service>
         <service
-            android:name="com.aware.EventBus"
+            android:name="com.aware.Websocket"
             android:exported="true" />
 
     </application>

@@ -68,15 +68,17 @@ android {
 dependencies {
     implementation "org.eclipse.paho:org.eclipse.paho.client.mqttv3:$mqtt_libs"
     implementation 'com.koushikdutta.ion:ion:2.2.1' //don't update
-    implementation "com.google.android.material:material:1.2.0-alpha01"
+    implementation 'com.koushikdutta.async:androidasync:2.2.1'
+
+    implementation "com.google.android.material:material:1.2.0-alpha02"
     implementation "org.jetbrains.anko:anko:$anko_version"
 
     implementation "androidx.gridlayout:gridlayout:1.0.0"
     implementation "androidx.cardview:cardview:1.0.0"
 
     implementation "androidx.annotation:annotation:1.1.0"
-    implementation "androidx.core:core:1.2.0-beta01"
-    implementation "com.google.android.material:material:1.2.0-alpha01"
+    implementation "androidx.core:core:1.2.0-rc01"
+    implementation "com.google.android.material:material:1.2.0-alpha02"
     implementation "androidx.appcompat:appcompat:1.1.0"
 
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0-alpha'

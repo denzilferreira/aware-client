@@ -764,16 +764,22 @@
         android:title="Context exchange protocols">
 
         <PreferenceScreen
-            android:icon="@drawable/ic_action_eventbus"
-            android:key="eventbus"
-            android:summary="Real-time eventbus stream (AWARE Micro)"
+            android:icon="@drawable/ic_action_websocket"
+            android:key="websocket"
+            android:summary="Real-time websocket stream (AWARE Micro)"
             android:title="Real-time streaming">
 
             <CheckBoxPreference
                 android:defaultValue="false"
-                android:key="status_eventbus"
+                android:key="status_websocket"
                 android:persistent="true"
                 android:title="Enable real-time streaming to AWARE Micro"/>
+
+            <EditTextPreference
+                android:key="websocket_server"
+                android:persistent="true"
+                android:summary="Websocket URL"
+                android:title="Websocket Server" />
 
         </PreferenceScreen>
 

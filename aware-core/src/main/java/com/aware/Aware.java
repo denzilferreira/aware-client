@@ -202,7 +202,7 @@ public class Aware extends Service {
     private static Intent keyboard = null;
     private static Intent scheduler = null;
     private static Intent significantSrv = null;
-    private static Intent eventBus = null;
+    private static Intent websocket = null;
 
     private static AsyncStudyCheck studyCheck = null;
 
@@ -2468,6 +2468,10 @@ public class Aware extends Service {
         if (Aware.getSetting(context, Aware_Preferences.STATUS_KEYBOARD).equals("true")) {
             startKeyboard(context);
         } else stopKeyboard(context);
+
+        if (Aware.getSetting(context, Aware_Preferences.STATUS_WEBSOCKET).equals("true")) {
+            startWebsocket(context);
+        } else stopWebsocket(context);
     }
 
     public static void startPlugins(Context context) {
@@ -2592,6 +2596,7 @@ public class Aware extends Service {
         stopInstallations(context);
         stopKeyboard(context);
         stopScheduler(context);
+        stopWebsocket(context);
     }
 
     /**
@@ -3071,14 +3076,14 @@ public class Aware extends Service {
      * Start EventBus module
      * @param context
      */
-    public static void startEventBus(Context context) {
+    public static void startWebsocket(Context context) {
         if(context == null) return;
-        if(eventBus == null) eventBus = new Intent(context, EventBus.class);
-        context.startService(eventBus);
+        if(websocket == null) websocket = new Intent(context, Websocket.class);
+        context.startService(websocket);
     }
 
-    public static void stopEventBus(Context context) {
+    public static void stopWebsocket(Context context) {
         if (context == null) return;
-        if (eventBus != null) context.stopService(eventBus);
+        if (websocket != null) context.stopService(websocket);
     }
 }

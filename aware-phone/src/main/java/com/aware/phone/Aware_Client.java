@@ -415,7 +415,9 @@ public class Aware_Client extends Aware_Activity implements SharedPreferences.On
                     findPreference(Aware_Preferences.WEBSERVICE_REMOVE_DATA),
                     findPreference(Aware_Preferences.DEBUG_DB_SLOW),
                     findPreference(Aware_Preferences.FOREGROUND_PRIORITY),
-                    findPreference(Aware_Preferences.STATUS_TOUCH)
+                    findPreference(Aware_Preferences.STATUS_TOUCH),
+                    findPreference(Aware_Preferences.STATUS_WEBSOCKET),
+                    findPreference(Aware_Preferences.WEBSOCKET_SERVER)
             );
         }
 

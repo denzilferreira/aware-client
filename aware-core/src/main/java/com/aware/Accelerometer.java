@@ -26,6 +26,10 @@ import com.aware.providers.Accelerometer_Provider;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Data;
 import com.aware.providers.Accelerometer_Provider.Accelerometer_Sensor;
 import com.aware.utils.Aware_Sensor;
+import com.aware.utils.DatabaseHelper;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -128,6 +132,30 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         rowData.put(Accelerometer_Data.LABEL, LABEL);
 
         if (awareSensor != null) awareSensor.onAccelerometerChanged(rowData);
+
+        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSOCKET).equals("true")) {
+            try {
+                JSONObject data = new JSONObject();
+                data.put(Accelerometer_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                data.put(Accelerometer_Data.TIMESTAMP, TS);
+                data.put(Accelerometer_Data.VALUES_0, event.values[0]);
+                data.put(Accelerometer_Data.VALUES_1, event.values[1]);
+                data.put(Accelerometer_Data.VALUES_2, event.values[2]);
+                data.put(Accelerometer_Data.ACCURACY, event.accuracy);
+                data.put(Accelerometer_Data.LABEL, LABEL);
+
+                JSONObject message = new JSONObject();
+                message.put("device_id", Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                message.put("table", "accelerometer");
+                message.put("data", data.toString());
+
+                Log.d(TAG, "Stream: " + message.toString());
+                Websocket.awareSensor.sendMessage(message.toString());
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
 
         data_values.add(rowData);
         LAST_TS = TS;

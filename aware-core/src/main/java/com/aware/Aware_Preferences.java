@@ -659,5 +659,10 @@ public class Aware_Preferences {
     /**
      * Enable real-time streaming through eventbus
      */
-    public static final String STATUS_EVENTBUS = "status_eventbus";
+    public static final String STATUS_WEBSOCKET = "status_websocket";
+
+    /**
+     * Where the websocket server is located (https://domain or IP)
+     */
+    public static final String WEBSOCKET_SERVER = "websocket_server";
 }
