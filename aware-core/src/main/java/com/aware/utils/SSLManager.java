@@ -401,9 +401,10 @@ public class SSLManager {
         File host_credentials = new File(root_folder.toString(), hostname);
         if (host_credentials.exists()) {
             File[] certs = host_credentials.listFiles();
-            for (File crt : certs) {
-                if (crt.getName().equals("server.crt")) return new FileInputStream(crt);
-            }
+            if(certs != null)
+                for (File crt : certs) {
+                    if (crt.getName().equals("server.crt")) return new FileInputStream(crt);
+                }
         }
         return null;
     }
