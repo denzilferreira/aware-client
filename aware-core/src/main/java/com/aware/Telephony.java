@@ -201,7 +201,7 @@ public class Telephony extends Aware_Sensor {
                 }
 
                 List<NeighboringCellInfo> neighbors = telephonyManager.getNeighboringCellInfo();
-                if (neighbors.size() > 0) {
+                if (neighbors != null && neighbors.size() > 0) {
                     for (NeighboringCellInfo neighbor : neighbors) {
                         rowData = new ContentValues();
                         rowData.put(GSM_Neighbors_Data.TIMESTAMP, timestamp);
