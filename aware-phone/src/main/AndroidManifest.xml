@@ -75,6 +75,7 @@
             android:theme="@style/Theme.Aware">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
@@ -126,10 +127,17 @@
             android:theme="@style/Theme.Aware">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="aware" />
-                <data android:scheme="aware-ssl" />
+                <data
+                    android:host="*"
+                    android:pathPattern="/index.php/webservice/index/.*"
+                    android:scheme="http" />
+                <data
+                    android:host="*"
+                    android:pathPattern="/index.php/webservice/index/.*"
+                    android:scheme="https" />
             </intent-filter>
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -138,7 +146,8 @@
         <activity android:name=".ui.Aware_Participant" />
 
         <receiver
-            android:name="com.aware.Aware$AndroidPackageMonitor" android:exported="true">
+            android:name="com.aware.Aware$AndroidPackageMonitor"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_ADDED" />
                 <action android:name="android.intent.action.PACKAGE_REMOVED" />
@@ -147,8 +156,7 @@
             </intent-filter>
         </receiver>
 
-        <receiver
-            android:name="com.aware.Aware$AwareBoot">
+        <receiver android:name="com.aware.Aware$AwareBoot">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <category android:name="android.intent.category.DEFAULT" />
