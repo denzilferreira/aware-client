@@ -105,11 +105,13 @@ public class Aware_Join_Study extends Aware_Activity {
             Uri url = Uri.parse(study_url);
             onboarding = url.getQueryParameter("participant");
             if (onboarding != null) {
-                participant_label.setText(onboarding);
                 if (Aware.DEBUG) Log.d(Aware.TAG, "AWARE Study participant ID detected: " + onboarding);
                 study_url = study_url.substring(0,study_url.indexOf("participant")-1);
                 if (Aware.DEBUG) Log.d(Aware.TAG, "AWARE Study URL: " + study_url);
+            } else {
+                onboarding = "";
             }
+            participant_label.setText(onboarding);
         }
 
         if (Aware.DEBUG) Log.d(Aware.TAG, "Study URL:" + study_url);
