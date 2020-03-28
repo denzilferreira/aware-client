@@ -452,6 +452,7 @@ public class Aware_Join_Study extends Aware_Activity {
                     Intent studyInfo = new Intent(getApplicationContext(), Aware_Join_Study.class);
                     studyInfo.putExtra(Aware_Join_Study.EXTRA_STUDY_URL, study_url);
                     studyInfo.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    finish();
                     startActivity(studyInfo);
 
                 } catch (JSONException e) {
