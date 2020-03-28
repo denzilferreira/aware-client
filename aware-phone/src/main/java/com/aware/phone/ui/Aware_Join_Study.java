@@ -7,6 +7,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -108,10 +109,17 @@ public class Aware_Join_Study extends Aware_Activity {
                 if (Aware.DEBUG) Log.d(Aware.TAG, "AWARE Study participant ID detected: " + onboarding);
                 study_url = study_url.substring(0,study_url.indexOf("participant")-1);
                 if (Aware.DEBUG) Log.d(Aware.TAG, "AWARE Study URL: " + study_url);
+                participant_label.setText(onboarding);
+                participant_label.setFocusable(false);
+                participant_label.setEnabled(false);
+                participant_label.setCursorVisible(false);
+                participant_label.setKeyListener(null);
+                participant_label.setBackgroundColor(Color.TRANSPARENT);
             } else {
                 onboarding = "";
+                participant_label.setText(onboarding);
             }
-            participant_label.setText(onboarding);
+
         }
 
         if (Aware.DEBUG) Log.d(Aware.TAG, "Study URL:" + study_url);
