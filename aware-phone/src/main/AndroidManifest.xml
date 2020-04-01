@@ -132,11 +132,11 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:host="*"
-                    android:pathPattern="/index.php/webservice/index/.*"
+                    android:pathPattern="/.*index.php/webservice/index/.*"
                     android:scheme="http" />
                 <data
                     android:host="*"
-                    android:pathPattern="/index.php/webservice/index/.*"
+                    android:pathPattern="/.*index.php/webservice/index/.*"
                     android:scheme="https" />
             </intent-filter>
             <meta-data
