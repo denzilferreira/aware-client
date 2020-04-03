@@ -136,6 +136,110 @@ public class Screen extends Aware_Sensor {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
+
+        if (intent != null && intent.getAction() != null) {
+
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            KeyguardManager km = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+
+            if (intent.getAction().equals(ACTION_AWARE_SCREEN_ON)) {
+
+                ContentValues rowData = new ContentValues();
+                rowData.put(Screen_Data.TIMESTAMP, System.currentTimeMillis());
+                rowData.put(Screen_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                rowData.put(Screen_Data.SCREEN_STATUS, Screen.STATUS_SCREEN_ON);
+                try {
+                    getContentResolver().insert(Screen_Data.CONTENT_URI, rowData);
+                    if (awareSensor != null) awareSensor.onScreenOn();
+                } catch (SQLiteException e) {
+                    if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                } catch (SQLException e) {
+                    if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                }
+
+                if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_SCREEN_ON);
+                sendBroadcast(new Intent(ACTION_AWARE_SCREEN_ON));
+
+                if (km.isKeyguardLocked()) {
+                    rowData = new ContentValues();
+                    rowData.put(Screen_Data.TIMESTAMP, System.currentTimeMillis());
+                    rowData.put(Screen_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                    rowData.put(Screen_Data.SCREEN_STATUS, Screen.STATUS_SCREEN_LOCKED);
+                    try {
+                        getContentResolver().insert(Screen_Data.CONTENT_URI, rowData);
+                        if (awareSensor != null) awareSensor.onScreenUnlocked();
+                    } catch (SQLiteException e) {
+                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                    } catch (SQLException e) {
+                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                    }
+
+                    if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_SCREEN_LOCKED);
+                    sendBroadcast(new Intent(ACTION_AWARE_SCREEN_LOCKED));
+                }
+
+                return START_STICKY;
+            }
+            if (intent.getAction().equals(ACTION_AWARE_SCREEN_OFF)) {
+
+                ContentValues rowData = new ContentValues();
+                rowData.put(Screen_Data.TIMESTAMP, System.currentTimeMillis());
+                rowData.put(Screen_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                rowData.put(Screen_Data.SCREEN_STATUS, Screen.STATUS_SCREEN_OFF);
+                try {
+                    getContentResolver().insert(Screen_Data.CONTENT_URI, rowData);
+                    if (awareSensor != null) awareSensor.onScreenOff();
+                } catch (SQLiteException e) {
+                    if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                } catch (SQLException e) {
+                    if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                }
+
+                if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_SCREEN_OFF);
+                sendBroadcast(new Intent(ACTION_AWARE_SCREEN_OFF));
+
+                if (km.isKeyguardLocked()) {
+                    rowData = new ContentValues();
+                    rowData.put(Screen_Data.TIMESTAMP, System.currentTimeMillis());
+                    rowData.put(Screen_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                    rowData.put(Screen_Data.SCREEN_STATUS, Screen.STATUS_SCREEN_LOCKED);
+                    try {
+                        getContentResolver().insert(Screen_Data.CONTENT_URI, rowData);
+                        if (awareSensor != null) awareSensor.onScreenLocked();
+                    } catch (SQLiteException e) {
+                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                    } catch (SQLException e) {
+                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                    }
+
+                    if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_SCREEN_LOCKED);
+                    sendBroadcast(new Intent(ACTION_AWARE_SCREEN_LOCKED));
+                }
+                return START_STICKY;
+            }
+
+            if (intent.getAction().equals(ACTION_AWARE_SCREEN_UNLOCKED)) {
+                if (!km.isKeyguardLocked()) {
+                    ContentValues rowData = new ContentValues();
+                    rowData.put(Screen_Data.TIMESTAMP, System.currentTimeMillis());
+                    rowData.put(Screen_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                    rowData.put(Screen_Data.SCREEN_STATUS, Screen.STATUS_SCREEN_UNLOCKED);
+                    try {
+                        getContentResolver().insert(Screen_Data.CONTENT_URI, rowData);
+                        if (awareSensor != null) awareSensor.onScreenUnlocked();
+                    } catch (SQLiteException e) {
+                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                    } catch (SQLException e) {
+                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
+                    }
+
+                    if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_SCREEN_UNLOCKED);
+                    sendBroadcast(new Intent(ACTION_AWARE_SCREEN_UNLOCKED));
+                }
+                return START_STICKY;
+            }
+        }
+
         if (PERMISSIONS_OK) {
             if (screenMonitor == null) {
                 screenMonitor = new ScreenMonitor();
@@ -257,7 +361,6 @@ public class Screen extends Aware_Sensor {
                 ContentResolver.requestSync(request);
             }
         }
-
         return START_STICKY;
     }
 
@@ -265,101 +368,17 @@ public class Screen extends Aware_Sensor {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-
             PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            KeyguardManager km = (KeyguardManager) context.getSystemService(KEYGUARD_SERVICE);
+            KeyguardManager km = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
 
             if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
-                ContentValues rowData = new ContentValues();
-                rowData.put(Screen_Data.TIMESTAMP, System.currentTimeMillis());
-                rowData.put(Screen_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                rowData.put(Screen_Data.SCREEN_STATUS, Screen.STATUS_SCREEN_ON);
-                try {
-                    context.getContentResolver().insert(Screen_Data.CONTENT_URI, rowData);
-                    if (awareSensor != null) awareSensor.onScreenOn();
-                } catch (SQLiteException e) {
-                    if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-                } catch (SQLException e) {
-                    if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-                }
-
-                if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_SCREEN_ON);
-                sendBroadcast(new Intent(ACTION_AWARE_SCREEN_ON));
-
-                if (km.isKeyguardLocked()) {
-                    rowData = new ContentValues();
-                    rowData.put(Screen_Data.TIMESTAMP, System.currentTimeMillis());
-                    rowData.put(Screen_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                    rowData.put(Screen_Data.SCREEN_STATUS, Screen.STATUS_SCREEN_LOCKED);
-                    try {
-                        context.getContentResolver().insert(Screen_Data.CONTENT_URI, rowData);
-                        if (awareSensor != null) awareSensor.onScreenUnlocked();
-                    } catch (SQLiteException e) {
-                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-                    } catch (SQLException e) {
-                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-                    }
-
-                    if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_SCREEN_LOCKED);
-                    sendBroadcast(new Intent(ACTION_AWARE_SCREEN_LOCKED));
-                }
+                startService(new Intent(context, Screen.class).setAction(Screen.ACTION_AWARE_SCREEN_ON));
             }
-
             if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF) || !pm.isInteractive()) {
-
-                ContentValues rowData = new ContentValues();
-                rowData.put(Screen_Data.TIMESTAMP, System.currentTimeMillis());
-                rowData.put(Screen_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                rowData.put(Screen_Data.SCREEN_STATUS, Screen.STATUS_SCREEN_OFF);
-                try {
-                    context.getContentResolver().insert(Screen_Data.CONTENT_URI, rowData);
-                    if (awareSensor != null) awareSensor.onScreenOff();
-                } catch (SQLiteException e) {
-                    if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-                } catch (SQLException e) {
-                    if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-                }
-
-                if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_SCREEN_OFF);
-                sendBroadcast(new Intent(ACTION_AWARE_SCREEN_OFF));
-
-                if (km.isKeyguardLocked()) {
-                    rowData = new ContentValues();
-                    rowData.put(Screen_Data.TIMESTAMP, System.currentTimeMillis());
-                    rowData.put(Screen_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                    rowData.put(Screen_Data.SCREEN_STATUS, Screen.STATUS_SCREEN_LOCKED);
-                    try {
-                        context.getContentResolver().insert(Screen_Data.CONTENT_URI, rowData);
-                        if (awareSensor != null) awareSensor.onScreenLocked();
-                    } catch (SQLiteException e) {
-                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-                    } catch (SQLException e) {
-                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-                    }
-
-                    if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_SCREEN_LOCKED);
-                    sendBroadcast(new Intent(ACTION_AWARE_SCREEN_LOCKED));
-                }
+                startService(new Intent(context, Screen.class).setAction(Screen.ACTION_AWARE_SCREEN_OFF));
             }
-
-            if (intent.getAction().equals(Intent.ACTION_USER_PRESENT)) {
-                if (!km.isKeyguardLocked()) {
-                    ContentValues rowData = new ContentValues();
-                    rowData.put(Screen_Data.TIMESTAMP, System.currentTimeMillis());
-                    rowData.put(Screen_Data.DEVICE_ID, Aware.getSetting(context, Aware_Preferences.DEVICE_ID));
-                    rowData.put(Screen_Data.SCREEN_STATUS, Screen.STATUS_SCREEN_UNLOCKED);
-                    try {
-                        context.getContentResolver().insert(Screen_Data.CONTENT_URI, rowData);
-                        if (awareSensor != null) awareSensor.onScreenUnlocked();
-                    } catch (SQLiteException e) {
-                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-                    } catch (SQLException e) {
-                        if (Aware.DEBUG) Log.d(TAG, e.getMessage());
-                    }
-
-                    if (Aware.DEBUG) Log.d(TAG, ACTION_AWARE_SCREEN_UNLOCKED);
-                    context.sendBroadcast(new Intent(ACTION_AWARE_SCREEN_UNLOCKED));
-                }
+            if (intent.getAction().equals(Intent.ACTION_USER_PRESENT) && !km.isKeyguardLocked()) {
+                startService(new Intent(context, Screen.class).setAction(Screen.ACTION_AWARE_SCREEN_UNLOCKED));
             }
         }
     }
