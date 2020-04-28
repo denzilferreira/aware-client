@@ -138,6 +138,14 @@
                     android:host="*"
                     android:pathPattern="/.*index.php/webservice/index/.*"
                     android:scheme="https" />
+                <data
+                    android:host="*"
+                    android:pathPattern="/.*index.php/webservice/index/.*"
+                    android:scheme="aware" />
+                <data
+                    android:host="*"
+                    android:pathPattern="/.*index.php/webservice/index/.*"
+                    android:scheme="aware-ssl" />
             </intent-filter>
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

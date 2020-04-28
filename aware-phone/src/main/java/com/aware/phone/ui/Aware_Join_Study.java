@@ -102,6 +102,11 @@ public class Aware_Join_Study extends Aware_Activity {
             if (Aware.DEBUG) Log.d(Aware.TAG, "AWARE Link detected: " + getIntent().getDataString() + " SCHEME: " + scheme);
 
             study_url = getIntent().getDataString();
+            if (scheme.equalsIgnoreCase("aware")) {
+                study_url = getIntent().getDataString().replace("aware://", "http://");
+            } else if (scheme.equalsIgnoreCase("aware-ssl")) {
+                study_url = getIntent().getDataString().replace("aware-ssl://", "https://");
+            }
 
             Uri url = Uri.parse(study_url);
             onboarding = url.getQueryParameter("participant");
