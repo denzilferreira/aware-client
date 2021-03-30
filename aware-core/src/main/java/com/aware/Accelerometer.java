@@ -67,6 +67,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
     private String device_id = "";
     private boolean debug_db_slow = false;
+    private boolean status_websocket = false;
     private List<ContentValues> data_values = new ArrayList<>();
 
     private static DataLabel dataLabeler = new DataLabel();
@@ -134,6 +135,31 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         rowData.put(Accelerometer_Data.LABEL, LABEL);
 
         if (awareSensor != null) awareSensor.onAccelerometerChanged(rowData);
+
+        if (status_websocket) {
+            try {
+                JSONObject data = new JSONObject();
+                data.put(Accelerometer_Data.DEVICE_ID, device_id);
+                data.put(Accelerometer_Data.TIMESTAMP, TS);
+                data.put(Accelerometer_Data.VALUES_0, event.values[0]);
+                data.put(Accelerometer_Data.VALUES_1, event.values[1]);
+                data.put(Accelerometer_Data.VALUES_2, event.values[2]);
+                data.put(Accelerometer_Data.ACCURACY, event.accuracy);
+                data.put(Accelerometer_Data.LABEL, LABEL);
+
+                JSONObject message = new JSONObject();
+                message.put("device_id", device_id);
+                message.put("table", "accelerometer");
+                message.put("data", data.toString());
+
+                Log.d(TAG, "Stream: " + message.toString());
+                Websocket.awareSensor.sendMessage(message.toString());
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
 
         data_values.add(rowData);
         LAST_TS = TS;
@@ -270,7 +296,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
         debug_db_slow = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true");
         device_id = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
-
+        status_websocket = Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSOCKET).equals("true");
         if (PERMISSIONS_OK) {
             if (mAccelerometer == null) {
                 if (Aware.DEBUG) Log.w(TAG, "This device does not have an accelerometer!");
