@@ -71,6 +71,8 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
      * Until today, no available Android phone samples higher than 208Hz (Nexus 7).
      * http://ilessendata.blogspot.com/2012/11/android-accelerometer-sampling-rates.html
      */
+    private String device_id = "";
+    private boolean debug_db_slow = false;
     private List<ContentValues> data_values = new ArrayList<ContentValues>();
 
     private static String LABEL = "";
@@ -98,7 +100,7 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
                 final ContentValues[] data_buffer = new ContentValues[data_values.size()];
                 data_values.toArray(data_buffer);
                 try {
-                    if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true")) {
+                    if (!debug_db_slow) {
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
@@ -131,7 +133,7 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
         LAST_VALUES = new Float[]{event.values[0], event.values[1], event.values[2]};
 
         ContentValues rowData = new ContentValues();
-        rowData.put(Gravity_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+        rowData.put(Gravity_Data.DEVICE_ID, device_id);
         rowData.put(Gravity_Data.TIMESTAMP, TS);
         rowData.put(Gravity_Data.VALUES_0, event.values[0]);
         rowData.put(Gravity_Data.VALUES_1, event.values[1]);
@@ -152,7 +154,7 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
         data_values.toArray(data_buffer);
 
         try {
-            if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true")) {
+            if (!debug_db_slow) {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -276,6 +278,9 @@ public class Gravity extends Aware_Sensor implements SensorEventListener {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
+
+        debug_db_slow = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true");
+        device_id = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
 
         if (PERMISSIONS_OK) {
             if (mGravity == null) {

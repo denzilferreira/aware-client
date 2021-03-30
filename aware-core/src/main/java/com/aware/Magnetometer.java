@@ -68,6 +68,8 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
     public static final String ACTION_AWARE_MAGNETOMETER_LABEL = "ACTION_AWARE_MAGNETOMETER_LABEL";
     public static final String EXTRA_LABEL = "label";
 
+    private String device_id = "";
+    private boolean debug_db_slow = false;
     /**
      * Until today, no available Android phone samples higher than 208Hz (Nexus 7).
      * http://ilessendata.blogspot.com/2012/11/android-accelerometer-sampling-rates.html
@@ -107,7 +109,7 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
         LAST_VALUES = new Float[]{event.values[0], event.values[1], event.values[2]};
 
         ContentValues rowData = new ContentValues();
-        rowData.put(Magnetometer_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+        rowData.put(Magnetometer_Data.DEVICE_ID, device_id);
         rowData.put(Magnetometer_Data.TIMESTAMP, TS);
         rowData.put(Magnetometer_Data.VALUES_0, event.values[0]);
         rowData.put(Magnetometer_Data.VALUES_1, event.values[1]);
@@ -128,7 +130,7 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
         data_values.toArray(data_buffer);
 
         try {
-            if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true")) {
+            if (!debug_db_slow) {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -251,6 +253,9 @@ public class Magnetometer extends Aware_Sensor implements SensorEventListener {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
+
+        debug_db_slow = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true");
+        device_id = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
 
         if (PERMISSIONS_OK) {
             if (mMagnetometer == null) {
