@@ -51,6 +51,7 @@ public class SSLManager {
         if (protocol.equalsIgnoreCase("http")) return; //no need to do anything for http server
 
         String hostname = study_uri.getHost();
+        int port = study_uri.getPort();
         if (study_uri.getQuery() != null) {
             // If it is in URL parameters, always unconditionally handle it
             String crt = study_uri.getQueryParameter("crt");
@@ -66,7 +67,7 @@ public class SSLManager {
                 if (Aware.DEBUG)
                     Log.d(Aware.TAG, "Certificates: Downloading crt if not present: " + hostname);
                 if (!hasCertificate(context, hostname)) {
-                    downloadCertificate(context, protocol, hostname, true);
+                    downloadCertificate(context, protocol, hostname, port, true);
                 } else {
                     if (Aware.DEBUG)
                         Log.d(Aware.TAG, "Certificates: Already present and key_management=once: " + hostname);
@@ -75,7 +76,7 @@ public class SSLManager {
                 try {
                     if (!hasCertificate(context, hostname)) {
                         if (Aware.DEBUG) Log.d(Aware.TAG, "Certificates: Downloading for the first time SSL certificate: " + protocol+"://"+hostname);
-                        downloadCertificate(context, protocol, hostname, true);
+                        downloadCertificate(context, protocol, hostname, port, true);
                     } else {
                         //Cached certificate information
                         InputStream localCertificate = getCertificate(context, hostname);
@@ -96,6 +97,7 @@ public class SSLManager {
         private String url;
         private String protocol;
         private String hostname;
+        private int port;
         private Context context;
 
         CheckCertificates(Context context, String URL) {
@@ -104,6 +106,7 @@ public class SSLManager {
 
             Uri study_uri = Uri.parse(url);
             this.hostname = study_uri.getHost();
+            this.port = study_uri.getPort();
 
             this.protocol = "http";
             try {
@@ -116,9 +119,9 @@ public class SSLManager {
         @Override
         protected Void doInBackground(X509Certificate... x509Certificate) {
             try {
-                X509Certificate remote_certificate = retrieveRemoteCertificate(new URL(protocol+"://"+hostname));
+                X509Certificate remote_certificate = retrieveRemoteCertificate(new URL(protocol, hostname, port, ""));
                 if (!x509Certificate[0].equals(remote_certificate)) { //local certificate is expired or different, download new certificate
-                    downloadCertificate(context, protocol, hostname, true);
+                    downloadCertificate(context, protocol, hostname, port, true);
                     //this will force download of SSL certificate from the server. Checked every 15 minutes until successful update to up-to-date certificate.
                 }
             } catch (MalformedURLException e) {
@@ -204,7 +207,7 @@ public class SSLManager {
      * @param hostname Hostname to download.
      * @param block    If true, block until certificate retrieved, otherwise do not.
      */
-    private static void downloadCertificate(Context context, String protocol, String hostname, boolean block) {
+    private static void downloadCertificate(Context context, String protocol, String hostname, int port, boolean block) {
         File root_folder;
         if (context.getApplicationContext().getResources().getBoolean(R.bool.internalstorage)) {
             root_folder = new File(context.getFilesDir(), "/credentials/" + hostname);
@@ -216,7 +219,7 @@ public class SSLManager {
         root_folder.mkdirs();
 
         try {
-            X509Certificate certificate = retrieveRemoteCertificate(new URL(protocol+"://"+hostname));
+            X509Certificate certificate = retrieveRemoteCertificate(new URL(protocol, hostname, port, ""));
             byte[] certificate_data = certificate.getEncoded();
             FileOutputStream outputStream = new FileOutputStream(new File(root_folder.toString() + "/server.crt"));
             outputStream.write(certificate_data);
