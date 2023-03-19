@@ -62,6 +62,8 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
     public static final String ACTION_AWARE_BAROMETER_LABEL = "ACTION_AWARE_BAROMETER_LABEL";
     public static final String EXTRA_LABEL = "label";
 
+    private String device_id = "";
+    private boolean debug_db_slow = false;
     private List<ContentValues> data_values = new ArrayList<ContentValues>();
     private static String LABEL = "";
     private static DataLabel dataLabeler = new DataLabel();
@@ -93,7 +95,7 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
 
         // Proceed with saving as usual.
         ContentValues rowData = new ContentValues();
-        rowData.put(Barometer_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+        rowData.put(Barometer_Data.DEVICE_ID, device_id);
         rowData.put(Barometer_Data.TIMESTAMP, TS);
         rowData.put(Barometer_Data.AMBIENT_PRESSURE, event.values[0]);
         rowData.put(Barometer_Data.ACCURACY, event.accuracy);
@@ -111,7 +113,7 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
         final ContentValues[] data_buffer = new ContentValues[data_values.size()];
         data_values.toArray(data_buffer);
         try {
-            if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true")) {
+            if (!debug_db_slow) {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -237,6 +239,9 @@ public class Barometer extends Aware_Sensor implements SensorEventListener {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
+
+        debug_db_slow = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true");
+        device_id = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
 
         if (PERMISSIONS_OK) {
             if (mPressure == null) {

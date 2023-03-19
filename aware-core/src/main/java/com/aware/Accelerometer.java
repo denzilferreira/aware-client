@@ -65,6 +65,9 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     public static final String ACTION_AWARE_ACCELEROMETER_LABEL = "ACTION_AWARE_ACCELEROMETER_LABEL";
     public static final String EXTRA_LABEL = "label";
 
+    private String device_id = "";
+    private boolean debug_db_slow = false;
+    private boolean status_websocket = false;
     private List<ContentValues> data_values = new ArrayList<>();
 
     private static DataLabel dataLabeler = new DataLabel();
@@ -90,7 +93,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
                 final ContentValues[] data_buffer = new ContentValues[data_values.size()];
                 data_values.toArray(data_buffer);
                 try {
-                    if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true")) {
+                    if (!debug_db_slow) {
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
@@ -123,7 +126,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         LAST_VALUES = new Float[]{event.values[0], event.values[1], event.values[2]};
 
         ContentValues rowData = new ContentValues();
-        rowData.put(Accelerometer_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+        rowData.put(Accelerometer_Data.DEVICE_ID, device_id);
         rowData.put(Accelerometer_Data.TIMESTAMP, TS);
         rowData.put(Accelerometer_Data.VALUES_0, event.values[0]);
         rowData.put(Accelerometer_Data.VALUES_1, event.values[1]);
@@ -133,10 +136,10 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
 
         if (awareSensor != null) awareSensor.onAccelerometerChanged(rowData);
 
-        if (Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSOCKET).equals("true")) {
+        if (status_websocket) {
             try {
                 JSONObject data = new JSONObject();
-                data.put(Accelerometer_Data.DEVICE_ID, Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                data.put(Accelerometer_Data.DEVICE_ID, device_id);
                 data.put(Accelerometer_Data.TIMESTAMP, TS);
                 data.put(Accelerometer_Data.VALUES_0, event.values[0]);
                 data.put(Accelerometer_Data.VALUES_1, event.values[1]);
@@ -145,7 +148,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
                 data.put(Accelerometer_Data.LABEL, LABEL);
 
                 JSONObject message = new JSONObject();
-                message.put("device_id", Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID));
+                message.put("device_id", device_id);
                 message.put("table", "accelerometer");
                 message.put("data", data.toString());
 
@@ -157,6 +160,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
             }
         }
 
+
         data_values.add(rowData);
         LAST_TS = TS;
 
@@ -167,7 +171,7 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
         final ContentValues[] data_buffer = new ContentValues[data_values.size()];
         data_values.toArray(data_buffer);
         try {
-            if (!Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true")) {
+            if (!debug_db_slow) {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -290,6 +294,9 @@ public class Accelerometer extends Aware_Sensor implements SensorEventListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
 
+        debug_db_slow = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEBUG_DB_SLOW).equals("true");
+        device_id = Aware.getSetting(getApplicationContext(), Aware_Preferences.DEVICE_ID);
+        status_websocket = Aware.getSetting(getApplicationContext(), Aware_Preferences.STATUS_WEBSOCKET).equals("true");
         if (PERMISSIONS_OK) {
             if (mAccelerometer == null) {
                 if (Aware.DEBUG) Log.w(TAG, "This device does not have an accelerometer!");
